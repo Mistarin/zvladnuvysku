@@ -6,7 +6,7 @@ import { ThemeToggle } from "./theme-toggle";
 import { createClient } from "@/lib/supabase/client";
 import { useEffect, useState } from "react";
 import type { User } from "@supabase/supabase-js";
-
+import Image from "next/image";
 const navLinks = [
   { href: "/predmety", label: "Předměty" },
 ];
@@ -55,9 +55,13 @@ export function Navbar() {
             className="flex items-center gap-2 group"
             aria-label="ZvladnuVysku — domů"
           >
-            <div className="w-7 h-7 rounded-lg accent-gradient flex items-center justify-center text-white font-bold text-xs shrink-0 group-hover:scale-110 transition-transform duration-200">
-              ZV
-            </div>
+            <Image
+              src="/logo.png"
+              alt="ZvládnuVýšku Logo"
+              width={28}
+              height={28}
+              className="shrink-0 group-hover:scale-110 transition-transform duration-200"
+            />
             <span className="font-semibold text-foreground tracking-tight">
               Zvládnu<span style={{ color: "var(--accent-color)" }}>Výšku</span>
             </span>
