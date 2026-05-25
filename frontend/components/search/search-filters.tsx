@@ -1,0 +1,151 @@
+"use client";
+
+import { useCallback, useState } from "react";
+import type { SubjectFilters } from "@/hooks/use-subjects";
+import type { FilterConfig } from "@/hooks/use-subject-filters";
+
+interface SearchFiltersProps {
+  filters: SubjectFilters;
+  filterConfig: FilterConfig[];
+  onFilterChange: <K extends keyof SubjectFilters>(
+    key: K,
+    value: SubjectFilters[K]
+  ) => void;
+  onReset: () => void;
+  activeFilterCount: number;
+}
+
+export function SearchFilters({
+  filters,
+  filterConfig,
+  onFilterChange,
+  onReset,
+  activeFilterCount,
+}: SearchFiltersProps) {
+  const [isOpen, setIsOpen] = useState(false);
+
+  const handleMultiSelect = useCallback(
+    (key: keyof SubjectFilters, value: number | string) => {
+      const currentValues = (filters[key] as (number | string)[]) || [];
+      const exists = currentValues.includes(value as never);
+
+      if (exists) {
+        const next = currentValues.filter((v) => v !== value);
+        onFilterChange(key, next.length > 0 ? (next as SubjectFilters[typeof key]) : undefined);
+      } else {
+        onFilterChange(key, [...currentValues, value] as SubjectFilters[typeof key]);
+      }
+    },
+    [filters, onFilterChange]
+  );
+
+  return (
+    <div className="space-y-2">
+      {/* Toggle button */}
+      <div className="flex items-center justify-between">
+        <button
+          id="filter-toggle"
+          onClick={() => setIsOpen(!isOpen)}
+          className={`
+            flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium border transition-all duration-150
+            ${isOpen || activeFilterCount > 0
+              ? "bg-primary/10 text-primary border-primary/30"
+              : "bg-card text-muted-foreground border-border hover:text-foreground hover:bg-muted"
+            }
+          `}
+        >
+          <span>{isOpen ? "▲" : "▼"}</span>
+          <span>Filtry</span>
+          {activeFilterCount > 0 && (
+            <span className="w-5 h-5 rounded-full bg-primary text-primary-foreground text-xs flex items-center justify-center font-bold">
+              {activeFilterCount}
+            </span>
+          )}
+        </button>
+
+        {activeFilterCount > 0 && (
+          <button
+            onClick={onReset}
+            className="text-sm text-muted-foreground hover:text-destructive transition-colors"
+          >
+            Zrušit filtry
+          </button>
+        )}
+      </div>
+
+      {/* Filter panel */}
+      {isOpen && (
+        <div className="bg-card border border-border rounded-xl p-4 animate-slide-down">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {filterConfig.map((config) => (
+              <div key={config.key} className="space-y-2">
+                <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  {config.label}
+                </h4>
+
+                {config.type === "multiselect" && config.options && (
+                  <div className="flex flex-wrap gap-1.5">
+                    {config.options.map((option) => {
+                      const currentValues =
+                        (filters[config.key] as (number | string)[]) || [];
+                      const isSelected = currentValues.includes(
+                        option.value as never
+                      );
+
+                      return (
+                        <button
+                          key={option.value}
+                          onClick={() =>
+                            handleMultiSelect(config.key, option.value)
+                          }
+                          className={`
+                            text-xs px-2.5 py-1 rounded-lg border transition-all duration-100
+                            ${isSelected
+                              ? "bg-primary text-primary-foreground border-primary"
+                              : "bg-background text-foreground border-border hover:border-primary/50 hover:bg-primary/5"
+                            }
+                          `}
+                        >
+                          {option.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {config.type === "boolean" && (
+                  <div className="flex flex-col gap-1">
+                    {[
+                      { value: true, label: "✓ Povinná" },
+                      { value: false, label: "✗ Volitelná" },
+                    ].map((opt) => (
+                      <button
+                        key={String(opt.value)}
+                        onClick={() => {
+                          if (filters[config.key] === opt.value) {
+                            onFilterChange(config.key, null as SubjectFilters[typeof config.key]);
+                          } else {
+                            onFilterChange(config.key, opt.value as SubjectFilters[typeof config.key]);
+                          }
+                        }}
+                        className={`
+                          text-xs px-2.5 py-1 rounded-lg border transition-all duration-100 text-left
+                          ${filters[config.key] === opt.value
+                            ? "bg-primary text-primary-foreground border-primary"
+                            : "bg-background text-foreground border-border hover:border-primary/50"
+                          }
+                        `}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
