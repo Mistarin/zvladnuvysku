@@ -63,8 +63,8 @@ export default function HomePage() {
 
   return (
     <div className="relative overflow-hidden">
-      {/* Ambient glow */}
-      <div className="home-ambient" aria-hidden />
+      {/* Animated ambient glow */}
+      <div className="home-ambient-glow" aria-hidden="true" />
 
       {/* Hero — fullscreen centered */}
       <section className="home-hero">

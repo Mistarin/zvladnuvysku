@@ -185,16 +185,30 @@
     animation: fadeIn 150ms ease;
   }
 
-  /* ── Home page (fullscreen landing) ── */
-  .home-ambient {
+  /* ── Home page (pulsing ambient glow) ── */
+  @keyframes colorPulse {
+    0%, 100% { background-color: #EE7202; }
+    16% { background-color: #703287; }
+    33% { background-color: #F3B400; }
+    50% { background-color: #CC0A1C; }
+    66% { background-color: #0078B4; }
+    83% { background-color: #769722; }
+  }
+
+  .home-ambient-glow {
     position: absolute;
     inset: 0;
     pointer-events: none;
-    background: radial-gradient(
-      ellipse 70% 55% at 50% 35%,
-      color-mix(in srgb, var(--accent-color) 12%, transparent),
-      transparent 70%
-    );
+    z-index: 0;
+    animation: colorPulse 20s infinite alternate ease-in-out;
+    /* Use mask to create the glow effect from center */
+    -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 35%, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 70%);
+    mask-image: radial-gradient(ellipse 70% 60% at 50% 35%, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 70%);
+    opacity: 0.15; /* A bit stronger than before */
+  }
+
+  .dark .home-ambient-glow {
+    opacity: 0.25;
   }
 
   /* Hero section — full viewport, content shifted slightly above center */
