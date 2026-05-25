@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { DifficultyBadge, StarRating } from "@/components/subject/difficulty-badge";
+import { RatingForm } from "@/components/subject/rating-form";
 import type { Subject } from "@/lib/types/database";
 
 interface PageProps {
@@ -48,6 +49,8 @@ export default async function PredmetDetailPage({ params }: PageProps) {
   }
 
   const subject = data as Subject;
+  const { data: { user } } = await supabase.auth.getUser();
+  const isLoggedIn = !!user;
 
   return (
     <div className="container mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-8">
@@ -191,17 +194,9 @@ export default async function PredmetDetailPage({ params }: PageProps) {
           </div>
         </ContentSection>
 
-        {/* Hodnocení — fáze 2+ */}
+        {/* Hodnocení */}
         <ContentSection title="Hodnocení" icon="⭐">
-          <div className="text-center py-4">
-            <p className="text-muted-foreground text-sm">
-              Hodnocení bude dostupné v příští verzi. Chceš přispět?{" "}
-              <Link href="/prihlaseni" className="text-primary hover:underline">
-                Přihlas se
-              </Link>
-              .
-            </p>
-          </div>
+          <RatingForm subjectId={subject.id} isLoggedIn={isLoggedIn} />
         </ContentSection>
       </div>
 
