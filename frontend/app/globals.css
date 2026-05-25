@@ -251,8 +251,21 @@
     83% { color: #769722; }
   }
 
+  @keyframes borderColorPulse {
+    0%, 100% { border-color: rgba(238, 114, 2, 0.5); --tw-ring-color: rgba(238, 114, 2, 0.5); }
+    16% { border-color: rgba(112, 50, 135, 0.5); --tw-ring-color: rgba(112, 50, 135, 0.5); }
+    33% { border-color: rgba(243, 180, 0, 0.5); --tw-ring-color: rgba(243, 180, 0, 0.5); }
+    50% { border-color: rgba(204, 10, 28, 0.5); --tw-ring-color: rgba(204, 10, 28, 0.5); }
+    66% { border-color: rgba(0, 120, 180, 0.5); --tw-ring-color: rgba(0, 120, 180, 0.5); }
+    83% { border-color: rgba(118, 151, 34, 0.5); --tw-ring-color: rgba(118, 151, 34, 0.5); }
+  }
+
   .home-title-accent {
     animation: textColorPulse 60s infinite alternate ease-in-out;
+  }
+
+  .search-bar-focused {
+    animation: borderColorPulse 60s infinite alternate ease-in-out;
   }
 
   /* Search wrapper — wide, ~2.5x the default search */

@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useEffect } from "react";
+import { Search, X } from "lucide-react";
 
 interface SearchBarProps {
   query: string;
@@ -41,26 +42,11 @@ export function SearchBar({
         transition-all duration-200
         ${
           isFocused
-            ? "ring-1 ring-primary/40 border-primary/40 shadow-lg shadow-primary/8"
-            : "border-border hover:border-border hover:shadow-md"
+            ? "ring-1 shadow-lg search-bar-focused"
+            : "border-transparent hover:shadow-md"
         }
       `}
     >
-      {/* Search icon — left side, fades in when there is text */}
-      <span
-        className={`
-          pl-4 shrink-0 transition-all duration-200
-          ${isLarge ? "text-xl" : "text-base"}
-          ${hasText
-            ? "opacity-100 text-primary"
-            : "opacity-40 text-muted-foreground"
-          }
-        `}
-        aria-hidden
-      >
-        🔍
-      </span>
-
       {/* Input */}
       <input
         ref={inputRef}
@@ -80,25 +66,45 @@ export function SearchBar({
         className={`
           flex-1 bg-transparent border-none outline-none
           text-foreground placeholder:text-muted-foreground
-          ${isLarge ? "py-4 px-4 text-lg" : "py-2.5 px-3 text-sm"}
+          ${isLarge ? "py-4 pl-6 pr-24 text-lg" : "py-2.5 pl-4 pr-20 text-sm"}
         `}
         aria-label="Vyhledat předmět"
         aria-autocomplete="list"
       />
 
-      {/* Clear button */}
-      {query && (
-        <button
-          onClick={() => {
-            onQueryChange("");
-            inputRef.current?.focus();
-          }}
-          className="pr-4 pl-2 text-muted-foreground hover:text-foreground transition-colors"
-          aria-label="Vymazat hledání"
+      {/* Right side icons container (slides in when typing) */}
+      <div className="absolute right-3 flex items-center overflow-hidden">
+        <div
+          className={`
+            flex items-center gap-2 transition-all duration-300 ease-out
+            ${
+              hasText
+                ? "translate-x-0 opacity-100"
+                : "translate-x-4 opacity-0 pointer-events-none"
+            }
+          `}
         >
-          ✕
-        </button>
-      )}
+          {query && (
+            <button
+              onClick={() => {
+                onQueryChange("");
+                inputRef.current?.focus();
+              }}
+              className="p-1 text-muted-foreground hover:text-foreground transition-colors"
+              aria-label="Vymazat hledání"
+            >
+              <X size={isLarge ? 20 : 16} />
+            </button>
+          )}
+          
+          {/* Vertical divider */}
+          <div className="w-px h-5 bg-border mx-1" />
+          
+          <div className="p-1 text-primary">
+            <Search size={isLarge ? 20 : 16} strokeWidth={2.5} />
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
