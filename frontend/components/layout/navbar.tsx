@@ -56,11 +56,11 @@ export function Navbar() {
             aria-label="ZvladnuVysku — domů"
           >
             <Image
-              src="/logo.png"
+              src="/logo-v2.png"
               alt="ZvládnuVýšku Logo"
-              width={28}
-              height={28}
-              className="shrink-0 group-hover:scale-110 transition-transform duration-200"
+              width={56}
+              height={56}
+              className="shrink-0 group-hover:scale-105 transition-transform duration-200"
             />
             <span className="font-semibold text-foreground tracking-tight">
               Zvládnu<span style={{ color: "var(--accent-color)" }}>Výšku</span>
