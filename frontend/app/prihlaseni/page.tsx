@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import { MicrosoftLoginButton } from '@/components/auth/microsoft-login-button'
+import { EmailLoginForm } from '@/components/auth/email-login-form'
 
 export const metadata: Metadata = {
   title: 'Přihlášení',
@@ -31,7 +31,7 @@ export default async function PrihlaseniPage() {
 
         {/* Login card */}
         <div className="glass-card p-6 space-y-5">
-          <MicrosoftLoginButton />
+          <EmailLoginForm />
 
           <div className="flex items-center gap-3">
             <div className="flex-1 h-px bg-border" />
@@ -40,8 +40,7 @@ export default async function PrihlaseniPage() {
           </div>
 
           <p className="text-xs text-center text-muted-foreground leading-relaxed">
-            Přihlaš se svým školním Microsoft účtem.
-            Jiné účty nebudou přijaty.
+            Zadej svůj školní email. Zašleme ti jednorázový odkaz pro přihlášení, nepotřebuješ žádné heslo.
           </p>
         </div>
 
