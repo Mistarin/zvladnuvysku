@@ -200,15 +200,23 @@
     inset: 0;
     pointer-events: none;
     z-index: 0;
-    animation: colorPulse 20s infinite alternate ease-in-out;
+    animation: colorPulse 60s infinite alternate ease-in-out;
     /* Use mask to create the glow effect from center */
     -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 35%, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 70%);
     mask-image: radial-gradient(ellipse 70% 60% at 50% 35%, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 70%);
-    opacity: 0.15; /* A bit stronger than before */
+    opacity: 0.15;
+    transition: opacity 350ms ease;
   }
 
   .dark .home-ambient-glow {
     opacity: 0.25;
+  }
+
+  .home-ambient-glow--dimmed {
+    opacity: 0.1;
+  }
+  .dark .home-ambient-glow--dimmed {
+    opacity: 0.15;
   }
 
   /* Hero section — full viewport, content shifted slightly above center */
@@ -246,8 +254,18 @@
     line-height: 1.1;
     color: var(--color-foreground);
   }
+
+  @keyframes textColorPulse {
+    0%, 100% { color: #EE7202; }
+    16% { color: #703287; }
+    33% { color: #F3B400; }
+    50% { color: #CC0A1C; }
+    66% { color: #0078B4; }
+    83% { color: #769722; }
+  }
+
   .home-title-accent {
-    color: var(--accent-color);
+    animation: textColorPulse 60s infinite alternate ease-in-out;
   }
 
   /* Search wrapper — wide, ~2.5x the default search */

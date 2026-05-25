@@ -64,7 +64,10 @@ export default function HomePage() {
   return (
     <div className="relative overflow-hidden">
       {/* Animated ambient glow */}
-      <div className="home-ambient-glow" aria-hidden="true" />
+      <div 
+        className={`home-ambient-glow ${isFocused ? "home-ambient-glow--dimmed" : ""}`} 
+        aria-hidden="true" 
+      />
 
       {/* Hero — fullscreen centered */}
       <section className="home-hero">

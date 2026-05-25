@@ -63,7 +63,7 @@ export function Navbar() {
               className="shrink-0 group-hover:scale-105 transition-transform duration-200"
             />
             <span className="font-semibold text-foreground tracking-tight">
-              Zvládnu<span style={{ color: "var(--accent-color)" }}>Výšku</span>
+              Zvládnu<span className="home-title-accent">Výšku</span>
             </span>
           </Link>
 
