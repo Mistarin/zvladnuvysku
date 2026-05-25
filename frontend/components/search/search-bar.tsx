@@ -41,7 +41,7 @@ export function SearchBar({
         transition-all duration-200
         ${
           isFocused
-            ? "ring-1 ring-white/60 border-white/60 shadow-lg"
+            ? "ring-1 ring-primary/40 border-primary/40 shadow-lg shadow-primary/8"
             : "border-border hover:border-border hover:shadow-md"
         }
       `}
