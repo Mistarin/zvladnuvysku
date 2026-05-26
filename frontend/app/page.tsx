@@ -63,6 +63,8 @@ export default function HomePage() {
 
   return (
     <div className="relative overflow-hidden">
+      {/* Universal noise overlay to eliminate banding on the glow aura and create a premium film-grain effect */}
+      <div className="home-noise-overlay" aria-hidden="true" />
 
       {/* Hero — fullscreen centered */}
       <section className="home-hero">
@@ -93,7 +95,7 @@ export default function HomePage() {
 
           <div className="relative z-50 w-full">
             {/* The glow aura positioned literally behind the search bar */}
-            <div className="absolute -inset-4 sm:-inset-6 z-[-1] rounded-[3rem] home-ambient-glow-aura" aria-hidden="true" />
+            <div className="absolute -inset-4 sm:-inset-6 z-[-1] home-ambient-glow-aura" aria-hidden="true" />
 
             <SearchBar
               query={query}

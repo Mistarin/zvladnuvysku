@@ -40,6 +40,7 @@ export function SearchBar({
         relative flex items-center w-full
         bg-card border rounded-2xl
         transition-shadow duration-200
+        search-bar-container
         ${
           isFocused
             ? "ring-1 shadow-lg search-bar-focused"

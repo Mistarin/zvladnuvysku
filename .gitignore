@@ -35,3 +35,4 @@ next-env.d.ts
 .cache/
 dist/
 CHANGELOG.md
+package-lock.json

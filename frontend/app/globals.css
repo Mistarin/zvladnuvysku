@@ -187,23 +187,47 @@
 
   /* ── Home page (pulsing ambient glow) ── */
   @keyframes colorPulse {
-    0%, 100% { background-color: #EE7202; }
-    16% { background-color: #703287; }
-    33% { background-color: #F3B400; }
-    50% { background-color: #CC0A1C; }
-    66% { background-color: #0078B4; }
-    83% { background-color: #769722; }
+    0%, 100% { background-color: #0078B4; }
+    16.66% { background-color: #769722; }
+    33.33% { background-color: #EE7202; }
+    50% { background-color: #703287; }
+    66.66% { background-color: #F3B400; }
+    83.33% { background-color: #CC0A1C; }
+  }
+
+  @keyframes colorPulseDark {
+    0%, 100% { background-color: #0C5A88; }
+    16.66% { background-color: #5B7A2A; }
+    33.33% { background-color: #A45B1A; }
+    50% { background-color: #5A2A76; }
+    66.66% { background-color: #B07D16; }
+    83.33% { background-color: #9A1826; }
   }
 
   .home-ambient-glow-aura {
-    animation: colorPulse 60s infinite alternate ease-in-out;
-    filter: blur(40px);
+    animation: colorPulse 36s infinite alternate ease-in-out;
+    filter: blur(64px);
     opacity: 0.15;
+    border-radius: 2rem;
     transition: opacity 350ms ease;
   }
 
   .dark .home-ambient-glow-aura {
-    opacity: 0.25;
+    animation: colorPulseDark 36s infinite alternate ease-in-out;
+    opacity: 0.12;
+  }
+
+  .home-noise-overlay {
+    position: absolute;
+    inset: -100%;
+    z-index: 0;
+    pointer-events: none;
+    opacity: 0.01;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  }
+  .dark .home-noise-overlay {
+    opacity: 0.012;
   }
 
   /* Hero section — full viewport, content shifted slightly above center */
@@ -243,29 +267,68 @@
   }
 
   @keyframes textColorPulse {
-    0%, 100% { color: #EE7202; }
-    16% { color: #703287; }
-    33% { color: #F3B400; }
-    50% { color: #CC0A1C; }
-    66% { color: #0078B4; }
-    83% { color: #769722; }
+    0%, 100% { color: #0078B4; }
+    16.66% { color: #769722; }
+    33.33% { color: #EE7202; }
+    50% { color: #703287; }
+    66.66% { color: #F3B400; }
+    83.33% { color: #CC0A1C; }
   }
 
-  @keyframes borderColorPulse {
-    0%, 100% { border-color: rgba(238, 114, 2, 0.5); --tw-ring-color: rgba(238, 114, 2, 0.5); }
-    16% { border-color: rgba(112, 50, 135, 0.5); --tw-ring-color: rgba(112, 50, 135, 0.5); }
-    33% { border-color: rgba(243, 180, 0, 0.5); --tw-ring-color: rgba(243, 180, 0, 0.5); }
-    50% { border-color: rgba(204, 10, 28, 0.5); --tw-ring-color: rgba(204, 10, 28, 0.5); }
-    66% { border-color: rgba(0, 120, 180, 0.5); --tw-ring-color: rgba(0, 120, 180, 0.5); }
-    83% { border-color: rgba(118, 151, 34, 0.5); --tw-ring-color: rgba(118, 151, 34, 0.5); }
+  @keyframes textColorPulseDark {
+    0%, 100% { color: #0C5A88; }
+    16.66% { color: #5B7A2A; }
+    33.33% { color: #A45B1A; }
+    50% { color: #5A2A76; }
+    66.66% { color: #B07D16; }
+    83.33% { color: #9A1826; }
   }
 
   .home-title-accent {
-    animation: textColorPulse 60s infinite alternate ease-in-out;
+    animation: textColorPulse 36s infinite alternate ease-in-out;
+  }
+
+  .dark .home-title-accent {
+    animation: textColorPulseDark 36s infinite alternate ease-in-out;
   }
 
   .search-bar-focused {
-    animation: borderColorPulse 60s infinite alternate ease-in-out;
+    border-color: #4b5563 !important;
+    box-shadow: 0 0 0 1px #4b5563, 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1) !important;
+  }
+
+  .dark .search-bar-focused {
+    border-color: #374151 !important;
+    box-shadow: 0 0 0 1px #374151, 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -4px rgba(0, 0, 0, 0.3) !important;
+  }
+
+  /* Disable transitions on the search bar container and children to prevent focus background flashing */
+  .search-bar-container,
+  .search-bar-container * {
+    transition: none !important;
+  }
+
+  /* Clean browser input background/autofill behavior */
+  #subject-search {
+    background-color: transparent !important;
+    background: transparent !important;
+    outline: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
+  #subject-search:-webkit-autofill,
+  #subject-search:-webkit-autofill:hover,
+  #subject-search:-webkit-autofill:focus,
+  #subject-search:-webkit-autofill:active {
+    background-color: transparent !important;
+    background: transparent !important;
+    -webkit-text-fill-color: var(--color-foreground) !important;
+    -webkit-box-shadow: 0 0 0px 1000px transparent inset !important;
+    box-shadow: 0 0 0px 1000px transparent inset !important;
+    transition: background-color 5000s ease-in-out 0s !important;
   }
 
   /* Search wrapper — wide, ~2.5x the default search */
