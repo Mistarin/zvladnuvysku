@@ -4,7 +4,8 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { DifficultyBadge, StarRating } from "@/components/subject/difficulty-badge";
 import { RatingForm } from "@/components/subject/rating-form";
-import type { Subject } from "@/lib/types/database";
+import { RatingStats } from "@/components/subject/rating-stats";
+import type { Subject, SubjectRatingStats } from "@/lib/types/database";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -51,6 +52,22 @@ export default async function PredmetDetailPage({ params }: PageProps) {
   const subject = data as Subject;
   const { data: { user } } = await supabase.auth.getUser();
   const isLoggedIn = !!user;
+
+  // Count available flashcard decks for this subject
+  const { count: deckCount } = await supabase
+    .from('flashcard_decks')
+    .select('*', { count: 'exact', head: true })
+    .eq('subject_id', subject.id)
+    .eq('is_public', true);
+
+  const { data: ratingStatsData } = await supabase
+    .from("subject_rating_stats")
+    .select("*")
+    .eq("subject_id", subject.id)
+    .single();
+
+  const ratingStats = ratingStatsData as SubjectRatingStats | null;
+  const totalRatings = ratingStats?.total_ratings ?? 0;
 
   return (
     <div className="container mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-8">
@@ -179,24 +196,72 @@ export default async function PredmetDetailPage({ params }: PageProps) {
           </ContentSection>
         )}
 
-        {/* Flashcardy — vyžadují login */}
+        {/* Flashcardy */}
         <ContentSection title="Flashcardy" icon="🃏">
-          <div className="text-center py-4 space-y-3">
-            <p className="text-muted-foreground text-sm">
-              Flashcardy pro tento předmět jsou dostupné po přihlášení.
-            </p>
-            <Link
-              href="/prihlaseni"
-              className="inline-flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-medium accent-gradient text-white hover:opacity-90 transition-all"
-            >
-              Přihlásit se →
-            </Link>
-          </div>
+          {isLoggedIn ? (
+            <div className="space-y-3">
+              {deckCount !== null && deckCount !== undefined && deckCount > 0 && (
+                <p className="text-sm text-muted-foreground">
+                  K dispozici je{' '}
+                  <span className="font-semibold text-foreground">
+                    {deckCount} {deckCount === 1 ? 'balíček' : deckCount >= 2 && deckCount <= 4 ? 'balíčky' : 'balíčků'}
+                  </span>{' '}
+                  s kartami pro procvičování.
+                </p>
+              )}
+              {(deckCount === 0 || deckCount === null) && (
+                <p className="text-sm text-muted-foreground">
+                  Zatím žádné flashcardy. Buďte první kdo je vytvoří!
+                </p>
+              )}
+              <div className="flex gap-3 flex-wrap">
+                <Link
+                  href={`/predmety/${slug}/flashcardy`}
+                  className="inline-flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-medium accent-gradient text-white hover:opacity-90 transition-all"
+                >
+                  🃏 Zobrazit flashcardy →
+                </Link>
+                <Link
+                  href={`/flashcardy/novy?subject=${slug}`}
+                  className="inline-flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-medium border border-border bg-card hover:bg-muted transition-all"
+                >
+                  + Vytvořit balíček
+                </Link>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <p className="text-muted-foreground text-sm">
+                {deckCount !== null && deckCount !== undefined && deckCount > 0
+                  ? `K dispozici je ${deckCount} ${deckCount === 1 ? 'balíček' : deckCount >= 2 && deckCount <= 4 ? 'balíčky' : 'balíčků'} s kartami — přihlaste se pro procvičování.`
+                  : 'Přihlaste se pro přístup k flashkartám nebo jejich vytváření.'}
+              </p>
+              <div className="flex gap-3 flex-wrap">
+                {deckCount !== null && deckCount !== undefined && deckCount > 0 && (
+                  <Link
+                    href={`/predmety/${slug}/flashcardy`}
+                    className="inline-flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-medium border border-border bg-card hover:bg-muted transition-all"
+                  >
+                    🃏 Procházet flashcardy
+                  </Link>
+                )}
+                <Link
+                  href="/prihlaseni"
+                  className="inline-flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-medium accent-gradient text-white hover:opacity-90 transition-all"
+                >
+                  Přihlásit se →
+                </Link>
+              </div>
+            </div>
+          )}
         </ContentSection>
 
         {/* Hodnocení */}
         <ContentSection title="Hodnocení" icon="⭐">
-          <RatingForm subjectId={subject.id} isLoggedIn={isLoggedIn} />
+          <div className="space-y-6">
+            <RatingStats stats={ratingStats} totalRatings={totalRatings} />
+            <RatingForm subjectId={subject.id} isLoggedIn={isLoggedIn} />
+          </div>
         </ContentSection>
       </div>
 

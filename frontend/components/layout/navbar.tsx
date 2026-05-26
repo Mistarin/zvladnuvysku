@@ -69,6 +69,7 @@ export function Navbar() {
 
           {/* Right side */}
           <div className="flex items-center gap-1">
+          {/* Static nav links */}
             {navLinks.map((link) => (
               <Link
                 key={link.href}
@@ -86,6 +87,41 @@ export function Navbar() {
                 {link.label}
               </Link>
             ))}
+
+            {/* Auth-conditional links */}
+            {user && (
+              <Link
+                href="/navrhnout"
+                id="nav-navrhnout"
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-150 ${
+                  pathname === "/navrhnout"
+                    ? "bg-primary/10 text-primary"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                }`}
+              >
+                Navrhnout předmět
+              </Link>
+            )}
+
+            {/* Admin link — only for admin/moderator */}
+            {user && (() => {
+              const role =
+                (user.app_metadata?.role as string | undefined) ??
+                (user.user_metadata?.role as string | undefined);
+              return role === 'admin' || role === 'moderator';
+            })() && (
+              <Link
+                href="/admin"
+                id="nav-admin"
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-150 ${
+                  pathname === "/admin"
+                    ? "bg-primary/10 text-primary"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                }`}
+              >
+                Admin
+              </Link>
+            )}
 
             <div className="ml-1">
               <ThemeToggle />
