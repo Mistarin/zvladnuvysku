@@ -58,7 +58,12 @@ export async function approveProposal(proposalId: string): Promise<ActionResult>
     if (fetchError || !proposal) return { success: false, error: 'Návrh nenalezen' }
 
     if (proposal.type === 'new') {
-      const { error: insertError } = await supabase.from('subjects').insert(proposal.data as never)
+      const insertData = { ...proposal.data } as Record<string, any>
+      if (!insertData.slug) {
+        const base = insertData.short_tag || insertData.name || 'predmet'
+        insertData.slug = base.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
+      }
+      const { error: insertError } = await supabase.from('subjects').insert(insertData as never)
       if (insertError) return { success: false, error: `Chyba při vkládání: ${insertError.message}` }
     } else if (proposal.type === 'edit' && proposal.subject_id) {
       const { error: updateError } = await supabase.from('subjects').update(proposal.data as never).eq('id', proposal.subject_id)
@@ -100,7 +105,6 @@ export async function rejectProposal(proposalId: string, reason?: string): Promi
       .from('subject_proposals')
       .update({
         status: 'rejected',
-        rejection_reason: reason ?? null,
         reviewed_by: userId,
         reviewed_at: new Date().toISOString(),
       })
