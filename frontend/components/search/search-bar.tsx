@@ -2,6 +2,7 @@
 
 import { useRef, useEffect } from "react";
 import { Search, X } from "lucide-react";
+import { useSound } from "../layout/sound-provider";
 
 interface SearchBarProps {
   query: string;
@@ -23,6 +24,7 @@ export function SearchBar({
   size = "default",
 }: SearchBarProps) {
   const inputRef = useRef<HTMLInputElement>(null);
+  const { isSoundEnabled } = useSound();
 
   useEffect(() => {
     if (isFocused) {
@@ -30,6 +32,15 @@ export function SearchBar({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+  
+  const handleFocus = () => {
+    if (isSoundEnabled) {
+      const audio = new Audio('/sounds/swipe-confirm.mp3');
+      audio.volume = 0.5; // default volume
+      audio.play().catch(e => console.warn('Audio play failed:', e));
+    }
+    onFocus?.();
+  };
 
   const isLarge = size === "large";
   const hasText = query.length > 0;
@@ -55,7 +66,7 @@ export function SearchBar({
         type="search"
         value={query}
         onChange={(e) => onQueryChange(e.target.value)}
-        onFocus={onFocus}
+        onFocus={handleFocus}
         onBlur={(e) => {
           if (!e.relatedTarget?.closest("[data-search-suggestions]")) {
             onBlur?.();

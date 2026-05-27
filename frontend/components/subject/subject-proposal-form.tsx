@@ -28,6 +28,35 @@ const SEMESTER_OPTIONS = [
   { value: 'oba', label: '🔄 Oba semestry' },
 ]
 
+// Ostravská univerzita faculties
+const FACULTY_OPTIONS = [
+  { value: 'PřF', label: 'PřF — Přírodovědecká fakulta' },
+  { value: 'FF', label: 'FF — Filozofická fakulta' },
+  { value: 'PdF', label: 'PdF — Pedagogická fakulta' },
+  { value: 'LF', label: 'LF — Lékařská fakulta' },
+  { value: 'FSS', label: 'FSS — Fakulta sociálních studií' },
+  { value: 'FU', label: 'FU — Fakulta umění' },
+  { value: 'EkF', label: 'EkF — Ekonomická fakulta' },
+  { value: 'FBI', label: 'FBI — Fakulta bezpečnostního inženýrství' },
+]
+
+const ATTENDANCE_OPTIONS = [
+  { value: 'volná', label: '🟢 Volná docházka' },
+  { value: 'povinná', label: '🔴 Povinná docházka' },
+  { value: 'povinné_přednášky', label: '🟠 Povinné přednášky' },
+  { value: 'povinné_cvičení', label: '🟡 Povinné cvičení' },
+]
+
+const DESCRIPTION_TEMPLATE = `- Předmět se zabývá...
+- Výuka probíhá formou...
+- Zakončení je...`
+
+const TARGET_AUDIENCE_TEMPLATE = `- Vhodné pro...
+- Nevhodné pro...`
+
+const REQUIREMENTS_TEMPLATE = `- Znalost...
+- Schopnost...`
+
 function FieldLabel({ children, required }: { children: React.ReactNode; required?: boolean }) {
   return (
     <label className="block text-xs font-medium text-muted-foreground mb-1">
@@ -45,12 +74,24 @@ function Input({ ...props }: React.InputHTMLAttributes<HTMLInputElement>) {
   )
 }
 
-function Textarea({ ...props }: React.TextareaHTMLAttributes<HTMLTextAreaElement>) {
+function Select({ ...props }: React.SelectHTMLAttributes<HTMLSelectElement>) {
   return (
-    <textarea
+    <select
       {...props}
-      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground resize-none outline-none focus:ring-1 focus:ring-primary/40 focus:border-primary/40 transition-all"
+      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:ring-1 focus:ring-primary/40 focus:border-primary/40 transition-all"
     />
+  )
+}
+
+function Textarea({ hint, ...props }: React.TextareaHTMLAttributes<HTMLTextAreaElement> & { hint?: string }) {
+  return (
+    <div>
+      <textarea
+        {...props}
+        className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground resize-none outline-none focus:ring-1 focus:ring-primary/40 focus:border-primary/40 transition-all font-mono"
+      />
+      {hint && <p className="text-xs text-muted-foreground mt-1">{hint}</p>}
+    </div>
   )
 }
 
@@ -64,10 +105,12 @@ export function SubjectProposalForm({ userId }: SubjectProposalFormProps) {
   const [error, setError] = useState<string | null>(null)
 
   const [form, setForm] = useState({
-    name: '', short_tag: '', description: '', target_audience: '',
-    real_requirements: '', difficulty: 3, time_intensity: 3,
-    attendance_required: false, credits: '', semester: '', faculty: '',
-    department: '', year: '', note: '',
+    name: '', short_tag: '', description: DESCRIPTION_TEMPLATE,
+    target_audience: TARGET_AUDIENCE_TEMPLATE,
+    real_requirements: REQUIREMENTS_TEMPLATE,
+    difficulty: 3, time_intensity: 3,
+    attendance_type: '',
+    credits: '', semester: '', faculty: '', year: '', note: '',
   })
 
   const set = (k: keyof typeof form, v: string | number | boolean) =>
@@ -97,10 +140,9 @@ export function SubjectProposalForm({ userId }: SubjectProposalFormProps) {
       description: form.description || undefined, target_audience: form.target_audience || undefined,
       real_requirements: form.real_requirements || undefined,
       difficulty: form.difficulty, time_intensity: form.time_intensity,
-      attendance_required: form.attendance_required,
+      attendance_type: form.attendance_type || undefined,
       credits: form.credits ? Number(form.credits) : undefined,
       semester: form.semester || undefined, faculty: form.faculty || undefined,
-      department: form.department || undefined,
       year: form.year ? Number(form.year) : undefined,
     }
 
@@ -160,10 +202,12 @@ export function SubjectProposalForm({ userId }: SubjectProposalFormProps) {
 
       {/* Data předmětu */}
       <div className="glass-card p-6 space-y-4">
-        <h2 className="font-semibold text-foreground">
-          {type === 'new' ? 'Informace o předmětu' : 'Nové/opravené informace'}
-        </h2>
-        <p className="text-xs text-muted-foreground">{type === 'edit' ? 'Vyplň jen pole, která chceš změnit.' : 'Vyplň co nejvíce informací.'}</p>
+        <div>
+          <h2 className="font-semibold text-foreground">
+            {type === 'new' ? 'Informace o předmětu' : 'Nové/opravené informace'}
+          </h2>
+          <p className="text-xs text-muted-foreground mt-0.5">{type === 'edit' ? 'Vyplň jen pole, která chceš změnit.' : 'Vyplň co nejvíce informací.'}</p>
+        </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
@@ -178,17 +222,32 @@ export function SubjectProposalForm({ userId }: SubjectProposalFormProps) {
 
         <div>
           <FieldLabel>Popis předmětu</FieldLabel>
-          <Textarea placeholder="O čem předmět je..." rows={3} value={form.description} onChange={(e) => set('description', e.target.value)} />
+          <Textarea
+            rows={4}
+            value={form.description}
+            onChange={(e) => set('description', e.target.value)}
+            hint="Každý řádek začíná pomlčkou (-). Dodržuj formát šablony výše."
+          />
         </div>
 
         <div>
           <FieldLabel>Pro koho je předmět</FieldLabel>
-          <Textarea placeholder="Cílová skupina studentů..." rows={2} value={form.target_audience} onChange={(e) => set('target_audience', e.target.value)} />
+          <Textarea
+            rows={3}
+            value={form.target_audience}
+            onChange={(e) => set('target_audience', e.target.value)}
+            hint="Popiš, kdo z předmětu nejvíce získá a kdo ho naopak nemusí chodit."
+          />
         </div>
 
         <div>
           <FieldLabel>Reálné požadavky (zkušenosti studentů)</FieldLabel>
-          <Textarea placeholder="Co ve skutečnosti potřebuješ zvládnout..." rows={3} value={form.real_requirements} onChange={(e) => set('real_requirements', e.target.value)} />
+          <Textarea
+            rows={3}
+            value={form.real_requirements}
+            onChange={(e) => set('real_requirements', e.target.value)}
+            hint="Co ve skutečnosti potřebuješ — ne co píše syllabus."
+          />
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
@@ -213,28 +272,25 @@ export function SubjectProposalForm({ userId }: SubjectProposalFormProps) {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div>
             <FieldLabel>Semestr</FieldLabel>
-            <select value={form.semester} onChange={(e) => set('semester', e.target.value)}
-              className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:ring-1 focus:ring-primary/40 focus:border-primary/40 transition-all">
+            <Select value={form.semester} onChange={(e) => set('semester', e.target.value)}>
               <option value="">– vybrat –</option>
               {SEMESTER_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-            </select>
+            </Select>
           </div>
           <div>
             <FieldLabel>Fakulta</FieldLabel>
-            <Input placeholder="PřF" value={form.faculty} onChange={(e) => set('faculty', e.target.value)} />
+            <Select value={form.faculty} onChange={(e) => set('faculty', e.target.value)}>
+              <option value="">– vybrat –</option>
+              {FACULTY_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+            </Select>
           </div>
           <div>
-            <FieldLabel>Katedra</FieldLabel>
-            <Input placeholder="KI" value={form.department} onChange={(e) => set('department', e.target.value)} />
+            <FieldLabel>Docházka</FieldLabel>
+            <Select value={form.attendance_type} onChange={(e) => set('attendance_type', e.target.value)}>
+              <option value="">– vybrat –</option>
+              {ATTENDANCE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+            </Select>
           </div>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <button type="button" onClick={() => set('attendance_required', !form.attendance_required)}
-            className={`relative w-10 h-5 rounded-full transition-colors ${form.attendance_required ? 'accent-gradient' : 'bg-muted'}`}>
-            <span className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${form.attendance_required ? 'translate-x-5' : ''}`} />
-          </button>
-          <span className="text-sm text-foreground">Povinná docházka</span>
         </div>
       </div>
 

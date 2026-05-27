@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/layout/theme-provider";
+import { SoundProvider } from "@/components/layout/sound-provider";
 import { Navbar } from "@/components/layout/navbar";
 
 const inter = Inter({
@@ -47,8 +48,10 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange={false}
         >
-          <Navbar />
-          <main className="flex-1">{children}</main>
+          <SoundProvider>
+            <Navbar />
+            <main className="flex-1">{children}</main>
+          </SoundProvider>
         </ThemeProvider>
       </body>
     </html>

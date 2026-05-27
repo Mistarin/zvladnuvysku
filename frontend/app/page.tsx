@@ -63,8 +63,6 @@ export default function HomePage() {
 
   return (
     <div className="relative overflow-hidden">
-      {/* Universal noise overlay to eliminate banding on the glow aura and create a premium film-grain effect */}
-      <div className="home-noise-overlay" aria-hidden="true" />
 
       {/* Hero — fullscreen centered */}
       <section className="home-hero">

@@ -217,18 +217,7 @@
     opacity: 0.12;
   }
 
-  .home-noise-overlay {
-    position: absolute;
-    inset: -100%;
-    z-index: 0;
-    pointer-events: none;
-    opacity: 0.01;
-    mix-blend-mode: overlay;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
-  }
-  .dark .home-noise-overlay {
-    opacity: 0.012;
-  }
+
 
   /* Hero section — full viewport, content shifted slightly above center */
   .home-hero {
@@ -302,9 +291,10 @@
     box-shadow: 0 0 0 1px #374151, 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -4px rgba(0, 0, 0, 0.3) !important;
   }
 
-  /* Disable transitions on the search bar container and children to prevent focus background flashing */
-  .search-bar-container,
-  .search-bar-container * {
+  /* Only suppress transitions on the input itself (prevents focus flash),
+     not on the container (which needs bg-color transition for theme switching) */
+  .search-bar-container input,
+  .search-bar-container button {
     transition: none !important;
   }
 

@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { ProposalCard, type SubjectProposal } from '@/components/subject/proposal-card'
 import { ShieldAlert, ClipboardList } from 'lucide-react'
+import Link from 'next/link'
 
 export const metadata: Metadata = {
   title: 'Admin panel',
@@ -84,9 +85,16 @@ export default async function AdminPage() {
           <ClipboardList className="w-6 h-6 text-primary" />
           <h1 className="text-2xl font-bold text-foreground">Admin panel</h1>
         </div>
-        <p className="text-muted-foreground text-sm">
-          Čekající návrhy předmětů ke schválení
-        </p>
+      </div>
+
+      {/* Tab navigation */}
+      <div className="flex gap-2 border-b border-border">
+        <span className="px-4 py-2 text-sm font-semibold text-primary border-b-2 border-primary -mb-px">
+          Čekající návrhy
+        </span>
+        <Link href="/admin/subjects" className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
+          Správa předmětů
+        </Link>
       </div>
 
       {proposalsWithEmail.length === 0 ? (

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { ThemeToggle } from "./theme-toggle";
+import { SettingsMenu } from "./settings-menu";
 import { createClient } from "@/lib/supabase/client";
 import { useEffect, useState } from "react";
 import type { User } from "@supabase/supabase-js";
@@ -124,7 +124,7 @@ export function Navbar() {
             )}
 
             <div className="ml-1">
-              <ThemeToggle />
+              <SettingsMenu />
             </div>
 
             {user ? (
@@ -152,6 +152,20 @@ export function Navbar() {
                         <p className="text-xs text-muted-foreground truncate">{user.email}</p>
                       </div>
                       <div className="p-1">
+                        {(() => {
+                          const role =
+                            (user.app_metadata?.role as string | undefined) ??
+                            (user.user_metadata?.role as string | undefined);
+                          return (role === 'admin' || role === 'moderator') ? (
+                            <Link
+                              href="/admin"
+                              onClick={() => setMenuOpen(false)}
+                              className="w-full text-left px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors flex items-center gap-2"
+                            >
+                              <span>🛡️</span> Administrace
+                            </Link>
+                          ) : null;
+                        })()}
                         <button
                           onClick={handleSignOut}
                           className="w-full text-left px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"

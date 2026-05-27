@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import type { SubjectWithStats } from '@/lib/types/database'
 
 export interface SubjectFilters {
+  query?: string
   difficulty?: number[]
   timeIntensity?: number[]
   attendanceRequired?: boolean | null
@@ -53,6 +54,10 @@ export function useSubjects(
         .select('*', { count: 'exact' })
 
       // Filtrace
+      if (filters.query?.trim()) {
+        const q = `%${filters.query.trim()}%`
+        query = query.or(`name.ilike.${q},short_tag.ilike.${q}`)
+      }
       if (filters.difficulty?.length) {
         query = query.in('difficulty', filters.difficulty)
       }

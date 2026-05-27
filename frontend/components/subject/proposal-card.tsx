@@ -21,8 +21,8 @@ const FIELD_LABELS: Record<string, string> = {
   name: 'Název', short_tag: 'Zkratka', description: 'Popis',
   target_audience: 'Pro koho', real_requirements: 'Reálné požadavky',
   difficulty: 'Obtížnost', time_intensity: 'Časová náročnost',
-  attendance_required: 'Povinná docházka', credits: 'Kredity',
-  semester: 'Semestr', faculty: 'Fakulta', department: 'Katedra', year: 'Ročník',
+  attendance_required: 'Povinná docházka', attendance_type: 'Docházka',
+  credits: 'Kredity', semester: 'Semestr', faculty: 'Fakulta', year: 'Ročník',
 }
 
 interface ProposalCardProps {
@@ -34,16 +34,32 @@ export function ProposalCard({ proposal, currentSubjectData }: ProposalCardProps
   const [isPending, setIsPending] = useState(false)
   const [rejectReason, setRejectReason] = useState('')
   const [showReject, setShowReject] = useState(false)
+  const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
+  const [done, setDone] = useState(false)
 
   const handleApprove = async () => {
     setIsPending(true)
-    await approveProposal(proposal.id)
+    setFeedback(null)
+    const result = await approveProposal(proposal.id)
+    if (result.success) {
+      setFeedback({ type: 'success', message: 'Návrh byl schválen ✓' })
+      setDone(true)
+    } else {
+      setFeedback({ type: 'error', message: result.error })
+    }
     setIsPending(false)
   }
 
   const handleReject = async () => {
     setIsPending(true)
-    await rejectProposal(proposal.id, rejectReason || undefined)
+    setFeedback(null)
+    const result = await rejectProposal(proposal.id, rejectReason || undefined)
+    if (result.success) {
+      setFeedback({ type: 'success', message: 'Návrh byl zamítnut' })
+      setDone(true)
+    } else {
+      setFeedback({ type: 'error', message: result.error })
+    }
     setIsPending(false)
     setShowReject(false)
   }
@@ -51,6 +67,15 @@ export function ProposalCard({ proposal, currentSubjectData }: ProposalCardProps
   const formattedDate = new Date(proposal.created_at).toLocaleDateString('cs-CZ', {
     day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit',
   })
+
+  if (done && feedback?.type === 'success') {
+    return (
+      <div className="glass-card p-4 flex items-center gap-3 text-sm text-muted-foreground border border-border/50 opacity-60">
+        <CheckCircle className="w-4 h-4 text-emerald-500 shrink-0" />
+        <span>{feedback.message} — <span className="font-medium">{String(proposal.data.name ?? proposal.id)}</span></span>
+      </div>
+    )
+  }
 
   return (
     <div className="glass-card p-6 space-y-5">
@@ -101,11 +126,22 @@ export function ProposalCard({ proposal, currentSubjectData }: ProposalCardProps
         </div>
       )}
 
+      {/* Feedback banner */}
+      {feedback && (
+        <div className={`rounded-lg px-3 py-2.5 text-sm font-medium ${
+          feedback.type === 'success'
+            ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20'
+            : 'bg-destructive/10 text-destructive border border-destructive/20'
+        }`}>
+          {feedback.message}
+        </div>
+      )}
+
       {/* Actions */}
       <div className="flex flex-wrap gap-3 pt-2 border-t border-border">
         <button onClick={handleApprove} disabled={isPending}
           className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium accent-gradient text-white hover:opacity-90 transition-all disabled:opacity-50">
-          <CheckCircle className="w-4 h-4" /> Schválit
+          <CheckCircle className="w-4 h-4" /> {isPending ? 'Zpracovávám…' : 'Schválit'}
         </button>
 
         {showReject ? (

@@ -102,6 +102,7 @@ export function useSubjectFilters(): UseSubjectFiltersReturn {
 
   // Parsování filtrů z URL
   const filters: SubjectFilters = useMemo(() => ({
+    query: searchParams.get('q') ?? undefined,
     difficulty: parseNumberArray(searchParams.get('difficulty')),
     timeIntensity: parseNumberArray(searchParams.get('time_intensity')),
     semester: parseStringArray(searchParams.get('semester')),
@@ -127,6 +128,7 @@ export function useSubjectFilters(): UseSubjectFiltersReturn {
     const params = new URLSearchParams(searchParams.toString())
 
     const paramMap: Partial<Record<keyof SubjectFilters, string>> = {
+      query: 'q',
       difficulty: 'difficulty',
       timeIntensity: 'time_intensity',
       semester: 'semester',
