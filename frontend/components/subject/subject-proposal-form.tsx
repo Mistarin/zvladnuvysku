@@ -36,8 +36,6 @@ const FACULTY_OPTIONS = [
   { value: 'LF', label: 'LF — Lékařská fakulta' },
   { value: 'FSS', label: 'FSS — Fakulta sociálních studií' },
   { value: 'FU', label: 'FU — Fakulta umění' },
-  { value: 'EkF', label: 'EkF — Ekonomická fakulta' },
-  { value: 'FBI', label: 'FBI — Fakulta bezpečnostního inženýrství' },
 ]
 
 const ATTENDANCE_OPTIONS = [
