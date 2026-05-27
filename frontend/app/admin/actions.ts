@@ -66,7 +66,8 @@ export async function approveProposal(proposalId: string): Promise<ActionResult>
       const { error: insertError } = await supabase.from('subjects').insert(insertData as never)
       if (insertError) return { success: false, error: `Chyba při vkládání: ${insertError.message}` }
     } else if (proposal.type === 'edit' && proposal.subject_id) {
-      const { error: updateError } = await supabase.from('subjects').update(proposal.data as never).eq('id', proposal.subject_id)
+      const updateData = { ...proposal.data } as Record<string, any>
+      const { error: updateError } = await supabase.from('subjects').update(updateData as never).eq('id', proposal.subject_id)
       if (updateError) return { success: false, error: `Chyba při úpravě: ${updateError.message}` }
     }
 

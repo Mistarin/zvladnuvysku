@@ -50,9 +50,15 @@ export const FILTER_CONFIG: FilterConfig[] = [
     ],
   },
   {
-    key: 'attendanceRequired',
-    label: 'Povinná docházka',
-    type: 'boolean',
+    key: 'attendanceType',
+    label: 'Docházka',
+    type: 'multiselect',
+    options: [
+      { value: 'volná', label: 'Volná' },
+      { value: 'povinná', label: 'Povinná (vše)' },
+      { value: 'povinné přednášky', label: 'Povinné přednášky' },
+      { value: 'povinná cvičení', label: 'Povinná cvičení' },
+    ],
   },
   {
     key: 'year',
@@ -106,14 +112,11 @@ export function useSubjectFilters(): UseSubjectFiltersReturn {
     difficulty: parseNumberArray(searchParams.get('difficulty')),
     timeIntensity: parseNumberArray(searchParams.get('time_intensity')),
     semester: parseStringArray(searchParams.get('semester')),
-    attendanceRequired: searchParams.get('attendance') === 'true'
-      ? true
-      : searchParams.get('attendance') === 'false'
-      ? false
-      : null,
+    attendanceType: parseStringArray(searchParams.get('attendance')),
     year: parseNumberArray(searchParams.get('year')),
     creditsMin: searchParams.get('credits_min') ? Number(searchParams.get('credits_min')) : undefined,
     creditsMax: searchParams.get('credits_max') ? Number(searchParams.get('credits_max')) : undefined,
+    faculty: searchParams.get('faculty') ?? undefined,
   }), [searchParams])
 
   const sort: SortConfig = useMemo(() => ({
@@ -132,10 +135,11 @@ export function useSubjectFilters(): UseSubjectFiltersReturn {
       difficulty: 'difficulty',
       timeIntensity: 'time_intensity',
       semester: 'semester',
-      attendanceRequired: 'attendance',
+      attendanceType: 'attendance',
       year: 'year',
       creditsMin: 'credits_min',
       creditsMax: 'credits_max',
+      faculty: 'faculty',
     }
 
     const paramKey = paramMap[key]
@@ -158,6 +162,7 @@ export function useSubjectFilters(): UseSubjectFiltersReturn {
     const params = new URLSearchParams()
     if (searchParams.get('sort_by')) params.set('sort_by', searchParams.get('sort_by')!)
     if (searchParams.get('sort_dir')) params.set('sort_dir', searchParams.get('sort_dir')!)
+    if (searchParams.get('faculty')) params.set('faculty', searchParams.get('faculty')!)
     router.push(`${pathname}?${params.toString()}`)
   }, [router, pathname, searchParams])
 
@@ -175,7 +180,7 @@ export function useSubjectFilters(): UseSubjectFiltersReturn {
     if (filters.difficulty?.length) count++
     if (filters.timeIntensity?.length) count++
     if (filters.semester?.length) count++
-    if (filters.attendanceRequired !== null && filters.attendanceRequired !== undefined) count++
+    if (filters.attendanceType?.length) count++
     if (filters.year?.length) count++
     if (filters.creditsMin !== undefined) count++
     if (filters.creditsMax !== undefined) count++

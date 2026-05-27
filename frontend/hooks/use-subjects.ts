@@ -8,11 +8,11 @@ export interface SubjectFilters {
   query?: string
   difficulty?: number[]
   timeIntensity?: number[]
-  attendanceRequired?: boolean | null
+  attendanceType?: string[]
   semester?: string[]
   creditsMin?: number
   creditsMax?: number
-  faculty?: string[]
+  faculty?: string
   department?: string[]
   year?: number[]
 }
@@ -64,8 +64,8 @@ export function useSubjects(
       if (filters.timeIntensity?.length) {
         query = query.in('time_intensity', filters.timeIntensity)
       }
-      if (filters.attendanceRequired !== null && filters.attendanceRequired !== undefined) {
-        query = query.eq('attendance_required', filters.attendanceRequired)
+      if (filters.attendanceType?.length) {
+        query = query.in('attendance_type', filters.attendanceType)
       }
       if (filters.semester?.length) {
         query = query.in('semester', filters.semester)
@@ -76,8 +76,8 @@ export function useSubjects(
       if (filters.creditsMax !== undefined) {
         query = query.lte('credits', filters.creditsMax)
       }
-      if (filters.faculty?.length) {
-        query = query.in('faculty', filters.faculty)
+      if (filters.faculty) {
+        query = query.eq('faculty', filters.faculty)
       }
       if (filters.year?.length) {
         query = query.in('year', filters.year)

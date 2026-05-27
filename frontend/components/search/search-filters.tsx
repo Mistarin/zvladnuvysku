@@ -137,34 +137,7 @@ export function SearchFilters({
                   </div>
                 )}
 
-                {config.type === "boolean" && (
-                  <div className="flex flex-col gap-1">
-                    {[
-                      { value: true, label: "✓ Povinná" },
-                      { value: false, label: "✗ Volitelná" },
-                    ].map((opt) => (
-                      <button
-                        key={String(opt.value)}
-                        onClick={() => {
-                          if (filters[config.key] === opt.value) {
-                            onFilterChange(config.key, null as SubjectFilters[typeof config.key]);
-                          } else {
-                            onFilterChange(config.key, opt.value as SubjectFilters[typeof config.key]);
-                          }
-                        }}
-                        className={`
-                          text-xs px-2.5 py-1 rounded-lg border transition-all duration-100 text-left
-                          ${filters[config.key] === opt.value
-                            ? "bg-primary text-primary-foreground border-primary"
-                            : "bg-background text-foreground border-border hover:border-primary/50"
-                          }
-                        `}
-                      >
-                        {opt.label}
-                      </button>
-                    ))}
-                  </div>
-                )}
+
               </div>
             ))}
           </div>

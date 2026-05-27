@@ -153,14 +153,27 @@ export default async function PredmetDetailPage({ params }: PageProps) {
             }
           />
         )}
-        <StatCard
-          label="Docházka"
-          value={subject.attendance_required ? "Povinná" : "Volitelná"}
-          icon={subject.attendance_required ? "📋" : "✅"}
-          valueClass={
-            subject.attendance_required ? "text-orange-500" : "text-emerald-500"
-          }
-        />
+        {(() => {
+          const type = subject.attendance_type;
+          if (!type) return null;
+          let text = type;
+          let icon = "📋";
+          let color = "text-muted-foreground";
+
+          if (type === "volná") { text = "Volná"; icon = "🟢"; color = "text-emerald-500"; }
+          else if (type === "povinná") { text = "Povinná (vše)"; icon = "🔴"; color = "text-red-500"; }
+          else if (type === "povinné přednášky") { text = "Přednášky"; icon = "🟠"; color = "text-orange-500"; }
+          else if (type === "povinná cvičení") { text = "Cvičení"; icon = "🟡"; color = "text-yellow-500"; }
+
+          return (
+            <StatCard
+              label="Docházka"
+              value={text}
+              icon={icon}
+              valueClass={color}
+            />
+          );
+        })()}
         {subject.year && (
           <StatCard
             label="Doporučený ročník"

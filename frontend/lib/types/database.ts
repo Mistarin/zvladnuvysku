@@ -20,7 +20,7 @@ export interface Database {
           real_requirements: string | null
           difficulty: number | null
           time_intensity: number | null
-          attendance_required: boolean
+          attendance_type: string | null
           credits: number | null
           semester: 'zimní' | 'letní' | 'oba' | null
           faculty: string | null

@@ -4,13 +4,19 @@ import { redirect } from 'next/navigation'
 import { ProposalCard, type SubjectProposal } from '@/components/subject/proposal-card'
 import { ShieldAlert, ClipboardList } from 'lucide-react'
 import Link from 'next/link'
+import { FacultyFilter } from '@/components/admin/faculty-filter'
 
 export const metadata: Metadata = {
   title: 'Admin panel',
   description: 'Správa návrhů předmětů.',
 }
 
-export default async function AdminPage() {
+export default async function AdminPage(props: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+}) {
+  const searchParams = await props.searchParams
+  const facultyFilter = searchParams.faculty as string | undefined
+
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
@@ -38,8 +44,7 @@ export default async function AdminPage() {
   }
 
   // Fetch pending proposals
-  // NOTE: subject_proposals table must exist in Supabase. See SQL in subject-proposal-form.tsx
-  const { data: rawProposals } = await (supabase as unknown as {
+  let query = (supabase as unknown as {
     from: (t: string) => {
       select: (s: string) => {
         eq: (k: string, v: string) => {
@@ -51,9 +56,18 @@ export default async function AdminPage() {
     .from('subject_proposals')
     .select('*')
     .eq('status', 'pending')
-    .order('created_at', { ascending: true })
 
-  const proposals = (rawProposals ?? []) as SubjectProposal[]
+  const { data: rawProposals } = await query.order('created_at', { ascending: true })
+
+  let proposals = (rawProposals ?? []) as SubjectProposal[]
+
+  // Filter by faculty if selected
+  if (facultyFilter) {
+    proposals = proposals.filter((p) => {
+      const data = p.data as any
+      return data.faculty === facultyFilter
+    })
+  }
 
   // For 'edit' proposals, fetch current subject data to show diff
   const subjectIds = proposals
@@ -72,7 +86,6 @@ export default async function AdminPage() {
   )
 
   // Fetch proposer emails from profiles (best effort — may not be available with anon key)
-  // Emails are attached directly since auth.users is not accessible from the client
   const proposalsWithEmail = proposals.map((p) => ({
     ...p,
     proposed_by_email: undefined as string | undefined,
@@ -96,6 +109,8 @@ export default async function AdminPage() {
           Správa předmětů
         </Link>
       </div>
+      
+      <FacultyFilter />
 
       {proposalsWithEmail.length === 0 ? (
         <div className="glass-card p-12 text-center space-y-3">

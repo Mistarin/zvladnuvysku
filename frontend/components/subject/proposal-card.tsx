@@ -21,7 +21,7 @@ const FIELD_LABELS: Record<string, string> = {
   name: 'Název', short_tag: 'Zkratka', description: 'Popis',
   target_audience: 'Pro koho', real_requirements: 'Reálné požadavky',
   difficulty: 'Obtížnost', time_intensity: 'Časová náročnost',
-  attendance_required: 'Povinná docházka', attendance_type: 'Docházka',
+  attendance_type: 'Docházka',
   credits: 'Kredity', semester: 'Semestr', faculty: 'Fakulta', year: 'Ročník',
 }
 

@@ -40,9 +40,9 @@ const FACULTY_OPTIONS = [
 
 const ATTENDANCE_OPTIONS = [
   { value: 'volná', label: '🟢 Volná docházka' },
-  { value: 'povinná', label: '🔴 Povinná docházka' },
-  { value: 'povinné_přednášky', label: '🟠 Povinné přednášky' },
-  { value: 'povinné_cvičení', label: '🟡 Povinné cvičení' },
+  { value: 'povinná', label: '🔴 Povinná (vše)' },
+  { value: 'povinné přednášky', label: '🟠 Povinné přednášky' },
+  { value: 'povinná cvičení', label: '🟡 Povinná cvičení' },
 ]
 
 const DESCRIPTION_TEMPLATE = `- Předmět se zabývá...

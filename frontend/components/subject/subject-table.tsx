@@ -24,7 +24,7 @@ const COLUMNS: {
   { key: "difficulty", label: "Obtížnost", sortable: true, className: "text-center" },
   { key: "time_intensity", label: "Náročnost", sortable: true, className: "hidden lg:table-cell text-center" },
   { key: "semester", label: "Semestr", sortable: true, className: "hidden md:table-cell" },
-  { key: "attendance_required", label: "Docházka", sortable: false, className: "hidden lg:table-cell text-center" },
+  { key: "attendance_type", label: "Docházka", sortable: false, className: "hidden lg:table-cell text-center" },
 ];
 
 const SEMESTER_LABELS: Record<string, string> = {
@@ -50,6 +50,17 @@ function TableSkeleton() {
       ))}
     </>
   );
+}
+const ATTENDANCE_STYLES: Record<string, { text: string; bg: string }> = {
+  volná: { text: "Volná", bg: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" },
+  povinná: { text: "Povinná (vše)", bg: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400" },
+  "povinné přednášky": { text: "Přednášky", bg: "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400" },
+  "povinná cvičení": { text: "Cvičení", bg: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400" },
+};
+
+function getAttendanceData(type: string | null | undefined) {
+  if (!type) return { text: "—", bg: "bg-muted text-muted-foreground" };
+  return ATTENDANCE_STYLES[type] || { text: type, bg: "bg-muted text-muted-foreground" };
 }
 
 export function SubjectTable({
@@ -122,97 +133,89 @@ export function SubjectTable({
               </td>
             </tr>
           ) : (
-            subjects.map((subject, idx) => (
-              <tr
-                key={subject.id}
-                className={`
-                  table-row-hover border-b border-border/50 last:border-0
-                  ${idx % 2 === 0 ? "" : "bg-muted/20"}
-                `}
-              >
-                {/* Název */}
-                <td className="px-4 py-3">
-                  <Link
-                    href={`/predmety/${subject.slug}`}
-                    className="font-medium text-foreground hover:text-primary transition-colors line-clamp-1"
-                  >
-                    {subject.name}
-                  </Link>
-                  {subject.department && (
-                    <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">
-                      {subject.department}
-                    </p>
-                  )}
-                </td>
+            subjects.map((subject, idx) => {
+              const attendance = getAttendanceData(subject.attendance_type);
+              return (
+                <tr
+                  key={subject.id}
+                  className={`
+                    table-row-hover border-b border-border/50 last:border-0
+                    ${idx % 2 === 0 ? "" : "bg-muted/20"}
+                  `}
+                >
+                  <td className="px-4 py-3">
+                    <Link
+                      href={`/predmety/${subject.slug}`}
+                      className="font-medium text-foreground hover:text-primary transition-colors line-clamp-1"
+                    >
+                      {subject.name}
+                    </Link>
+                    {subject.department && (
+                      <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">
+                        {subject.department}
+                      </p>
+                    )}
+                  </td>
 
-                {/* Zkratka */}
-                <td className="px-4 py-3 hidden sm:table-cell">
-                  <span className="font-mono text-xs font-semibold text-primary/80 bg-primary/10 px-1.5 py-0.5 rounded">
-                    {subject.short_tag}
-                  </span>
-                </td>
+                  <td className="px-4 py-3 hidden sm:table-cell">
+                    <span className="font-mono text-xs font-semibold text-primary/80 bg-primary/10 px-1.5 py-0.5 rounded">
+                      {subject.short_tag}
+                    </span>
+                  </td>
 
-                {/* Kredity */}
-                <td className="px-4 py-3 text-center hidden md:table-cell">
-                  {subject.credits ? (
-                    <span className="text-sm font-medium">{subject.credits}</span>
-                  ) : (
-                    <span className="text-muted-foreground">—</span>
-                  )}
-                </td>
+                  <td className="px-4 py-3 text-center hidden md:table-cell">
+                    {subject.credits ? (
+                      <span className="text-sm font-medium">{subject.credits}</span>
+                    ) : (
+                      <span className="text-muted-foreground">—</span>
+                    )}
+                  </td>
 
-                {/* Obtížnost */}
-                <td className="px-4 py-3 text-center">
-                  {subject.difficulty ? (
-                    <DifficultyBadge difficulty={subject.difficulty} />
-                  ) : (
-                    <span className="text-muted-foreground text-sm">—</span>
-                  )}
-                </td>
+                  <td className="px-4 py-3 text-center">
+                    {subject.difficulty ? (
+                      <DifficultyBadge difficulty={subject.difficulty} />
+                    ) : (
+                      <span className="text-muted-foreground text-sm">—</span>
+                    )}
+                  </td>
 
-                {/* Časová náročnost */}
-                <td className="px-4 py-3 text-center hidden lg:table-cell">
-                  {subject.time_intensity ? (
-                    <div className="flex items-center justify-center gap-0.5">
-                      {Array.from({ length: 5 }).map((_, i) => (
-                        <div
-                          key={i}
-                          className={`w-1.5 h-4 rounded-sm ${
-                            i < subject.time_intensity!
-                              ? "bg-primary"
-                              : "bg-muted"
-                          }`}
-                        />
-                      ))}
-                    </div>
-                  ) : (
-                    <span className="text-muted-foreground">—</span>
-                  )}
-                </td>
+                  <td className="px-4 py-3 text-center hidden lg:table-cell">
+                    {subject.time_intensity ? (
+                      <div className="flex items-center justify-center gap-0.5">
+                        {Array.from({ length: 5 }).map((_, i) => (
+                          <div
+                            key={i}
+                            className={`w-1.5 h-4 rounded-sm ${
+                              i < subject.time_intensity!
+                                ? "bg-primary"
+                                : "bg-muted"
+                            }`}
+                          />
+                        ))}
+                      </div>
+                    ) : (
+                      <span className="text-muted-foreground">—</span>
+                    )}
+                  </td>
 
-                {/* Semestr */}
-                <td className="px-4 py-3 hidden md:table-cell">
-                  <span className="text-sm text-muted-foreground">
-                    {subject.semester
-                      ? SEMESTER_LABELS[subject.semester] || subject.semester
-                      : "—"}
-                  </span>
-                </td>
+                  <td className="px-4 py-3 hidden md:table-cell">
+                    <span className="text-sm text-muted-foreground">
+                      {subject.semester
+                        ? SEMESTER_LABELS[subject.semester] || subject.semester
+                        : "—"}
+                    </span>
+                  </td>
 
-                {/* Docházka */}
-                <td className="px-4 py-3 text-center hidden lg:table-cell">
-                  <span
-                    className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-                      subject.attendance_required
-                        ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
-                        : "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
-                    }`}
-                  >
-                    {subject.attendance_required ? "Povinná" : "Volitelná"}
-                  </span>
-                </td>
-              </tr>
-            ))
+                  <td className="px-4 py-3 text-center hidden lg:table-cell">
+                    <span
+                      className={`text-xs font-medium px-2 py-0.5 rounded-full ${attendance.bg}`}
+                    >
+                      {attendance.text}
+                    </span>
+                  </td>
+                </tr>
+              );
+            })
           )}
         </tbody>
       </table>

@@ -3,6 +3,7 @@
 import { Suspense } from "react";
 import { SubjectTable } from "@/components/subject/subject-table";
 import { SearchFilters } from "@/components/search/search-filters";
+import { FacultyFilter } from "@/components/admin/faculty-filter";
 import { useSubjects } from "@/hooks/use-subjects";
 import { useSubjectFilters } from "@/hooks/use-subject-filters";
 
@@ -26,6 +27,8 @@ function SubjectsContent() {
 
   return (
     <div className="space-y-6">
+      <FacultyFilter />
+      
       {/* Filters */}
       <SearchFilters
         filters={filters}
