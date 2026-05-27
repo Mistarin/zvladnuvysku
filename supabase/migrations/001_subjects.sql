@@ -35,8 +35,12 @@ CREATE POLICY "Veřejné čtení předmětů"
 
 CREATE POLICY "Moderátor může upravovat"
   ON subjects FOR ALL TO authenticated
-  USING (true) WITH CHECK (true);
-  -- Poznámka: v produkci přidej role check (is_moderator)
+  USING (
+    (auth.jwt() -> 'app_metadata' ->> 'role') IN ('admin', 'moderator')
+  )
+  WITH CHECK (
+    (auth.jwt() -> 'app_metadata' ->> 'role') IN ('admin', 'moderator')
+  );
 
 -- Tagy předmětů (pro rozšířené filtrování)
 CREATE TABLE subject_tags (

@@ -3,7 +3,7 @@ import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import type { Database } from '@/lib/types/database'
 
-const ALLOWED_DOMAIN = '@osu.cz'
+const ALLOWED_DOMAIN = 'osu.cz'
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
@@ -37,9 +37,10 @@ export async function GET(request: Request) {
     return NextResponse.redirect(`${origin}/auth/error?reason=exchange_failed`)
   }
 
-  // Ověření @osu.cz domény
+  // Ověření @osu.cz domény — split na @ aby se zabránilo bypass přes fake-osu.cz
   const email = data.user.email ?? ''
-  if (!email.endsWith(ALLOWED_DOMAIN)) {
+  const emailDomain = email.split('@')[1]?.toLowerCase()
+  if (emailDomain !== ALLOWED_DOMAIN) {
     // Odhlásíme uživatele — session nesmí zůstat
     await supabase.auth.signOut()
     return NextResponse.redirect(
