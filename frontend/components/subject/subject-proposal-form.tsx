@@ -214,7 +214,7 @@ export function SubjectProposalForm({ userId }: SubjectProposalFormProps) {
           </div>
           <div>
             <FieldLabel required={type === 'new'}>Zkratka (short_tag)</FieldLabel>
-            <Input placeholder="KI/ALG1" value={form.short_tag} onChange={(e) => set('short_tag', e.target.value)} />
+            <Input placeholder="ALG1" value={form.short_tag} onChange={(e) => set('short_tag', e.target.value)} />
           </div>
         </div>
 
