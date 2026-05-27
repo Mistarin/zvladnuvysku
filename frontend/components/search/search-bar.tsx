@@ -50,7 +50,7 @@ export function SearchBar({
       className={`
         relative flex items-center w-full
         bg-card border rounded-2xl
-        transition-shadow duration-200
+        transition-all duration-200
         search-bar-container
         ${
           isFocused

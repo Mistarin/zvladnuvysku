@@ -66,15 +66,36 @@ export default function HomePage() {
 
       {/* Hero — fullscreen centered */}
       <section className="home-hero">
-        {/* Headline */}
-        <div
-          className={`home-headline ${isFocused ? "home-headline--hidden" : ""}`}
-          aria-hidden={isFocused}
-        >
-          <h1 className="home-title">
-            Najdi svůj{" "}
-            <span className="home-title-accent">předmět</span>
-          </h1>
+        {/* Headlines */}
+        <div className="relative w-full mb-8 flex justify-center pointer-events-none select-none">
+          {/* Main Title (Maintains DOM height) */}
+          <div
+            className={`transition-all ease-out text-center ${
+              isFocused 
+                ? "opacity-0 translate-y-4 duration-150 delay-0" 
+                : "opacity-100 translate-y-0 duration-300 delay-150"
+            }`}
+            aria-hidden={isFocused}
+          >
+            <h1 className="home-title whitespace-nowrap">
+              Najdi svůj{" "}
+              <span className="home-title-accent">předmět</span>
+            </h1>
+          </div>
+
+          {/* Alternative Hint (Absolute, centered over main title) */}
+          <div
+            className={`absolute inset-0 flex items-center justify-center transition-all ease-out ${
+              isFocused 
+                ? "opacity-100 translate-y-0 duration-300 delay-150" 
+                : "opacity-0 translate-y-4 duration-150 delay-0"
+            }`}
+            aria-hidden={!isFocused}
+          >
+            <p className="text-lg md:text-xl font-medium text-muted-foreground/80 tracking-tight px-4 whitespace-nowrap">
+              „Protože reálné zkušenosti studentů jsou víc než jen sylabus.“
+            </p>
+          </div>
         </div>
 
         {/* Search */}
@@ -93,7 +114,12 @@ export default function HomePage() {
 
           <div className="relative z-50 w-full">
             {/* The glow aura positioned literally behind the search bar */}
-            <div className="absolute -inset-4 sm:-inset-6 z-[-1] home-ambient-glow-aura" aria-hidden="true" />
+            <div 
+              className={`absolute -inset-4 sm:-inset-6 z-[-1] home-ambient-glow-aura transition-transform duration-500 ease-out ${
+                isFocused ? "scale-90" : "scale-100"
+              }`} 
+              aria-hidden="true" 
+            />
 
             <SearchBar
               query={query}
