@@ -35,7 +35,7 @@ export function SearchBar({
   
   const handleFocus = () => {
     if (isSoundEnabled) {
-      const audio = new Audio('/sounds/swipe-confirm.mp3');
+      const audio = new Audio('/sounds/swipe-confirm2.mp3');
       audio.volume = 0.5; // default volume
       audio.play().catch(e => console.warn('Audio play failed:', e));
     }
