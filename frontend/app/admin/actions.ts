@@ -106,7 +106,10 @@ export async function rejectProposal(proposalId: string, reason?: string): Promi
       })
       .eq('id', proposalId)
 
-    if (error) return { success: false, error: 'Chyba při zamítání návrhu' }
+    if (error) {
+      console.error('Reject error:', error)
+      return { success: false, error: `Chyba při zamítání návrhu: ${(error as any).message || JSON.stringify(error)}` }
+    }
 
     revalidatePath('/admin')
     return { success: true }
