@@ -49,15 +49,17 @@ export async function updateTeacher(id: string, data: Partial<TeacherInsert>) {
     const { error } = await supabase
       .from("teachers")
       .update({
-        name: data.name,
-        slug: data.slug,
-        faculty: data.faculty,
-        department: data.department || null,
+        ...(data.name !== undefined && { name: data.name }),
+        ...(data.slug !== undefined && { slug: data.slug }),
+        ...(data.faculty !== undefined && { faculty: data.faculty }),
+        ...(data.department !== undefined && { department: data.department || null }),
+        ...(data.is_approved !== undefined && { is_approved: data.is_approved }),
       } as any)
       .eq("id", id);
 
     if (error) throw error;
     
+    revalidatePath("/admin");
     revalidatePath("/admin/ucitele");
     revalidatePath("/ucitele");
     if (data.slug) {
@@ -82,6 +84,7 @@ export async function deleteTeacher(id: string) {
 
     if (error) throw error;
     
+    revalidatePath("/admin");
     revalidatePath("/admin/ucitele");
     revalidatePath("/ucitele");
     

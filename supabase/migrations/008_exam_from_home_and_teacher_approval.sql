@@ -24,3 +24,17 @@ CREATE POLICY "Návrh učitele"
   ON teachers FOR INSERT
   TO public
   WITH CHECK (is_approved = false);
+
+-- RLS: admini a moderátoři mohou upravovat a mazat učitele
+DROP POLICY IF EXISTS "Admin úprava učitelů" ON teachers;
+CREATE POLICY "Admin úprava učitelů"
+  ON teachers FOR UPDATE
+  TO authenticated
+  USING ((auth.jwt() -> 'app_metadata' ->> 'role') IN ('admin', 'moderator'))
+  WITH CHECK ((auth.jwt() -> 'app_metadata' ->> 'role') IN ('admin', 'moderator'));
+
+DROP POLICY IF EXISTS "Admin mazání učitelů" ON teachers;
+CREATE POLICY "Admin mazání učitelů"
+  ON teachers FOR DELETE
+  TO authenticated
+  USING ((auth.jwt() -> 'app_metadata' ->> 'role') IN ('admin', 'moderator'));

@@ -14,19 +14,30 @@ interface TeacherApprovalCardProps {
 export function TeacherApprovalCard({ teacher }: TeacherApprovalCardProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const [error, setError] = useState<string | null>(null);
 
   const handleApprove = async () => {
+    setError(null);
     startTransition(async () => {
-      await updateTeacher(teacher.id, { is_approved: true });
-      router.refresh();
+      const result = await updateTeacher(teacher.id, { is_approved: true });
+      if (result.error) {
+        setError(result.error);
+      } else {
+        router.refresh();
+      }
     });
   };
 
   const handleReject = async () => {
     if (!confirm("Opravdu chcete tento návrh učitele smazat?")) return;
+    setError(null);
     startTransition(async () => {
-      await deleteTeacher(teacher.id);
-      router.refresh();
+      const result = await deleteTeacher(teacher.id);
+      if (result.error) {
+        setError(result.error);
+      } else {
+        router.refresh();
+      }
     });
   };
 
@@ -54,6 +65,9 @@ export function TeacherApprovalCard({ teacher }: TeacherApprovalCardProps) {
       </div>
 
       <div className="flex items-center gap-2 pt-2 border-t border-border">
+        {error && (
+          <p className="text-xs text-destructive w-full mb-2">{error}</p>
+        )}
         <button
           onClick={handleApprove}
           disabled={isPending}
