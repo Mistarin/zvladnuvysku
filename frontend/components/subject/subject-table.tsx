@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { DifficultyBadge } from "./difficulty-badge";
 import type { SubjectWithStats } from "@/lib/types/database";
+import { formatCredits } from "@/lib/utils";
 import type { SortConfig } from "@/hooks/use-subjects";
 
 interface SubjectTableProps {
@@ -189,7 +190,7 @@ export function SubjectTable({
 
                   <td className="px-4 py-3 text-center hidden md:table-cell">
                     {subject.credits ? (
-                      <span className="text-sm font-medium">{subject.credits}</span>
+                      <span className="text-sm font-medium">{formatCredits(subject.credits)}</span>
                     ) : (
                       <span className="text-muted-foreground">—</span>
                     )}

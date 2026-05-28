@@ -8,6 +8,7 @@ import { RatingStats } from "@/components/subject/rating-stats";
 import { MaterialUploadForm } from "@/components/subject/material-upload-form";
 import type { Subject, SubjectRatingStats } from "@/lib/types/database";
 import { BookOpen, Target, MessageSquare, Star, Users, Layers, FileText, CheckCircle2, XCircle, Clock, Calendar, Diamond } from "lucide-react";
+import { formatCredits } from "@/lib/utils";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -138,7 +139,7 @@ export default async function PredmetDetailPage({ params }: PageProps) {
 
           {subject.credits && (
             <span className="text-sm px-2.5 py-1 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 font-medium flex items-center gap-1.5">
-              <Diamond className="w-3.5 h-3.5" /> {subject.credits} kreditů
+              <Diamond className="w-3.5 h-3.5" /> {formatCredits(subject.credits)}
             </span>
           )}
 

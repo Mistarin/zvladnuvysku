@@ -6,6 +6,7 @@ import Link from "next/link";
 import { SearchBar } from "@/components/search/search-bar";
 import { SearchSuggestions } from "@/components/search/search-suggestions";
 import { useSearch } from "@/hooks/use-search";
+import { useFlashcardSearch, FLASHCARD_PREFIX } from "@/hooks/use-flashcard-search";
 
 const FEATURES = [
   {
@@ -35,6 +36,8 @@ export default function HomePage() {
   const router = useRouter();
   const [isFocused, setIsFocused] = useState(false);
   const { query, setQuery, results, isLoading, clearSearch } = useSearch();
+  const { isFlashcardMode, flashcardQuery, deckResults, isDeckLoading } =
+    useFlashcardSearch(query);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const handleFocus = useCallback(() => setIsFocused(true), []);
@@ -50,16 +53,31 @@ export default function HomePage() {
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
       if (e.key === "Enter" && query.trim()) {
-        router.push(`/predmety?q=${encodeURIComponent(query.trim())}`);
+        if (isFlashcardMode) {
+          // .F <název> → přejdi na flashcardy s hledáním
+          router.push(
+            flashcardQuery
+              ? `/flashcardy?q=${encodeURIComponent(flashcardQuery)}`
+              : "/flashcardy"
+          );
+        } else {
+          router.push(`/predmety?q=${encodeURIComponent(query.trim())}`);
+        }
         setIsFocused(false);
+        clearSearch();
       }
       if (e.key === "Escape") {
         setIsFocused(false);
         clearSearch();
       }
     },
-    [query, router, clearSearch]
+    [query, flashcardQuery, isFlashcardMode, router, clearSearch]
   );
+
+  // Placeholder se mění podle módu
+  const placeholder = isFlashcardMode
+    ? "Název balíčku…"
+    : "Předmět, zkratka, katedra…";
 
   return (
     <div className="relative overflow-hidden">
@@ -79,7 +97,9 @@ export default function HomePage() {
           >
             <h1 className="home-title whitespace-nowrap">
               Najdi svůj{" "}
-              <span className="home-title-accent">předmět</span>
+              <span className="home-title-accent">
+                {isFlashcardMode ? "balíček" : "předmět"}
+              </span>
             </h1>
           </div>
 
@@ -93,7 +113,9 @@ export default function HomePage() {
             aria-hidden={!isFocused}
           >
             <p className="text-lg md:text-xl font-medium text-muted-foreground/80 tracking-tight px-4 whitespace-nowrap">
-              „Protože reálné zkušenosti studentů jsou víc než jen sylabus.“
+              {isFlashcardMode
+                ? "Hledáš flashcard balíček? Zkus zadat název nebo předmět."
+                : `„Protože reálné zkušenosti studentů jsou víc než jen sylabus.“`}
             </p>
           </div>
         </div>
@@ -127,7 +149,7 @@ export default function HomePage() {
               onFocus={handleFocus}
               onBlur={handleBlur}
               isFocused={isFocused}
-              placeholder="Předmět, zkratka, katedra…"
+              placeholder={placeholder}
               size="large"
             />
 
@@ -137,12 +159,18 @@ export default function HomePage() {
                 isLoading={isLoading}
                 query={query}
                 onSelect={handleSelect}
+                isFlashcardMode={isFlashcardMode}
+                flashcardQuery={flashcardQuery}
+                deckResults={deckResults}
+                isDeckLoading={isDeckLoading}
               />
             )}
           </div>
 
           <p className={`home-hint ${isFocused ? "home-hint--hidden" : ""}`}>
-            Jednotný studentský hub. Proč generovat stokrát to, co už dávno existuje?
+            {isFlashcardMode
+              ? <><span className="font-mono text-primary">.F</span> režim — hledáš flashcard balíčky</>
+              : "Jednotný studentský hub. Proč generovat stokrát to, co už dávno existuje?"}
           </p>
         </div>
       </section>
