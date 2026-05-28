@@ -60,6 +60,9 @@ export async function approveProposal(proposalId: string): Promise<ActionResult>
       const teachers = insertData.teachers as { id?: string, name: string, faculty: string }[] | undefined
       delete insertData.teachers
 
+      const materials = insertData.materials as { title: string, file_path: string, size_bytes: number }[] | undefined
+      delete insertData.materials
+
       if (!insertData.slug) {
         const base = insertData.short_tag || insertData.name || 'predmet'
         insertData.slug = base.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
@@ -70,9 +73,6 @@ export async function approveProposal(proposalId: string): Promise<ActionResult>
       if (teachers && teachers.length > 0) {
         await processTeachers(supabase, (insertedSubject as any).id, teachers)
       }
-
-      const materials = insertData.materials as { title: string, file_path: string, size_bytes: number }[] | undefined
-      delete insertData.materials
 
       if (materials && materials.length > 0) {
         const materialsToInsert = materials.map(m => ({
@@ -90,15 +90,15 @@ export async function approveProposal(proposalId: string): Promise<ActionResult>
       const teachers = updateData.teachers as { id?: string, name: string, faculty: string }[] | undefined
       delete updateData.teachers
 
+      const materials = updateData.materials as { title: string, file_path: string, size_bytes: number }[] | undefined
+      delete updateData.materials
+
       const { error: updateError } = await supabase.from('subjects').update(updateData as never).eq('id', proposal.subject_id)
       if (updateError) return { success: false, error: `Chyba při úpravě: ${updateError.message}` }
 
       if (teachers && teachers.length > 0) {
         await processTeachers(supabase, proposal.subject_id, teachers)
       }
-
-      const materials = updateData.materials as { title: string, file_path: string, size_bytes: number }[] | undefined
-      delete updateData.materials
       
       if (materials && materials.length > 0) {
         const materialsToInsert = materials.map(m => ({

@@ -62,7 +62,15 @@ function EditRow({ subject, onDone }: { subject: SubjectRow; onDone: () => void 
         <input value={form.short_tag} onChange={e => setForm(f => ({ ...f, short_tag: e.target.value }))} className={inputCls} />
       </td>
       <td className="px-4 py-3 hidden md:table-cell">
-        <input value={form.faculty} onChange={e => setForm(f => ({ ...f, faculty: e.target.value }))} className={inputCls} />
+        <select value={form.faculty} onChange={e => setForm(f => ({ ...f, faculty: e.target.value }))} className={inputCls}>
+          <option value="">—</option>
+          <option value="FSS">FSS (Sociální věda)</option>
+          <option value="FU">FU (Umělecká)</option>
+          <option value="FF">FF (Filozofická)</option>
+          <option value="LF">LF (Lékařská)</option>
+          <option value="PdF">PdF (Pedagogická)</option>
+          <option value="PřF">PřF (Přírodní vědy)</option>
+        </select>
       </td>
       <td className="px-4 py-3 hidden md:table-cell">
         <select value={form.semester} onChange={e => setForm(f => ({ ...f, semester: e.target.value }))} className={inputCls}>
