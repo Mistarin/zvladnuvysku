@@ -59,16 +59,30 @@ export async function approveProposal(proposalId: string): Promise<ActionResult>
 
     if (proposal.type === 'new') {
       const insertData = { ...proposal.data } as Record<string, any>
+      const teachers = insertData.teachers as { id?: string, name: string, faculty: string }[] | undefined
+      delete insertData.teachers
+
       if (!insertData.slug) {
         const base = insertData.short_tag || insertData.name || 'predmet'
         insertData.slug = base.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
       }
-      const { error: insertError } = await supabase.from('subjects').insert(insertData as never)
+      const { data: insertedSubject, error: insertError } = await supabase.from('subjects').insert(insertData as never).select().single()
       if (insertError) return { success: false, error: `Chyba při vkládání: ${insertError.message}` }
+
+      if (teachers && teachers.length > 0) {
+        await processTeachers(supabase, (insertedSubject as any).id, teachers)
+      }
     } else if (proposal.type === 'edit' && proposal.subject_id) {
       const updateData = { ...proposal.data } as Record<string, any>
+      const teachers = updateData.teachers as { id?: string, name: string, faculty: string }[] | undefined
+      delete updateData.teachers
+
       const { error: updateError } = await supabase.from('subjects').update(updateData as never).eq('id', proposal.subject_id)
       if (updateError) return { success: false, error: `Chyba při úpravě: ${updateError.message}` }
+
+      if (teachers && teachers.length > 0) {
+        await processTeachers(supabase, proposal.subject_id, teachers)
+      }
     }
 
     // Mark proposal as approved
@@ -147,5 +161,32 @@ export async function updateSubject(subjectId: string, data: Record<string, unkn
     return { success: true }
   } catch (err) {
     return { success: false, error: err instanceof Error ? err.message : 'Neznámá chyba' }
+  }
+}
+
+async function processTeachers(supabase: any, subjectId: string, teachers: { id?: string, name: string, faculty: string }[]) {
+  for (const t of teachers) {
+    let teacherId = t.id
+    if (!teacherId) {
+      // Create new teacher
+      const slug = t.name.toLowerCase().replace(/[^a-z0-9á-ž]+/g, '-').replace(/(^-|-$)/g, '')
+      const { data: newT } = await supabase.from('teachers').insert({
+        name: t.name,
+        faculty: t.faculty,
+        slug: slug + '-' + Math.floor(Math.random() * 1000)
+      }).select().single()
+      if (newT) teacherId = newT.id
+    }
+    
+    if (teacherId) {
+      // Link to subject
+      const { error } = await supabase.from('subject_teachers').insert({
+        subject_id: subjectId,
+        teacher_id: teacherId
+      })
+      if (error && error.code !== '23505') { // Ignore unique violation if already linked
+        console.error('Failed to link teacher:', error)
+      }
+    }
   }
 }

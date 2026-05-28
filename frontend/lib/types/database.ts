@@ -111,6 +111,51 @@ export interface Database {
         Insert: Omit<Database['public']['Tables']['subject_rating_stats']['Row'], 'updated_at'>
         Update: Partial<Database['public']['Tables']['subject_rating_stats']['Insert']>
       }
+      teachers: {
+        Row: {
+          id: string
+          slug: string
+          name: string
+          faculty: string
+          department: string | null
+          created_at: string
+        }
+        Insert: Omit<Database['public']['Tables']['teachers']['Row'], 'id' | 'created_at'>
+        Update: Partial<Database['public']['Tables']['teachers']['Insert']>
+      }
+      teacher_ratings: {
+        Row: {
+          id: string
+          teacher_id: string
+          user_id: string
+          rating: number | null
+          review: string | null
+          created_at: string
+        }
+        Insert: Omit<Database['public']['Tables']['teacher_ratings']['Row'], 'id' | 'created_at'>
+        Update: Partial<Database['public']['Tables']['teacher_ratings']['Insert']>
+      }
+      subject_teachers: {
+        Row: {
+          subject_id: string
+          teacher_id: string
+        }
+        Insert: Database['public']['Tables']['subject_teachers']['Row']
+        Update: Partial<Database['public']['Tables']['subject_teachers']['Insert']>
+      }
+      subject_materials: {
+        Row: {
+          id: string
+          subject_id: string
+          uploader_id: string
+          title: string
+          file_path: string
+          size_bytes: number
+          created_at: string
+        }
+        Insert: Omit<Database['public']['Tables']['subject_materials']['Row'], 'id' | 'created_at'>
+        Update: Partial<Database['public']['Tables']['subject_materials']['Insert']>
+      }
     }
     Views: Record<string, never>
     Functions: Record<string, never>
@@ -127,9 +172,15 @@ export type Flashcard = Database['public']['Tables']['flashcards']['Row']
 export type CardProgress = Database['public']['Tables']['card_progress']['Row']
 export type SubjectRating = Database['public']['Tables']['subject_ratings']['Row']
 export type SubjectRatingStats = Database['public']['Tables']['subject_rating_stats']['Row']
+export type Teacher = Database['public']['Tables']['teachers']['Row']
+export type TeacherInsert = Database['public']['Tables']['teachers']['Insert']
+export type TeacherRating = Database['public']['Tables']['teacher_ratings']['Row']
+export type SubjectTeacher = Database['public']['Tables']['subject_teachers']['Row']
+export type SubjectMaterial = Database['public']['Tables']['subject_materials']['Row']
 
 // Extended types with joins
 export type SubjectWithStats = Subject & {
   rating_stats?: SubjectRatingStats | null
   tags?: SubjectTag[]
+  teachers?: Teacher[]
 }

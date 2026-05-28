@@ -102,6 +102,13 @@ export function SubjectProposalForm({ userId }: SubjectProposalFormProps) {
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  const [selectedTeachers, setSelectedTeachers] = useState<{ id?: string, name: string, faculty: string }[]>([])
+  const [teacherSearch, setTeacherSearch] = useState('')
+  const [teacherSearchResults, setTeacherSearchResults] = useState<{ id: string, name: string, faculty: string }[]>([])
+  const [isAddingNewTeacher, setIsAddingNewTeacher] = useState(false)
+  const [newTeacherName, setNewTeacherName] = useState('')
+  const [newTeacherFaculty, setNewTeacherFaculty] = useState('')
+
   const [form, setForm] = useState({
     name: '', short_tag: '', description: DESCRIPTION_TEMPLATE,
     target_audience: TARGET_AUDIENCE_TEMPLATE,
@@ -126,6 +133,18 @@ export function SubjectProposalForm({ userId }: SubjectProposalFormProps) {
     setSearchResults(data ?? [])
   }
 
+  const searchTeachers = async (q: string) => {
+    setTeacherSearch(q)
+    if (q.length < 2) { setTeacherSearchResults([]); return }
+    const supabase = createClient()
+    const { data } = await supabase
+      .from('teachers')
+      .select('id, name, faculty')
+      .ilike('name', `%${q}%`)
+      .limit(6)
+    setTeacherSearchResults(data ?? [])
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (type === 'edit' && !subjectId) { setError('Vyber předmět, který chceš upravit.'); return }
@@ -142,6 +161,7 @@ export function SubjectProposalForm({ userId }: SubjectProposalFormProps) {
       credits: form.credits ? Number(form.credits) : undefined,
       semester: form.semester || undefined, faculty: form.faculty || undefined,
       year: form.year ? Number(form.year) : undefined,
+      teachers: selectedTeachers.length > 0 ? selectedTeachers : undefined,
     }
 
     const { error: dbError } = await supabase.from('subject_proposals' as never).insert({
@@ -288,6 +308,86 @@ export function SubjectProposalForm({ userId }: SubjectProposalFormProps) {
               <option value="">– vybrat –</option>
               {ATTENDANCE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
             </Select>
+          </div>
+        </div>
+
+        {/* Učitelé */}
+        <div className="border-t border-border pt-4 mt-2">
+          <FieldLabel>Vyučující předmětu</FieldLabel>
+          <div className="space-y-3">
+            {selectedTeachers.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {selectedTeachers.map((t, i) => (
+                  <div key={i} className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-muted text-sm border border-border">
+                    <span className="font-mono text-[10px] bg-background px-1 rounded text-muted-foreground">{t.faculty}</span>
+                    <span>{t.name}</span>
+                    <button type="button" onClick={() => setSelectedTeachers(prev => prev.filter((_, idx) => idx !== i))} className="text-muted-foreground hover:text-destructive ml-1">
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {!isAddingNewTeacher ? (
+              <div className="relative">
+                <Input placeholder="Hledat učitele podle jména..." value={teacherSearch} onChange={(e) => searchTeachers(e.target.value)} />
+                {teacherSearchResults.length > 0 && (
+                  <div className="absolute z-10 w-full mt-1 rounded-xl border border-border bg-popover shadow-xl overflow-hidden">
+                    {teacherSearchResults.map((t) => (
+                      <button key={t.id} type="button" 
+                        onClick={() => { 
+                          if (!selectedTeachers.find(st => st.id === t.id)) {
+                            setSelectedTeachers(prev => [...prev, t])
+                          }
+                          setTeacherSearch('')
+                          setTeacherSearchResults([]) 
+                        }}
+                        className="w-full text-left px-3 py-2.5 text-sm hover:bg-muted transition-colors flex items-center gap-2">
+                        <span className="font-mono text-xs bg-primary/10 text-primary px-1.5 py-0.5 rounded">{t.faculty}</span>
+                        <span>{t.name}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+                <div className="mt-2 text-right">
+                  <button type="button" onClick={() => setIsAddingNewTeacher(true)} className="text-xs text-primary hover:underline">
+                    Nenašel(a) jsi učitele? Přidej ho!
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="p-3 bg-muted/50 rounded-lg border border-border space-y-3">
+                <h4 className="text-sm font-medium">Nový vyučující</h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <FieldLabel>Jméno a příjmení (s tituly)</FieldLabel>
+                    <Input placeholder="Mgr. Jan Novák, Ph.D." value={newTeacherName} onChange={e => setNewTeacherName(e.target.value)} />
+                  </div>
+                  <div>
+                    <FieldLabel>Fakulta</FieldLabel>
+                    <Select value={newTeacherFaculty} onChange={e => setNewTeacherFaculty(e.target.value)}>
+                      <option value="">– vybrat –</option>
+                      {FACULTY_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                    </Select>
+                  </div>
+                </div>
+                <div className="flex justify-end gap-2">
+                  <button type="button" onClick={() => setIsAddingNewTeacher(false)} className="px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground">Zrušit</button>
+                  <button type="button" 
+                    disabled={!newTeacherName || !newTeacherFaculty}
+                    onClick={() => {
+                      setSelectedTeachers(prev => [...prev, { name: newTeacherName, faculty: newTeacherFaculty }])
+                      setNewTeacherName('')
+                      setNewTeacherFaculty('')
+                      setIsAddingNewTeacher(false)
+                    }} 
+                    className="px-3 py-1.5 text-xs bg-primary text-primary-foreground rounded-md disabled:opacity-50">
+                    Přidat učitele
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

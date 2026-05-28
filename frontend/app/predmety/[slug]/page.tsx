@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { DifficultyBadge, StarRating } from "@/components/subject/difficulty-badge";
 import { RatingForm } from "@/components/subject/rating-form";
 import { RatingStats } from "@/components/subject/rating-stats";
+import { MaterialUploadForm } from "@/components/subject/material-upload-form";
 import type { Subject, SubjectRatingStats } from "@/lib/types/database";
 
 interface PageProps {
@@ -52,6 +53,22 @@ export default async function PredmetDetailPage({ params }: PageProps) {
   const subject = data as Subject;
   const { data: { user } } = await supabase.auth.getUser();
   const isLoggedIn = !!user;
+
+  const { data: stData } = await supabase
+    .from("subject_teachers")
+    .select("teachers(id, slug, name, faculty)")
+    .eq("subject_id", subject.id);
+    
+  const teachers = ((stData as any[])?.map(st => st.teachers).flat().filter(Boolean) as { id: string, slug: string, name: string, faculty: string }[]) || [];
+
+  // Fetch study materials for this subject
+  const { data: materialsData } = await supabase
+    .from("subject_materials")
+    .select("id, title, file_path, size_bytes, created_at, uploader:uploader_id (raw_user_meta_data)")
+    .eq("subject_id", subject.id)
+    .order("created_at", { ascending: false });
+    
+  const materials = materialsData || [];
 
   // Count available flashcard decks for this subject
   const { count: deckCount } = await supabase
@@ -208,6 +225,84 @@ export default async function PredmetDetailPage({ params }: PageProps) {
             </p>
           </ContentSection>
         )}
+
+        {/* Učitelé */}
+        {teachers.length > 0 && (
+          <ContentSection title="Vyučující" icon="👨‍🏫">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {teachers.map((t) => (
+                <Link
+                  key={t.id}
+                  href={`/ucitele/${t.slug}`}
+                  className="flex items-center gap-3 p-3 rounded-lg border border-border bg-card hover:bg-muted hover:border-primary/50 transition-all group"
+                >
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium text-sm text-foreground group-hover:text-primary transition-colors truncate">
+                      {t.name}
+                    </div>
+                    <div className="text-xs text-muted-foreground uppercase tracking-wider mt-0.5">
+                      {t.faculty}
+                    </div>
+                  </div>
+                  <div className="text-muted-foreground group-hover:text-primary opacity-0 group-hover:opacity-100 transition-all">
+                    →
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </ContentSection>
+        )}
+
+        {/* Studijní materiály (PDF) */}
+        <ContentSection title="Studijní materiály (PDF)" icon="📄">
+          <div className="space-y-4">
+            {materials.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {materials.map((m: any) => {
+                  const { data: publicUrlData } = supabase.storage.from('study_materials').getPublicUrl(m.file_path);
+                  
+                  return (
+                    <a
+                      key={m.id}
+                      href={publicUrlData.publicUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-3 p-3 rounded-lg border border-border bg-card hover:bg-muted hover:border-primary/50 transition-all group"
+                    >
+                      <div className="text-2xl opacity-80 group-hover:opacity-100 transition-opacity">
+                        📑
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium text-sm text-foreground group-hover:text-primary transition-colors truncate">
+                          {m.title}
+                        </div>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="text-[10px] uppercase font-semibold text-primary/80 bg-primary/10 px-1.5 py-0.5 rounded">
+                            PDF
+                          </span>
+                          <span className="text-xs text-muted-foreground truncate">
+                            {(m.size_bytes / 1024 / 1024).toFixed(1)} MB
+                          </span>
+                        </div>
+                      </div>
+                      <div className="text-muted-foreground group-hover:text-primary opacity-0 group-hover:opacity-100 transition-all">
+                        ↓
+                      </div>
+                    </a>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground italic">
+                Zatím nebyly nahrány žádné materiály.
+              </p>
+            )}
+
+            <div className="pt-2 border-t border-border">
+              <MaterialUploadForm subjectId={subject.id} />
+            </div>
+          </div>
+        </ContentSection>
 
         {/* Flashcardy */}
         <ContentSection title="Flashcardy" icon="🃏">
