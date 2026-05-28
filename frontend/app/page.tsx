@@ -142,7 +142,7 @@ export default function HomePage() {
           </div>
 
           <p className={`home-hint ${isFocused ? "home-hint--hidden" : ""}`}>
-            Stiskni <kbd>Enter</kbd> pro zobrazení výsledků
+            Jednotný studentský hub. Proč generovat stokrát to, co už dávno existuje?
           </p>
         </div>
       </section>

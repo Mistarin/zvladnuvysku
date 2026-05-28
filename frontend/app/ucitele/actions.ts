@@ -23,13 +23,12 @@ export async function proposeTeacher(data: {
 
     const slug = data.slug?.trim() || generateSlug(data.name);
 
-    // is_approved je v databázi DEFAULT false — nemusíme posílat vůbec
     const { error } = await (supabase.from("teachers") as any).insert({
       name: data.name,
       slug,
       faculty: data.faculty,
       department: data.department || null,
-      // is_approved: false  — řeší se přes RLS / DEFAULT, ne tady
+      is_approved: false,
     });
 
     if (error) throw error;
