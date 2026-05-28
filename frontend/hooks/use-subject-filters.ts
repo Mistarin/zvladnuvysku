@@ -6,43 +6,75 @@ import type { SubjectFilters, SortConfig } from './use-subjects'
 import type { Subject } from '@/lib/types/database'
 
 export interface FilterConfig {
-  key: keyof SubjectFilters
+  key: keyof SubjectFilters | 'freeCredits'
   label: string
-  type: 'multiselect' | 'boolean' | 'range'
-  options?: { value: string | number; label: string }[]
+  type: 'multiselect' | 'select' | 'slider' | 'boolean'
+  options?: { value: string | number; label: string; color?: string }[]
   min?: number
   max?: number
+  step?: number
 }
 
 export const FILTER_CONFIG: FilterConfig[] = [
   {
-    key: 'difficulty',
-    label: 'Obtížnost',
-    type: 'multiselect',
+    key: 'timeIntensityMax',
+    label: 'Max. Náročnost',
+    type: 'slider',
+    min: 1,
+    max: 5,
+    step: 1,
+  },
+  {
+    key: 'ratingMin',
+    label: 'Min. Hodnocení Předmětu',
+    type: 'slider',
+    min: 1,
+    max: 5,
+    step: 1,
+  },
+  {
+    key: 'teacherRatingMin',
+    label: 'Min. Hodnocení Učitele',
+    type: 'slider',
+    min: 1,
+    max: 5,
+    step: 1,
+  },
+  {
+    key: 'creditsMin',
+    label: 'Min. Kredity',
+    type: 'slider',
+    min: 0,
+    max: 15,
+    step: 1,
+  },
+  {
+    key: 'attendanceType',
+    label: 'Docházka',
+    type: 'select',
     options: [
-      { value: 1, label: '⭐ Velmi snadný' },
-      { value: 2, label: '⭐⭐ Snadný' },
-      { value: 3, label: '⭐⭐⭐ Střední' },
-      { value: 4, label: '⭐⭐⭐⭐ Těžký' },
-      { value: 5, label: '⭐⭐⭐⭐⭐ Velmi těžký' },
+      { value: 'volná', label: 'Volná' },
+      { value: 'povinné přednášky', label: 'Povinné přednášky' },
+      { value: 'povinná cvičení', label: 'Povinná cvičení' },
+      { value: 'povinná', label: 'Povinná (vše)' },
     ],
   },
   {
-    key: 'timeIntensity',
-    label: 'Časová náročnost',
-    type: 'multiselect',
+    key: 'year',
+    label: 'Doporučený ročník',
+    type: 'select',
     options: [
-      { value: 1, label: '1 — Minimální' },
-      { value: 2, label: '2 — Nízká' },
-      { value: 3, label: '3 — Střední' },
-      { value: 4, label: '4 — Vysoká' },
-      { value: 5, label: '5 — Maximální' },
+      { value: 1, label: '1. ročník' },
+      { value: 2, label: '2. ročník' },
+      { value: 3, label: '3. ročník' },
+      { value: 4, label: '4. ročník' },
+      { value: 5, label: '5. ročník' },
     ],
   },
   {
     key: 'semester',
     label: 'Semestr',
-    type: 'multiselect',
+    type: 'select',
     options: [
       { value: 'zimní', label: 'Zimní' },
       { value: 'letní', label: 'Letní' },
@@ -50,51 +82,16 @@ export const FILTER_CONFIG: FilterConfig[] = [
     ],
   },
   {
-    key: 'attendanceType',
-    label: 'Docházka',
-    type: 'multiselect',
+    key: 'faculty',
+    label: 'Fakulta',
+    type: 'select',
     options: [
-      { value: 'volná', label: 'Volná' },
-      { value: 'povinná', label: 'Povinná (vše)' },
-      { value: 'povinné přednášky', label: 'Povinné přednášky' },
-      { value: 'povinná cvičení', label: 'Povinná cvičení' },
-    ],
-  },
-  {
-    key: 'year',
-    label: 'Doporučený ročník',
-    type: 'multiselect',
-    options: [
-      { value: 1, label: '1. ročník' },
-      { value: 2, label: '2. ročník' },
-      { value: 3, label: '3. ročník' },
-    ],
-  },
-  {
-    key: 'creditsMin',
-    label: 'Kredity (min)',
-    type: 'range',
-    min: 1,
-    max: 10,
-  },
-  {
-    key: 'ratingMin',
-    label: 'Hodnocení předmětu',
-    type: 'multiselect',
-    options: [
-      { value: 4, label: '⭐⭐⭐⭐ 4+ hvězd' },
-      { value: 3, label: '⭐⭐⭐ 3+ hvězd' },
-      { value: 2, label: '⭐⭐ 2+ hvězd' },
-    ],
-  },
-  {
-    key: 'teacherRatingMin',
-    label: 'Hodnocení učitele',
-    type: 'multiselect',
-    options: [
-      { value: 4, label: '⭐⭐⭐⭐ 4+ hvězd' },
-      { value: 3, label: '⭐⭐⭐ 3+ hvězd' },
-      { value: 2, label: '⭐⭐ 2+ hvězd' },
+      { value: 'FSS', label: 'FSS 🟨' },
+      { value: 'FU', label: 'FU 🟥' },
+      { value: 'FF', label: 'FF 🟪' },
+      { value: 'LF', label: 'LF 🟦' },
+      { value: 'PdF', label: 'PdF 🟧' },
+      { value: 'PřF', label: 'PřF 🟩' },
     ],
   },
 ]
@@ -131,6 +128,7 @@ export function useSubjectFilters(): UseSubjectFiltersReturn {
     query: searchParams.get('q') ?? undefined,
     difficulty: parseNumberArray(searchParams.get('difficulty')),
     timeIntensity: parseNumberArray(searchParams.get('time_intensity')),
+    timeIntensityMax: searchParams.get('time_intensity_max') ? Number(searchParams.get('time_intensity_max')) : undefined,
     semester: parseStringArray(searchParams.get('semester')),
     attendanceType: parseStringArray(searchParams.get('attendance')),
     year: parseNumberArray(searchParams.get('year')),
@@ -156,6 +154,7 @@ export function useSubjectFilters(): UseSubjectFiltersReturn {
       query: 'q',
       difficulty: 'difficulty',
       timeIntensity: 'time_intensity',
+      timeIntensityMax: 'time_intensity_max',
       semester: 'semester',
       attendanceType: 'attendance',
       year: 'year',
@@ -203,6 +202,7 @@ export function useSubjectFilters(): UseSubjectFiltersReturn {
     let count = 0
     if (filters.difficulty?.length) count++
     if (filters.timeIntensity?.length) count++
+    if (filters.timeIntensityMax !== undefined) count++
     if (filters.semester?.length) count++
     if (filters.attendanceType?.length) count++
     if (filters.year?.length) count++
@@ -210,6 +210,7 @@ export function useSubjectFilters(): UseSubjectFiltersReturn {
     if (filters.creditsMax !== undefined) count++
     if (filters.ratingMin !== undefined) count++
     if (filters.teacherRatingMin !== undefined) count++
+    if (filters.faculty !== undefined) count++
     return count
   }, [filters])
 

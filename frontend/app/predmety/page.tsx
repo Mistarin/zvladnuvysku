@@ -3,7 +3,6 @@
 import { Suspense } from "react";
 import { SubjectTable } from "@/components/subject/subject-table";
 import { SearchFilters } from "@/components/search/search-filters";
-import { FacultyFilter } from "@/components/admin/faculty-filter";
 import { useSubjects } from "@/hooks/use-subjects";
 import { useSubjectFilters } from "@/hooks/use-subject-filters";
 
@@ -27,8 +26,6 @@ function SubjectsContent() {
 
   return (
     <div className="space-y-6">
-      <FacultyFilter />
-      
       {/* Filters */}
       <SearchFilters
         filters={filters}
@@ -128,7 +125,7 @@ function SubjectsContent() {
 
 export default function PredmetyPage() {
   return (
-    <div className="container mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-8">
+    <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-foreground">Předměty</h1>

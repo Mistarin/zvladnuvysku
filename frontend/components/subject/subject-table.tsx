@@ -2,18 +2,18 @@
 
 import Link from "next/link";
 import { DifficultyBadge } from "./difficulty-badge";
-import type { Subject } from "@/lib/types/database";
+import type { SubjectWithStats } from "@/lib/types/database";
 import type { SortConfig } from "@/hooks/use-subjects";
 
 interface SubjectTableProps {
-  subjects: Subject[];
+  subjects: SubjectWithStats[];
   isLoading: boolean;
   sort: SortConfig;
   onSortChange: (sort: SortConfig) => void;
 }
 
 const COLUMNS: {
-  key: keyof Subject;
+  key: keyof SubjectWithStats | 'avg_teacher_rating';
   label: string;
   sortable: boolean;
   className?: string;
@@ -21,16 +21,17 @@ const COLUMNS: {
   { key: "name", label: "Název", sortable: true },
   { key: "short_tag", label: "Zkratka", sortable: true, className: "hidden sm:table-cell text-center" },
   { key: "credits", label: "Kredity", sortable: true, className: "hidden md:table-cell text-center" },
-  { key: "difficulty", label: "Obtížnost", sortable: true, className: "text-center" },
-  { key: "time_intensity", label: "Náročnost", sortable: true, className: "hidden lg:table-cell text-center" },
-  { key: "semester", label: "Semestr", sortable: true, className: "hidden md:table-cell" },
+  { key: "time_intensity", label: "Náročnost", sortable: true, className: "text-center" },
+  { key: "avg_subject_rating", label: "Předmět", sortable: true, className: "hidden lg:table-cell text-center" },
+  { key: "avg_teacher_rating", label: "Učitel", sortable: true, className: "hidden xl:table-cell text-center" },
+  { key: "semester", label: "Semestr", sortable: true, className: "hidden md:table-cell text-center" },
   { key: "attendance_type", label: "Docházka", sortable: false, className: "hidden lg:table-cell text-center" },
 ];
 
 const SEMESTER_LABELS: Record<string, string> = {
-  zimní: "❄️ Zimní",
-  letní: "☀️ Letní",
-  oba: "🔄 Oba",
+  zimní: "Zimní",
+  letní: "Letní",
+  oba: "Oba",
 };
 
 const FACULTY_COLORS: Record<string, string> = {
@@ -78,7 +79,7 @@ export function SubjectTable({
   sort,
   onSortChange,
 }: SubjectTableProps) {
-  function handleSort(column: keyof Subject) {
+  function handleSort(column: keyof SubjectWithStats) {
     if (sort.column === column) {
       onSortChange({
         column,
@@ -89,7 +90,7 @@ export function SubjectTable({
     }
   }
 
-  function SortIcon({ column }: { column: keyof Subject }) {
+  function SortIcon({ column }: { column: keyof SubjectWithStats }) {
     if (sort.column !== column) {
       return <span className="text-muted-foreground/40 ml-1">↕</span>;
     }
@@ -109,7 +110,8 @@ export function SubjectTable({
               <th
                 key={col.key}
                 className={`
-                  px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider
+                  px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider
+                  ${col.className?.includes('text-center') ? '' : 'text-left'}
                   ${col.className || ""}
                   ${col.sortable ? "cursor-pointer select-none hover:text-foreground transition-colors" : ""}
                 `}
@@ -187,29 +189,32 @@ export function SubjectTable({
                   </td>
 
                   <td className="px-4 py-3 text-center">
-                    {subject.difficulty ? (
-                      <DifficultyBadge difficulty={subject.difficulty} />
+                    {subject.time_intensity ? (
+                      <DifficultyBadge difficulty={subject.time_intensity} />
                     ) : (
                       <span className="text-muted-foreground text-sm">—</span>
                     )}
                   </td>
 
                   <td className="px-4 py-3 text-center hidden lg:table-cell">
-                    {subject.time_intensity ? (
-                      <div className="flex items-center justify-center gap-0.5">
-                        {Array.from({ length: 5 }).map((_, i) => (
-                          <div
-                            key={i}
-                            className={`w-1.5 h-4 rounded-sm ${
-                              i < subject.time_intensity!
-                                ? "bg-primary"
-                                : "bg-muted"
-                            }`}
-                          />
-                        ))}
+                    {subject.avg_subject_rating ? (
+                      <div className="flex items-center justify-center gap-1">
+                        <span className="font-bold text-amber-500">{subject.avg_subject_rating.toFixed(1)}</span>
+                        <span className="text-amber-500 text-xs">★</span>
                       </div>
                     ) : (
-                      <span className="text-muted-foreground">—</span>
+                      <span className="text-muted-foreground text-sm">—</span>
+                    )}
+                  </td>
+
+                  <td className="px-4 py-3 text-center hidden xl:table-cell">
+                    {subject.avg_teacher_rating ? (
+                      <div className="flex items-center justify-center gap-1">
+                        <span className="font-bold text-amber-500">{subject.avg_teacher_rating.toFixed(1)}</span>
+                        <span className="text-amber-500 text-xs">★</span>
+                      </div>
+                    ) : (
+                      <span className="text-muted-foreground text-sm">—</span>
                     )}
                   </td>
 

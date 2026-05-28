@@ -8,6 +8,7 @@ export interface SubjectFilters {
   query?: string
   difficulty?: number[]
   timeIntensity?: number[]
+  timeIntensityMax?: number
   attendanceType?: string[]
   semester?: string[]
   creditsMin?: number
@@ -64,6 +65,9 @@ export function useSubjects(
       }
       if (filters.timeIntensity?.length) {
         query = query.in('time_intensity', filters.timeIntensity)
+      }
+      if (filters.timeIntensityMax !== undefined) {
+        query = query.lte('time_intensity', filters.timeIntensityMax)
       }
       if (filters.attendanceType?.length) {
         query = query.in('attendance_type', filters.attendanceType)

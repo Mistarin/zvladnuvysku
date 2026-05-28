@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import { Diamond } from "lucide-react";
 import type { SubjectFilters } from "@/hooks/use-subjects";
 import type { FilterConfig } from "@/hooks/use-subject-filters";
 
@@ -87,14 +88,16 @@ export function SearchFilters({
           )}
         </button>
 
-        {activeFilterCount > 0 && (
-          <button
-            onClick={onReset}
-            className="text-sm text-muted-foreground hover:text-destructive transition-colors"
-          >
-            Zrušit filtry
-          </button>
-        )}
+        <div className="flex items-center gap-3">
+          {activeFilterCount > 0 && (
+            <button
+              onClick={onReset}
+              className="text-sm text-muted-foreground hover:text-destructive transition-colors"
+            >
+              Zrušit filtry
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Filter panel */}
@@ -111,7 +114,7 @@ export function SearchFilters({
                   <div className="flex flex-wrap gap-1.5">
                     {config.options.map((option) => {
                       const currentValues =
-                        (filters[config.key] as (number | string)[]) || [];
+                        (filters[config.key as keyof SubjectFilters] as (number | string)[]) || [];
                       const isSelected = currentValues.includes(
                         option.value as never
                       );
@@ -120,7 +123,7 @@ export function SearchFilters({
                         <button
                           key={option.value}
                           onClick={() =>
-                            handleMultiSelect(config.key, option.value)
+                            handleMultiSelect(config.key as keyof SubjectFilters, option.value)
                           }
                           className={`
                             text-xs px-2.5 py-1 rounded-lg border transition-all duration-100
@@ -137,9 +140,80 @@ export function SearchFilters({
                   </div>
                 )}
 
+                {config.type === "slider" && (
+                  <div className="flex flex-col gap-2 pt-1">
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="range"
+                        min={config.min}
+                        max={config.max}
+                        step={config.step || 1}
+                        value={(filters[config.key as keyof SubjectFilters] as number) ?? (config.key.includes('Max') ? config.max : config.min)}
+                        onChange={(e) => onFilterChange(config.key as keyof SubjectFilters, Number(e.target.value) as any)}
+                        className="w-full accent-primary"
+                      />
+                      <span className="text-sm font-bold text-foreground min-w-[1.5rem] text-right bg-muted px-2 py-0.5 rounded-md">
+                        {(filters[config.key as keyof SubjectFilters] as number) ?? (config.key.includes('Max') ? config.max : config.min)}
+                      </span>
+                    </div>
+                  </div>
+                )}
 
+                {config.type === "select" && config.options && (() => {
+                  const filterVal = filters[config.key as keyof SubjectFilters];
+                  const selectedValue = Array.isArray(filterVal) ? filterVal[0] : filterVal;
+                  
+                  return (
+                    <select
+                      value={selectedValue ?? ""}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (!val) {
+                          onFilterChange(config.key as keyof SubjectFilters, undefined as any);
+                          return;
+                        }
+                        const isNumber = typeof config.options![0].value === 'number';
+                        const newVal = isNumber ? Number(val) : val;
+                        const isArrayType = ['attendanceType', 'semester', 'year'].includes(config.key);
+                        
+                        onFilterChange(config.key as keyof SubjectFilters, (isArrayType ? [newVal] : newVal) as any);
+                      }}
+                      className="w-full px-3 py-2 text-sm bg-background border border-border rounded-lg outline-none focus:ring-1 focus:ring-primary/40 focus:border-primary/40 text-foreground"
+                    >
+                      <option value="">Všechny</option>
+                      {config.options.map((opt) => (
+                        <option 
+                          key={opt.value} 
+                          value={opt.value}
+                          style={{ color: opt.color, fontWeight: opt.color ? 'bold' : 'normal' }}
+                        >
+                          {opt.label}
+                        </option>
+                      ))}
+                    </select>
+                  );
+                })()}
               </div>
             ))}
+            
+            {/* Quick Filters */}
+            <div className="space-y-2">
+              <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                Rychlé volby
+              </h4>
+              <button
+                onClick={() => {
+                  onFilterChange('timeIntensityMax' as any, 2 as any);
+                  onFilterChange('ratingMin' as any, 4 as any);
+                  onFilterChange('teacherRatingMin' as any, 4 as any);
+                  onFilterChange('attendanceType' as any, ['volná'] as any);
+                }}
+                title="Vybere předměty s náročností max 2, volnou docházkou a hodnocením učitele i předmětu minimálně 4 ⭐"
+                className="w-full flex items-center justify-center gap-1.5 text-sm font-medium px-3 py-2 rounded-lg bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20 transition-colors border border-emerald-500/20"
+              >
+                <Diamond className="w-4 h-4" /> Kredity zdarma
+              </button>
+            </div>
           </div>
         </div>
       )}
