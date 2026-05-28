@@ -10,8 +10,8 @@ interface SoundContextType {
 const SoundContext = createContext<SoundContextType | undefined>(undefined);
 
 export function SoundProvider({ children }: { children: React.ReactNode }) {
-  // Default to true. We initialize with true, but will override with localStorage after mount.
-  const [isSoundEnabled, setIsSoundEnabled] = useState(true);
+  // Default to false. We initialize with false, but will override with localStorage after mount.
+  const [isSoundEnabled, setIsSoundEnabled] = useState(false);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
