@@ -15,6 +15,8 @@ export interface SubjectFilters {
   faculty?: string
   department?: string[]
   year?: number[]
+  ratingMin?: number
+  teacherRatingMin?: number
 }
 
 export interface SortConfig {
@@ -49,8 +51,7 @@ export function useSubjects(
 
     try {
       const supabase = createClient()
-      let query = supabase
-        .from('subjects')
+      let query = (supabase.from('subject_search_view') as any)
         .select('*', { count: 'exact' })
 
       // Filtrace
@@ -81,6 +82,12 @@ export function useSubjects(
       }
       if (filters.year?.length) {
         query = query.in('year', filters.year)
+      }
+      if (filters.ratingMin !== undefined) {
+        query = query.gte('avg_subject_rating', filters.ratingMin)
+      }
+      if (filters.teacherRatingMin !== undefined) {
+        query = query.gte('avg_teacher_rating', filters.teacherRatingMin)
       }
 
       // Řazení

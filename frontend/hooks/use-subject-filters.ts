@@ -77,6 +77,26 @@ export const FILTER_CONFIG: FilterConfig[] = [
     min: 1,
     max: 10,
   },
+  {
+    key: 'ratingMin',
+    label: 'Hodnocení předmětu',
+    type: 'multiselect',
+    options: [
+      { value: 4, label: '⭐⭐⭐⭐ 4+ hvězd' },
+      { value: 3, label: '⭐⭐⭐ 3+ hvězd' },
+      { value: 2, label: '⭐⭐ 2+ hvězd' },
+    ],
+  },
+  {
+    key: 'teacherRatingMin',
+    label: 'Hodnocení učitele',
+    type: 'multiselect',
+    options: [
+      { value: 4, label: '⭐⭐⭐⭐ 4+ hvězd' },
+      { value: 3, label: '⭐⭐⭐ 3+ hvězd' },
+      { value: 2, label: '⭐⭐ 2+ hvězd' },
+    ],
+  },
 ]
 
 interface UseSubjectFiltersReturn {
@@ -117,6 +137,8 @@ export function useSubjectFilters(): UseSubjectFiltersReturn {
     creditsMin: searchParams.get('credits_min') ? Number(searchParams.get('credits_min')) : undefined,
     creditsMax: searchParams.get('credits_max') ? Number(searchParams.get('credits_max')) : undefined,
     faculty: searchParams.get('faculty') ?? undefined,
+    ratingMin: searchParams.get('rating_min') ? Number(searchParams.get('rating_min')) : undefined,
+    teacherRatingMin: searchParams.get('teacher_rating_min') ? Number(searchParams.get('teacher_rating_min')) : undefined,
   }), [searchParams])
 
   const sort: SortConfig = useMemo(() => ({
@@ -140,6 +162,8 @@ export function useSubjectFilters(): UseSubjectFiltersReturn {
       creditsMin: 'credits_min',
       creditsMax: 'credits_max',
       faculty: 'faculty',
+      ratingMin: 'rating_min',
+      teacherRatingMin: 'teacher_rating_min',
     }
 
     const paramKey = paramMap[key]
@@ -184,6 +208,8 @@ export function useSubjectFilters(): UseSubjectFiltersReturn {
     if (filters.year?.length) count++
     if (filters.creditsMin !== undefined) count++
     if (filters.creditsMax !== undefined) count++
+    if (filters.ratingMin !== undefined) count++
+    if (filters.teacherRatingMin !== undefined) count++
     return count
   }, [filters])
 

@@ -48,15 +48,18 @@ export default async function TeacherDetailPage({ params }: PageProps) {
     .from("teacher_ratings")
     .select("rating");
     
-  // Re-fetching specific to this teacher to get avg
+  // Fetch all ratings for avg
   const { data: teacherRatings } = await supabase
     .from("teacher_ratings")
-    .select("rating")
-    .eq("teacher_id", t.id);
+    .select("rating, review, created_at, comment_is_approved")
+    .eq("teacher_id", t.id)
+    .order("created_at", { ascending: false });
 
   const avgRating = teacherRatings?.length 
     ? ((teacherRatings as any[]).reduce((acc, r) => acc + (r.rating || 0), 0) / teacherRatings.length).toFixed(1)
     : "—";
+
+  const ratingsWithComments = ((teacherRatings as any[]) || []).filter(r => r.review && r.comment_is_approved);
 
   const { data: { user } } = await supabase.auth.getUser();
   const isLoggedIn = !!user;

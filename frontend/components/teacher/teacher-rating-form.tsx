@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
@@ -18,6 +18,36 @@ export function TeacherRatingForm({ teacherId, isLoggedIn }: TeacherRatingFormPr
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [isLoadingExisting, setIsLoadingExisting] = useState(isLoggedIn);
+
+  useEffect(() => {
+    if (!isLoggedIn) return;
+
+    async function fetchExisting() {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        setIsLoadingExisting(false);
+        return;
+      }
+
+      const { data } = await supabase
+        .from('teacher_ratings')
+        .select('*')
+        .eq('teacher_id', teacherId)
+        .eq('user_id', user.id)
+        .single();
+
+      if (data) {
+        const d = data as any;
+        setRating(d.rating || 0);
+        setReview(d.review || '');
+      }
+      setIsLoadingExisting(false);
+    }
+
+    fetchExisting();
+  }, [teacherId, isLoggedIn]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

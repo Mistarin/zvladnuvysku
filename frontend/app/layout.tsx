@@ -34,6 +34,8 @@ export const metadata: Metadata = {
   },
 };
 
+import { FeedbackButton } from "@/components/layout/feedback-button";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -51,6 +53,7 @@ export default function RootLayout({
           <SoundProvider>
             <Navbar />
             <main className="flex-1">{children}</main>
+            <FeedbackButton />
           </SoundProvider>
         </ThemeProvider>
       </body>

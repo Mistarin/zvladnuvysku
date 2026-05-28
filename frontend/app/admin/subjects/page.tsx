@@ -15,9 +15,7 @@ export default async function AdminSubjectsPage() {
 
   if (!user) redirect('/prihlaseni')
 
-  const role =
-    (user.app_metadata?.role as string | undefined) ??
-    (user.user_metadata?.role as string | undefined)
+  const role = user.app_metadata?.role as string | undefined
 
   const isAdmin = role === 'admin' || role === 'moderator'
 

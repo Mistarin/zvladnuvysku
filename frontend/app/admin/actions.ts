@@ -26,9 +26,7 @@ async function getAdminClient() {
   if (!user) throw new Error('Nepřihlášen')
 
   // Verify admin/moderator role
-  const role =
-    (user.app_metadata?.role as string | undefined) ??
-    (user.user_metadata?.role as string | undefined)
+  const role = user.app_metadata?.role as string | undefined
   if (role !== 'admin' && role !== 'moderator') {
     throw new Error('Nedostatečná oprávnění')
   }
@@ -267,5 +265,64 @@ export async function rejectMaterial(materialId: string, filePath: string): Prom
     return { success: true }
   } catch (err: any) {
     return { success: false, error: err.message || 'Neočekávaná chyba' }
+  }
+}
+
+export async function approveRatingComment(ratingId: string, type: "subject" | "teacher"): Promise<ActionResult> {
+  try {
+    const { supabase } = await getAdminClient()
+    const table = type === "subject" ? "subject_ratings" : "teacher_ratings"
+    
+    const { error } = await supabase
+      .from(table)
+      .update({ comment_is_approved: true } as never)
+      .eq('id', ratingId)
+
+    if (error) return { success: false, error: `Chyba při schvalování komentáře: ${error.message}` }
+    
+    revalidatePath('/admin')
+    revalidatePath(`/${type === 'subject' ? 'predmety' : 'ucitele'}/[slug]`, 'page')
+    
+    return { success: true }
+  } catch (err: any) {
+    return { success: false, error: err.message || 'Neočekávaná chyba' }
+  }
+}
+
+export async function rejectRatingComment(ratingId: string, type: "subject" | "teacher"): Promise<ActionResult> {
+  try {
+    const { supabase } = await getAdminClient()
+    const table = type === "subject" ? "subject_ratings" : "teacher_ratings"
+    
+    // We only set comment/review to NULL. We don't delete the row, so the star rating remains.
+    const { error } = await supabase
+      .from(table)
+      .update((type === "subject" ? { comment: null } : { review: null }) as never)
+      .eq('id', ratingId)
+
+    if (error) return { success: false, error: `Chyba při mazání textu komentáře: ${error.message}` }
+    
+    revalidatePath('/admin')
+    revalidatePath(`/${type === 'subject' ? 'predmety' : 'ucitele'}/[slug]`, 'page')
+    
+    return { success: true }
+  } catch (err: any) {
+    return { success: false, error: err.message || 'Neočekávaná chyba' }
+  }
+}
+export async function resolveFeedback(feedbackId: string): Promise<ActionResult> {
+  try {
+    const { supabase } = await getAdminClient()
+
+    const { error } = await (supabase.from('feedback') as any)
+      .update({ is_resolved: true })
+      .eq('id', feedbackId)
+
+    if (error) return { success: false, error: 'Chyba při aktualizaci stavu zpětné vazby' }
+
+    revalidatePath('/admin')
+    return { success: true }
+  } catch (err) {
+    return { success: false, error: err instanceof Error ? err.message : 'Neznámá chyba' }
   }
 }

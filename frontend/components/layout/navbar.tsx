@@ -9,13 +9,15 @@ import type { User } from "@supabase/supabase-js";
 import Image from "next/image";
 const navLinks = [
   { href: "/predmety", label: "Předměty" },
+  { href: "/ucitele", label: "Vyučující" },
 ];
 
 export function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
-  const [menuOpen, setMenuOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const supabase = createClient();
@@ -34,12 +36,17 @@ export function Navbar() {
   const handleSignOut = async () => {
     const supabase = createClient();
     await supabase.auth.signOut();
-    setMenuOpen(false);
+    setUserMenuOpen(false);
+    setMobileMenuOpen(false);
     router.push("/");
     router.refresh();
   };
 
-  // Iniciály z emailu (jmeno.prijmeni@osu.cz → JM)
+  const isAdmin = user && (() => {
+    const role = user.app_metadata?.role as string | undefined;
+    return role === 'admin' || role === 'moderator';
+  })();
+
   const initials = user?.email
     ? user.email.split("@")[0].split(".").map((p) => p[0]?.toUpperCase() ?? "").join("").slice(0, 2)
     : "";
@@ -51,9 +58,9 @@ export function Navbar() {
           {/* Logo */}
           <Link
             href="/"
+            onClick={() => setMobileMenuOpen(false)}
             id="nav-logo"
             className="flex items-center gap-2 group"
-            aria-label="ZvladnuVysku — domů"
           >
             <Image
               src="/logo-v2.png"
@@ -67,56 +74,36 @@ export function Navbar() {
             </span>
           </Link>
 
-          {/* Right side */}
-          <div className="flex items-center gap-1">
-          {/* Static nav links */}
+          {/* Desktop Right Side */}
+          <div className="hidden sm:flex items-center gap-1">
             {navLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
-                id={`nav-${link.href.replace("/", "")}`}
-                className={`
-                  px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-150
-                  ${
-                    pathname === link.href
-                      ? "bg-primary/10 text-primary"
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                  }
-                `}
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-150 ${
+                  pathname === link.href ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                }`}
               >
                 {link.label}
               </Link>
             ))}
 
-            {/* Auth-conditional links */}
             {user && (
               <Link
                 href="/navrhnout"
-                id="nav-navrhnout"
                 className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-150 ${
-                  pathname === "/navrhnout"
-                    ? "bg-primary/10 text-primary"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                  pathname === "/navrhnout" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-muted"
                 }`}
               >
                 Navrhnout předmět
               </Link>
             )}
 
-            {/* Admin link — only for admin/moderator */}
-            {user && (() => {
-              const role =
-                (user.app_metadata?.role as string | undefined) ??
-                (user.user_metadata?.role as string | undefined);
-              return role === 'admin' || role === 'moderator';
-            })() && (
+            {isAdmin && (
               <Link
                 href="/admin"
-                id="nav-admin"
                 className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-150 ${
-                  pathname === "/admin"
-                    ? "bg-primary/10 text-primary"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                  pathname === "/admin" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-muted"
                 }`}
               >
                 Admin
@@ -128,47 +115,24 @@ export function Navbar() {
             </div>
 
             {user ? (
-              // Přihlášený uživatel — avatar s dropdown
               <div className="relative ml-1">
                 <button
-                  onClick={() => setMenuOpen((o) => !o)}
+                  onClick={() => setUserMenuOpen((o) => !o)}
                   className="w-8 h-8 rounded-full accent-gradient flex items-center justify-center text-white text-xs font-bold hover:opacity-90 transition-opacity"
-                  aria-label="Uživatelské menu"
-                  id="nav-user-avatar"
                 >
                   {initials}
                 </button>
-
-                {menuOpen && (
+                {userMenuOpen && (
                   <>
-                    {/* Backdrop */}
-                    <div
-                      className="fixed inset-0 z-40"
-                      onClick={() => setMenuOpen(false)}
-                    />
-                    {/* Dropdown */}
+                    <div className="fixed inset-0 z-40" onClick={() => setUserMenuOpen(false)} />
                     <div className="absolute right-0 top-10 z-50 w-52 rounded-xl border border-border bg-popover shadow-xl animate-scale-in">
-                      <div className="px-3 py-2.5 border-b border-border">
-                        <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                      <div className="px-4 py-3 border-b border-border/50">
+                        <p className="text-sm font-medium text-foreground truncate">{user.email}</p>
                       </div>
                       <div className="p-1">
-                        {(() => {
-                          const role =
-                            (user.app_metadata?.role as string | undefined) ??
-                            (user.user_metadata?.role as string | undefined);
-                          return (role === 'admin' || role === 'moderator') ? (
-                            <Link
-                              href="/admin"
-                              onClick={() => setMenuOpen(false)}
-                              className="w-full text-left px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors flex items-center gap-2"
-                            >
-                              <span>🛡️</span> Administrace
-                            </Link>
-                          ) : null;
-                        })()}
                         <button
                           onClick={handleSignOut}
-                          className="w-full text-left px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
+                          className="w-full text-left px-3 py-2 text-sm text-destructive hover:bg-destructive/10 rounded-lg transition-colors"
                         >
                           Odhlásit se
                         </button>
@@ -178,18 +142,105 @@ export function Navbar() {
                 )}
               </div>
             ) : (
-              // Nepřihlášený
-              <Link
-                href="/prihlaseni"
-                id="nav-prihlaseni"
-                className="ml-1 px-3 py-1.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-all duration-150"
-              >
-                Přihlásit se
-              </Link>
+              <div className="flex items-center gap-2 ml-2">
+                <Link
+                  href="/prihlaseni"
+                  className="px-4 py-1.5 text-sm font-semibold rounded-lg bg-foreground text-background hover:scale-105 transition-transform"
+                >
+                  Přihlásit
+                </Link>
+              </div>
             )}
+          </div>
+
+          {/* Mobile Right Side (Hamburger + Settings) */}
+          <div className="flex items-center gap-2 sm:hidden">
+            <SettingsMenu />
+            <button 
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="p-2 -mr-2 text-foreground"
+              aria-label="Menu"
+            >
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                {mobileMenuOpen ? (
+                  <>
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                  </>
+                ) : (
+                  <>
+                    <line x1="3" y1="12" x2="21" y2="12"></line>
+                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                    <line x1="3" y1="18" x2="21" y2="18"></line>
+                  </>
+                )}
+              </svg>
+            </button>
           </div>
         </nav>
       </div>
+
+      {/* Mobile Collapse Menu */}
+      {mobileMenuOpen && (
+        <div className="sm:hidden border-t border-border/50 bg-background px-4 py-4 space-y-3 shadow-xl">
+          {navLinks.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              onClick={() => setMobileMenuOpen(false)}
+              className={`block px-4 py-2 rounded-lg text-sm font-medium ${
+                pathname === link.href ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted"
+              }`}
+            >
+              {link.label}
+            </Link>
+          ))}
+          {user && (
+            <Link
+              href="/navrhnout"
+              onClick={() => setMobileMenuOpen(false)}
+              className={`block px-4 py-2 rounded-lg text-sm font-medium ${
+                pathname === "/navrhnout" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted"
+              }`}
+            >
+              Navrhnout předmět
+            </Link>
+          )}
+          {isAdmin && (
+            <Link
+              href="/admin"
+              onClick={() => setMobileMenuOpen(false)}
+              className={`block px-4 py-2 rounded-lg text-sm font-medium ${
+                pathname === "/admin" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted"
+              }`}
+            >
+              Admin
+            </Link>
+          )}
+          <div className="border-t border-border pt-3 mt-3">
+            {user ? (
+              <div className="space-y-2">
+                <div className="px-4 py-2 text-sm text-foreground opacity-70 truncate">{user.email}</div>
+                <button
+                  onClick={handleSignOut}
+                  className="w-full text-left px-4 py-2 text-sm text-destructive hover:bg-destructive/10 rounded-lg transition-colors font-medium"
+                >
+                  Odhlásit se
+                </button>
+              </div>
+            ) : (
+              <Link
+                href="/prihlaseni"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block text-center px-4 py-2 text-sm font-semibold rounded-lg bg-foreground text-background"
+              >
+                Přihlásit
+              </Link>
+            )}
+          </div>
+        </div>
+      )}
     </header>
   );
 }
+

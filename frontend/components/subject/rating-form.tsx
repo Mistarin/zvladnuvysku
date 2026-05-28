@@ -1,8 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRating } from '@/hooks/use-rating'
+import { createClient } from '@/lib/supabase/client'
 
 interface RatingFormProps {
   subjectId: string
@@ -53,6 +54,39 @@ export function RatingForm({ subjectId, isLoggedIn }: RatingFormProps) {
   const [usefulness, setUsefulness] = useState(0)
   const [workload, setWorkload] = useState(0)
   const [comment, setComment] = useState('')
+  const [isLoadingExisting, setIsLoadingExisting] = useState(isLoggedIn)
+
+  useEffect(() => {
+    if (!isLoggedIn) return;
+    
+    async function fetchExisting() {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        setIsLoadingExisting(false);
+        return;
+      }
+      
+      const { data } = await supabase
+        .from('subject_ratings')
+        .select('*')
+        .eq('subject_id', subjectId)
+        .eq('user_id', user.id)
+        .single();
+        
+      if (data) {
+        const d = data as any;
+        setOverall(d.overall || 0);
+        setDifficulty(d.difficulty || 0);
+        setUsefulness(d.usefulness || 0);
+        setWorkload(d.workload || 0);
+        setComment(d.comment || '');
+      }
+      setIsLoadingExisting(false);
+    }
+    
+    fetchExisting();
+  }, [subjectId, isLoggedIn]);
 
   if (!isLoggedIn) {
     return (

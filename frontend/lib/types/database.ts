@@ -93,9 +93,10 @@ export interface Database {
           workload: number | null
           overall: number
           comment: string | null
+          comment_is_approved: boolean | null
           created_at: string
         }
-        Insert: Omit<Database['public']['Tables']['subject_ratings']['Row'], 'id' | 'created_at'>
+        Insert: Omit<Database['public']['Tables']['subject_ratings']['Row'], 'id' | 'created_at' | 'comment_is_approved'> & { comment_is_approved?: boolean | null }
         Update: Partial<Database['public']['Tables']['subject_ratings']['Insert']>
       }
       subject_rating_stats: {
@@ -130,9 +131,10 @@ export interface Database {
           user_id: string
           rating: number | null
           review: string | null
+          comment_is_approved: boolean | null
           created_at: string
         }
-        Insert: Omit<Database['public']['Tables']['teacher_ratings']['Row'], 'id' | 'created_at'>
+        Insert: Omit<Database['public']['Tables']['teacher_ratings']['Row'], 'id' | 'created_at' | 'comment_is_approved'> & { comment_is_approved?: boolean | null }
         Update: Partial<Database['public']['Tables']['teacher_ratings']['Insert']>
       }
       subject_teachers: {
@@ -157,8 +159,37 @@ export interface Database {
         Insert: Omit<Database['public']['Tables']['subject_materials']['Row'], 'id' | 'created_at' | 'is_approved'> & { is_approved?: boolean }
         Update: Partial<Database['public']['Tables']['subject_materials']['Insert']>
       }
+      feedback: {
+        Row: {
+          id: string
+          user_id: string | null
+          type: 'bug' | 'feature' | 'other'
+          message: string
+          is_resolved: boolean
+          created_at: string
+        }
+        Insert: Omit<Database['public']['Tables']['feedback']['Row'], 'id' | 'created_at' | 'is_resolved'> & { is_resolved?: boolean }
+        Update: Partial<Database['public']['Tables']['feedback']['Insert']>
+      }
+      teacher_rating_stats: {
+        Row: {
+          teacher_id: string
+          avg_rating: number
+          total_ratings: number
+          updated_at: string
+        }
+        Insert: Omit<Database['public']['Tables']['teacher_rating_stats']['Row'], 'updated_at'>
+        Update: Partial<Database['public']['Tables']['teacher_rating_stats']['Insert']>
+      }
     }
-    Views: Record<string, never>
+    Views: {
+      subject_search_view: {
+        Row: Database['public']['Tables']['subjects']['Row'] & {
+          avg_subject_rating: number
+          avg_teacher_rating: number
+        }
+      }
+    }
     Functions: Record<string, never>
     Enums: Record<string, never>
   }
@@ -178,9 +209,12 @@ export type TeacherInsert = Database['public']['Tables']['teachers']['Insert']
 export type TeacherRating = Database['public']['Tables']['teacher_ratings']['Row']
 export type SubjectTeacher = Database['public']['Tables']['subject_teachers']['Row']
 export type SubjectMaterial = Database['public']['Tables']['subject_materials']['Row']
+export type Feedback = Database['public']['Tables']['feedback']['Row']
+export type TeacherRatingStats = Database['public']['Tables']['teacher_rating_stats']['Row']
+export type SubjectSearchView = Database['public']['Views']['subject_search_view']['Row']
 
 // Extended types with joins
-export type SubjectWithStats = Subject & {
+export type SubjectWithStats = SubjectSearchView & {
   rating_stats?: SubjectRatingStats | null
   tags?: SubjectTag[]
   teachers?: Teacher[]

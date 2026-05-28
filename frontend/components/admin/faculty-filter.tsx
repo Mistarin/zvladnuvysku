@@ -21,10 +21,15 @@ export function FacultyFilter() {
     <div className="flex flex-wrap gap-2 py-2">
       <Link
         href={pathname}
-        className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all ${
+        style={{
+          backgroundColor: !currentFaculty ? "#02BED6" : undefined,
+          color: !currentFaculty ? "#ffffff" : undefined,
+          borderColor: "#02BED6"
+        }}
+        className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-all ${
           !currentFaculty 
-            ? "bg-foreground text-background shadow-md scale-105" 
-            : "bg-muted text-muted-foreground hover:bg-muted/80"
+            ? "shadow-md scale-105" 
+            : "bg-transparent text-muted-foreground hover:opacity-80"
         }`}
       >
         Všechny

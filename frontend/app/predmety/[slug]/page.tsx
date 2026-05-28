@@ -51,40 +51,54 @@ export default async function PredmetDetailPage({ params }: PageProps) {
   }
 
   const subject = data as Subject;
-  const { data: { user } } = await supabase.auth.getUser();
+  const [
+    { data: { user } },
+    { data: stData },
+    { data: materialsData, error: materialsError },
+    { data: rawRatings },
+    { count: deckCount },
+    { data: ratingStatsData }
+  ] = await Promise.all([
+    supabase.auth.getUser(),
+    supabase.from("subject_teachers").select("teachers(id, slug, name, faculty)").eq("subject_id", subject.id),
+    supabase.from("subject_materials").select("id, title, file_path, size_bytes, created_at, is_approved").eq("subject_id", subject.id).order("created_at", { ascending: false }),
+    supabase.from('subject_ratings').select('id, overall_rating, comment, created_at').eq('subject_id', subject.id).eq('comment_is_approved', true).not('comment', 'is', null).order('created_at', { ascending: false }),
+    supabase.from('flashcard_decks').select('*', { count: 'exact', head: true }).eq('subject_id', subject.id).eq('is_public', true),
+    supabase.from("subject_rating_stats").select("*").eq("subject_id", subject.id).single()
+  ]);
+
   const isLoggedIn = !!user;
 
-  const { data: stData } = await supabase
-    .from("subject_teachers")
-    .select("teachers(id, slug, name, faculty)")
-    .eq("subject_id", subject.id);
-    
   const teachers = ((stData as any[])?.map(st => st.teachers).flat().filter(Boolean) as { id: string, slug: string, name: string, faculty: string }[]) || [];
 
-  // Fetch study materials for this subject
-  const { data: materialsData, error: materialsError } = await supabase
-    .from("subject_materials")
-    .select("id, title, file_path, size_bytes, created_at, is_approved")
-    .eq("subject_id", subject.id)
-    .order("created_at", { ascending: false });
-    
   if (materialsError) {
     console.error("Error fetching materials:", materialsError);
   }
-  const materials = materialsData || [];
+  let materials: any[] = materialsData || [];
 
-  // Count available flashcard decks for this subject
-  const { count: deckCount } = await supabase
-    .from('flashcard_decks')
-    .select('*', { count: 'exact', head: true })
-    .eq('subject_id', subject.id)
-    .eq('is_public', true);
+  // Self-heal concurrently
+  if (materials.length > 0) {
+    const validIds = new Set<string>();
+    await Promise.all(materials.map(async (m) => {
+      const { data: publicUrlData } = supabase.storage.from('study_materials').getPublicUrl(m.file_path);
+      try {
+        const res = await fetch(publicUrlData.publicUrl, { method: 'HEAD', cache: 'no-store' });
+        if (res.ok) {
+          validIds.add(m.id);
+        } else if (res.status === 400 || res.status === 404) {
+          console.warn(`Material missing in storage: ${m.file_path}. Deleting DB row.`);
+          await supabase.from('subject_materials').delete().eq('id', m.id);
+        } else {
+          validIds.add(m.id);
+        }
+      } catch (e) {
+        validIds.add(m.id);
+      }
+    }));
+    materials = materials.filter(m => validIds.has(m.id));
+  }
 
-  const { data: ratingStatsData } = await supabase
-    .from("subject_rating_stats")
-    .select("*")
-    .eq("subject_id", subject.id)
-    .single();
+  const ratingsWithComments = rawRatings || [];
 
   const ratingStats = ratingStatsData as SubjectRatingStats | null;
   const totalRatings = ratingStats?.total_ratings ?? 0;
@@ -202,6 +216,47 @@ export default async function PredmetDetailPage({ params }: PageProps) {
           />
         )}
       </div>
+
+      {/* Hodnocení form a statistiky */}
+      <div className="mb-8">
+        <ContentSection title="Hodnocení předmětu" icon="⭐">
+          <div className="space-y-6">
+            <RatingStats stats={ratingStats} totalRatings={totalRatings} />
+            <RatingForm subjectId={subject.id} isLoggedIn={isLoggedIn} />
+          </div>
+        </ContentSection>
+      </div>
+
+      {ratingsWithComments.length > 0 && (
+        <div className="mb-8">
+          <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
+            <span>💬</span> Zkušenosti studentů
+          </h2>
+          <div className="space-y-4">
+            {ratingsWithComments.map((rating: any) => (
+              <div key={rating.id} className="glass-card p-4 space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="font-medium text-sm text-foreground">Anonymní student</div>
+                    <span className="text-xs text-muted-foreground">•</span>
+                    <span className="text-xs text-muted-foreground">
+                      {new Date(rating.created_at).toLocaleDateString('cs-CZ')}
+                    </span>
+                  </div>
+                  {rating.overall_rating && (
+                    <div className="flex items-center gap-1 text-amber-500 font-bold text-sm">
+                      {rating.overall_rating}/5 ★
+                    </div>
+                  )}
+                </div>
+                <p className="text-foreground/90 text-sm italic leading-relaxed">
+                  "{rating.comment}"
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Content sections */}
       <div className="space-y-6">
@@ -372,13 +427,7 @@ export default async function PredmetDetailPage({ params }: PageProps) {
           )}
         </ContentSection>
 
-        {/* Hodnocení */}
-        <ContentSection title="Hodnocení" icon="⭐">
-          <div className="space-y-6">
-            <RatingStats stats={ratingStats} totalRatings={totalRatings} />
-            <RatingForm subjectId={subject.id} isLoggedIn={isLoggedIn} />
-          </div>
-        </ContentSection>
+
       </div>
 
       {/* Back link */}

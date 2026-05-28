@@ -5,7 +5,7 @@ export async function TeacherReviews({ teacherId }: { teacherId: string }) {
 
   const { data: reviews, error } = await supabase
     .from("teacher_ratings")
-    .select("id, rating, review, created_at")
+    .select("id, rating, review, created_at, comment_is_approved")
     .eq("teacher_id", teacherId)
     .order("created_at", { ascending: false });
 
@@ -42,9 +42,15 @@ export async function TeacherReviews({ teacherId }: { teacherId: string }) {
             </span>
           </div>
           {review.review ? (
-            <p className="text-foreground text-sm leading-relaxed whitespace-pre-wrap">
-              {review.review}
-            </p>
+            review.comment_is_approved ? (
+              <p className="text-foreground text-sm leading-relaxed whitespace-pre-wrap">
+                {review.review}
+              </p>
+            ) : (
+              <p className="text-amber-500/80 text-sm italic">
+                Komentář čeká na schválení administrátorem.
+              </p>
+            )
           ) : (
             <p className="text-muted-foreground/60 text-sm italic">
               Bez slovního komentáře.
