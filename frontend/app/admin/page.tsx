@@ -8,6 +8,7 @@ import { ShieldAlert, ClipboardList } from 'lucide-react'
 import Link from 'next/link'
 import { FacultyFilter } from '@/components/admin/faculty-filter'
 import { FeedbackApprovalCard } from '@/components/admin/feedback-approval-card'
+import { TeacherApprovalCard } from '@/components/admin/teacher-approval-card'
 
 export const metadata: Metadata = {
   title: 'Admin panel',
@@ -86,9 +87,16 @@ export default async function AdminPage(props: {
   const { data: rawFeedback } = await (supabase.from('feedback') as any)
     .select('*')
     .eq('is_resolved', false)
+  let unresolvedFeedback: any[] = rawFeedback || []
+
+  // Fetch unapproved teachers
+  const { data: rawTeachers } = await supabase
+    .from('teachers')
+    .select('*')
+    .eq('is_approved', false)
     .order('created_at', { ascending: true })
 
-  let unresolvedFeedback: any[] = rawFeedback || []
+  let unapprovedTeachers: any[] = rawTeachers || []
 
   // Filter by faculty if selected
   if (facultyFilter) {
@@ -100,6 +108,7 @@ export default async function AdminPage(props: {
     unapprovedMaterials = unapprovedMaterials.filter(m => (m.subject as any)?.faculty === facultyFilter)
     unapprovedSubjectRatings = unapprovedSubjectRatings.filter(r => (r.subject as any)?.faculty === facultyFilter)
     unapprovedTeacherRatings = unapprovedTeacherRatings.filter(r => (r.teacher as any)?.faculty === facultyFilter)
+    unapprovedTeachers = unapprovedTeachers.filter(t => t.faculty === facultyFilter)
   }
 
   // Combine ratings for UI
@@ -143,7 +152,7 @@ export default async function AdminPage(props: {
     proposed_by_email: undefined as string | undefined,
   }))
 
-  const allDone = proposalsWithEmail.length === 0 && unapprovedMaterials.length === 0 && unapprovedComments.length === 0 && unresolvedFeedback.length === 0;
+  const allDone = proposalsWithEmail.length === 0 && unapprovedMaterials.length === 0 && unapprovedComments.length === 0 && unresolvedFeedback.length === 0 && unapprovedTeachers.length === 0;
 
   return (
     <div className="container mx-auto max-w-3xl px-4 sm:px-6 lg:px-8 py-8 space-y-8">
@@ -152,9 +161,14 @@ export default async function AdminPage(props: {
           <ClipboardList className="w-6 h-6 text-primary" />
           <h1 className="text-2xl font-bold text-foreground">Admin panel</h1>
         </div>
-        <Link href="/admin/subjects" className="text-sm text-primary hover:underline font-medium">
-          Správa existujících předmětů →
-        </Link>
+        <div className="flex flex-col items-end gap-1">
+          <Link href="/admin/subjects" className="text-sm text-primary hover:underline font-medium">
+            Správa předmětů →
+          </Link>
+          <Link href="/admin/ucitele" className="text-sm text-primary hover:underline font-medium">
+            Správa vyučujících →
+          </Link>
+        </div>
       </div>
 
       <div className="space-y-4">
@@ -248,6 +262,26 @@ export default async function AdminPage(props: {
                   <FeedbackApprovalCard
                     key={feedback.id}
                     feedback={feedback}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Učitelé */}
+          {unapprovedTeachers.length > 0 && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between border-b border-border/50 pb-2">
+                <h2 className="text-xl font-bold flex items-center gap-2">
+                  <span>🧑‍🏫</span> Noví učitelé
+                </h2>
+                <span className="text-sm text-muted-foreground">{unapprovedTeachers.length} {unapprovedTeachers.length === 1 ? 'učitel' : unapprovedTeachers.length < 5 ? 'učitelé' : 'učitelů'}</span>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {unapprovedTeachers.map((teacher: any) => (
+                  <TeacherApprovalCard
+                    key={teacher.id}
+                    teacher={teacher}
                   />
                 ))}
               </div>

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { TeacherProposalDialog } from "@/components/teacher/teacher-proposal-dialog";
 
 export const metadata: Metadata = {
   title: "Vyučující | ZvládnuVýšku",
@@ -22,6 +23,7 @@ export default async function TeachersPage() {
   const { data: teachers, error } = await supabase
     .from("teachers")
     .select("id, slug, name, faculty, department")
+    .eq("is_approved", true)
     .order("faculty", { ascending: true })
     .order("name", { ascending: true });
 
@@ -54,6 +56,13 @@ export default async function TeachersPage() {
             Prohlížej si profily vyučujících, hodnoť jejich přístup a objev, jaké předměty učí.
           </p>
         </div>
+        <TeacherProposalDialog 
+          trigger={
+            <button className="px-4 py-2 bg-primary text-primary-foreground rounded-lg font-medium text-sm hover:opacity-90 transition-opacity">
+              + Přidat vyučujícího
+            </button>
+          }
+        />
       </div>
 
       {faculties.length === 0 ? (

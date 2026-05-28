@@ -183,6 +183,12 @@ export default async function PredmetDetailPage({ params }: PageProps) {
               <Calendar className="w-3.5 h-3.5" /> {subject.year}. ročník
             </span>
           )}
+
+          {subject.exam_from_home && (
+            <span className="text-sm font-medium px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5 border border-emerald-500/20">
+              🏠 Z domova
+            </span>
+          )}
         </div>
       </div>
 

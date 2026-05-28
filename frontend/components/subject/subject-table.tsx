@@ -161,17 +161,24 @@ export function SubjectTable({
                     >
                       {subject.name}
                     </Link>
-                    {subject.faculty && (
-                      <span 
-                        className="inline-block mt-1 px-1.5 py-0.5 text-[10px] font-semibold rounded uppercase tracking-wider"
-                        style={{ 
-                          backgroundColor: `${FACULTY_COLORS[subject.faculty] || "var(--foreground)"}20`,
-                          color: FACULTY_COLORS[subject.faculty] || "var(--foreground)",
-                        }}
-                      >
-                        {subject.faculty}
-                      </span>
-                    )}
+                    <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
+                      {subject.faculty && (
+                        <span 
+                          className="inline-block px-1.5 py-0.5 text-[10px] font-semibold rounded uppercase tracking-wider"
+                          style={{ 
+                            backgroundColor: `${FACULTY_COLORS[subject.faculty] || "var(--foreground)"}20`,
+                            color: FACULTY_COLORS[subject.faculty] || "var(--foreground)",
+                          }}
+                        >
+                          {subject.faculty}
+                        </span>
+                      )}
+                      {(subject as any).exam_from_home && (
+                        <span className="inline-block px-1.5 py-0.5 text-[10px] font-semibold rounded uppercase tracking-wider bg-primary/10 text-primary border border-primary/20">
+                          🏠 Z domova
+                        </span>
+                      )}
+                    </div>
                   </td>
 
                   <td className="px-4 py-3 hidden sm:table-cell text-center align-middle">

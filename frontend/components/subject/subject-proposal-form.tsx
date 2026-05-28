@@ -115,6 +115,7 @@ export function SubjectProposalForm({ userId }: SubjectProposalFormProps) {
     real_requirements: REQUIREMENTS_TEMPLATE,
     difficulty: 3, time_intensity: 3,
     attendance_type: '',
+    exam_from_home: false,
     credits: '', semester: '', faculty: '', year: '', note: '',
   })
 
@@ -187,6 +188,7 @@ export function SubjectProposalForm({ userId }: SubjectProposalFormProps) {
       real_requirements: form.real_requirements || undefined,
       difficulty: form.difficulty, time_intensity: form.time_intensity,
       attendance_type: form.attendance_type || undefined,
+      exam_from_home: form.exam_from_home,
       credits: form.credits ? Number(form.credits) : undefined,
       semester: form.semester || undefined, faculty: form.faculty || undefined,
       year: form.year ? Number(form.year) : undefined,
@@ -334,10 +336,21 @@ export function SubjectProposalForm({ userId }: SubjectProposalFormProps) {
           </div>
           <div>
             <FieldLabel>Docházka</FieldLabel>
-            <Select value={form.attendance_type} onChange={(e) => set('attendance_type', e.target.value)}>
-              <option value="">– vybrat –</option>
-              {ATTENDANCE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-            </Select>
+            <div className="space-y-3">
+              <Select value={form.attendance_type} onChange={(e) => set('attendance_type', e.target.value)}>
+                <option value="">– vybrat –</option>
+                {ATTENDANCE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+              </Select>
+              <label className="flex items-center gap-2 cursor-pointer pt-1">
+                <input 
+                  type="checkbox" 
+                  checked={form.exam_from_home} 
+                  onChange={(e) => set('exam_from_home', e.target.checked)}
+                  className="w-4 h-4 rounded border-border text-primary focus:ring-primary/40 bg-background"
+                />
+                <span className="text-sm font-medium">Zkouška z domova</span>
+              </label>
+            </div>
           </div>
         </div>
 

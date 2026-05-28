@@ -165,7 +165,7 @@ export function SearchFilters({
                   
                   return (
                     <select
-                      value={selectedValue ?? ""}
+                      value={(selectedValue as string | number) ?? ""}
                       onChange={(e) => {
                         const val = e.target.value;
                         if (!val) {
@@ -193,6 +193,18 @@ export function SearchFilters({
                     </select>
                   );
                 })()}
+
+                {config.type === "boolean" && (
+                  <label className="flex items-center gap-2 cursor-pointer p-2 rounded-lg hover:bg-muted/50 transition-colors">
+                    <input
+                      type="checkbox"
+                      checked={(filters[config.key as keyof SubjectFilters] as boolean) || false}
+                      onChange={(e) => onFilterChange(config.key as keyof SubjectFilters, (e.target.checked ? true : undefined) as any)}
+                      className="w-4 h-4 rounded border-border text-primary focus:ring-primary/40 bg-background"
+                    />
+                    <span className="text-sm font-medium text-foreground">{config.label}</span>
+                  </label>
+                )}
               </div>
             ))}
             

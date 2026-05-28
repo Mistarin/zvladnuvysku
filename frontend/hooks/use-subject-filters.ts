@@ -94,6 +94,11 @@ export const FILTER_CONFIG: FilterConfig[] = [
       { value: 'PřF', label: 'PřF 🟩' },
     ],
   },
+  {
+    key: 'examFromHome',
+    label: 'Zkouška z domova',
+    type: 'boolean',
+  },
 ]
 
 interface UseSubjectFiltersReturn {
@@ -137,6 +142,7 @@ export function useSubjectFilters(): UseSubjectFiltersReturn {
     faculty: searchParams.get('faculty') ?? undefined,
     ratingMin: searchParams.get('rating_min') ? Number(searchParams.get('rating_min')) : undefined,
     teacherRatingMin: searchParams.get('teacher_rating_min') ? Number(searchParams.get('teacher_rating_min')) : undefined,
+    examFromHome: searchParams.get('exam_from_home') === 'true' || undefined,
   }), [searchParams])
 
   const sort: SortConfig = useMemo(() => ({
@@ -163,6 +169,7 @@ export function useSubjectFilters(): UseSubjectFiltersReturn {
       faculty: 'faculty',
       ratingMin: 'rating_min',
       teacherRatingMin: 'teacher_rating_min',
+      examFromHome: 'exam_from_home',
     }
 
     const paramKey = paramMap[key]
@@ -211,6 +218,7 @@ export function useSubjectFilters(): UseSubjectFiltersReturn {
     if (filters.ratingMin !== undefined) count++
     if (filters.teacherRatingMin !== undefined) count++
     if (filters.faculty !== undefined) count++
+    if (filters.examFromHome === true) count++
     return count
   }, [filters])
 

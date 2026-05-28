@@ -18,6 +18,7 @@ export interface SubjectFilters {
   year?: number[]
   ratingMin?: number
   teacherRatingMin?: number
+  examFromHome?: boolean
 }
 
 export interface SortConfig {
@@ -92,6 +93,9 @@ export function useSubjects(
       }
       if (filters.teacherRatingMin !== undefined) {
         query = query.gte('avg_teacher_rating', filters.teacherRatingMin)
+      }
+      if (filters.examFromHome) {
+        query = query.eq('exam_from_home', true)
       }
 
       // Řazení

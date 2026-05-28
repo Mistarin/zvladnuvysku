@@ -22,6 +22,7 @@ export interface Database {
           time_intensity: number | null
           attendance_type: string | null
           credits: number | null
+          exam_from_home: boolean | null
           semester: 'zimní' | 'letní' | 'oba' | null
           faculty: string | null
           department: string | null
@@ -119,6 +120,7 @@ export interface Database {
           name: string
           faculty: string
           department: string | null
+          is_approved: boolean | null
           created_at: string
         }
         Insert: Omit<Database['public']['Tables']['teachers']['Row'], 'id' | 'created_at'>
