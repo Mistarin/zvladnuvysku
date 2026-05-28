@@ -133,6 +133,8 @@ export function SubjectProposalForm({ userId }: SubjectProposalFormProps) {
     setSearchResults(data ?? [])
   }
 
+  const [materials, setMaterials] = useState<File[]>([])
+
   const searchTeachers = async (q: string) => {
     setTeacherSearch(q)
     if (q.length < 2) { setTeacherSearchResults([]); return }
@@ -152,6 +154,33 @@ export function SubjectProposalForm({ userId }: SubjectProposalFormProps) {
     setError(null)
 
     const supabase = createClient()
+    
+    // Upload materials first
+    const uploadedMaterials: { title: string, file_path: string, size_bytes: number }[] = []
+    if (materials.length > 0) {
+      const proposalId = crypto.randomUUID()
+      for (const file of materials) {
+        const fileExt = file.name.split('.').pop()
+        const filePath = `proposals/${proposalId}/${crypto.randomUUID()}.${fileExt}`
+        
+        const { error: uploadError } = await supabase.storage
+          .from('study_materials')
+          .upload(filePath, file)
+          
+        if (uploadError) {
+          setError(`Nepodařilo se nahrát soubor ${file.name}: ${uploadError.message}`)
+          setIsSubmitting(false)
+          return
+        }
+        
+        uploadedMaterials.push({
+          title: file.name.replace('.pdf', ''),
+          file_path: filePath,
+          size_bytes: file.size
+        })
+      }
+    }
+
     const proposalData = {
       name: form.name || undefined, short_tag: form.short_tag || undefined,
       description: form.description || undefined, target_audience: form.target_audience || undefined,
@@ -162,6 +191,7 @@ export function SubjectProposalForm({ userId }: SubjectProposalFormProps) {
       semester: form.semester || undefined, faculty: form.faculty || undefined,
       year: form.year ? Number(form.year) : undefined,
       teachers: selectedTeachers.length > 0 ? selectedTeachers : undefined,
+      materials: uploadedMaterials.length > 0 ? uploadedMaterials : undefined,
     }
 
     const { error: dbError } = await supabase.from('subject_proposals' as never).insert({
@@ -389,6 +419,65 @@ export function SubjectProposalForm({ userId }: SubjectProposalFormProps) {
               </div>
             )}
           </div>
+        </div>
+      </div>
+
+      {/* Materiály */}
+      <div className="glass-card p-6 space-y-4">
+        <div>
+          <h2 className="font-semibold text-foreground">Studijní materiály</h2>
+          <p className="text-xs text-muted-foreground mt-0.5">Volitelně nahraj PDF materiály (výpisky, testy) pro tento předmět.</p>
+        </div>
+        
+        <div className="space-y-3">
+          <input
+            type="file"
+            accept="application/pdf"
+            multiple
+            className="hidden"
+            id="proposal-materials-upload"
+            onChange={(e) => {
+              if (e.target.files) {
+                const newFiles = Array.from(e.target.files);
+                const validFiles = newFiles.filter(f => f.size <= 2 * 1024 * 1024);
+                if (newFiles.length !== validFiles.length) {
+                  setError("Některé soubory byly přeskočeny, protože přesahují limit 2 MB.");
+                }
+                setMaterials(prev => [...prev, ...validFiles]);
+              }
+            }}
+          />
+          <label 
+            htmlFor="proposal-materials-upload"
+            className="inline-flex items-center justify-center w-full px-4 py-6 border-2 border-dashed border-border rounded-xl cursor-pointer hover:bg-muted/50 transition-colors"
+          >
+            <div className="text-center">
+              <span className="text-2xl opacity-80">📄</span>
+              <p className="mt-2 text-sm font-medium text-foreground">Vybrat PDF soubory</p>
+              <p className="text-xs text-muted-foreground mt-1">Maximálně 2 MB na soubor</p>
+            </div>
+          </label>
+
+          {materials.length > 0 && (
+            <div className="space-y-2 mt-4">
+              {materials.map((file, idx) => (
+                <div key={idx} className="flex items-center justify-between p-2 rounded-lg bg-muted/30 border border-border text-sm">
+                  <div className="flex items-center gap-2 truncate">
+                    <span>📄</span>
+                    <span className="truncate">{file.name}</span>
+                    <span className="text-muted-foreground text-xs">({(file.size / 1024 / 1024).toFixed(1)} MB)</span>
+                  </div>
+                  <button 
+                    type="button"
+                    onClick={() => setMaterials(prev => prev.filter((_, i) => i !== idx))}
+                    className="text-muted-foreground hover:text-destructive p-1"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 

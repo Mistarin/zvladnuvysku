@@ -64,7 +64,7 @@ export default async function PredmetDetailPage({ params }: PageProps) {
   // Fetch study materials for this subject
   const { data: materialsData, error: materialsError } = await supabase
     .from("subject_materials")
-    .select("id, title, file_path, size_bytes, created_at")
+    .select("id, title, file_path, size_bytes, created_at, is_approved")
     .eq("subject_id", subject.id)
     .order("created_at", { ascending: false });
     
@@ -286,6 +286,11 @@ export default async function PredmetDetailPage({ params }: PageProps) {
                           <span className="text-xs text-muted-foreground truncate">
                             {(m.size_bytes / 1024 / 1024).toFixed(1)} MB
                           </span>
+                          {!m.is_approved && (
+                            <span className="text-[10px] uppercase font-semibold text-amber-600 bg-amber-500/10 px-1.5 py-0.5 rounded ml-auto">
+                              Čeká na schválení
+                            </span>
+                          )}
                         </div>
                       </div>
                       <div className="text-muted-foreground group-hover:text-primary opacity-0 group-hover:opacity-100 transition-all">

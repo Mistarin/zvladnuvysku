@@ -1,0 +1,94 @@
+"use client";
+
+import { useState } from "react";
+import { approveMaterial, rejectMaterial } from "@/app/admin/actions";
+import type { SubjectMaterial } from "@/lib/types/database";
+import { createClient } from "@/lib/supabase/client";
+
+interface MaterialApprovalCardProps {
+  material: SubjectMaterial;
+  subjectName?: string;
+}
+
+export function MaterialApprovalCard({ material, subjectName }: MaterialApprovalCardProps) {
+  const [isApproving, setIsApproving] = useState(false);
+  const [isRejecting, setIsRejecting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const supabase = createClient();
+  const { data: publicUrlData } = supabase.storage.from("study_materials").getPublicUrl(material.file_path);
+
+  const handleApprove = async () => {
+    setIsApproving(true);
+    setError(null);
+    const result = await approveMaterial(material.id);
+    if (!result.success) {
+      setError(result.error);
+    }
+    setIsApproving(false);
+  };
+
+  const handleReject = async () => {
+    if (!window.confirm("Opravdu zamítnout a smazat tento materiál?")) return;
+    setIsRejecting(true);
+    setError(null);
+    const result = await rejectMaterial(material.id, material.file_path);
+    if (!result.success) {
+      setError(result.error);
+    }
+    setIsRejecting(false);
+  };
+
+  const isWorking = isApproving || isRejecting;
+
+  return (
+    <div className="glass-card p-5 space-y-4">
+      <div className="flex justify-between items-start gap-4">
+        <div>
+          <h3 className="font-bold text-lg text-foreground flex items-center gap-2">
+            📄 {material.title}
+          </h3>
+          <p className="text-sm text-muted-foreground mt-1">
+            Velikost: {(material.size_bytes / 1024 / 1024).toFixed(2)} MB
+          </p>
+          {subjectName && (
+            <p className="text-sm text-muted-foreground mt-1">
+              Předmět: <span className="font-medium text-foreground">{subjectName}</span>
+            </p>
+          )}
+        </div>
+        <a 
+          href={publicUrlData.publicUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-sm font-medium px-3 py-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+        >
+          Otevřít PDF ↗
+        </a>
+      </div>
+
+      {error && (
+        <div className="p-3 bg-destructive/10 text-destructive text-sm rounded-lg border border-destructive/20">
+          {error}
+        </div>
+      )}
+
+      <div className="flex justify-end gap-2 pt-2 border-t border-border/50">
+        <button
+          onClick={handleReject}
+          disabled={isWorking}
+          className="px-4 py-2 text-sm font-medium text-destructive hover:bg-destructive/10 rounded-lg transition-colors disabled:opacity-50"
+        >
+          {isRejecting ? "Mažu..." : "Zamítnout (Smazat)"}
+        </button>
+        <button
+          onClick={handleApprove}
+          disabled={isWorking}
+          className="px-4 py-2 text-sm font-medium bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20 rounded-lg transition-colors disabled:opacity-50"
+        >
+          {isApproving ? "Schvaluji..." : "Schválit"}
+        </button>
+      </div>
+    </div>
+  );
+}

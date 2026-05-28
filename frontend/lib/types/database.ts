@@ -152,8 +152,9 @@ export interface Database {
           file_path: string
           size_bytes: number
           created_at: string
+          is_approved: boolean
         }
-        Insert: Omit<Database['public']['Tables']['subject_materials']['Row'], 'id' | 'created_at'>
+        Insert: Omit<Database['public']['Tables']['subject_materials']['Row'], 'id' | 'created_at' | 'is_approved'> & { is_approved?: boolean }
         Update: Partial<Database['public']['Tables']['subject_materials']['Insert']>
       }
     }

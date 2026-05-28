@@ -72,6 +72,21 @@ export async function approveProposal(proposalId: string): Promise<ActionResult>
       if (teachers && teachers.length > 0) {
         await processTeachers(supabase, (insertedSubject as any).id, teachers)
       }
+
+      const materials = insertData.materials as { title: string, file_path: string, size_bytes: number }[] | undefined
+      delete insertData.materials
+
+      if (materials && materials.length > 0) {
+        const materialsToInsert = materials.map(m => ({
+          subject_id: (insertedSubject as any).id,
+          uploader_id: proposal.proposed_by,
+          title: m.title,
+          file_path: m.file_path,
+          size_bytes: m.size_bytes,
+          is_approved: true
+        }))
+        await supabase.from('subject_materials').insert(materialsToInsert as never)
+      }
     } else if (proposal.type === 'edit' && proposal.subject_id) {
       const updateData = { ...proposal.data } as Record<string, any>
       const teachers = updateData.teachers as { id?: string, name: string, faculty: string }[] | undefined
@@ -82,6 +97,21 @@ export async function approveProposal(proposalId: string): Promise<ActionResult>
 
       if (teachers && teachers.length > 0) {
         await processTeachers(supabase, proposal.subject_id, teachers)
+      }
+
+      const materials = updateData.materials as { title: string, file_path: string, size_bytes: number }[] | undefined
+      delete updateData.materials
+      
+      if (materials && materials.length > 0) {
+        const materialsToInsert = materials.map(m => ({
+          subject_id: proposal.subject_id,
+          uploader_id: proposal.proposed_by,
+          title: m.title,
+          file_path: m.file_path,
+          size_bytes: m.size_bytes,
+          is_approved: true
+        }))
+        await supabase.from('subject_materials').insert(materialsToInsert as never)
       }
     }
 
@@ -188,5 +218,54 @@ async function processTeachers(supabase: any, subjectId: string, teachers: { id?
         console.error('Failed to link teacher:', error)
       }
     }
+  }
+}
+
+export async function approveMaterial(materialId: string): Promise<ActionResult> {
+  try {
+    const { supabase } = await getAdminClient()
+    const { error } = await supabase
+      .from('subject_materials')
+      .update({ is_approved: true } as never)
+      .eq('id', materialId)
+
+    if (error) return { success: false, error: `Chyba při schvalování materiálu: ${error.message}` }
+    revalidatePath('/admin')
+    revalidatePath('/predmety/[slug]', 'page')
+    return { success: true }
+  } catch (err: any) {
+    return { success: false, error: err.message || 'Neočekávaná chyba' }
+  }
+}
+
+export async function rejectMaterial(materialId: string, filePath: string): Promise<ActionResult> {
+  try {
+    const { supabase } = await getAdminClient()
+    
+    // The storage trigger will automatically delete the database row if we delete the file first
+    const { error: storageError } = await supabase.storage
+      .from('study_materials')
+      .remove([filePath])
+
+    if (storageError) {
+      // If file doesn't exist in storage, we just delete the row
+      console.warn("Storage delete failed or file not found:", storageError)
+    }
+
+    // Try deleting the row directly in case the trigger didn't fire or file was already gone
+    const { error: dbError } = await supabase
+      .from('subject_materials')
+      .delete()
+      .eq('id', materialId)
+      
+    if (dbError && dbError.code !== 'P0002') { 
+      return { success: false, error: `Chyba při mazání materiálu: ${dbError.message}` }
+    }
+    
+    revalidatePath('/admin')
+    revalidatePath('/predmety/[slug]', 'page')
+    return { success: true }
+  } catch (err: any) {
+    return { success: false, error: err.message || 'Neočekávaná chyba' }
   }
 }
