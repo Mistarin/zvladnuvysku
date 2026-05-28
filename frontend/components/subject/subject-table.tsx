@@ -19,7 +19,7 @@ const COLUMNS: {
   className?: string;
 }[] = [
   { key: "name", label: "Název", sortable: true },
-  { key: "short_tag", label: "Zkratka", sortable: true, className: "hidden sm:table-cell" },
+  { key: "short_tag", label: "Zkratka", sortable: true, className: "hidden sm:table-cell text-center" },
   { key: "credits", label: "Kredity", sortable: true, className: "hidden md:table-cell text-center" },
   { key: "difficulty", label: "Obtížnost", sortable: true, className: "text-center" },
   { key: "time_intensity", label: "Náročnost", sortable: true, className: "hidden lg:table-cell text-center" },
@@ -31,6 +31,15 @@ const SEMESTER_LABELS: Record<string, string> = {
   zimní: "❄️ Zimní",
   letní: "☀️ Letní",
   oba: "🔄 Oba",
+};
+
+const FACULTY_COLORS: Record<string, string> = {
+  FSS: "#FBB900",
+  FU: "#D2091D",
+  FF: "#74348B",
+  LF: "#007CBB",
+  PdF: "#EE7202",
+  PřF: "#7A9B21",
 };
 
 function TableSkeleton() {
@@ -150,15 +159,21 @@ export function SubjectTable({
                     >
                       {subject.name}
                     </Link>
-                    {subject.department && (
-                      <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">
-                        {subject.department}
-                      </p>
+                    {subject.faculty && (
+                      <span 
+                        className="inline-block mt-1 px-1.5 py-0.5 text-[10px] font-semibold rounded uppercase tracking-wider"
+                        style={{ 
+                          backgroundColor: `${FACULTY_COLORS[subject.faculty] || "var(--foreground)"}20`,
+                          color: FACULTY_COLORS[subject.faculty] || "var(--foreground)",
+                        }}
+                      >
+                        {subject.faculty}
+                      </span>
                     )}
                   </td>
 
-                  <td className="px-4 py-3 hidden sm:table-cell">
-                    <span className="font-mono text-xs font-semibold text-primary/80 bg-primary/10 px-1.5 py-0.5 rounded">
+                  <td className="px-4 py-3 hidden sm:table-cell text-center align-middle">
+                    <span className="text-sm font-medium text-foreground">
                       {subject.short_tag}
                     </span>
                   </td>

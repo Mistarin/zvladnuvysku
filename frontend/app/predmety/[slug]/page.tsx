@@ -62,12 +62,15 @@ export default async function PredmetDetailPage({ params }: PageProps) {
   const teachers = ((stData as any[])?.map(st => st.teachers).flat().filter(Boolean) as { id: string, slug: string, name: string, faculty: string }[]) || [];
 
   // Fetch study materials for this subject
-  const { data: materialsData } = await supabase
+  const { data: materialsData, error: materialsError } = await supabase
     .from("subject_materials")
-    .select("id, title, file_path, size_bytes, created_at, uploader:uploader_id (raw_user_meta_data)")
+    .select("id, title, file_path, size_bytes, created_at")
     .eq("subject_id", subject.id)
     .order("created_at", { ascending: false });
     
+  if (materialsError) {
+    console.error("Error fetching materials:", materialsError);
+  }
   const materials = materialsData || [];
 
   // Count available flashcard decks for this subject
