@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { createClient } from "@/lib/supabase/client";
 import { DifficultyBadge } from "@/components/subject/difficulty-badge";
 import type { SearchResult } from "@/hooks/use-search";
 import type { FlashcardDeckResult } from "@/hooks/use-flashcard-search";
@@ -37,6 +38,7 @@ export function SearchSuggestions({
   isMaterialLoading = false,
 }: SearchSuggestionsProps) {
   if (!query || query.trim().length < 1) return null;
+  const materialStorage = createClient().storage.from("study_materials");
 
   // ── FLASHCARD MODE ──────────────────────────────────────────────────────
   if (mode === "flashcards") {
@@ -167,13 +169,22 @@ export function SearchSuggestions({
                   ? <>Žádné materiály pro „<span className="font-medium text-foreground">{materialQuery}</span>“</>
                   : "Žádné schválené materiály"}
               </p>
+              <Link
+                href={materialQuery ? `/materialy?q=${encodeURIComponent(materialQuery)}` : "/materialy"}
+                onClick={onSelect}
+                className="mt-2 text-xs text-sky-700 hover:underline block"
+              >
+                Projít všechny materiály →
+              </Link>
             </div>
           ) : (
             <>
               {materialResults.map((material, idx) => (
-                <Link
+                <a
                   key={material.id}
-                  href={material.subject ? `/predmety/${material.subject.slug}` : "/materialy"}
+                  href={material.public_url || materialStorage.getPublicUrl(material.file_path).data.publicUrl}
+                  target="_blank"
+                  rel="noreferrer"
                   onClick={onSelect}
                   role="option"
                   aria-selected={false}
@@ -199,7 +210,7 @@ export function SearchSuggestions({
                   <span className="text-xs text-muted-foreground shrink-0 ml-3">
                     {formatFileSize(material.size_bytes)}
                   </span>
-                </Link>
+                </a>
               ))}
 
               <Link

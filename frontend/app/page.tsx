@@ -195,6 +195,18 @@ export default function HomePage() {
                 ? <><span className="font-mono text-sky-700">.M</span> režim — hledáš studijní materiály</>
                 : "Jednotný studentský hub. Proč generovat stokrát to, co už dávno existuje?"}
           </p>
+
+          {searchMode === "subjects" && !isFocused && (
+            <div className="mt-3 flex flex-wrap items-center justify-center gap-2 text-xs text-muted-foreground">
+              <span>Zkratky hledání:</span>
+              <span className="rounded-full border border-border bg-card px-2.5 py-1">
+                <span className="font-mono text-primary">.f</span> balíčky
+              </span>
+              <span className="rounded-full border border-border bg-card px-2.5 py-1">
+                <span className="font-mono text-sky-700">.m</span> materiály
+              </span>
+            </div>
+          )}
         </div>
       </section>
 

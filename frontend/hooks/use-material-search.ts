@@ -8,6 +8,7 @@ export interface MaterialSearchResult {
   id: string
   title: string
   file_path: string
+  public_url: string
   size_bytes: number
   created_at: string
   subject: { name: string; slug: string; short_tag: string } | null
@@ -38,6 +39,7 @@ export function useMaterialSearch(query: string): UseMaterialSearchReturn {
     const supabase = createClient()
 
     const run = async () => {
+      const storage = supabase.storage.from('study_materials')
       let q = supabase
         .from('subject_materials')
         .select('id, title, file_path, size_bytes, created_at, subject:subject_id(name, slug, short_tag)')
@@ -50,7 +52,11 @@ export function useMaterialSearch(query: string): UseMaterialSearchReturn {
       }
 
       const { data } = await q
-      setMaterialResults((data as MaterialSearchResult[]) || [])
+      const mapped = ((data as Omit<MaterialSearchResult, 'public_url'>[]) || []).map((material) => ({
+        ...material,
+        public_url: storage.getPublicUrl(material.file_path).data.publicUrl,
+      }))
+      setMaterialResults(mapped)
       setIsMaterialLoading(false)
     }
 

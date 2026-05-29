@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { SearchLandingBar } from "@/components/search/search-landing-bar";
 import { BookOpen, Layers } from "lucide-react";
 
 interface PageProps {
@@ -62,6 +63,11 @@ export default async function FlashcardDeckListPage({ searchParams }: PageProps)
             </p>
           </div>
         </div>
+        <SearchLandingBar
+          basePath="/flashcardy"
+          placeholder="Hledat balíček nebo předmět..."
+          emptyHint="Napiš název balíčku a stiskni Enter."
+        />
       </div>
 
       {decks.length === 0 ? (
@@ -71,6 +77,11 @@ export default async function FlashcardDeckListPage({ searchParams }: PageProps)
           <p className="text-sm text-muted-foreground">
             {query ? "Pro zadaný dotaz jsme nic nenašli." : "Zatím tu nejsou žádné veřejné balíčky."}
           </p>
+          {query && (
+            <Link href="/flashcardy" className="text-sm text-primary hover:underline">
+              Zobrazit všechny balíčky
+            </Link>
+          )}
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

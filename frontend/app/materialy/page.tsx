@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { SearchLandingBar } from "@/components/search/search-landing-bar";
 import { FileText, ExternalLink } from "lucide-react";
 import { formatFileSize } from "@/lib/utils";
 
@@ -63,6 +64,11 @@ export default async function MaterialListPage({ searchParams }: PageProps) {
             </p>
           </div>
         </div>
+        <SearchLandingBar
+          basePath="/materialy"
+          placeholder="Hledat materiál nebo předmět..."
+          emptyHint="Napiš název materiálu a stiskni Enter."
+        />
       </div>
 
       {materials.length === 0 ? (
@@ -72,6 +78,11 @@ export default async function MaterialListPage({ searchParams }: PageProps) {
           <p className="text-sm text-muted-foreground">
             {query ? "Pro zadaný dotaz jsme nic nenašli." : "Zatím tu nejsou žádné schválené materiály."}
           </p>
+          {query && (
+            <Link href="/materialy" className="text-sm text-sky-700 hover:underline">
+              Zobrazit všechny materiály
+            </Link>
+          )}
         </div>
       ) : (
         <div className="space-y-3">
