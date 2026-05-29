@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useDeferredValue } from "react";
 import { useRouter } from "next/navigation";
 import { SearchBar } from "@/components/search/search-bar";
 import { SearchSuggestions } from "@/components/search/search-suggestions";
@@ -13,8 +13,9 @@ export function HeroSearch() {
   const router = useRouter();
   const [isFocused, setIsFocused] = useState(false);
   const { query, setQuery, results, isLoading, clearSearch } = useSearch();
-  const { flashcardQuery, deckResults, isDeckLoading } = useFlashcardSearch(query);
-  const { materialQuery, materialResults, isMaterialLoading } = useMaterialSearch(query);
+  const deferredQuery = useDeferredValue(query);
+  const { flashcardQuery, deckResults, isDeckLoading } = useFlashcardSearch(deferredQuery);
+  const { materialQuery, materialResults, isMaterialLoading } = useMaterialSearch(deferredQuery);
   const searchMode = parseSearchMode(query).mode;
 
   const handleFocus = useCallback(() => setIsFocused(true), []);

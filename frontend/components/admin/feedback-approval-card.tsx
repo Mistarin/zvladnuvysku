@@ -13,6 +13,7 @@ interface FeedbackApprovalCardProps {
     user_id: string | null;
     status: "new" | "in_progress" | "resolved";
     source_label?: string | null;
+    source_type?: "general" | "material" | "subject_rating" | "teacher_rating" | null;
   };
 }
 
@@ -37,6 +38,17 @@ export function FeedbackApprovalCard({ feedback }: FeedbackApprovalCardProps) {
   };
 
   const config = typeLabels[feedback.type];
+  const statusLabels = {
+    new: "Nové",
+    in_progress: "Rozpracováno",
+    resolved: "Vyřešeno",
+  } as const;
+  const sourceTypeLabels: Record<string, string> = {
+    general: "Obecné",
+    material: "Materiál",
+    subject_rating: "Hodnocení předmětu",
+    teacher_rating: "Hodnocení učitele",
+  };
 
   return (
     <div className="glass-card p-4 space-y-3">
@@ -49,6 +61,9 @@ export function FeedbackApprovalCard({ feedback }: FeedbackApprovalCardProps) {
             {new Date(feedback.created_at).toLocaleString("cs-CZ")}
           </span>
         </div>
+        <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-foreground">
+          {statusLabels[feedback.status]}
+        </span>
       </div>
       
       <p className="text-sm text-foreground/90 whitespace-pre-wrap leading-relaxed">
@@ -57,6 +72,11 @@ export function FeedbackApprovalCard({ feedback }: FeedbackApprovalCardProps) {
       {feedback.source_label && (
         <p className="text-xs text-muted-foreground">
           Kontext: <span className="font-medium text-foreground">{feedback.source_label}</span>
+          {feedback.source_type && (
+            <span className="ml-2 text-[11px] uppercase tracking-wide">
+              · {sourceTypeLabels[feedback.source_type] ?? feedback.source_type}
+            </span>
+          )}
         </p>
       )}
       {error && (

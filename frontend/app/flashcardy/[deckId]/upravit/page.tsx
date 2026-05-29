@@ -79,7 +79,6 @@ export default async function UpravitBalicekPage({ params }: PageProps) {
 
       <NewDeckForm
         initialSubject={initialSubject}
-        userId={user.id}
         initialDeckData={{ deck: flashcardDeck, cards: flashcards }}
       />
     </div>

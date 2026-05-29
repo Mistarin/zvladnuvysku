@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
+import { getMyTeacherRating, saveTeacherRating } from "@/app/actions/contributions";
 
 interface TeacherRatingFormProps {
   teacherId: string;
@@ -18,32 +18,21 @@ export function TeacherRatingForm({ teacherId, isLoggedIn }: TeacherRatingFormPr
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-  const [isLoadingExisting, setIsLoadingExisting] = useState(isLoggedIn);
 
   useEffect(() => {
     if (!isLoggedIn) return;
 
     async function fetchExisting() {
-      const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        setIsLoadingExisting(false);
+      const result = await getMyTeacherRating(teacherId)
+      if (!result.success || !result.data) {
         return;
       }
+      const existingRating = result.data;
 
-      const { data } = await supabase
-        .from('teacher_ratings')
-        .select('*')
-        .eq('teacher_id', teacherId)
-        .eq('user_id', user.id)
-        .single();
-
-      if (data) {
-        const d = data as any;
-        setRating(d.rating || 0);
-        setReview(d.review || '');
+      if (existingRating) {
+        setRating(existingRating.rating || 0);
+        setReview(existingRating.review || '');
       }
-      setIsLoadingExisting(false);
     }
 
     fetchExisting();
@@ -59,30 +48,16 @@ export function TeacherRatingForm({ teacherId, isLoggedIn }: TeacherRatingFormPr
     setIsSubmitting(true);
     setError(null);
 
-    const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-
-    if (!user) {
-      setError("Pro hodnocení se musíte přihlásit.");
-      setIsSubmitting(false);
-      return;
-    }
-
-    const { error: dbError } = await supabase.from("teacher_ratings").upsert({
-      teacher_id: teacherId,
-      user_id: user.id,
+    const result = await saveTeacherRating({
+      teacherId,
       rating,
-      review: review.trim() || null,
-    } as never, { onConflict: 'teacher_id,user_id' });
+      review,
+    });
 
     setIsSubmitting(false);
 
-    if (dbError) {
-      if (dbError.code === "23505") { // Unique violation
-        setError("Tohoto vyučujícího už jste hodnotili.");
-      } else {
-        setError(`Chyba při ukládání: ${dbError.message}`);
-      }
+    if (!result.success) {
+      setError(result.error);
       return;
     }
 

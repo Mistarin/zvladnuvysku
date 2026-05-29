@@ -3,6 +3,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { TeacherRatingForm } from "@/components/teacher/teacher-rating-form";
 import { TeacherReviews } from "@/components/teacher/teacher-reviews";
+import type { Database } from "@/lib/types/database";
 
 const FACULTY_COLORS: Record<string, string> = {
   FSS: "#FBB900",
@@ -16,6 +17,13 @@ const FACULTY_COLORS: Record<string, string> = {
 interface PageProps {
   params: Promise<{ slug: string }>;
 }
+
+type TeacherRow = Database["public"]["Tables"]["teachers"]["Row"];
+type TeacherRatingRow = Database["public"]["Tables"]["teacher_ratings"]["Row"];
+type TeacherSubject = Pick<Database["public"]["Tables"]["subjects"]["Row"], "slug" | "name" | "short_tag">;
+type TeacherSubjectJoinRow = {
+  subjects: TeacherSubject | TeacherSubject[] | null;
+};
 
 export default async function TeacherDetailPage({ params }: PageProps) {
   const { slug } = await params;
@@ -32,7 +40,7 @@ export default async function TeacherDetailPage({ params }: PageProps) {
     notFound();
   }
 
-  const t = teacher as any;
+  const t = teacher as TeacherRow;
 
   // Fetch subjects taught by teacher
   const { data: stData } = await supabase
@@ -41,12 +49,11 @@ export default async function TeacherDetailPage({ params }: PageProps) {
     .eq("teacher_id", t.id);
 
   // Parse subjects safely since it's nested
-  const subjects = (stData as any[])?.map(st => st.subjects).filter(Boolean) as { slug: string, name: string, short_tag: string }[] || [];
-
-  // Fetch ratings
-  const { data: ratingsData } = await supabase
-    .from("teacher_ratings")
-    .select("rating");
+  const subjectRows = (stData ?? []) as TeacherSubjectJoinRow[];
+  const subjects = subjectRows.flatMap((row) => {
+    if (!row.subjects) return [];
+    return Array.isArray(row.subjects) ? row.subjects : [row.subjects];
+  });
     
   // Fetch all ratings for avg
   const { data: teacherRatings } = await supabase
@@ -55,11 +62,10 @@ export default async function TeacherDetailPage({ params }: PageProps) {
     .eq("teacher_id", t.id)
     .order("created_at", { ascending: false });
 
-  const avgRating = teacherRatings?.length 
-    ? ((teacherRatings as any[]).reduce((acc, r) => acc + (r.rating || 0), 0) / teacherRatings.length).toFixed(1)
+  const ratings = (teacherRatings ?? []) as Pick<TeacherRatingRow, "rating" | "review" | "created_at" | "comment_is_approved">[];
+  const avgRating = ratings.length 
+    ? (ratings.reduce((acc, r) => acc + (r.rating || 0), 0) / ratings.length).toFixed(1)
     : "—";
-
-  const ratingsWithComments = ((teacherRatings as any[]) || []).filter(r => r.review && r.comment_is_approved);
 
   const { data: { user } } = await supabase.auth.getUser();
   const isLoggedIn = !!user;
@@ -105,7 +111,7 @@ export default async function TeacherDetailPage({ params }: PageProps) {
               {avgRating} <span className="text-xl">⭐</span>
             </div>
             <div className="text-xs text-muted-foreground mt-1">
-              {teacherRatings?.length || 0} hodnocení
+              {ratings.length || 0} hodnocení
             </div>
           </div>
         </div>

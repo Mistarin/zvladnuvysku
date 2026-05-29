@@ -2,12 +2,12 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { DifficultyBadge, StarRating } from "@/components/subject/difficulty-badge";
+import { DifficultyBadge } from "@/components/subject/difficulty-badge";
 import { RatingForm } from "@/components/subject/rating-form";
 import { RatingStats } from "@/components/subject/rating-stats";
 import { MaterialUploadForm } from "@/components/subject/material-upload-form";
 import { ReportIssueDialog } from "@/components/feedback/report-issue-dialog";
-import type { Subject, SubjectRatingStats } from "@/lib/types/database";
+import type { Database, Subject, SubjectRatingStats } from "@/lib/types/database";
 import { BookOpen, Target, MessageSquare, Star, Users, Layers, FileText, CheckCircle2, XCircle, Clock, Calendar, Diamond } from "lucide-react";
 import { formatCredits } from "@/lib/utils";
 
@@ -38,6 +38,32 @@ const SEMESTER_LABELS: Record<string, string> = {
   letní: "Letní semestr",
   oba: "Oba semestry",
 };
+
+type TeacherStats = {
+  avg_rating: number | null
+  rating_count?: number | null
+  total_ratings?: number | null
+}
+
+type SubjectTeacherListItem = Pick<Database['public']['Tables']['teachers']['Row'], 'id' | 'slug' | 'name' | 'faculty'> & {
+  teacher_rating_stats: TeacherStats[] | TeacherStats | null
+}
+
+type SubjectTeacherJoinRow = {
+  teachers: SubjectTeacherListItem | SubjectTeacherListItem[] | null
+}
+
+type SubjectMaterialListItem = Pick<
+  Database['public']['Tables']['subject_materials']['Row'],
+  'id' | 'title' | 'file_path' | 'size_bytes' | 'created_at' | 'is_approved'
+>
+
+type SubjectComment = Pick<
+  Database['public']['Tables']['subject_ratings']['Row'],
+  'id' | 'created_at' | 'comment'
+> & {
+  overall_rating: number | null
+}
 
 export default async function PredmetDetailPage({ params }: PageProps) {
   const { slug } = await params;
@@ -72,36 +98,18 @@ export default async function PredmetDetailPage({ params }: PageProps) {
 
   const isLoggedIn = !!user;
 
-  const teachers = ((stData as any[])?.map(st => st.teachers).flat().filter(Boolean) as { id: string, slug: string, name: string, faculty: string }[]) || [];
+  const teacherRows = (stData ?? []) as SubjectTeacherJoinRow[]
+  const teachers = teacherRows.flatMap((row) => {
+    if (!row.teachers) return []
+    return Array.isArray(row.teachers) ? row.teachers : [row.teachers]
+  })
 
   if (materialsError) {
     console.error("Error fetching materials:", materialsError);
   }
-  let materials: any[] = materialsData || [];
+  const materials = (materialsData ?? []) as SubjectMaterialListItem[]
 
-  // Self-heal concurrently
-  if (materials.length > 0) {
-    const validIds = new Set<string>();
-    await Promise.all(materials.map(async (m) => {
-      const { data: publicUrlData } = supabase.storage.from('study_materials').getPublicUrl(m.file_path);
-      try {
-        const res = await fetch(publicUrlData.publicUrl, { method: 'HEAD', cache: 'no-store' });
-        if (res.ok) {
-          validIds.add(m.id);
-        } else if (res.status === 400 || res.status === 404) {
-          console.warn(`Material missing in storage: ${m.file_path}. Deleting DB row.`);
-          await supabase.from('subject_materials').delete().eq('id', m.id);
-        } else {
-          validIds.add(m.id);
-        }
-      } catch (e) {
-        validIds.add(m.id);
-      }
-    }));
-    materials = materials.filter(m => validIds.has(m.id));
-  }
-
-  const ratingsWithComments = rawRatings || [];
+  const ratingsWithComments = (rawRatings ?? []) as SubjectComment[];
 
   const ratingStats = ratingStatsData as SubjectRatingStats | null;
   const totalRatings = ratingStats?.total_ratings ?? 0;
@@ -253,7 +261,7 @@ export default async function PredmetDetailPage({ params }: PageProps) {
                 <MessageSquare className="w-5 h-5 text-indigo-500" /> Zkušenosti studentů
               </h3>
               <div className="space-y-4">
-                {ratingsWithComments.map((rating: any) => (
+                {ratingsWithComments.map((rating) => (
                   <div key={rating.id} className="glass-card p-4 space-y-2">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
@@ -270,7 +278,7 @@ export default async function PredmetDetailPage({ params }: PageProps) {
                       )}
                     </div>
                     <p className="text-foreground/90 text-sm italic leading-relaxed">
-                      "{rating.comment}"
+                      &ldquo;{rating.comment}&rdquo;
                     </p>
                     <div className="pt-2">
                       <ReportIssueDialog
@@ -296,10 +304,10 @@ export default async function PredmetDetailPage({ params }: PageProps) {
                 <Users className="w-5 h-5 text-purple-500" /> Vyučující
               </h2>
               <div className="flex flex-col gap-3">
-                {teachers.map((t: any) => {
+                {teachers.map((t) => {
                   const tStats = Array.isArray(t.teacher_rating_stats) ? t.teacher_rating_stats[0] : t.teacher_rating_stats;
                   const avgRating = tStats?.avg_rating;
-                  const ratingCount = tStats?.rating_count || 0;
+                  const ratingCount = tStats?.rating_count ?? tStats?.total_ratings ?? 0;
                   
                   return (
                     <div key={t.id} className="bg-card border border-border rounded-xl p-4 shadow-sm flex flex-col gap-2">
@@ -392,7 +400,7 @@ export default async function PredmetDetailPage({ params }: PageProps) {
         
         {materials.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {materials.map((m: any) => {
+            {materials.map((m) => {
               const { data: publicUrlData } = supabase.storage.from('study_materials').getPublicUrl(m.file_path);
               
               return (

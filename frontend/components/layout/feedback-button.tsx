@@ -3,9 +3,11 @@
 import { useState, useTransition } from "react";
 import { submitFeedback } from "@/app/actions/feedback";
 
+type FeedbackType = "bug" | "feature" | "other";
+
 export function FeedbackButton() {
   const [isOpen, setIsOpen] = useState(false);
-  const [type, setType] = useState<"bug" | "feature" | "other">("bug");
+  const [type, setType] = useState<FeedbackType>("bug");
   const [message, setMessage] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -72,7 +74,7 @@ export function FeedbackButton() {
                   <label className="block text-sm font-medium mb-1 text-foreground">Typ zprávy</label>
                   <select
                     value={type}
-                    onChange={(e) => setType(e.target.value as any)}
+                    onChange={(e) => setType(e.target.value as FeedbackType)}
                     className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
                   >
                     <option value="bug">Nahlásit chybu</option>

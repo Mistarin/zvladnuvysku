@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/client";
 import { DifficultyBadge } from "@/components/subject/difficulty-badge";
 import type { SearchResult } from "@/hooks/use-search";
 import type { FlashcardDeckResult } from "@/hooks/use-flashcard-search";
@@ -38,7 +37,6 @@ export function SearchSuggestions({
   isMaterialLoading = false,
 }: SearchSuggestionsProps) {
   if (!query || query.trim().length < 1) return null;
-  const materialStorage = createClient().storage.from("study_materials");
 
   // ── FLASHCARD MODE ──────────────────────────────────────────────────────
   if (mode === "flashcards") {
@@ -189,7 +187,7 @@ export function SearchSuggestions({
               {materialResults.map((material, idx) => (
                 <a
                   key={material.id}
-                  href={material.public_url || materialStorage.getPublicUrl(material.file_path).data.publicUrl}
+                  href={material.public_url}
                   target="_blank"
                   rel="noreferrer"
                   onClick={onSelect}

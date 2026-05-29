@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/server'
 import type { FlashcardDeck, Flashcard } from '@/lib/types/database'
 import { CardListItem } from '@/components/flashcard/card-list-item'
 import { DeleteDeckButton } from '@/components/flashcard/delete-deck-button'
+import { DeckOwnerToolbar } from '@/components/flashcard/deck-owner-toolbar'
 
 interface PageProps {
   params: Promise<{ deckId: string }>
@@ -13,8 +14,7 @@ interface PageProps {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { deckId } = await params
   const supabase = await createClient()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data } = await (supabase as any).from('flashcard_decks').select('title').eq('id', deckId).single()
+  const { data } = await supabase.from('flashcard_decks').select('title').eq('id', deckId).single()
   return { title: (data as { title: string } | null)?.title ?? 'Balíček flashkaret' }
 }
 
@@ -46,6 +46,10 @@ export default async function DeckDetailPage({ params }: PageProps) {
 
   const isCreator = user?.id === flashcardDeck.creator_id
 
+  if (!flashcardDeck.is_public && !isCreator) {
+    notFound()
+  }
+
   // Fetch creator profile for display (admin API not available client-side)
   void (supabase)
 
@@ -54,6 +58,8 @@ export default async function DeckDetailPage({ params }: PageProps) {
       {/* Breadcrumb */}
       <nav className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
         <Link href="/" className="hover:text-foreground transition-colors">Domů</Link>
+        <span>/</span>
+        <Link href="/flashcardy" className="hover:text-foreground transition-colors">Kartičky</Link>
         <span>/</span>
         <span className="text-foreground font-medium truncate">{flashcardDeck.title}</span>
       </nav>
@@ -68,17 +74,31 @@ export default async function DeckDetailPage({ params }: PageProps) {
             )}
           </div>
           {isCreator && (
-            <div className="flex gap-2 shrink-0">
-              <Link
-                href={`/flashcardy/${deckId}/upravit`}
-                className="px-4 py-2 rounded-lg text-sm font-medium border border-border bg-card hover:bg-muted transition-all"
-              >
-                Upravit
-              </Link>
+            <div className="shrink-0">
               <DeleteDeckButton deckId={deckId} />
             </div>
           )}
         </div>
+
+        {isCreator && (
+          <div className="rounded-xl border border-primary/10 bg-primary/5 p-4 space-y-3">
+            <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-sm font-semibold text-foreground">Správa balíčku</p>
+                <p className="text-xs text-muted-foreground">
+                  Rychle změň viditelnost, otevři editor nebo si vytvoř kopii na další úpravy.
+                </p>
+              </div>
+              <Link
+                href="/flashcardy#moje-balicky"
+                className="text-xs font-medium text-primary hover:underline"
+              >
+                Zpět do Mých balíčků
+              </Link>
+            </div>
+            <DeckOwnerToolbar deckId={deckId} isPublic={flashcardDeck.is_public} />
+          </div>
+        )}
 
         <div className="flex flex-wrap items-center gap-3 pt-1">
           <span className="text-sm text-muted-foreground">

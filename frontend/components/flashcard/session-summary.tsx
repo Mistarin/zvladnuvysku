@@ -8,7 +8,6 @@ interface SessionResult {
 
 interface SessionSummaryProps {
   results: SessionResult[]
-  deckId: string
   subjectSlug?: string
   onRestart: () => void
 }
@@ -21,7 +20,7 @@ function getMessage(percentKnown: number): string {
   return '🌱 Každý někde začíná. Pokračujte v procvičování!'
 }
 
-export function SessionSummary({ results, deckId: _deckId, subjectSlug, onRestart }: SessionSummaryProps) {
+export function SessionSummary({ results, subjectSlug, onRestart }: SessionSummaryProps) {
   const total = results.length
   const known = results.filter((r) => r.quality >= 5).length
   const almost = results.filter((r) => r.quality >= 3 && r.quality < 5).length

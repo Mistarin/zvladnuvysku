@@ -7,6 +7,10 @@ import { createClient } from "@/lib/supabase/client";
 import { useEffect, useState } from "react";
 import type { User } from "@supabase/supabase-js";
 import Image from "next/image";
+
+interface NavbarProps {
+  initialUser: User | null;
+}
 const navLinks = [
   { href: "/predmety", label: "Předměty" },
   { href: "/flashcardy", label: "Kartičky" },
@@ -16,19 +20,16 @@ const navLinks = [
 ];
 
 function isActiveLink(pathname: string, href: string) {
-  if (href.includes("#")) {
-    const baseHref = href.split("#")[0] || "/";
-    return pathname === baseHref;
-  }
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-export function Navbar() {
+export function Navbar({ initialUser }: NavbarProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<User | null>(initialUser);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [currentHash, setCurrentHash] = useState("");
 
   useEffect(() => {
     const supabase = createClient();
@@ -43,6 +44,27 @@ export function Navbar() {
 
     return () => subscription.unsubscribe();
   }, []);
+
+  useEffect(() => {
+    const updateHash = () => {
+      setCurrentHash(window.location.hash);
+    };
+
+    updateHash();
+    window.addEventListener("hashchange", updateHash);
+
+    return () => window.removeEventListener("hashchange", updateHash);
+  }, []);
+
+  function linkIsActive(href: string) {
+    if (href.includes("#")) {
+      const [baseHref, hash] = href.split("#");
+      const normalizedBaseHref = baseHref || "/";
+      return pathname === normalizedBaseHref && currentHash === `#${hash}`;
+    }
+
+    return isActiveLink(pathname, href);
+  }
 
   const handleSignOut = async () => {
     const supabase = createClient();
@@ -92,7 +114,7 @@ export function Navbar() {
                 key={link.href}
                 href={link.href}
                 className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-150 ${
-                  isActiveLink(pathname, link.href) ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                  linkIsActive(link.href) ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-muted"
                 }`}
               >
                 {link.label}
@@ -144,13 +166,37 @@ export function Navbar() {
                         <Link
                           href="/moje-aktivita"
                           onClick={() => setUserMenuOpen(false)}
-                          className="block w-full px-3 py-2 text-sm text-foreground hover:bg-muted rounded-lg transition-colors"
+                          className="block w-full rounded-lg px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted"
+                        >
+                          Dashboard
+                        </Link>
+                        <Link
+                          href="/navrhnout"
+                          onClick={() => setUserMenuOpen(false)}
+                          className="block w-full rounded-lg px-3 py-2 text-sm text-foreground transition-colors hover:bg-muted"
+                        >
+                          Navrhnout předmět
+                        </Link>
+                        <Link
+                          href="/moje-aktivita"
+                          onClick={() => setUserMenuOpen(false)}
+                          className="block w-full rounded-lg px-3 py-2 text-sm text-foreground transition-colors hover:bg-muted"
                         >
                           Moje aktivita
                         </Link>
+                        {isAdmin && (
+                          <Link
+                            href="/admin"
+                            onClick={() => setUserMenuOpen(false)}
+                            className="block w-full rounded-lg px-3 py-2 text-sm text-foreground transition-colors hover:bg-muted"
+                          >
+                            Admin page
+                          </Link>
+                        )}
+                        <div className="my-1 border-t border-border/50" />
                         <button
                           onClick={handleSignOut}
-                          className="w-full text-left px-3 py-2 text-sm text-destructive hover:bg-destructive/10 rounded-lg transition-colors"
+                          className="w-full rounded-lg px-3 py-2 text-left text-sm text-destructive transition-colors hover:bg-destructive/10"
                         >
                           Odhlásit se
                         </button>
@@ -207,7 +253,7 @@ export function Navbar() {
                 href={link.href}
                 onClick={() => setMobileMenuOpen(false)}
                 className={`shrink-0 rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${
-                  isActiveLink(pathname, link.href)
+                  linkIsActive(link.href)
                     ? "bg-primary text-primary-foreground"
                     : "bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground"
                 }`}
@@ -228,7 +274,7 @@ export function Navbar() {
               href={link.href}
               onClick={() => setMobileMenuOpen(false)}
               className={`block px-4 py-2 rounded-lg text-sm font-medium ${
-                isActiveLink(pathname, link.href) ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted"
+                linkIsActive(link.href) ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted"
               }`}
             >
               {link.label}
@@ -263,13 +309,36 @@ export function Navbar() {
                 <Link
                   href="/moje-aktivita"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="block px-4 py-2 text-sm font-medium text-foreground hover:bg-muted rounded-lg transition-colors"
+                  className="block rounded-lg px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted"
+                >
+                  Dashboard
+                </Link>
+                <Link
+                  href="/navrhnout"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="block rounded-lg px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted"
+                >
+                  Navrhnout předmět
+                </Link>
+                <Link
+                  href="/moje-aktivita"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="block rounded-lg px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted"
                 >
                   Moje aktivita
                 </Link>
+                {isAdmin && (
+                  <Link
+                    href="/admin"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="block rounded-lg px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted"
+                  >
+                    Admin page
+                  </Link>
+                )}
                 <button
                   onClick={handleSignOut}
-                  className="w-full text-left px-4 py-2 text-sm text-destructive hover:bg-destructive/10 rounded-lg transition-colors font-medium"
+                  className="w-full rounded-lg px-4 py-2 text-left text-sm font-medium text-destructive transition-colors hover:bg-destructive/10"
                 >
                   Odhlásit se
                 </button>

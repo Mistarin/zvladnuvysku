@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { ReportIssueDialog } from "@/components/feedback/report-issue-dialog";
+import type { TeacherRating } from "@/lib/types/database";
 
 export async function TeacherReviews({ teacherId }: { teacherId: string }) {
   const supabase = await createClient();
@@ -25,7 +26,7 @@ export async function TeacherReviews({ teacherId }: { teacherId: string }) {
 
   return (
     <div className="space-y-4">
-      {(reviews as any[]).map((review) => (
+      {(reviews as TeacherRating[]).map((review) => (
         <div key={review.id} className="glass-card p-5">
           <div className="flex justify-between items-start mb-3">
             <div className="flex gap-1">

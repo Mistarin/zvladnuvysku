@@ -12,10 +12,8 @@ const SoundContext = createContext<SoundContextType | undefined>(undefined);
 export function SoundProvider({ children }: { children: React.ReactNode }) {
   // Default to false. We initialize with false, but will override with localStorage after mount.
   const [isSoundEnabled, setIsSoundEnabled] = useState(false);
-  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
     const stored = localStorage.getItem("sound_enabled");
     if (stored !== null) {
       setIsSoundEnabled(stored === "true");

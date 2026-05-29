@@ -8,15 +8,14 @@ import { SessionSummary } from './session-summary'
 
 interface FlashcardStudySessionProps {
   cards: Flashcard[]
-  deckId: string
   subjectSlug?: string
 }
 
-export function FlashcardStudySession({ cards, deckId, subjectSlug }: FlashcardStudySessionProps) {
+export function FlashcardStudySession({ cards, subjectSlug }: FlashcardStudySessionProps) {
   const [sessionKey, setSessionKey] = useState(0)
 
   const { currentCard, currentIndex, totalCards, isComplete, rate, sessionResults } =
-    useFlashcardSession({ cards, deckId })
+    useFlashcardSession({ cards })
 
   const handleRestart = () => {
     setSessionKey((k) => k + 1)
@@ -36,7 +35,6 @@ export function FlashcardStudySession({ cards, deckId, subjectSlug }: FlashcardS
       <SessionSummary
         key={`summary-${sessionKey}`}
         results={sessionResults}
-        deckId={deckId}
         subjectSlug={subjectSlug}
         onRestart={handleRestart}
       />

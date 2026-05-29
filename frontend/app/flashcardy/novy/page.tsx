@@ -63,7 +63,7 @@ export default async function NovyBalicekPage({ searchParams }: PageProps) {
         </p>
       </div>
 
-      <NewDeckForm initialSubject={initialSubject} userId={user.id} />
+      <NewDeckForm initialSubject={initialSubject} />
     </div>
   )
 }

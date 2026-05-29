@@ -12,8 +12,7 @@ interface PageProps {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { deckId } = await params
   const supabase = await createClient()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data } = await (supabase as any).from('flashcard_decks').select('title').eq('id', deckId).single()
+  const { data } = await supabase.from('flashcard_decks').select('title').eq('id', deckId).single()
   return { title: `Procvičování — ${(data as { title: string } | null)?.title ?? 'Kartičky'}` }
 }
 
@@ -36,6 +35,10 @@ export default async function UcitSePage({ params }: PageProps) {
   if (error || !deck) notFound()
 
   const flashcardDeck = deck as FlashcardDeck
+
+  if (!flashcardDeck.is_public && flashcardDeck.creator_id !== user.id) {
+    notFound()
+  }
 
   const { data: cards } = await supabase
     .from('flashcards')
@@ -75,8 +78,7 @@ export default async function UcitSePage({ params }: PageProps) {
   // Determine subject slug for back navigation
   let subjectSlug: string | undefined
   if (flashcardDeck.subject_id) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: subject } = await (supabase as any)
+    const { data: subject } = await supabase
       .from('subjects')
       .select('slug')
       .eq('id', flashcardDeck.subject_id)
@@ -101,7 +103,6 @@ export default async function UcitSePage({ params }: PageProps) {
 
       <FlashcardStudySession
         cards={sortedCards}
-        deckId={deckId}
         subjectSlug={subjectSlug}
       />
     </div>

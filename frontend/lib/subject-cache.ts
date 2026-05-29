@@ -1,16 +1,8 @@
 /**
  * Subject cache — singleton, jeden fetch na celou browser session.
- *
- * Strategie:
- *   1. Při prvním použití spustí async fetch
- *   2. Každé další volání vrátí stejný Promise (de-duplication)
- *   3. Výsledky jsou v paměti — žádná síť po prvním načtení
  */
 
-import { createClient } from '@/lib/supabase/client'
-import type { Database } from '@/lib/types/database'
-
-type SubjectRow = Database['public']['Tables']['subjects']['Row']
+import { getSubjectSearchCache } from '@/app/actions/contributions'
 
 export interface SubjectCacheEntry {
   id: string
@@ -30,18 +22,10 @@ let cache: SubjectCacheEntry[] | null = null
 let fetchPromise: Promise<SubjectCacheEntry[]> | null = null
 
 async function fetchAllSubjects(): Promise<SubjectCacheEntry[]> {
-  const supabase = createClient()
-  const { data, error } = await supabase
-    .from('subjects')
-    .select('id, slug, name, short_tag, faculty, difficulty, credits, semester')
-    .order('name') as unknown as {
-      data: Pick<SubjectRow, 'id' | 'slug' | 'name' | 'short_tag' | 'faculty' | 'difficulty' | 'credits' | 'semester'>[] | null
-      error: { message: string } | null
-    }
+  const result = await getSubjectSearchCache()
+  if (!result.success) throw new Error(result.error)
 
-  if (error) throw error
-
-  return (data ?? []).map((row) => ({
+  return result.data.map((row) => ({
     id: row.id,
     slug: row.slug,
     name: row.name,

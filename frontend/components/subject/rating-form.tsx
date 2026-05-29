@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRating } from '@/hooks/use-rating'
-import { createClient } from '@/lib/supabase/client'
+import { getMySubjectRating } from '@/app/actions/contributions'
 
 interface RatingFormProps {
   subjectId: string
@@ -54,35 +54,24 @@ export function RatingForm({ subjectId, isLoggedIn }: RatingFormProps) {
   const [usefulness, setUsefulness] = useState(0)
   const [workload, setWorkload] = useState(0)
   const [comment, setComment] = useState('')
-  const [isLoadingExisting, setIsLoadingExisting] = useState(isLoggedIn)
 
   useEffect(() => {
     if (!isLoggedIn) return;
     
     async function fetchExisting() {
-      const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        setIsLoadingExisting(false);
+      const result = await getMySubjectRating(subjectId)
+      if (!result.success || !result.data) {
         return;
       }
-      
-      const { data } = await supabase
-        .from('subject_ratings')
-        .select('*')
-        .eq('subject_id', subjectId)
-        .eq('user_id', user.id)
-        .single();
-        
-      if (data) {
-        const d = data as any;
-        setOverall(d.overall || 0);
-        setDifficulty(d.difficulty || 0);
-        setUsefulness(d.usefulness || 0);
-        setWorkload(d.workload || 0);
-        setComment(d.comment || '');
+      const existingRating = result.data
+
+      if (existingRating) {
+        setOverall(existingRating.overall || 0);
+        setDifficulty(existingRating.difficulty || 0);
+        setUsefulness(existingRating.usefulness || 0);
+        setWorkload(existingRating.workload || 0);
+        setComment(existingRating.comment || '');
       }
-      setIsLoadingExisting(false);
     }
     
     fetchExisting();

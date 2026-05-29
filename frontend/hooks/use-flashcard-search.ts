@@ -1,16 +1,11 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { createClient } from '@/lib/supabase/client'
+import { searchFlashcardDecks, type FlashcardDeckSearchResult } from '@/app/actions/search'
 import { parseSearchMode } from '@/lib/search-mode'
 
-export interface FlashcardDeckResult {
-  id: string
-  title: string
-  description: string | null
-  card_count: number
-  subject?: { name: string; short_tag: string; faculty: string | null } | null
-}
+export type FlashcardDeckResult = FlashcardDeckSearchResult
+type CachedDeckSearch = { data: FlashcardDeckResult[]; expiresAt: number }
 
 interface UseFlashcardSearchReturn {
   isFlashcardMode: boolean
@@ -18,6 +13,9 @@ interface UseFlashcardSearchReturn {
   deckResults: FlashcardDeckResult[]
   isDeckLoading: boolean
 }
+
+const deckSearchCache = new Map<string, CachedDeckSearch>()
+const SEARCH_CACHE_TTL_MS = 5 * 60 * 1000
 
 export function useFlashcardSearch(query: string): UseFlashcardSearchReturn {
   const parsed = parseSearchMode(query)
@@ -30,30 +28,46 @@ export function useFlashcardSearch(query: string): UseFlashcardSearchReturn {
   useEffect(() => {
     if (!isFlashcardMode) {
       setDeckResults([])
+      setIsDeckLoading(false)
       return
     }
 
+    let cancelled = false
     setIsDeckLoading(true)
-    const supabase = createClient()
 
-    const run = async () => {
-      let q = supabase
-        .from('flashcard_decks')
-        .select('id, title, description, card_count, subject:subject_id(name, short_tag, faculty)')
-        .eq('is_public', true)
-        .order('card_count', { ascending: false })
-        .limit(8)
-
-      if (flashcardQuery.length >= 1) {
-        q = q.ilike('title', `%${flashcardQuery}%`)
+    const timeoutId = window.setTimeout(() => {
+      const cached = deckSearchCache.get(flashcardQuery)
+      if (cached && cached.expiresAt > Date.now()) {
+        if (!cancelled) {
+          setDeckResults(cached.data)
+          setIsDeckLoading(false)
+        }
+        return
       }
 
-      const { data } = await q
-      setDeckResults((data as FlashcardDeckResult[]) || [])
-      setIsDeckLoading(false)
-    }
+      searchFlashcardDecks(flashcardQuery)
+        .then((data) => {
+          if (!cancelled) {
+            deckSearchCache.set(flashcardQuery, {
+              data,
+              expiresAt: Date.now() + SEARCH_CACHE_TTL_MS,
+            })
+            setDeckResults(data)
+            setIsDeckLoading(false)
+          }
+        })
+        .catch(() => {
+          if (!cancelled) {
+            setDeckResults([])
+            setIsDeckLoading(false)
+          }
+        })
+    }, 120)
 
-    run()
+    return () => {
+      cancelled = true
+      window.clearTimeout(timeoutId)
+    }
   }, [isFlashcardMode, flashcardQuery])
 
   return { isFlashcardMode, flashcardQuery, deckResults, isDeckLoading }

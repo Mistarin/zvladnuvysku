@@ -4,12 +4,9 @@ import Image from 'next/image'
 import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Check } from 'lucide-react'
-import { createClient } from '@/lib/supabase/client'
+import { Check, ChevronDown, ChevronUp, Copy, GripVertical, Plus, Trash2 } from 'lucide-react'
+import { saveOwnDeck } from '@/app/flashcardy/actions'
 import {
-  FLASHCARD_MEDIA_BUCKET,
-  FLASHCARD_MEDIA_PREFIX,
-  groupFlashcardMediaPaths,
   type DeckSubjectRef,
   getFlashcardMediaUrl,
   normalizeFlashcard,
@@ -40,7 +37,6 @@ interface InitialDeckData {
 
 interface NewDeckFormProps {
   initialSubject?: DeckSubjectRef | null
-  userId: string
   initialDeckData?: InitialDeckData
 }
 
@@ -141,7 +137,7 @@ function getQuestionTypeDescription(type: FlashcardQuestionType): string {
   }
 }
 
-export function NewDeckForm({ initialSubject = null, userId, initialDeckData }: NewDeckFormProps) {
+export function NewDeckForm({ initialSubject = null, initialDeckData }: NewDeckFormProps) {
   const router = useRouter()
   const isEditing = Boolean(initialDeckData)
   const [title, setTitle] = useState(initialDeckData?.deck.title ?? '')
@@ -155,6 +151,7 @@ export function NewDeckForm({ initialSubject = null, userId, initialDeckData }: 
       ? initialDeckData.cards.map(createQuestionFromCard)
       : [createEmptyQuestion()]
   )
+  const [collapsedQuestions, setCollapsedQuestions] = useState<Record<string, boolean>>({})
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -203,9 +200,50 @@ export function NewDeckForm({ initialSubject = null, userId, initialDeckData }: 
 
   const addQuestion = () => setQuestions((prev) => [...prev, createEmptyQuestion()])
 
+  const duplicateQuestion = (index: number) => {
+    setQuestions((prev) => {
+      const source = prev[index]
+      if (!source) return prev
+
+      const duplicated: QuestionDraft = {
+        ...source,
+        id: undefined,
+        options: source.options.map((option) => ({ ...option, id: crypto.randomUUID() })),
+        mediaFile: null,
+        removeMedia: false,
+      }
+
+      return [...prev.slice(0, index + 1), duplicated, ...prev.slice(index + 1)]
+    })
+  }
+
   const removeQuestion = (index: number) => {
     if (questions.length <= 1) return
     setQuestions((prev) => prev.filter((_, i) => i !== index))
+  }
+
+  const moveQuestion = (index: number, direction: 'up' | 'down') => {
+    setQuestions((prev) => {
+      const targetIndex = direction === 'up' ? index - 1 : index + 1
+      if (targetIndex < 0 || targetIndex >= prev.length) return prev
+
+      const next = [...prev]
+      const [item] = next.splice(index, 1)
+      next.splice(targetIndex, 0, item)
+      return next
+    })
+  }
+
+  const getQuestionKey = (question: QuestionDraft, index: number) => question.id ?? `draft-${index}`
+
+  const toggleCollapsed = (questionKey: string) => {
+    setCollapsedQuestions((prev) => ({ ...prev, [questionKey]: !prev[questionKey] }))
+  }
+
+  const setAllCollapsed = (collapsed: boolean) => {
+    setCollapsedQuestions(
+      Object.fromEntries(questions.map((question, index) => [getQuestionKey(question, index), collapsed]))
+    )
   }
 
   const updateQuestion = <K extends keyof QuestionDraft>(index: number, field: K, value: QuestionDraft[K]) => {
@@ -359,148 +397,48 @@ export function NewDeckForm({ initialSubject = null, userId, initialDeckData }: 
     if (validationError) return setError(validationError)
 
     setLoading(true)
-    const supabase = createClient()
-    const uploadedPaths: string[] = []
-    const removedPaths: string[] = []
 
     try {
-      const subjectId = selectedSubject?.id ?? null
-
-      let deckId = initialDeckData?.deck.id
-
-      if (isEditing && deckId) {
-        const { error: deckErr } = await supabase
-          .from('flashcard_decks')
-          .update({
-            title: title.trim(),
-            description: description.trim() || null,
-            is_public: isPublic,
-            subject_id: subjectId,
-          } as never)
-          .eq('id', deckId)
-
-        if (deckErr) throw new Error(deckErr.message || 'Nepodařilo se upravit balíček.')
-      } else {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { data: deck, error: deckErr } = await (supabase as any)
-          .from('flashcard_decks')
-          .insert({
-            title: title.trim(),
-            description: description.trim() || null,
-            is_public: isPublic,
-            creator_id: userId,
-            subject_id: subjectId,
-          })
-          .select('id')
-          .single()
-
-        if (deckErr || !deck) throw new Error(deckErr?.message || 'Nepodařilo se vytvořit balíček.')
-        deckId = (deck as { id: string }).id
+      const payload = {
+        deckId: initialDeckData?.deck.id,
+        title,
+        description,
+        isPublic,
+        subjectId: selectedSubject?.id ?? null,
+        questions: valid.map((question, index) => ({
+          clientKey: getQuestionKey(question, index),
+          id: question.id,
+          type: question.type,
+          prompt: question.prompt,
+          answerText: question.answerText,
+          options: question.options,
+          correctOptionIds: question.correctOptionIds,
+          yesNoCorrect: question.yesNoCorrect,
+          mediaPath: question.mediaPath,
+          removeMedia: question.removeMedia,
+          hasMediaFile: Boolean(question.mediaFile),
+        })),
       }
 
-      if (!deckId) throw new Error('Chybí ID balíčku.')
+      const formData = new FormData()
+      formData.set('payload', JSON.stringify(payload))
 
-      const existingCards = new Map((initialDeckData?.cards ?? []).map((card) => [card.id, card]))
-      const validIds = new Set(valid.map((question) => question.id).filter(Boolean))
-      const cardsToDelete = (initialDeckData?.cards ?? []).filter((card) => !validIds.has(card.id))
-
-      const records = []
-      for (const [index, question] of valid.entries()) {
-        let mediaPath = question.mediaPath
-
+      valid.forEach((question, index) => {
         if (question.mediaFile) {
-          if (question.mediaPath) {
-            removedPaths.push(question.mediaPath)
-          }
-          const ext = question.mediaFile.name.split('.').pop() || 'png'
-          mediaPath = `${FLASHCARD_MEDIA_PREFIX}/${userId}/${Date.now()}-${index}.${ext}`
-          const { error: uploadError } = await supabase.storage
-            .from(FLASHCARD_MEDIA_BUCKET)
-            .upload(mediaPath, question.mediaFile, { cacheControl: '3600', upsert: false })
-
-          if (uploadError) {
-            throw new Error(`Nepodařilo se nahrát obrázek: ${uploadError.message}`)
-          }
-          uploadedPaths.push(mediaPath)
-        } else if (question.removeMedia && question.mediaPath) {
-          removedPaths.push(question.mediaPath)
-          mediaPath = null
+          formData.set(`media:${getQuestionKey(question, index)}`, question.mediaFile)
         }
+      })
 
-        const answerData =
-          question.type === 'multiple_choice'
-            ? {
-                options: question.options.filter((option) => option.text.trim()).map((option) => ({
-                  id: option.id,
-                  text: option.text.trim(),
-                })),
-                correctOptionIds: question.correctOptionIds,
-              }
-            : question.type === 'yes_no'
-              ? {
-                  correct: question.yesNoCorrect,
-                }
-              : {
-                  answerText: question.answerText.trim(),
-                }
-
-        const record = {
-          deck_id: deckId,
-          front: question.prompt.trim(),
-          back: question.type === 'yes_no' ? (question.yesNoCorrect ? 'Ano' : 'Ne') : question.answerText.trim(),
-          prompt: question.prompt.trim(),
-          question_type: question.type,
-          answer_data: answerData,
-          media_path: mediaPath,
-          position: index,
-        }
-
-        if (question.id && existingCards.has(question.id)) {
-          const { error: updateError } = await supabase
-            .from('flashcards')
-            .update(record as never)
-            .eq('id', question.id)
-            .eq('deck_id', deckId)
-
-          if (updateError) throw new Error(updateError.message || 'Nepodařilo se upravit otázku.')
-        } else {
-          records.push(record)
-        }
+      const result = await saveOwnDeck(formData)
+      if (!result.success) {
+        throw new Error(result.error)
       }
 
-      if (records.length > 0) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { error: cardsErr } = await (supabase as any).from('flashcards').insert(records)
-        if (cardsErr) throw new Error(cardsErr.message || 'Nepodařilo se uložit nové otázky.')
-      }
-
-      for (const card of cardsToDelete) {
-        const { error: deleteError } = await supabase
-          .from('flashcards')
-          .delete()
-          .eq('id', card.id)
-          .eq('deck_id', deckId)
-
-        if (deleteError) throw new Error(deleteError.message || 'Nepodařilo se smazat otázku.')
-        if (card.media_path) removedPaths.push(card.media_path)
-      }
-
-      const uniqueRemovedPaths = [...new Set(removedPaths.filter(Boolean))]
-      if (uniqueRemovedPaths.length > 0) {
-        for (const entry of groupFlashcardMediaPaths(uniqueRemovedPaths)) {
-          await supabase.storage.from(entry.bucket).remove(entry.paths)
-        }
-      }
-
-      router.push(`/flashcardy/${deckId}`)
+      router.push(`/flashcardy/${result.deckId}`)
       router.refresh()
     } catch (err: unknown) {
-      if (uploadedPaths.length > 0) {
-        for (const entry of groupFlashcardMediaPaths(uploadedPaths)) {
-          await supabase.storage.from(entry.bucket).remove(entry.paths)
-        }
-      }
       setError(err instanceof Error ? err.message : 'Nastala chyba.')
+    } finally {
       setLoading(false)
     }
   }
@@ -639,36 +577,108 @@ export function NewDeckForm({ initialSubject = null, userId, initialDeckData }: 
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold text-foreground">Otázky ({questions.length})</h2>
-          <button
-            type="button"
-            onClick={addQuestion}
-            className="text-sm px-3 py-1.5 rounded-lg border border-primary/30 text-primary hover:bg-primary/5 transition-all"
-          >
-            + Přidat otázku
-          </button>
+          <div className="flex flex-wrap items-center gap-2">
+            {questions.length > 1 && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setAllCollapsed(true)}
+                  className="text-sm px-3 py-1.5 rounded-lg border border-border text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
+                >
+                  Sbalit vše
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setAllCollapsed(false)}
+                  className="text-sm px-3 py-1.5 rounded-lg border border-border text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
+                >
+                  Rozbalit vše
+                </button>
+              </>
+            )}
+            <button
+              type="button"
+              onClick={addQuestion}
+              className="inline-flex items-center gap-2 text-sm px-3 py-1.5 rounded-lg border border-primary/30 text-primary hover:bg-primary/5 transition-all"
+            >
+              <Plus className="size-4" />
+              Přidat otázku
+            </button>
+          </div>
         </div>
 
         <div className="space-y-3">
           {questions.map((question, index) => (
-            <div key={question.id ?? index} className="glass-card rounded-xl p-5 space-y-4">
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                    Otázka {index + 1}
-                  </span>
-                  <p className="text-xs text-muted-foreground mt-1">{getQuestionTypeDescription(question.type)}</p>
+            (() => {
+              const questionKey = getQuestionKey(question, index)
+              const isCollapsed = collapsedQuestions[questionKey] ?? false
+              const questionSummary = question.prompt.trim() || 'Prázdná otázka'
+
+              return (
+            <div key={questionKey} className="glass-card rounded-xl p-5 space-y-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <GripVertical className="size-4 text-muted-foreground/60" />
+                    <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                      Otázka {index + 1}
+                    </span>
+                    <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
+                      {getQuestionTypeDescription(question.type)}
+                    </span>
+                  </div>
+                  <p className="mt-2 line-clamp-2 text-sm text-foreground">
+                    {questionSummary}
+                  </p>
                 </div>
-                {questions.length > 1 && (
+                <div className="flex flex-wrap items-center justify-end gap-2 shrink-0">
                   <button
                     type="button"
-                    onClick={() => removeQuestion(index)}
-                    className="text-xs text-destructive hover:opacity-70 transition-opacity"
+                    onClick={() => toggleCollapsed(questionKey)}
+                    className="inline-flex items-center gap-1 rounded-lg border border-border px-2.5 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
                   >
-                    Odebrat
+                    {isCollapsed ? <ChevronDown className="size-3.5" /> : <ChevronUp className="size-3.5" />}
+                    {isCollapsed ? 'Rozbalit' : 'Sbalit'}
                   </button>
-                )}
+                  <button
+                    type="button"
+                    onClick={() => moveQuestion(index, 'up')}
+                    disabled={index === 0}
+                    className="inline-flex items-center gap-1 rounded-lg border border-border px-2.5 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-40"
+                  >
+                    ↑
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => moveQuestion(index, 'down')}
+                    disabled={index === questions.length - 1}
+                    className="inline-flex items-center gap-1 rounded-lg border border-border px-2.5 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-40"
+                  >
+                    ↓
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => duplicateQuestion(index)}
+                    className="inline-flex items-center gap-1 rounded-lg border border-border px-2.5 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                  >
+                    <Copy className="size-3.5" />
+                    Duplikovat
+                  </button>
+                  {questions.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => removeQuestion(index)}
+                      className="inline-flex items-center gap-1 rounded-lg border border-destructive/30 px-2.5 py-1.5 text-xs font-medium text-destructive hover:bg-destructive/10 transition-colors"
+                    >
+                      <Trash2 className="size-3.5" />
+                      Odebrat
+                    </button>
+                  )}
+                </div>
               </div>
 
+              {!isCollapsed && (
+                <>
               <div className="space-y-2">
                 <label className="text-xs text-muted-foreground">Typ otázky</label>
                 <select
@@ -812,7 +822,11 @@ export function NewDeckForm({ initialSubject = null, userId, initialDeckData }: 
                   />
                 </div>
               )}
+                </>
+              )}
             </div>
+              )
+            })()
           ))}
         </div>
 

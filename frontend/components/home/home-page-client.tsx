@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useDeferredValue } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { SearchBar } from "@/components/search/search-bar";
@@ -38,10 +38,11 @@ export function HomePageClient() {
   const router = useRouter();
   const [isFocused, setIsFocused] = useState(false);
   const { query, setQuery, results, isLoading, clearSearch } = useSearch();
+  const deferredQuery = useDeferredValue(query);
   const { isFlashcardMode, flashcardQuery, deckResults, isDeckLoading } =
-    useFlashcardSearch(query);
+    useFlashcardSearch(deferredQuery);
   const { isMaterialMode, materialQuery, materialResults, isMaterialLoading } =
-    useMaterialSearch(query);
+    useMaterialSearch(deferredQuery);
   const containerRef = useRef<HTMLDivElement>(null);
   const searchMode = parseSearchMode(query).mode;
 

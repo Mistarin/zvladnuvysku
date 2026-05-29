@@ -2,13 +2,12 @@
 
 import Link from "next/link";
 import { DifficultyBadge } from "./difficulty-badge";
+import type { SortConfig } from "@/lib/subjects";
 import type { SubjectWithStats } from "@/lib/types/database";
 import { formatCredits } from "@/lib/utils";
-import type { SortConfig } from "@/hooks/use-subjects";
 
 interface SubjectTableProps {
   subjects: SubjectWithStats[];
-  isLoading: boolean;
   sort: SortConfig;
   onSortChange: (sort: SortConfig) => void;
 }
@@ -44,24 +43,6 @@ const FACULTY_COLORS: Record<string, string> = {
   PřF: "#7A9B21",
 };
 
-function TableSkeleton() {
-  return (
-    <>
-      {Array.from({ length: 8 }).map((_, i) => (
-        <tr key={i} className="border-b border-border/50">
-          {Array.from({ length: 5 }).map((_, j) => (
-            <td key={j} className="px-4 py-3">
-              <div
-                className="h-4 bg-muted rounded animate-pulse"
-                style={{ width: `${60 + Math.random() * 40}%` }}
-              />
-            </td>
-          ))}
-        </tr>
-      ))}
-    </>
-  );
-}
 const ATTENDANCE_STYLES: Record<string, { text: string; bg: string }> = {
   volná: { text: "Volná", bg: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" },
   povinná: { text: "Povinná (vše)", bg: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400" },
@@ -76,7 +57,6 @@ function getAttendanceData(type: string | null | undefined) {
 
 export function SubjectTable({
   subjects,
-  isLoading,
   sort,
   onSortChange,
 }: SubjectTableProps) {
@@ -132,9 +112,7 @@ export function SubjectTable({
           </tr>
         </thead>
         <tbody>
-          {isLoading ? (
-            <TableSkeleton />
-          ) : subjects.length === 0 ? (
+          {subjects.length === 0 ? (
             <tr>
               <td
                 colSpan={COLUMNS.length}
@@ -174,7 +152,7 @@ export function SubjectTable({
                           {subject.faculty}
                         </span>
                       )}
-                      {(subject as any).exam_from_home && (
+                      {subject.exam_from_home && (
                         <span className="inline-block px-1.5 py-0.5 text-[10px] font-semibold rounded uppercase tracking-wider bg-primary/10 text-primary border border-primary/20">
                           🏠 Z domova
                         </span>

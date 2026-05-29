@@ -1,9 +1,9 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useState } from "react";
 import { Diamond } from "lucide-react";
-import type { SubjectFilters } from "@/hooks/use-subjects";
 import type { FilterConfig } from "@/hooks/use-subject-filters";
+import type { SubjectFilters } from "@/lib/subjects";
 
 interface SearchFiltersProps {
   filters: SubjectFilters;
@@ -25,20 +25,33 @@ export function SearchFilters({
 }: SearchFiltersProps) {
   const [isOpen, setIsOpen] = useState(false);
 
-  const handleMultiSelect = useCallback(
-    (key: keyof SubjectFilters, value: number | string) => {
-      const currentValues = (filters[key] as (number | string)[]) || [];
-      const exists = currentValues.includes(value as never);
+  function setFilter<K extends keyof SubjectFilters>(key: K, value: SubjectFilters[K]) {
+    onFilterChange(key, value);
+  }
 
-      if (exists) {
-        const next = currentValues.filter((v) => v !== value);
-        onFilterChange(key, next.length > 0 ? (next as SubjectFilters[typeof key]) : undefined);
-      } else {
-        onFilterChange(key, [...currentValues, value] as SubjectFilters[typeof key]);
-      }
-    },
-    [filters, onFilterChange]
-  );
+  function getArrayFilterValue(key: keyof SubjectFilters) {
+    return (filters[key] as (number | string)[] | undefined) ?? [];
+  }
+
+  function getNumberFilterValue(key: keyof SubjectFilters, fallback: number) {
+    return (filters[key] as number | undefined) ?? fallback;
+  }
+
+  function getBooleanFilterValue(key: keyof SubjectFilters) {
+    return (filters[key] as boolean | undefined) ?? false;
+  }
+
+  function handleMultiSelect(key: keyof SubjectFilters, value: number | string) {
+    const currentValues = getArrayFilterValue(key);
+    const exists = currentValues.includes(value as never);
+
+    if (exists) {
+      const next = currentValues.filter((v) => v !== value);
+      onFilterChange(key, next.length > 0 ? (next as SubjectFilters[typeof key]) : undefined);
+    } else {
+      onFilterChange(key, [...currentValues, value] as SubjectFilters[typeof key]);
+    }
+  }
 
   return (
     <div className="space-y-3">
@@ -113,17 +126,15 @@ export function SearchFilters({
                 {config.type === "multiselect" && config.options && (
                   <div className="flex flex-wrap gap-1.5">
                     {config.options.map((option) => {
-                      const currentValues =
-                        (filters[config.key as keyof SubjectFilters] as (number | string)[]) || [];
-                      const isSelected = currentValues.includes(
-                        option.value as never
-                      );
+                      const filterKey = config.key as keyof SubjectFilters;
+                      const currentValues = getArrayFilterValue(filterKey);
+                      const isSelected = currentValues.includes(option.value as never);
 
                       return (
                         <button
                           key={option.value}
                           onClick={() =>
-                            handleMultiSelect(config.key as keyof SubjectFilters, option.value)
+                            handleMultiSelect(filterKey, option.value)
                           }
                           className={`
                             text-xs px-2.5 py-1 rounded-lg border transition-all duration-100
@@ -143,17 +154,28 @@ export function SearchFilters({
                 {config.type === "slider" && (
                   <div className="flex flex-col gap-2 pt-1">
                     <div className="flex items-center gap-3">
+                      {(() => {
+                        const filterKey = config.key as keyof SubjectFilters;
+                        const fallback = config.key.includes('Max') ? config.max ?? 0 : config.min ?? 0;
+                        const currentValue = getNumberFilterValue(filterKey, fallback);
+
+                        return (
                       <input
                         type="range"
                         min={config.min}
                         max={config.max}
                         step={config.step || 1}
-                        value={(filters[config.key as keyof SubjectFilters] as number) ?? (config.key.includes('Max') ? config.max : config.min)}
-                        onChange={(e) => onFilterChange(config.key as keyof SubjectFilters, Number(e.target.value) as any)}
+                        value={currentValue}
+                        onChange={(e) => setFilter(filterKey, Number(e.target.value) as SubjectFilters[typeof filterKey])}
                         className="w-full accent-primary"
                       />
+                        );
+                      })()}
                       <span className="text-sm font-bold text-foreground min-w-[1.5rem] text-right bg-muted px-2 py-0.5 rounded-md">
-                        {(filters[config.key as keyof SubjectFilters] as number) ?? (config.key.includes('Max') ? config.max : config.min)}
+                        {getNumberFilterValue(
+                          config.key as keyof SubjectFilters,
+                          config.key.includes('Max') ? config.max ?? 0 : config.min ?? 0
+                        )}
                       </span>
                     </div>
                   </div>
@@ -169,14 +191,16 @@ export function SearchFilters({
                       onChange={(e) => {
                         const val = e.target.value;
                         if (!val) {
-                          onFilterChange(config.key as keyof SubjectFilters, undefined as any);
+                          setFilter(config.key as keyof SubjectFilters, undefined);
                           return;
                         }
                         const isNumber = typeof config.options![0].value === 'number';
                         const newVal = isNumber ? Number(val) : val;
                         const isArrayType = ['attendanceType', 'semester', 'year'].includes(config.key);
                         
-                        onFilterChange(config.key as keyof SubjectFilters, (isArrayType ? [newVal] : newVal) as any);
+                        const filterKey = config.key as keyof SubjectFilters;
+                        const nextValue = isArrayType ? [newVal] : newVal;
+                        setFilter(filterKey, nextValue as SubjectFilters[typeof filterKey]);
                       }}
                       className="w-full px-3 py-2 text-sm bg-background border border-border rounded-lg outline-none focus:ring-1 focus:ring-primary/40 focus:border-primary/40 text-foreground"
                     >
@@ -198,8 +222,8 @@ export function SearchFilters({
                   <label className="flex items-center gap-2 cursor-pointer p-2 rounded-lg hover:bg-muted/50 transition-colors">
                     <input
                       type="checkbox"
-                      checked={(filters[config.key as keyof SubjectFilters] as boolean) || false}
-                      onChange={(e) => onFilterChange(config.key as keyof SubjectFilters, (e.target.checked ? true : undefined) as any)}
+                      checked={getBooleanFilterValue(config.key as keyof SubjectFilters)}
+                      onChange={(e) => setFilter(config.key as keyof SubjectFilters, e.target.checked ? true : undefined)}
                       className="w-4 h-4 rounded border-border text-primary focus:ring-primary/40 bg-background"
                     />
                     <span className="text-sm font-medium text-foreground">{config.label}</span>
@@ -215,10 +239,10 @@ export function SearchFilters({
               </h4>
               <button
                 onClick={() => {
-                  onFilterChange('timeIntensityMax' as any, 2 as any);
-                  onFilterChange('ratingMin' as any, 4 as any);
-                  onFilterChange('teacherRatingMin' as any, 4 as any);
-                  onFilterChange('attendanceType' as any, ['volná'] as any);
+                  setFilter('timeIntensityMax', 2);
+                  setFilter('ratingMin', 4);
+                  setFilter('teacherRatingMin', 4);
+                  setFilter('attendanceType', ['volná']);
                 }}
                 title="Vybere předměty s náročností max 2, volnou docházkou a hodnocením učitele i předmětu minimálně 4 ⭐"
                 className="w-full flex items-center justify-center gap-1.5 text-sm font-medium px-3 py-2 rounded-lg bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20 transition-colors border border-emerald-500/20"

@@ -11,10 +11,9 @@ interface SessionResult {
 
 interface UseFlashcardSessionOptions {
   cards: Flashcard[]
-  deckId: string
 }
 
-export function useFlashcardSession({ cards, deckId: _deckId }: UseFlashcardSessionOptions) {
+export function useFlashcardSession({ cards }: UseFlashcardSessionOptions) {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [sessionResults, setSessionResults] = useState<SessionResult[]>([])
   const [isComplete, setIsComplete] = useState(false)

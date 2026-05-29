@@ -21,7 +21,7 @@ export default async function NavrhnoutPage() {
           Chybí ti tady nějaký předmět, nebo máš lepší informace? Pošli nám návrh a moderátor ho brzy zkontroluje.
         </p>
       </div>
-      <SubjectProposalForm userId={user.id} />
+      <SubjectProposalForm />
     </div>
   )
 }

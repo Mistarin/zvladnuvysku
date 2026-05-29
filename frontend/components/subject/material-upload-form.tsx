@@ -2,7 +2,7 @@
 
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
+import { uploadSubjectMaterial } from "@/app/actions/contributions";
 
 interface MaterialUploadFormProps {
   subjectId: string;
@@ -56,46 +56,15 @@ export function MaterialUploadForm({ subjectId }: MaterialUploadFormProps) {
     setError(null);
     setSuccessMessage(null);
 
-    const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-
-    if (!user) {
-      setError("Pro nahrávání musíte být přihlášeni.");
-      setIsUploading(false);
-      return;
-    }
-
     try {
-      // 1. Upload to Supabase Storage
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${subjectId}/${Date.now()}-${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
-      
-      const { error: uploadError, data: uploadData } = await supabase.storage
-        .from('study_materials')
-        .upload(fileName, file, {
-          cacheControl: '3600',
-          upsert: false
-        });
+      const formData = new FormData();
+      formData.set('subjectId', subjectId);
+      formData.set('title', title.trim());
+      formData.set('file', file);
 
-      if (uploadError) {
-        throw new Error(`Chyba při nahrávání souboru: ${uploadError.message}`);
-      }
-
-      // 2. Insert record to subject_materials table
-      const { error: dbError } = await supabase.from('subject_materials').insert({
-        subject_id: subjectId,
-        uploader_id: user.id,
-        title: title.trim(),
-        file_path: uploadData.path,
-        size_bytes: file.size,
-        moderation_status: 'pending',
-        is_approved: false,
-      } as never);
-
-      if (dbError) {
-        // Rollback storage if db insert fails
-        await supabase.storage.from('study_materials').remove([uploadData.path]);
-        throw new Error(`Chyba při ukládání záznamu: ${dbError.message}`);
+      const result = await uploadSubjectMaterial(formData);
+      if (!result.success) {
+        throw new Error(result.error);
       }
 
       // Success
@@ -105,8 +74,8 @@ export function MaterialUploadForm({ subjectId }: MaterialUploadFormProps) {
       setSuccessMessage("Materiál byl nahrán a teď čeká na schválení moderátorem. Stav uvidíš v Mojí aktivitě.");
       router.refresh();
       
-    } catch (err: any) {
-      setError(err.message || "Nastala neočekávaná chyba.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Nastala neočekávaná chyba.");
     } finally {
       setIsUploading(false);
     }

@@ -2,8 +2,13 @@
 
 import { useCallback, useMemo } from 'react'
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
-import type { SubjectFilters, SortConfig } from './use-subjects'
-import type { Subject } from '@/lib/types/database'
+import {
+  getSubjectFiltersFromSearchParams,
+  getSubjectPageFromSearchParams,
+  getSubjectSortFromSearchParams,
+  type SubjectFilters,
+  type SortConfig,
+} from '@/lib/subjects'
 
 export interface FilterConfig {
   key: keyof SubjectFilters | 'freeCredits'
@@ -107,20 +112,10 @@ interface UseSubjectFiltersReturn {
   resetFilters: () => void
   filterConfig: FilterConfig[]
   activeFilterCount: number
+  page: number
+  setPage: (page: number) => void
   sort: SortConfig
   setSort: (sort: SortConfig) => void
-}
-
-function parseNumberArray(value: string | null): number[] | undefined {
-  if (!value) return undefined
-  const parsed = value.split(',').map(Number).filter(Boolean)
-  return parsed.length > 0 ? parsed : undefined
-}
-
-function parseStringArray(value: string | null): string[] | undefined {
-  if (!value) return undefined
-  const parsed = value.split(',').filter(Boolean)
-  return parsed.length > 0 ? parsed : undefined
 }
 
 export function useSubjectFilters(): UseSubjectFiltersReturn {
@@ -129,26 +124,15 @@ export function useSubjectFilters(): UseSubjectFiltersReturn {
   const searchParams = useSearchParams()
 
   // Parsování filtrů z URL
-  const filters: SubjectFilters = useMemo(() => ({
-    query: searchParams.get('q') ?? undefined,
-    difficulty: parseNumberArray(searchParams.get('difficulty')),
-    timeIntensity: parseNumberArray(searchParams.get('time_intensity')),
-    timeIntensityMax: searchParams.get('time_intensity_max') ? Number(searchParams.get('time_intensity_max')) : undefined,
-    semester: parseStringArray(searchParams.get('semester')),
-    attendanceType: parseStringArray(searchParams.get('attendance')),
-    year: parseNumberArray(searchParams.get('year')),
-    creditsMin: searchParams.get('credits_min') ? Number(searchParams.get('credits_min')) : undefined,
-    creditsMax: searchParams.get('credits_max') ? Number(searchParams.get('credits_max')) : undefined,
-    faculty: searchParams.get('faculty') ?? undefined,
-    ratingMin: searchParams.get('rating_min') ? Number(searchParams.get('rating_min')) : undefined,
-    teacherRatingMin: searchParams.get('teacher_rating_min') ? Number(searchParams.get('teacher_rating_min')) : undefined,
-    examFromHome: searchParams.get('exam_from_home') === 'true' || undefined,
-  }), [searchParams])
+  const filters: SubjectFilters = useMemo(() => (
+    getSubjectFiltersFromSearchParams(searchParams)
+  ), [searchParams])
 
-  const sort: SortConfig = useMemo(() => ({
-    column: (searchParams.get('sort_by') || 'name') as keyof Subject,
-    direction: (searchParams.get('sort_dir') || 'asc') as 'asc' | 'desc',
-  }), [searchParams])
+  const sort: SortConfig = useMemo(() => (
+    getSubjectSortFromSearchParams(searchParams)
+  ), [searchParams])
+
+  const page = useMemo(() => getSubjectPageFromSearchParams(searchParams), [searchParams])
 
   const setFilter = useCallback(<K extends keyof SubjectFilters>(
     key: K,
@@ -204,6 +188,16 @@ export function useSubjectFilters(): UseSubjectFiltersReturn {
     router.push(`${pathname}?${params.toString()}`)
   }, [router, pathname, searchParams])
 
+  const setPage = useCallback((nextPage: number) => {
+    const params = new URLSearchParams(searchParams.toString())
+    if (nextPage <= 1) {
+      params.delete('page')
+    } else {
+      params.set('page', String(nextPage))
+    }
+    router.push(`${pathname}?${params.toString()}`)
+  }, [router, pathname, searchParams])
+
   // Počet aktivních filtrů
   const activeFilterCount = useMemo(() => {
     let count = 0
@@ -228,6 +222,8 @@ export function useSubjectFilters(): UseSubjectFiltersReturn {
     resetFilters,
     filterConfig: FILTER_CONFIG,
     activeFilterCount,
+    page,
+    setPage,
     sort,
     setSort,
   }

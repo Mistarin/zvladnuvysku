@@ -1,24 +1,24 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { approveMaterial, rejectMaterial } from "@/app/admin/actions";
 import type { SubjectMaterial } from "@/lib/types/database";
-import { createClient } from "@/lib/supabase/client";
+import { getStoragePublicUrl } from "@/lib/storage";
 
 interface MaterialApprovalCardProps {
   material: SubjectMaterial;
   subjectName?: string;
+  subjectSlug?: string;
 }
 
-export function MaterialApprovalCard({ material, subjectName }: MaterialApprovalCardProps) {
+export function MaterialApprovalCard({ material, subjectName, subjectSlug }: MaterialApprovalCardProps) {
   const [isApproving, setIsApproving] = useState(false);
   const [isRejecting, setIsRejecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState("");
   const [showReject, setShowReject] = useState(false);
-
-  const supabase = createClient();
-  const { data: publicUrlData } = supabase.storage.from("study_materials").getPublicUrl(material.file_path);
+  const publicUrl = getStoragePublicUrl("study_materials", material.file_path);
 
   const handleApprove = async () => {
     setIsApproving(true);
@@ -58,15 +58,28 @@ export function MaterialApprovalCard({ material, subjectName }: MaterialApproval
               Předmět: <span className="font-medium text-foreground">{subjectName}</span>
             </p>
           )}
+          <p className="text-xs text-muted-foreground mt-1">
+            Nahráno {new Date(material.created_at).toLocaleString("cs-CZ")}
+          </p>
         </div>
-        <a 
-          href={publicUrlData.publicUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-sm font-medium px-3 py-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
-        >
-          Otevřít PDF ↗
-        </a>
+        <div className="flex flex-col items-end gap-2">
+          <a 
+            href={publicUrl ?? "#"}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm font-medium px-3 py-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+          >
+            Otevřít PDF ↗
+          </a>
+          {subjectSlug && (
+            <Link
+              href={`/predmety/${subjectSlug}`}
+              className="text-xs font-medium text-muted-foreground hover:text-foreground"
+            >
+              Detail předmětu →
+            </Link>
+          )}
+        </div>
       </div>
 
       {error && (

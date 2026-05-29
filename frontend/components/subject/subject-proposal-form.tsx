@@ -1,7 +1,12 @@
 'use client'
 
-import { useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
+import { useEffect, useState } from 'react'
+import {
+  getSubjectDetailsForProposal,
+  submitSubjectProposal,
+} from '@/app/actions/contributions'
+import { getSubjectCache, searchInCache, type SubjectCacheEntry } from '@/lib/subject-cache'
+import { getTeacherCache, searchTeachersInCache, type TeacherCacheEntry } from '@/lib/teacher-cache'
 
 // NOTE: Run this SQL in Supabase before using this form:
 // CREATE TABLE subject_proposals (
@@ -17,10 +22,6 @@ import { createClient } from '@/lib/supabase/client'
 //   reviewed_at timestamptz,
 //   created_at timestamptz NOT NULL DEFAULT now()
 // );
-
-interface SubjectProposalFormProps {
-  userId: string
-}
 
 interface SubjectSearchResult {
   id: string
@@ -49,6 +50,8 @@ interface SubjectDetails {
   faculty: string | null
   year: number | null
 }
+
+const subjectDetailsCache = new Map<string, SubjectDetails>()
 
 const SEMESTER_OPTIONS = [
   { value: 'zimní', label: '❄️ Zimní' },
@@ -160,13 +163,15 @@ function formatDiffValue(value: string | number | boolean | null | undefined) {
   return String(value)
 }
 
-export function SubjectProposalForm({ userId }: SubjectProposalFormProps) {
+export function SubjectProposalForm() {
   const [type, setType] = useState<'new' | 'edit'>('new')
   const [subjectSearch, setSubjectSearch] = useState('')
   const [subjectId, setSubjectId] = useState<string | null>(null)
   const [originalSubject, setOriginalSubject] = useState<SubjectDetails | null>(null)
   const [searchResults, setSearchResults] = useState<SubjectSearchResult[]>([])
   const [isLoadingSubject, setIsLoadingSubject] = useState(false)
+  const [subjectCache, setSubjectCache] = useState<SubjectCacheEntry[]>([])
+  const [teacherCache, setTeacherCache] = useState<TeacherCacheEntry[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -183,16 +188,27 @@ export function SubjectProposalForm({ userId }: SubjectProposalFormProps) {
   const set = (k: keyof typeof form, v: string | number | boolean) =>
     setForm((f) => ({ ...f, [k]: v }))
 
+  useEffect(() => {
+    getSubjectCache().then(setSubjectCache).catch((cacheError) => {
+      console.error('Nepodařilo se načíst cache předmětů:', cacheError)
+    })
+    getTeacherCache().then(setTeacherCache).catch((cacheError) => {
+      console.error('Nepodařilo se načíst cache vyučujících:', cacheError)
+    })
+  }, [])
+
   const searchSubjects = async (q: string) => {
     setSubjectSearch(q)
     if (q.length < 2) { setSearchResults([]); return }
-    const supabase = createClient()
-    const { data } = await supabase
-      .from('subjects')
-      .select('id, name, short_tag')
-      .or(`name.ilike.%${q}%,short_tag.ilike.%${q}%`)
-      .limit(6)
-    setSearchResults(data ?? [])
+
+    const entries = subjectCache.length > 0 ? subjectCache : await getSubjectCache().catch(() => [])
+    setSearchResults(
+      searchInCache(entries, q, 6).map((subject) => ({
+        id: subject.id,
+        name: subject.name,
+        short_tag: subject.short_tag,
+      }))
+    )
   }
 
   const [materials, setMaterials] = useState<File[]>([])
@@ -218,23 +234,25 @@ export function SubjectProposalForm({ userId }: SubjectProposalFormProps) {
   }
 
   const loadSubjectDetails = async (selectedSubjectId: string) => {
-    setIsLoadingSubject(true)
-    setError(null)
-    const supabase = createClient()
-    const { data, error: subjectError } = await supabase
-      .from('subjects')
-      .select('name, short_tag, description, target_audience, real_requirements, difficulty, time_intensity, attendance_type, exam_from_home, credits, semester, faculty, year')
-      .eq('id', selectedSubjectId)
-      .single()
-
-    setIsLoadingSubject(false)
-
-    if (subjectError || !data) {
-      setError('Nepodařilo se načíst data vybraného předmětu.')
+    const cachedDetails = subjectDetailsCache.get(selectedSubjectId)
+    if (cachedDetails) {
+      applySubjectToForm(cachedDetails)
       return
     }
 
-    applySubjectToForm(data as SubjectDetails)
+    setIsLoadingSubject(true)
+    setError(null)
+    const result = await getSubjectDetailsForProposal(selectedSubjectId)
+    setIsLoadingSubject(false)
+
+    if (!result.success || !result.data) {
+      setError(result.success ? 'Nepodařilo se načíst data vybraného předmětu.' : result.error)
+      return
+    }
+
+    const details = result.data as SubjectDetails
+    subjectDetailsCache.set(selectedSubjectId, details)
+    applySubjectToForm(details)
   }
 
   const diffEntries = type === 'edit' && originalSubject
@@ -259,13 +277,15 @@ export function SubjectProposalForm({ userId }: SubjectProposalFormProps) {
   const searchTeachers = async (q: string) => {
     setTeacherSearch(q)
     if (q.length < 2) { setTeacherSearchResults([]); return }
-    const supabase = createClient()
-    const { data } = await supabase
-      .from('teachers')
-      .select('id, name, faculty')
-      .ilike('name', `%${q}%`)
-      .limit(6)
-    setTeacherSearchResults(data ?? [])
+
+    const entries = teacherCache.length > 0 ? teacherCache : await getTeacherCache().catch(() => [])
+    setTeacherSearchResults(
+      searchTeachersInCache(entries, q, 6).map((teacher) => ({
+        id: teacher.id,
+        name: teacher.name,
+        faculty: teacher.faculty,
+      }))
+    )
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -273,56 +293,22 @@ export function SubjectProposalForm({ userId }: SubjectProposalFormProps) {
     if (type === 'edit' && !subjectId) { setError('Vyber předmět, který chceš upravit.'); return }
     setIsSubmitting(true)
     setError(null)
-
-    const supabase = createClient()
-    
-    // Upload materials first
-    const uploadedMaterials: { title: string, file_path: string, size_bytes: number }[] = []
-    if (materials.length > 0) {
-      const proposalId = crypto.randomUUID()
-      for (const file of materials) {
-        const fileExt = file.name.split('.').pop()
-        const filePath = `proposals/${proposalId}/${crypto.randomUUID()}.${fileExt}`
-        
-        const { error: uploadError } = await supabase.storage
-          .from('study_materials')
-          .upload(filePath, file)
-          
-        if (uploadError) {
-          setError(`Nepodařilo se nahrát soubor ${file.name}: ${uploadError.message}`)
-          setIsSubmitting(false)
-          return
-        }
-        
-        uploadedMaterials.push({
-          title: file.name.replace('.pdf', ''),
-          file_path: filePath,
-          size_bytes: file.size
-        })
-      }
+    const payload = {
+      type,
+      subjectId,
+      form,
+      teachers: selectedTeachers,
+      materialFiles: materials.map((file) => ({ name: file.name, size: file.size })),
     }
 
-    const proposalData = {
-      name: form.name || undefined, short_tag: form.short_tag || undefined,
-      description: form.description || undefined, target_audience: form.target_audience || undefined,
-      real_requirements: form.real_requirements || undefined,
-      difficulty: form.difficulty, time_intensity: form.time_intensity,
-      attendance_type: form.attendance_type || undefined,
-      exam_from_home: form.exam_from_home,
-      credits: form.credits ? Number(form.credits) : undefined,
-      semester: form.semester || undefined, faculty: form.faculty || undefined,
-      year: form.year ? Number(form.year) : undefined,
-      teachers: selectedTeachers.length > 0 ? selectedTeachers : undefined,
-      materials: uploadedMaterials.length > 0 ? uploadedMaterials : undefined,
-    }
+    const formData = new FormData()
+    formData.set('payload', JSON.stringify(payload))
+    materials.forEach((file, index) => formData.set(`material:${index}`, file))
 
-    const { error: dbError } = await supabase.from('subject_proposals' as never).insert({
-      type, subject_id: type === 'edit' ? subjectId : null,
-      data: proposalData, note: form.note || null, proposed_by: userId,
-    } as never)
+    const result = await submitSubjectProposal(formData)
 
     setIsSubmitting(false)
-    if (dbError) { setError('Nepodařilo se odeslat návrh. Zkus to prosím znovu.'); return }
+    if (!result.success) { setError(result.error); return }
     setSuccess(true)
   }
 

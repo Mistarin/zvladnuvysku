@@ -1,10 +1,7 @@
 'use client'
 
 import { useState, useCallback } from 'react'
-import { createClient } from '@/lib/supabase/client'
-import type { Database } from '@/lib/types/database'
-
-type RatingInsert = Database['public']['Tables']['subject_ratings']['Insert']
+import { saveSubjectRating } from '@/app/actions/contributions'
 
 interface RatingInput {
   subjectId: string
@@ -33,30 +30,11 @@ export function useRating(): UseRatingReturn {
     setSuccess(false)
 
     try {
-      const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
-
-      if (!user) {
-        setError('Pro hodnocení se musíš přihlásit.')
+      const result = await saveSubjectRating(input)
+      if (!result.success) {
+        setError(result.error)
         return
       }
-
-      const payload: RatingInsert = {
-        subject_id: input.subjectId,
-        user_id: user.id,
-        overall: input.overall,
-        difficulty: input.difficulty ?? null,
-        usefulness: input.usefulness ?? null,
-        workload: input.workload ?? null,
-        comment: input.comment?.trim() || null,
-      }
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { error: dbError } = await (supabase as any)
-        .from('subject_ratings')
-        .upsert(payload, { onConflict: 'subject_id,user_id' })
-
-      if (dbError) throw dbError
       setSuccess(true)
     } catch (err) {
       console.error('Chyba při hodnocení:', err)

@@ -3,6 +3,8 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { SearchLandingBar } from "@/components/search/search-landing-bar";
 import { BookOpen, Layers } from "lucide-react";
+import { DeleteDeckButton } from "@/components/flashcard/delete-deck-button";
+import { DeckOwnerToolbar } from "@/components/flashcard/deck-owner-toolbar";
 
 interface PageProps {
   searchParams: Promise<{
@@ -87,6 +89,10 @@ export default async function FlashcardDeckListPage({ searchParams }: PageProps)
     myDecks = (myDecksData ?? []) as FlashcardDeckListItem[];
   }
 
+  const publicDeckCount = myDecks.filter((deck) => deck.is_public).length;
+  const privateDeckCount = myDecks.filter((deck) => !deck.is_public).length;
+  const totalCardCount = myDecks.reduce((sum, deck) => sum + deck.card_count, 0);
+
   return (
     <div className="container mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-8">
       <nav className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
@@ -117,7 +123,7 @@ export default async function FlashcardDeckListPage({ searchParams }: PageProps)
       </div>
 
       {user && (
-        <section className="mb-10 space-y-4 rounded-2xl border border-border bg-card p-5 shadow-sm">
+        <section id="moje-balicky" className="mb-10 space-y-4 rounded-2xl border border-border bg-card p-5 shadow-sm scroll-mt-24">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <h2 className="text-xl font-bold text-foreground">Moje balíčky</h2>
@@ -131,6 +137,21 @@ export default async function FlashcardDeckListPage({ searchParams }: PageProps)
             >
               + Nový balíček
             </Link>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div className="rounded-xl border border-border/70 bg-background/70 px-4 py-3">
+              <p className="text-xs uppercase tracking-wide text-muted-foreground">Celkem balíčků</p>
+              <p className="mt-1 text-2xl font-bold text-foreground">{myDecks.length}</p>
+            </div>
+            <div className="rounded-xl border border-border/70 bg-background/70 px-4 py-3">
+              <p className="text-xs uppercase tracking-wide text-muted-foreground">Veřejné / soukromé</p>
+              <p className="mt-1 text-2xl font-bold text-foreground">{publicDeckCount} <span className="text-muted-foreground">/</span> {privateDeckCount}</p>
+            </div>
+            <div className="rounded-xl border border-border/70 bg-background/70 px-4 py-3">
+              <p className="text-xs uppercase tracking-wide text-muted-foreground">Otázek napříč balíčky</p>
+              <p className="mt-1 text-2xl font-bold text-foreground">{totalCardCount}</p>
+            </div>
           </div>
 
           <form className="grid gap-3 rounded-xl border border-border/60 bg-background/60 p-4 md:grid-cols-[minmax(0,1fr)_180px_180px_auto]">
@@ -172,36 +193,41 @@ export default async function FlashcardDeckListPage({ searchParams }: PageProps)
           {myDecks.length > 0 ? (
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               {myDecks.map((deck) => (
-                <Link
+                <div
                   key={deck.id}
-                  href={`/flashcardy/${deck.id}`}
-                  className="block rounded-xl border border-border bg-background p-5 transition-all hover:border-primary/40 hover:bg-muted/30"
+                  className="rounded-xl border border-border bg-background p-5 transition-all hover:border-primary/40 hover:bg-muted/30"
                 >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <h3 className="font-semibold text-foreground">{deck.title}</h3>
-                      {deck.subject && (
-                        <p className="mt-1 text-xs text-muted-foreground">
-                          {deck.subject.short_tag} · {deck.subject.name}
-                        </p>
-                      )}
+                  <Link href={`/flashcardy/${deck.id}`} className="block">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <h3 className="font-semibold text-foreground">{deck.title}</h3>
+                        {deck.subject && (
+                          <p className="mt-1 text-xs text-muted-foreground">
+                            {deck.subject.short_tag} · {deck.subject.name}
+                          </p>
+                        )}
+                      </div>
+                      <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${deck.is_public ? "bg-emerald-500/10 text-emerald-600" : "bg-muted text-muted-foreground"}`}>
+                        {deck.is_public ? "Veřejný" : "Soukromý"}
+                      </span>
                     </div>
-                    <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${deck.is_public ? "bg-emerald-500/10 text-emerald-600" : "bg-muted text-muted-foreground"}`}>
-                      {deck.is_public ? "Veřejný" : "Soukromý"}
-                    </span>
+                    {deck.description && (
+                      <p className="mt-3 line-clamp-2 text-sm text-muted-foreground">
+                        {deck.description}
+                      </p>
+                    )}
+                    <div className="mt-4 flex items-center justify-between text-xs text-muted-foreground">
+                      <span>
+                        🃏 {deck.card_count} {deck.card_count === 1 ? "karta" : deck.card_count >= 2 && deck.card_count <= 4 ? "karty" : "karet"}
+                      </span>
+                      <span>Otevřít →</span>
+                    </div>
+                  </Link>
+                  <div className="mt-4 space-y-3 border-t border-border/70 pt-4">
+                    <DeckOwnerToolbar deckId={deck.id} isPublic={deck.is_public ?? false} variant="compact" />
+                    <DeleteDeckButton deckId={deck.id} />
                   </div>
-                  {deck.description && (
-                    <p className="mt-3 line-clamp-2 text-sm text-muted-foreground">
-                      {deck.description}
-                    </p>
-                  )}
-                  <div className="mt-4 flex items-center justify-between text-xs text-muted-foreground">
-                    <span>
-                      🃏 {deck.card_count} {deck.card_count === 1 ? "karta" : deck.card_count >= 2 && deck.card_count <= 4 ? "karty" : "karet"}
-                    </span>
-                    <span>Otevřít →</span>
-                  </div>
-                </Link>
+                </div>
               ))}
             </div>
           ) : (

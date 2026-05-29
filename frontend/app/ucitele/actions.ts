@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import type { TeacherInsert } from "@/lib/types/database";
 
 function generateSlug(text: string) {
   return text
@@ -31,13 +32,14 @@ export async function proposeTeacher(data: {
 
     for (let attempt = 0; attempt < 5; attempt += 1) {
       const slug = withSlugSuffix(baseSlug, attempt);
-      const { error } = await (supabase.from("teachers") as any).insert({
+      const teacherInsert: TeacherInsert = {
         name: data.name,
         slug,
         faculty: data.faculty,
         department: data.department || null,
         is_approved: false,
-      });
+      };
+      const { error } = await supabase.from("teachers").insert(teacherInsert as never);
 
       if (!error) {
         revalidatePath("/ucitele");
@@ -52,8 +54,9 @@ export async function proposeTeacher(data: {
     }
 
     throw new Error(lastError?.message || "Nepodařilo se navrhnout vyučujícího");
-  } catch (err: any) {
-    console.error("Error proposing teacher:", err.message);
-    return { error: err.message || "Nepodařilo se navrhnout vyučujícího" };
+  } catch (err) {
+    const errorMessage = err instanceof Error ? err.message : "Nepodařilo se navrhnout vyučujícího";
+    console.error("Error proposing teacher:", errorMessage);
+    return { error: errorMessage };
   }
 }

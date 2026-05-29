@@ -19,7 +19,7 @@ async function checkAdmin() {
 
 export async function createTeacher(data: TeacherInsert) {
   try {
-    const supabase = await checkAdmin() as any;
+    const supabase = await checkAdmin();
 
     const { error } = await supabase
       .from("teachers")
@@ -28,7 +28,7 @@ export async function createTeacher(data: TeacherInsert) {
         slug: data.slug,
         faculty: data.faculty,
         department: data.department || null,
-      } as any);
+      } as never);
 
     if (error) throw error;
     
@@ -36,15 +36,15 @@ export async function createTeacher(data: TeacherInsert) {
     revalidatePath("/ucitele");
     
     return { success: true };
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error creating teacher:", error);
-    return { error: error.message };
+    return { error: error instanceof Error ? error.message : "Nepodařilo se vytvořit vyučujícího." };
   }
 }
 
 export async function updateTeacher(id: string, data: Partial<TeacherInsert>) {
   try {
-    const supabase = await checkAdmin() as any;
+    const supabase = await checkAdmin();
 
     const { error } = await supabase
       .from("teachers")
@@ -54,7 +54,7 @@ export async function updateTeacher(id: string, data: Partial<TeacherInsert>) {
         ...(data.faculty !== undefined && { faculty: data.faculty }),
         ...(data.department !== undefined && { department: data.department || null }),
         ...(data.is_approved !== undefined && { is_approved: data.is_approved }),
-      } as any)
+      } as never)
       .eq("id", id);
 
     if (error) throw error;
@@ -67,15 +67,15 @@ export async function updateTeacher(id: string, data: Partial<TeacherInsert>) {
     }
     
     return { success: true };
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error updating teacher:", error);
-    return { error: error.message };
+    return { error: error instanceof Error ? error.message : "Nepodařilo se upravit vyučujícího." };
   }
 }
 
 export async function deleteTeacher(id: string) {
   try {
-    const supabase = await checkAdmin() as any;
+    const supabase = await checkAdmin();
 
     const { error } = await supabase
       .from("teachers")
@@ -89,8 +89,8 @@ export async function deleteTeacher(id: string) {
     revalidatePath("/ucitele");
     
     return { success: true };
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error deleting teacher:", error);
-    return { error: error.message };
+    return { error: error instanceof Error ? error.message : "Nepodařilo se smazat vyučujícího." };
   }
 }

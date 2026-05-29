@@ -69,7 +69,7 @@ export function TeacherFormDialog({ teacher, trigger, open, onOpenChange }: Teac
     startTransition(async () => {
       const result = isEditing 
         ? await updateTeacher(teacher.id, formData)
-        : await createTeacher(formData as any);
+        : await createTeacher({ ...formData, department: formData.department || null, is_approved: true });
 
       if (result.error) {
         setError(result.error);

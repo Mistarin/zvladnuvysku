@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { TeacherProposalDialog } from "@/components/teacher/teacher-proposal-dialog";
+import type { Teacher } from "@/lib/types/database";
 
 export const metadata: Metadata = {
   title: "Vyučující | ZvládnuVýšku",
@@ -37,11 +38,11 @@ export default async function TeachersPage() {
   }
 
   // Group teachers by faculty
-  const groupedTeachers = ((teachers as any[]) || []).reduce((acc, t) => {
+  const groupedTeachers = ((teachers ?? []) as Teacher[]).reduce<Record<string, Teacher[]>>((acc, t) => {
     if (!acc[t.faculty]) acc[t.faculty] = [];
     acc[t.faculty].push(t);
     return acc;
-  }, {} as Record<string, any[]>);
+  }, {});
 
   const faculties = Object.keys(groupedTeachers).sort();
 
@@ -83,7 +84,7 @@ export default async function TeachersPage() {
                 </h2>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {groupedTeachers[faculty].map((teacher: any) => (
+                {groupedTeachers[faculty].map((teacher) => (
                   <Link
                     key={teacher.id}
                     href={`/ucitele/${teacher.slug}`}

@@ -66,7 +66,7 @@ export function RatingApprovalCard({ rating }: RatingApprovalCardProps) {
       </div>
 
       <div className="p-4 bg-muted/30 border border-border rounded-lg text-sm text-foreground italic">
-        "{rating.comment}"
+        &ldquo;{rating.comment}&rdquo;
       </div>
 
       {error && (
