@@ -1,6 +1,12 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
 @import "tailwindcss";
 
+@property --brand-sync-color {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #0078B4;
+}
+
 
 /* Tailwind v4 theme definice */
 @theme {
@@ -37,6 +43,7 @@
     --accent-color: #02BED6;
     --accent-light: #38d2e4;
     --accent-glow: rgba(2, 190, 214, 0.18);
+    --brand-sync-color: #0078B4;
 
     color-scheme: light;
   }
@@ -65,6 +72,7 @@
     --accent-color: #1acbe0;
     --accent-light: #59daea;
     --accent-glow: rgba(26, 203, 224, 0.24);
+    --brand-sync-color: #0C5A88;
 
     color-scheme: dark;
   }
@@ -99,6 +107,11 @@
 
   html {
     scroll-behavior: smooth;
+    animation: brandSyncPulse 60s linear infinite;
+  }
+
+  html.dark {
+    animation-name: brandSyncPulseDark;
   }
 
   :focus-visible {
@@ -199,27 +212,8 @@
     animation: fadeIn 150ms ease;
   }
 
-  /* ── Home page (pulsing ambient glow) ── */
-  @keyframes colorPulse {
-    0%, 100% { background-color: #0078B4; }
-    16.66% { background-color: #02BED6; }
-    33.33% { background-color: #EE7202; }
-    50% { background-color: #703287; }
-    66.66% { background-color: #F3B400; }
-    83.33% { background-color: #CC0A1C; }
-  }
-
-  @keyframes colorPulseDark {
-    0%, 100% { background-color: #0C5A88; }
-    16.66% { background-color: #0A8FA1; }
-    33.33% { background-color: #A45B1A; }
-    50% { background-color: #5A2A76; }
-    66.66% { background-color: #B07D16; }
-    83.33% { background-color: #9A1826; }
-  }
-
   .home-ambient-glow-aura {
-    animation: colorPulse 36s infinite alternate ease-in-out;
+    background-color: var(--brand-sync-color);
     filter: blur(64px);
     opacity: 0.15;
     border-radius: 2rem;
@@ -227,7 +221,6 @@
   }
 
   .dark .home-ambient-glow-aura {
-    animation: colorPulseDark 36s infinite alternate ease-in-out;
     opacity: 0.12;
   }
 
@@ -269,30 +262,8 @@
     color: var(--color-foreground);
   }
 
-  @keyframes textColorPulse {
-    0%, 100% { color: #0078B4; }
-    16.66% { color: #02BED6; }
-    33.33% { color: #EE7202; }
-    50% { color: #703287; }
-    66.66% { color: #F3B400; }
-    83.33% { color: #CC0A1C; }
-  }
-
-  @keyframes textColorPulseDark {
-    0%, 100% { color: #0C5A88; }
-    16.66% { color: #0A8FA1; }
-    33.33% { color: #A45B1A; }
-    50% { color: #5A2A76; }
-    66.66% { color: #B07D16; }
-    83.33% { color: #9A1826; }
-  }
-
   .home-title-accent {
-    animation: textColorPulse 36s infinite alternate ease-in-out;
-  }
-
-  .dark .home-title-accent {
-    animation: textColorPulseDark 36s infinite alternate ease-in-out;
+    color: var(--brand-sync-color);
   }
 
   .search-bar-focused {
@@ -430,6 +401,24 @@
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
+}
+
+@keyframes brandSyncPulse {
+  0%, 100% { --brand-sync-color: #0078B4; }
+  16.66% { --brand-sync-color: #02BED6; }
+  33.33% { --brand-sync-color: #EE7202; }
+  50% { --brand-sync-color: #703287; }
+  66.66% { --brand-sync-color: #F3B400; }
+  83.33% { --brand-sync-color: #CC0A1C; }
+}
+
+@keyframes brandSyncPulseDark {
+  0%, 100% { --brand-sync-color: #0C5A88; }
+  16.66% { --brand-sync-color: #0A8FA1; }
+  33.33% { --brand-sync-color: #A45B1A; }
+  50% { --brand-sync-color: #5A2A76; }
+  66.66% { --brand-sync-color: #B07D16; }
+  83.33% { --brand-sync-color: #9A1826; }
 }
 
 @keyframes slideUp {
