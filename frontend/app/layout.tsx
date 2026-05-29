@@ -17,12 +17,12 @@ export const metadata: Metadata = {
     default: "ZvladnuVysku — Studentský hub Ostravské univerzity",
   },
   description:
-    "Najdi svůj předmět na Ostravské univerzitě. Hodnocení obtížnosti, flashcardy, reálné zkušenosti studentů.",
+    "Najdi svůj předmět na Ostravské univerzitě. Hodnocení obtížnosti, kartičky, reálné zkušenosti studentů.",
   keywords: [
     "Ostravská univerzita",
     "předměty",
     "hodnocení",
-    "flashcardy",
+    "kartičky",
     "studium",
     "OU",
   ],

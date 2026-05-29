@@ -23,7 +23,7 @@ const FEATURES = [
   },
   {
     icon: "🃏",
-    title: "Flashcardy",
+    title: "Kartičky",
     desc: "Spaced repetition učení přizpůsobené každému předmětu.",
   },
 ];
@@ -130,7 +130,7 @@ export default function HomePage() {
           >
             <p className="text-lg md:text-xl font-medium text-muted-foreground/80 tracking-tight px-4 whitespace-nowrap">
               {searchMode === "flashcards"
-                ? "Hledáš flashcard balíček? Zkus zadat název nebo předmět."
+                ? "Hledáš balíček kartiček? Zkus zadat název nebo předmět."
                 : searchMode === "materials"
                   ? "Hledáš materiál? Zkus název souboru nebo předmětu."
                   : `„Protože reálné zkušenosti studentů jsou víc než jen sylabus.“`}
@@ -191,7 +191,7 @@ export default function HomePage() {
           <div className={`home-search-helper ${isFocused ? "home-search-helper--hidden" : ""}`}>
             <p className="home-hint">
               {searchMode === "flashcards"
-                ? <><span className="font-mono text-primary">.F</span> režim — hledáš flashcard balíčky</>
+                ? <><span className="font-mono text-primary">.F</span> režim — hledáš balíčky kartiček</>
                 : searchMode === "materials"
                   ? <><span className="font-mono text-sky-700">.M</span> režim — hledáš studijní materiály</>
                   : "Jednotný studentský hub. Proč generovat stokrát to, co už dávno existuje?"}
@@ -200,7 +200,7 @@ export default function HomePage() {
             <div className={`home-search-modes ${searchMode === "subjects" ? "" : "home-search-modes--hidden"}`}>
               <span>Zkratky hledání:</span>
               <span className="rounded-full border border-border bg-card px-2.5 py-1">
-                <span className="font-mono text-primary">.f</span> balíčky
+                <span className="font-mono text-primary">.f</span> kartičky
               </span>
               <span className="rounded-full border border-border bg-card px-2.5 py-1">
                 <span className="font-mono text-sky-700">.m</span> materiály

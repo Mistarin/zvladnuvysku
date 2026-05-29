@@ -109,7 +109,7 @@ export function HeroSearch() {
       {!isFocused && (
         <p className="text-center text-xs text-muted-foreground mt-2 animate-fade-in">
           {searchMode === "flashcards" ? (
-            <><span className="font-mono text-primary">.F</span> režim — stiskni <kbd className="px-1 py-0.5 rounded bg-muted text-muted-foreground border border-border font-mono text-[10px]">Enter</kbd> pro všechny balíčky</>
+            <><span className="font-mono text-primary">.F</span> režim — stiskni <kbd className="px-1 py-0.5 rounded bg-muted text-muted-foreground border border-border font-mono text-[10px]">Enter</kbd> pro všechny kartičky</>
           ) : searchMode === "materials" ? (
             <><span className="font-mono text-sky-700">.M</span> režim — stiskni <kbd className="px-1 py-0.5 rounded bg-muted text-muted-foreground border border-border font-mono text-[10px]">Enter</kbd> pro všechny materiály</>
           ) : (

@@ -54,7 +54,7 @@ export function SearchSuggestions({
           <div className="px-4 py-2 border-b border-border/50 flex items-center gap-2 bg-primary/5">
             <Layers className="w-3.5 h-3.5 text-primary" />
             <span className="text-xs font-semibold text-primary tracking-wide">
-              Flashcard balíčky
+              Balíčky kartiček
             </span>
             {flashcardQuery && (
               <span className="text-xs text-muted-foreground">

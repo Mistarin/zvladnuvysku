@@ -9,8 +9,14 @@ import type { User } from "@supabase/supabase-js";
 import Image from "next/image";
 const navLinks = [
   { href: "/predmety", label: "Předměty" },
+  { href: "/flashcardy", label: "Kartičky" },
+  { href: "/materialy", label: "Materiály" },
   { href: "/ucitele", label: "Vyučující" },
 ];
+
+function isActiveLink(pathname: string, href: string) {
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
 
 export function Navbar() {
   const pathname = usePathname();
@@ -75,13 +81,13 @@ export function Navbar() {
           </Link>
 
           {/* Desktop Right Side */}
-          <div className="hidden sm:flex items-center gap-1">
+          <div className="hidden md:flex items-center gap-1">
             {navLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
                 className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-150 ${
-                  pathname === link.href ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                  isActiveLink(pathname, link.href) ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-muted"
                 }`}
               >
                 {link.label}
@@ -180,6 +186,27 @@ export function Navbar() {
         </nav>
       </div>
 
+      <div className="border-t border-border/40 md:hidden">
+        <div className="container mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+          <div className="flex gap-2 overflow-x-auto py-2 no-scrollbar">
+            {navLinks.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                onClick={() => setMobileMenuOpen(false)}
+                className={`shrink-0 rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${
+                  isActiveLink(pathname, link.href)
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground"
+                }`}
+              >
+                {link.label}
+              </Link>
+            ))}
+          </div>
+        </div>
+      </div>
+
       {/* Mobile Collapse Menu */}
       {mobileMenuOpen && (
         <div className="sm:hidden border-t border-border/50 bg-background px-4 py-4 space-y-3 shadow-xl">
@@ -189,7 +216,7 @@ export function Navbar() {
               href={link.href}
               onClick={() => setMobileMenuOpen(false)}
               className={`block px-4 py-2 rounded-lg text-sm font-medium ${
-                pathname === link.href ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted"
+                isActiveLink(pathname, link.href) ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted"
               }`}
             >
               {link.label}
@@ -243,4 +270,3 @@ export function Navbar() {
     </header>
   );
 }
-

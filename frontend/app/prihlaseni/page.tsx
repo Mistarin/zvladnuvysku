@@ -49,7 +49,7 @@ export default async function PrihlaseniPage() {
           <p className="font-medium text-foreground text-sm">K čemu slouží přihlášení?</p>
           <ul className="space-y-0.5 list-disc list-inside">
             <li>Hodnocení předmětů</li>
-            <li>Vytváření a ukládání flashcardů</li>
+            <li>Vytváření a ukládání kartiček</li>
             <li>Sledování pokroku studia</li>
           </ul>
         </div>

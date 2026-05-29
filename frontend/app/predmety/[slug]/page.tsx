@@ -329,23 +329,23 @@ export default async function PredmetDetailPage({ params }: PageProps) {
             </div>
           )}
 
-          {/* Flashcardy */}
+          {/* Kartičky */}
           <div className="space-y-3">
             <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
-              <Layers className="w-5 h-5 text-rose-500" /> Flashcardy
+              <Layers className="w-5 h-5 text-rose-500" /> Kartičky
             </h2>
             <div className="bg-card border border-border rounded-xl p-4 shadow-sm space-y-4">
               {isLoggedIn ? (
                 <>
                   <p className="text-sm text-muted-foreground">
-                    {deckCount ? `K dispozici: ${deckCount} balíčků` : 'Zatím žádné flashcardy. Buďte první!'}
+                    {deckCount ? `K dispozici: ${deckCount} balíčků` : 'Zatím žádné kartičky. Buďte první!'}
                   </p>
                   <div className="flex flex-col gap-2">
                     <Link
                       href={`/predmety/${slug}/flashcardy`}
                       className="text-center w-full py-2 rounded-lg text-sm font-medium accent-gradient text-white hover:opacity-90 transition-all"
                     >
-                      Procházet flashcardy
+                      Procházet kartičky
                     </Link>
                     <Link
                       href={`/flashcardy/novy?subject=${slug}`}
@@ -442,5 +442,4 @@ export default async function PredmetDetailPage({ params }: PageProps) {
     </div>
   );
 }
-
 

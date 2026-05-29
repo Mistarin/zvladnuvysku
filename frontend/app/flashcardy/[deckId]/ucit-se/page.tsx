@@ -14,7 +14,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const supabase = await createClient()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data } = await (supabase as any).from('flashcard_decks').select('title').eq('id', deckId).single()
-  return { title: `Procvičování — ${(data as { title: string } | null)?.title ?? 'Flashcardy'}` }
+  return { title: `Procvičování — ${(data as { title: string } | null)?.title ?? 'Kartičky'}` }
 }
 
 export default async function UcitSePage({ params }: PageProps) {

@@ -4,6 +4,7 @@ import Image from 'next/image'
 import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { Check } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import {
   FLASHCARD_MEDIA_BUCKET,
@@ -733,12 +734,23 @@ export function NewDeckForm({ initialSubject = null, userId, initialDeckData }: 
                   </div>
                   {question.options.map((option) => (
                     <div key={option.id} className="flex items-center gap-3">
-                      <input
-                        type="checkbox"
-                        checked={question.correctOptionIds.includes(option.id)}
-                        onChange={() => toggleCorrectOption(index, option.id)}
-                        className="h-4 w-4 rounded border-border"
-                      />
+                      <button
+                        type="button"
+                        onClick={() => toggleCorrectOption(index, option.id)}
+                        aria-pressed={question.correctOptionIds.includes(option.id)}
+                        aria-label={
+                          question.correctOptionIds.includes(option.id)
+                            ? 'Odebrat správnou odpověď'
+                            : 'Označit jako správnou odpověď'
+                        }
+                        className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md border transition-colors ${
+                          question.correctOptionIds.includes(option.id)
+                            ? 'border-primary bg-primary text-primary-foreground shadow-sm'
+                            : 'border-border bg-background text-transparent hover:border-primary/50 hover:bg-primary/5'
+                        }`}
+                      >
+                        <Check className="h-3.5 w-3.5" strokeWidth={3} />
+                      </button>
                       <input
                         type="text"
                         value={option.text}

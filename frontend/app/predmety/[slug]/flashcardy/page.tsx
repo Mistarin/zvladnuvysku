@@ -27,7 +27,7 @@ interface ProgressBasic {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params
   return {
-    title: `Flashcardy — ${slug}`,
+    title: `Kartičky — ${slug}`,
     description: `Procvičte si kartičkami předmět ${slug}.`,
   }
 }
@@ -109,12 +109,12 @@ export default async function SubjectFlashcardyPage({ params }: PageProps) {
         <span>/</span>
         <Link href={`/predmety/${slug}`} className="hover:text-foreground transition-colors">{subject.name}</Link>
         <span>/</span>
-        <span className="text-foreground font-medium">Flashcardy</span>
+        <span className="text-foreground font-medium">Kartičky</span>
       </nav>
 
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">🃏 Flashcardy</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">🃏 Kartičky</h1>
           <p className="text-muted-foreground mt-1">{subject.name}</p>
         </div>
         {user && (
@@ -130,7 +130,7 @@ export default async function SubjectFlashcardyPage({ params }: PageProps) {
       {flashcardDecks.length === 0 ? (
         <div className="text-center py-16 glass-card rounded-2xl space-y-4">
           <p className="text-4xl">🃏</p>
-          <p className="text-lg font-semibold text-foreground">Zatím žádné flashcardy</p>
+          <p className="text-lg font-semibold text-foreground">Zatím žádné kartičky</p>
           <p className="text-muted-foreground text-sm">
             Buď první kdo je vytvoří pro tento předmět!
           </p>

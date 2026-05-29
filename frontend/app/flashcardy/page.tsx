@@ -17,8 +17,8 @@ interface FlashcardDeckListItem {
 }
 
 export const metadata: Metadata = {
-  title: "Flashcard balíčky",
-  description: "Veřejné flashcard balíčky napříč předměty.",
+  title: "Balíčky kartiček",
+  description: "Veřejné balíčky kartiček napříč předměty.",
 };
 
 export default async function FlashcardDeckListPage({ searchParams }: PageProps) {
@@ -46,7 +46,7 @@ export default async function FlashcardDeckListPage({ searchParams }: PageProps)
       <nav className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
         <Link href="/" className="hover:text-foreground transition-colors">Domů</Link>
         <span>/</span>
-        <span className="text-foreground font-medium">Flashcardy</span>
+        <span className="text-foreground font-medium">Kartičky</span>
       </nav>
 
       <div className="mb-8 space-y-2">
@@ -55,7 +55,7 @@ export default async function FlashcardDeckListPage({ searchParams }: PageProps)
             <Layers className="w-5 h-5 text-primary" />
           </div>
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Flashcard balíčky</h1>
+            <h1 className="text-3xl font-bold text-foreground">Balíčky kartiček</h1>
             <p className="text-muted-foreground">
               {query
                 ? <>Výsledky pro „<span className="text-foreground font-medium">{query}</span>“</>
