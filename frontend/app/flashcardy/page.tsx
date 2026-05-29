@@ -51,8 +51,8 @@ export default async function FlashcardDeckListPage({ searchParams }: PageProps)
 
       <div className="mb-8 space-y-2">
         <div className="flex items-center gap-3">
-          <div className="w-11 h-11 rounded-2xl bg-primary/10 flex items-center justify-center">
-            <Layers className="w-5 h-5 text-primary" />
+          <div className="ui-accent-soft w-11 h-11 rounded-2xl flex items-center justify-center">
+            <Layers className="ui-accent-text w-5 h-5" />
           </div>
           <div>
             <h1 className="text-3xl font-bold text-foreground">Balíčky kartiček</h1>
@@ -78,7 +78,7 @@ export default async function FlashcardDeckListPage({ searchParams }: PageProps)
             {query ? "Pro zadaný dotaz jsme nic nenašli." : "Zatím tu nejsou žádné veřejné balíčky."}
           </p>
           {query && (
-            <Link href="/flashcardy" className="text-sm text-primary hover:underline">
+            <Link href="/flashcardy" className="ui-accent-text text-sm hover:underline">
               Zobrazit všechny balíčky
             </Link>
           )}
@@ -93,7 +93,7 @@ export default async function FlashcardDeckListPage({ searchParams }: PageProps)
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="space-y-1 min-w-0">
-                  <h2 className="font-semibold text-foreground group-hover:text-primary transition-colors leading-snug">
+                  <h2 className="font-semibold text-foreground group-hover:text-[var(--accent-color)] transition-colors leading-snug">
                     {deck.title}
                   </h2>
                   {deck.subject && (
@@ -109,8 +109,8 @@ export default async function FlashcardDeckListPage({ searchParams }: PageProps)
                     </div>
                   )}
                 </div>
-                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                  <BookOpen className="w-4 h-4 text-primary" />
+                <div className="ui-accent-soft w-8 h-8 rounded-lg flex items-center justify-center shrink-0">
+                  <BookOpen className="ui-accent-text w-4 h-4" />
                 </div>
               </div>
 
@@ -125,7 +125,7 @@ export default async function FlashcardDeckListPage({ searchParams }: PageProps)
                   🃏 {deck.card_count} {deck.card_count === 1 ? "karta" : deck.card_count >= 2 && deck.card_count <= 4 ? "karty" : "karet"}
                 </span>
                 {deck.subject && (
-                  <span className="font-mono text-primary/80 bg-primary/10 px-1.5 py-0.5 rounded">
+                  <span className="ui-accent-badge font-mono px-1.5 py-0.5 rounded">
                     {deck.subject.short_tag}
                   </span>
                 )}

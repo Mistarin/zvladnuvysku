@@ -124,6 +124,20 @@
     background: linear-gradient(135deg, var(--accent-color) 0%, var(--accent-light) 100%);
   }
 
+  .ui-accent-text {
+    color: var(--accent-color);
+  }
+
+  .ui-accent-soft {
+    background-color: color-mix(in srgb, var(--accent-color) 14%, transparent);
+    color: var(--accent-color);
+  }
+
+  .ui-accent-badge {
+    background-color: color-mix(in srgb, var(--accent-color) 14%, transparent);
+    color: color-mix(in srgb, var(--accent-color) 82%, white 18%);
+  }
+
   .hover-card {
     transition: transform 150ms ease, box-shadow 150ms ease;
   }
