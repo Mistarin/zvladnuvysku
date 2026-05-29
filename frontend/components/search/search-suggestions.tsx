@@ -4,18 +4,23 @@ import Link from "next/link";
 import { DifficultyBadge } from "@/components/subject/difficulty-badge";
 import type { SearchResult } from "@/hooks/use-search";
 import type { FlashcardDeckResult } from "@/hooks/use-flashcard-search";
-import { Layers, BookOpen } from "lucide-react";
+import type { MaterialSearchResult } from "@/hooks/use-material-search";
+import type { SearchMode } from "@/lib/search-mode";
+import { Layers, BookOpen, FileText } from "lucide-react";
+import { formatFileSize } from "@/lib/utils";
 
 interface SearchSuggestionsProps {
   results: SearchResult[];
   isLoading: boolean;
   query: string;
   onSelect: () => void;
-  // Flashcard mode
-  isFlashcardMode?: boolean;
+  mode?: SearchMode;
   flashcardQuery?: string;
   deckResults?: FlashcardDeckResult[];
   isDeckLoading?: boolean;
+  materialQuery?: string;
+  materialResults?: MaterialSearchResult[];
+  isMaterialLoading?: boolean;
 }
 
 export function SearchSuggestions({
@@ -23,15 +28,18 @@ export function SearchSuggestions({
   isLoading,
   query,
   onSelect,
-  isFlashcardMode = false,
+  mode = "subjects",
   flashcardQuery = "",
   deckResults = [],
   isDeckLoading = false,
+  materialQuery = "",
+  materialResults = [],
+  isMaterialLoading = false,
 }: SearchSuggestionsProps) {
   if (!query || query.trim().length < 1) return null;
 
   // ── FLASHCARD MODE ──────────────────────────────────────────────────────
-  if (isFlashcardMode) {
+  if (mode === "flashcards") {
     return (
       <div
         data-search-suggestions
@@ -48,7 +56,7 @@ export function SearchSuggestions({
             </span>
             {flashcardQuery && (
               <span className="text-xs text-muted-foreground">
-                — hledám „{flashcardQuery}"
+                — hledám „{flashcardQuery}“
               </span>
             )}
           </div>
@@ -62,7 +70,7 @@ export function SearchSuggestions({
             <div className="p-4 text-center">
               <p className="text-sm text-muted-foreground">
                 {flashcardQuery
-                  ? <>Žádné balíčky pro „<span className="font-medium text-foreground">{flashcardQuery}</span>"</>
+                  ? <>Žádné balíčky pro „<span className="font-medium text-foreground">{flashcardQuery}</span>“</>
                   : "Žádné veřejné balíčky"}
               </p>
               <Link
@@ -108,11 +116,102 @@ export function SearchSuggestions({
               ))}
 
               <Link
-                href="/flashcardy"
+                href={
+                  flashcardQuery
+                    ? `/flashcardy?q=${encodeURIComponent(flashcardQuery)}`
+                    : "/flashcardy"
+                }
                 onClick={onSelect}
                 className="flex items-center justify-center px-4 py-2.5 text-xs text-primary hover:bg-primary/5 transition-colors border-t border-border/50"
               >
                 Všechny balíčky →
+              </Link>
+            </>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // ── MATERIAL MODE ───────────────────────────────────────────────────────
+  if (mode === "materials") {
+    return (
+      <div
+        data-search-suggestions
+        className="absolute top-full left-0 right-0 mt-1 z-50 animate-slide-down"
+        role="listbox"
+        aria-label="Výsledky vyhledávání materiálů"
+      >
+        <div className="bg-popover border border-border rounded-xl shadow-xl overflow-hidden">
+          <div className="px-4 py-2 border-b border-border/50 flex items-center gap-2 bg-sky-500/5">
+            <FileText className="w-3.5 h-3.5 text-sky-600" />
+            <span className="text-xs font-semibold text-sky-700 tracking-wide">
+              Studijní materiály
+            </span>
+            {materialQuery && (
+              <span className="text-xs text-muted-foreground">
+                — hledám „{materialQuery}“
+              </span>
+            )}
+          </div>
+
+          {isMaterialLoading ? (
+            <div className="p-4 flex items-center gap-3">
+              <div className="w-4 h-4 border-2 border-sky-600/30 border-t-sky-600 rounded-full animate-spin" />
+              <span className="text-sm text-muted-foreground">Hledám materiály...</span>
+            </div>
+          ) : materialResults.length === 0 ? (
+            <div className="p-4 text-center">
+              <p className="text-sm text-muted-foreground">
+                {materialQuery
+                  ? <>Žádné materiály pro „<span className="font-medium text-foreground">{materialQuery}</span>“</>
+                  : "Žádné schválené materiály"}
+              </p>
+            </div>
+          ) : (
+            <>
+              {materialResults.map((material, idx) => (
+                <Link
+                  key={material.id}
+                  href={material.subject ? `/predmety/${material.subject.slug}` : "/materialy"}
+                  onClick={onSelect}
+                  role="option"
+                  aria-selected={false}
+                  className={`
+                    flex items-center justify-between px-4 py-3
+                    hover:bg-muted transition-colors duration-100 cursor-pointer
+                    ${idx !== materialResults.length - 1 ? "border-b border-border/50" : ""}
+                  `}
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-7 h-7 rounded-lg bg-sky-500/10 flex items-center justify-center shrink-0">
+                      <FileText className="w-3.5 h-3.5 text-sky-600" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-foreground truncate">{material.title}</p>
+                      {material.subject && (
+                        <p className="text-xs text-muted-foreground truncate">
+                          {material.subject.short_tag} · {material.subject.name}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  <span className="text-xs text-muted-foreground shrink-0 ml-3">
+                    {formatFileSize(material.size_bytes)}
+                  </span>
+                </Link>
+              ))}
+
+              <Link
+                href={
+                  materialQuery
+                    ? `/materialy?q=${encodeURIComponent(materialQuery)}`
+                    : "/materialy"
+                }
+                onClick={onSelect}
+                className="flex items-center justify-center px-4 py-2.5 text-xs text-sky-700 hover:bg-sky-500/5 transition-colors border-t border-border/50"
+              >
+                Všechny materiály →
               </Link>
             </>
           )}

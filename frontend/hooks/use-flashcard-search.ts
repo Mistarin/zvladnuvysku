@@ -1,9 +1,8 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
-
-export const FLASHCARD_PREFIX = '.f '
+import { parseSearchMode } from '@/lib/search-mode'
 
 export interface FlashcardDeckResult {
   id: string
@@ -21,9 +20,9 @@ interface UseFlashcardSearchReturn {
 }
 
 export function useFlashcardSearch(query: string): UseFlashcardSearchReturn {
-  const rawLower = query.toLowerCase()
-  const isFlashcardMode = rawLower.startsWith(FLASHCARD_PREFIX)
-  const flashcardQuery = isFlashcardMode ? query.slice(FLASHCARD_PREFIX.length).trim() : ''
+  const parsed = parseSearchMode(query)
+  const isFlashcardMode = parsed.mode === 'flashcards'
+  const flashcardQuery = isFlashcardMode ? parsed.modeQuery : ''
 
   const [deckResults, setDeckResults] = useState<FlashcardDeckResult[]>([])
   const [isDeckLoading, setIsDeckLoading] = useState(false)

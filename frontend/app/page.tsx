@@ -6,7 +6,9 @@ import Link from "next/link";
 import { SearchBar } from "@/components/search/search-bar";
 import { SearchSuggestions } from "@/components/search/search-suggestions";
 import { useSearch } from "@/hooks/use-search";
-import { useFlashcardSearch, FLASHCARD_PREFIX } from "@/hooks/use-flashcard-search";
+import { useFlashcardSearch } from "@/hooks/use-flashcard-search";
+import { useMaterialSearch } from "@/hooks/use-material-search";
+import { parseSearchMode } from "@/lib/search-mode";
 
 const FEATURES = [
   {
@@ -38,7 +40,10 @@ export default function HomePage() {
   const { query, setQuery, results, isLoading, clearSearch } = useSearch();
   const { isFlashcardMode, flashcardQuery, deckResults, isDeckLoading } =
     useFlashcardSearch(query);
+  const { isMaterialMode, materialQuery, materialResults, isMaterialLoading } =
+    useMaterialSearch(query);
   const containerRef = useRef<HTMLDivElement>(null);
+  const searchMode = parseSearchMode(query).mode;
 
   const handleFocus = useCallback(() => setIsFocused(true), []);
   const handleBlur = useCallback(() => {
@@ -54,11 +59,16 @@ export default function HomePage() {
     (e: React.KeyboardEvent) => {
       if (e.key === "Enter" && query.trim()) {
         if (isFlashcardMode) {
-          // .F <název> → přejdi na flashcardy s hledáním
           router.push(
             flashcardQuery
               ? `/flashcardy?q=${encodeURIComponent(flashcardQuery)}`
               : "/flashcardy"
+          );
+        } else if (isMaterialMode) {
+          router.push(
+            materialQuery
+              ? `/materialy?q=${encodeURIComponent(materialQuery)}`
+              : "/materialy"
           );
         } else {
           router.push(`/predmety?q=${encodeURIComponent(query.trim())}`);
@@ -71,13 +81,15 @@ export default function HomePage() {
         clearSearch();
       }
     },
-    [query, flashcardQuery, isFlashcardMode, router, clearSearch]
+    [query, flashcardQuery, materialQuery, isFlashcardMode, isMaterialMode, router, clearSearch]
   );
 
-  // Placeholder se mění podle módu
-  const placeholder = isFlashcardMode
-    ? "Název balíčku…"
-    : "Předmět, zkratka, katedra…";
+  const placeholder =
+    searchMode === "flashcards"
+      ? "Název balíčku…"
+      : searchMode === "materials"
+        ? "Název materiálu…"
+        : "Předmět, zkratka, katedra…";
 
   return (
     <div className="relative overflow-hidden">
@@ -98,7 +110,11 @@ export default function HomePage() {
             <h1 className="home-title whitespace-nowrap">
               Najdi svůj{" "}
               <span className="home-title-accent">
-                {isFlashcardMode ? "balíček" : "předmět"}
+                {searchMode === "flashcards"
+                  ? "balíček"
+                  : searchMode === "materials"
+                    ? "materiál"
+                    : "předmět"}
               </span>
             </h1>
           </div>
@@ -113,9 +129,11 @@ export default function HomePage() {
             aria-hidden={!isFocused}
           >
             <p className="text-lg md:text-xl font-medium text-muted-foreground/80 tracking-tight px-4 whitespace-nowrap">
-              {isFlashcardMode
+              {searchMode === "flashcards"
                 ? "Hledáš flashcard balíček? Zkus zadat název nebo předmět."
-                : `„Protože reálné zkušenosti studentů jsou víc než jen sylabus.“`}
+                : searchMode === "materials"
+                  ? "Hledáš materiál? Zkus název souboru nebo předmětu."
+                  : `„Protože reálné zkušenosti studentů jsou víc než jen sylabus.“`}
             </p>
           </div>
         </div>
@@ -159,18 +177,23 @@ export default function HomePage() {
                 isLoading={isLoading}
                 query={query}
                 onSelect={handleSelect}
-                isFlashcardMode={isFlashcardMode}
+                mode={searchMode}
                 flashcardQuery={flashcardQuery}
                 deckResults={deckResults}
                 isDeckLoading={isDeckLoading}
+                materialQuery={materialQuery}
+                materialResults={materialResults}
+                isMaterialLoading={isMaterialLoading}
               />
             )}
           </div>
 
           <p className={`home-hint ${isFocused ? "home-hint--hidden" : ""}`}>
-            {isFlashcardMode
+            {searchMode === "flashcards"
               ? <><span className="font-mono text-primary">.F</span> režim — hledáš flashcard balíčky</>
-              : "Jednotný studentský hub. Proč generovat stokrát to, co už dávno existuje?"}
+              : searchMode === "materials"
+                ? <><span className="font-mono text-sky-700">.M</span> režim — hledáš studijní materiály</>
+                : "Jednotný studentský hub. Proč generovat stokrát to, co už dávno existuje?"}
           </p>
         </div>
       </section>
