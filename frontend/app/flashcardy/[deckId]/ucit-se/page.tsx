@@ -95,7 +95,7 @@ export default async function UcitSePage({ params }: PageProps) {
           >
             ← {flashcardDeck.title}
           </Link>
-          <h1 className="text-xl font-bold text-foreground mt-1">Procvičování</h1>
+          <h1 className="text-xl font-bold text-foreground mt-1">Procvičování otázek</h1>
         </div>
       </div>
 

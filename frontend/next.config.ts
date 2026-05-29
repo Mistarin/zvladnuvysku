@@ -5,6 +5,14 @@ const nextConfig: NextConfig = {
   experimental: {
     viewTransition: true, // nativní page transitions
   },
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "onfkbvqifvkltelkomgo.supabase.co",
+      },
+    ],
+  },
   turbopack: {
     root: path.resolve(__dirname), // silence workspace root warning
   },

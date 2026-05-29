@@ -63,6 +63,10 @@ export interface Database {
           deck_id: string
           front: string
           back: string
+          question_type: 'classic_flashcard' | 'multiple_choice' | 'yes_no' | 'open_answer'
+          prompt: string
+          answer_data: Json
+          media_path: string | null
           position: number
           created_at: string
         }

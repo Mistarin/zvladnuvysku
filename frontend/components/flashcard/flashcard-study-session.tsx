@@ -15,7 +15,7 @@ interface FlashcardStudySessionProps {
 export function FlashcardStudySession({ cards, deckId, subjectSlug }: FlashcardStudySessionProps) {
   const [sessionKey, setSessionKey] = useState(0)
 
-  const { currentCard, currentIndex, totalCards, isFlipped, isComplete, flip, rate, sessionResults } =
+  const { currentCard, currentIndex, totalCards, isComplete, rate, sessionResults } =
     useFlashcardSession({ cards, deckId })
 
   const handleRestart = () => {
@@ -49,10 +49,8 @@ export function FlashcardStudySession({ cards, deckId, subjectSlug }: FlashcardS
     <FlashcardViewer
       key={`viewer-${sessionKey}-${currentIndex}`}
       card={currentCard}
-      isFlipped={isFlipped}
       currentIndex={currentIndex}
       totalCards={totalCards}
-      onFlip={flip}
       onRate={rate}
     />
   )

@@ -5,8 +5,8 @@ import { createClient } from '@/lib/supabase/server'
 import { NewDeckForm } from '@/components/flashcard/new-deck-form'
 
 export const metadata: Metadata = {
-  title: 'Nový balíček flashkaret',
-  description: 'Vytvořte si vlastní sadu flashkaret pro procvičování.',
+  title: 'Nový balíček procvičování',
+  description: 'Vytvořte si vlastní sadu otázek pro procvičování.',
 }
 
 interface PageProps {
@@ -44,9 +44,9 @@ export default async function NovyBalicekPage({ searchParams }: PageProps) {
       </nav>
 
       <div className="mb-8">
-        <h1 className="text-2xl sm:text-3xl font-bold text-foreground">🃏 Nový balíček flashkaret</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-foreground">🃏 Nový balíček procvičování</h1>
         <p className="text-muted-foreground mt-1">
-          Vytvořte sadu karet a procvičujte je pomocí opakování.
+          Vytvořte sadu otázek a procvičujte je pomocí opakování.
         </p>
       </div>
 

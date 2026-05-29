@@ -68,6 +68,12 @@ export default async function DeckDetailPage({ params }: PageProps) {
           </div>
           {isCreator && (
             <div className="flex gap-2 shrink-0">
+              <Link
+                href={`/flashcardy/${deckId}/upravit`}
+                className="px-4 py-2 rounded-lg text-sm font-medium border border-border bg-card hover:bg-muted transition-all"
+              >
+                Upravit
+              </Link>
               <DeleteDeckButton deckId={deckId} />
             </div>
           )}
@@ -100,9 +106,9 @@ export default async function DeckDetailPage({ params }: PageProps) {
 
       {/* Card list */}
       <div className="space-y-3">
-        <h2 className="text-lg font-semibold text-foreground">Karty ({flashcards.length})</h2>
+        <h2 className="text-lg font-semibold text-foreground">Otázky ({flashcards.length})</h2>
         {flashcards.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">Tento balíček nemá žádné karty.</div>
+          <div className="text-center py-8 text-muted-foreground">Tento balíček nemá žádné otázky.</div>
         ) : (
           <div className="space-y-2">
             {flashcards.map((card, i) => (

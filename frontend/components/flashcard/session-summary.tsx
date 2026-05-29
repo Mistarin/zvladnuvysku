@@ -41,27 +41,27 @@ export function SessionSummary({ results, deckId: _deckId, subjectSlug, onRestar
       <div className="w-full glass-card p-6 space-y-4">
         <div className="text-center">
           <span className="text-4xl font-bold text-primary">{percentKnown}%</span>
-          <p className="text-sm text-muted-foreground mt-1">správně ze {total} karet</p>
+          <p className="text-sm text-muted-foreground mt-1">zvládnuto z {total} otázek</p>
         </div>
 
         {/* Breakdown bars */}
         <div className="space-y-3">
           <StatBar
-            label="Znám"
+            label="Zvládl"
             count={known}
             total={total}
             color="bg-primary"
             emoji="✅"
           />
           <StatBar
-            label="Skoro"
+            label="Částečně"
             count={almost}
             total={total}
             color="bg-yellow-400"
             emoji="🤔"
           />
           <StatBar
-            label="Nevím"
+            label="Nezvládl"
             count={unknown}
             total={total}
             color="bg-destructive"
