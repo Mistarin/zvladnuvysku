@@ -14,6 +14,14 @@ export interface MultipleChoiceOption {
   text: string;
 }
 
+export interface DeckSubjectRef {
+  id: string;
+  slug: string;
+  name: string;
+  short_tag: string;
+  faculty: string | null;
+}
+
 export type EditableFlashcardQuestion = FlashcardQuestion & {
   media_url: string | null;
 }

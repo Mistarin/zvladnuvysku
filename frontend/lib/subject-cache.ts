@@ -13,9 +13,11 @@ import type { Database } from '@/lib/types/database'
 type SubjectRow = Database['public']['Tables']['subjects']['Row']
 
 export interface SubjectCacheEntry {
+  id: string
   slug: string
   name: string
   short_tag: string
+  faculty: string | null
   difficulty: number | null
   credits: number | null
   semester: string | null
@@ -31,18 +33,20 @@ async function fetchAllSubjects(): Promise<SubjectCacheEntry[]> {
   const supabase = createClient()
   const { data, error } = await supabase
     .from('subjects')
-    .select('slug, name, short_tag, difficulty, credits, semester')
+    .select('id, slug, name, short_tag, faculty, difficulty, credits, semester')
     .order('name') as unknown as {
-      data: Pick<SubjectRow, 'slug' | 'name' | 'short_tag' | 'difficulty' | 'credits' | 'semester'>[] | null
+      data: Pick<SubjectRow, 'id' | 'slug' | 'name' | 'short_tag' | 'faculty' | 'difficulty' | 'credits' | 'semester'>[] | null
       error: { message: string } | null
     }
 
   if (error) throw error
 
   return (data ?? []).map((row) => ({
+    id: row.id,
     slug: row.slug,
     name: row.name,
     short_tag: row.short_tag,
+    faculty: row.faculty,
     difficulty: row.difficulty,
     credits: row.credits,
     semester: row.semester,

@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { NewDeckForm } from '@/components/flashcard/new-deck-form'
+import type { DeckSubjectRef } from '@/lib/flashcards'
 import type { Flashcard, FlashcardDeck } from '@/lib/types/database'
 
 interface PageProps {
@@ -46,15 +47,15 @@ export default async function UpravitBalicekPage({ params }: PageProps) {
 
   const flashcards = (cards ?? []) as Flashcard[]
 
-  let defaultSubject: string | undefined
+  let initialSubject: DeckSubjectRef | null = null
   if (flashcardDeck.subject_id) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: subject } = await (supabase as any)
       .from('subjects')
-      .select('slug')
+      .select('id, slug, name, short_tag, faculty')
       .eq('id', flashcardDeck.subject_id)
       .single()
-    defaultSubject = (subject as { slug: string } | null)?.slug
+    initialSubject = (subject as DeckSubjectRef | null) ?? null
   }
 
   return (
@@ -77,7 +78,7 @@ export default async function UpravitBalicekPage({ params }: PageProps) {
       </div>
 
       <NewDeckForm
-        defaultSubject={defaultSubject}
+        initialSubject={initialSubject}
         userId={user.id}
         initialDeckData={{ deck: flashcardDeck, cards: flashcards }}
       />

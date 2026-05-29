@@ -9,7 +9,7 @@ export interface FlashcardDeckResult {
   title: string
   description: string | null
   card_count: number
-  subject?: { name: string; short_tag: string } | null
+  subject?: { name: string; short_tag: string; faculty: string | null } | null
 }
 
 interface UseFlashcardSearchReturn {
@@ -39,7 +39,7 @@ export function useFlashcardSearch(query: string): UseFlashcardSearchReturn {
     const run = async () => {
       let q = supabase
         .from('flashcard_decks')
-        .select('id, title, description, card_count, subject:subject_id(name, short_tag)')
+        .select('id, title, description, card_count, subject:subject_id(name, short_tag, faculty)')
         .eq('is_public', true)
         .order('card_count', { ascending: false })
         .limit(8)

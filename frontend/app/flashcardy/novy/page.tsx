@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { NewDeckForm } from '@/components/flashcard/new-deck-form'
+import type { DeckSubjectRef } from '@/lib/flashcards'
 
 export const metadata: Metadata = {
   title: 'Nový balíček procvičování',
@@ -23,6 +24,18 @@ export default async function NovyBalicekPage({ searchParams }: PageProps) {
   if (!user) redirect('/prihlaseni')
 
   const { subject } = await searchParams
+  let initialSubject: DeckSubjectRef | null = null
+
+  if (subject) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data } = await (supabase as any)
+      .from('subjects')
+      .select('id, slug, name, short_tag, faculty')
+      .eq('slug', subject)
+      .maybeSingle()
+
+    initialSubject = (data as DeckSubjectRef | null) ?? null
+  }
 
   return (
     <div className="container mx-auto max-w-3xl px-4 sm:px-6 lg:px-8 py-8">
@@ -50,7 +63,7 @@ export default async function NovyBalicekPage({ searchParams }: PageProps) {
         </p>
       </div>
 
-      <NewDeckForm defaultSubject={subject} userId={user.id} />
+      <NewDeckForm initialSubject={initialSubject} userId={user.id} />
     </div>
   )
 }

@@ -13,7 +13,7 @@ interface FlashcardDeckListItem {
   title: string;
   description: string | null;
   card_count: number;
-  subject: { name: string; slug: string; short_tag: string } | null;
+  subject: { name: string; slug: string; short_tag: string; faculty: string | null } | null;
 }
 
 export const metadata: Metadata = {
@@ -28,7 +28,7 @@ export default async function FlashcardDeckListPage({ searchParams }: PageProps)
 
   let decksQuery = supabase
     .from("flashcard_decks")
-    .select("id, title, description, card_count, subject:subject_id(name, slug, short_tag)")
+    .select("id, title, description, card_count, subject:subject_id(name, slug, short_tag, faculty)")
     .eq("is_public", true)
     .order("card_count", { ascending: false })
     .order("created_at", { ascending: false })
@@ -97,9 +97,16 @@ export default async function FlashcardDeckListPage({ searchParams }: PageProps)
                     {deck.title}
                   </h2>
                   {deck.subject && (
-                    <p className="text-xs text-muted-foreground truncate">
-                      {deck.subject.short_tag} · {deck.subject.name}
-                    </p>
+                    <div className="space-y-1 min-w-0">
+                      <p className="text-xs text-muted-foreground truncate">
+                        {deck.subject.short_tag} · {deck.subject.name}
+                      </p>
+                      {deck.subject.faculty && (
+                        <p className="text-[11px] text-muted-foreground/80 truncate">
+                          {deck.subject.faculty}
+                        </p>
+                      )}
+                    </div>
                   )}
                 </div>
                 <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">

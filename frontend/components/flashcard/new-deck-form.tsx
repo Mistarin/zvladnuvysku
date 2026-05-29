@@ -1,18 +1,20 @@
 'use client'
 
 import Image from 'next/image'
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import {
   FLASHCARD_MEDIA_BUCKET,
   FLASHCARD_MEDIA_PREFIX,
+  type DeckSubjectRef,
   getFlashcardMediaUrl,
   normalizeFlashcard,
   type FlashcardQuestionType,
   type MultipleChoiceOption,
 } from '@/lib/flashcards'
+import { getSubjectCache, searchInCache, type SubjectCacheEntry } from '@/lib/subject-cache'
 import type { Flashcard, FlashcardDeck } from '@/lib/types/database'
 
 interface QuestionDraft {
@@ -35,12 +37,14 @@ interface InitialDeckData {
 }
 
 interface NewDeckFormProps {
-  defaultSubject?: string
+  initialSubject?: DeckSubjectRef | null
   userId: string
   initialDeckData?: InitialDeckData
 }
 
-const IMAGE_MAX_FILE_SIZE = 2 * 1024 * 1024
+const IMAGE_MAX_FILE_SIZE = 100 * 1024
+const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/avif']
+const IMAGE_ACCEPT = '.jpg,.jpeg,.png,.webp,.avif,image/jpeg,image/png,image/webp,image/avif'
 
 function createOption(text = ''): MultipleChoiceOption {
   return { id: crypto.randomUUID(), text }
@@ -112,6 +116,16 @@ function createQuestionFromCard(card: Flashcard): QuestionDraft {
   }
 }
 
+function toDeckSubjectRef(subject: SubjectCacheEntry): DeckSubjectRef {
+  return {
+    id: subject.id,
+    slug: subject.slug,
+    name: subject.name,
+    short_tag: subject.short_tag,
+    faculty: subject.faculty,
+  }
+}
+
 function getQuestionTypeDescription(type: FlashcardQuestionType): string {
   switch (type) {
     case 'classic_flashcard':
@@ -125,12 +139,15 @@ function getQuestionTypeDescription(type: FlashcardQuestionType): string {
   }
 }
 
-export function NewDeckForm({ defaultSubject, userId, initialDeckData }: NewDeckFormProps) {
+export function NewDeckForm({ initialSubject = null, userId, initialDeckData }: NewDeckFormProps) {
   const router = useRouter()
   const isEditing = Boolean(initialDeckData)
   const [title, setTitle] = useState(initialDeckData?.deck.title ?? '')
   const [description, setDescription] = useState(initialDeckData?.deck.description ?? '')
   const [isPublic, setIsPublic] = useState(initialDeckData?.deck.is_public ?? true)
+  const [subjectCache, setSubjectCache] = useState<SubjectCacheEntry[]>([])
+  const [subjectQuery, setSubjectQuery] = useState(initialSubject?.name ?? '')
+  const [selectedSubject, setSelectedSubject] = useState<DeckSubjectRef | null>(initialSubject)
   const [questions, setQuestions] = useState<QuestionDraft[]>(
     initialDeckData?.cards.length
       ? initialDeckData.cards.map(createQuestionFromCard)
@@ -138,6 +155,49 @@ export function NewDeckForm({ defaultSubject, userId, initialDeckData }: NewDeck
   )
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+
+    const loadSubjects = async () => {
+      try {
+        const entries = await getSubjectCache()
+        if (!cancelled) setSubjectCache(entries)
+      } catch {
+        if (!cancelled) setSubjectCache([])
+      }
+    }
+
+    loadSubjects()
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  useEffect(() => {
+    setSelectedSubject(initialSubject)
+    setSubjectQuery(initialSubject?.name ?? '')
+  }, [initialSubject])
+
+  const subjectSuggestions = useMemo(() => {
+    const normalized = subjectQuery.trim().toLowerCase()
+    if (!normalized) return []
+    if (
+      selectedSubject &&
+      (selectedSubject.name.toLowerCase() === normalized || selectedSubject.short_tag.toLowerCase() === normalized)
+    ) {
+      return []
+    }
+    return searchInCache(subjectCache, subjectQuery, 8)
+  }, [selectedSubject, subjectCache, subjectQuery])
+
+  const cancelHref =
+    isEditing && initialDeckData
+      ? `/flashcardy/${initialDeckData.deck.id}`
+      : initialSubject?.slug
+        ? `/predmety/${initialSubject.slug}/flashcardy`
+        : '/predmety'
 
   const addQuestion = () => setQuestions((prev) => [...prev, createEmptyQuestion()])
 
@@ -228,6 +288,7 @@ export function NewDeckForm({ defaultSubject, userId, initialDeckData }: NewDeck
           ? {
               ...question,
               mediaFile: file,
+              mediaPreviewUrl: file ? URL.createObjectURL(file) : question.mediaPreviewUrl,
               removeMedia: file ? false : question.removeMedia,
             }
           : question
@@ -259,8 +320,8 @@ export function NewDeckForm({ defaultSubject, userId, initialDeckData }: NewDeck
     }
 
     for (const [index, question] of valid.entries()) {
-      if (question.mediaFile && (!question.mediaFile.type.startsWith('image/') || question.mediaFile.size > IMAGE_MAX_FILE_SIZE)) {
-        return { valid: [], error: `Otázka ${index + 1}: obrázek musí být do 2 MB a ve formátu obrázku.` }
+      if (question.mediaFile && (!ALLOWED_IMAGE_TYPES.includes(question.mediaFile.type) || question.mediaFile.size > IMAGE_MAX_FILE_SIZE)) {
+        return { valid: [], error: `Otázka ${index + 1}: obrázek musí být do 100 KB a ve formátu JPG, PNG, WEBP nebo AVIF.` }
       }
 
       if (question.type === 'multiple_choice') {
@@ -301,16 +362,7 @@ export function NewDeckForm({ defaultSubject, userId, initialDeckData }: NewDeck
     const removedPaths: string[] = []
 
     try {
-      let subjectId: string | null = null
-      if (defaultSubject) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { data: subject } = await (supabase as any)
-          .from('subjects')
-          .select('id')
-          .eq('slug', defaultSubject)
-          .single()
-        subjectId = (subject as { id: string } | null)?.id ?? null
-      }
+      const subjectId = selectedSubject?.id ?? null
 
       let deckId = initialDeckData?.deck.id
 
@@ -481,6 +533,85 @@ export function NewDeckForm({ defaultSubject, userId, initialDeckData }: NewDeck
           />
         </div>
 
+        <div className="space-y-3">
+          <label className="text-sm font-medium text-foreground" htmlFor="subject-search">
+            Přiřazený předmět
+          </label>
+          <div className="space-y-2">
+            <input
+              id="subject-search"
+              type="text"
+              value={subjectQuery}
+              onChange={(e) => {
+                const nextValue = e.target.value
+                setSubjectQuery(nextValue)
+                if (
+                  selectedSubject &&
+                  nextValue.trim().toLowerCase() !== selectedSubject.name.toLowerCase() &&
+                  nextValue.trim().toLowerCase() !== selectedSubject.short_tag.toLowerCase()
+                ) {
+                  setSelectedSubject(null)
+                }
+                if (!nextValue.trim()) {
+                  setSelectedSubject(null)
+                }
+              }}
+              placeholder="Hledej podle zkratky nebo názvu předmětu..."
+              className="w-full px-4 py-2.5 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+            />
+            {subjectSuggestions.length > 0 && (
+              <div className="rounded-xl border border-border bg-background overflow-hidden">
+                {subjectSuggestions.map((subject) => (
+                  <button
+                    key={subject.id}
+                    type="button"
+                    onClick={() => {
+                      const nextSubject = toDeckSubjectRef(subject)
+                      setSelectedSubject(nextSubject)
+                      setSubjectQuery(nextSubject.name)
+                    }}
+                    className="w-full px-4 py-3 text-left hover:bg-muted transition-colors border-b border-border last:border-b-0"
+                  >
+                    <p className="text-sm font-medium text-foreground">
+                      {subject.short_tag} · {subject.name}
+                    </p>
+                    {subject.faculty && (
+                      <p className="text-xs text-muted-foreground mt-1">{subject.faculty}</p>
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {selectedSubject ? (
+            <div className="flex items-start justify-between gap-3 rounded-xl border border-primary/20 bg-primary/5 px-4 py-3">
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-foreground">
+                  {selectedSubject.short_tag} · {selectedSubject.name}
+                </p>
+                {selectedSubject.faculty && (
+                  <p className="text-xs text-muted-foreground mt-1">{selectedSubject.faculty}</p>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedSubject(null)
+                  setSubjectQuery('')
+                }}
+                className="text-xs text-destructive hover:opacity-70 transition-opacity shrink-0"
+              >
+                Odebrat
+              </button>
+            </div>
+          ) : (
+            <p className="text-xs text-muted-foreground">
+              Předmět je volitelný. Pokud ho přiřadíš, balíček se bude lépe zobrazovat ve vyhledávání.
+            </p>
+          )}
+        </div>
+
         <div className="flex items-center gap-3">
           <button
             type="button"
@@ -558,10 +689,10 @@ export function NewDeckForm({ defaultSubject, userId, initialDeckData }: NewDeck
               </div>
 
               <div className="space-y-2">
-                <label className="text-xs text-muted-foreground">Obrázek k otázce (volitelný, max 2 MB)</label>
+                <label className="text-xs text-muted-foreground">Obrázek k otázce (volitelný, max 100 KB, JPG/PNG/WEBP/AVIF)</label>
                 <input
                   type="file"
-                  accept="image/*"
+                  accept={IMAGE_ACCEPT}
                   onChange={(e) => handleMediaChange(index, e.target.files?.[0] ?? null)}
                   className="block w-full text-sm text-muted-foreground file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20 cursor-pointer border border-border rounded-lg bg-background"
                 />
@@ -692,7 +823,7 @@ export function NewDeckForm({ defaultSubject, userId, initialDeckData }: NewDeck
           {loading ? (isEditing ? 'Ukládání...' : 'Vytváření...') : isEditing ? '✓ Uložit změny' : '✓ Vytvořit balíček'}
         </button>
         <Link
-          href={isEditing && initialDeckData ? `/flashcardy/${initialDeckData.deck.id}` : defaultSubject ? `/predmety/${defaultSubject}/flashcardy` : '/predmety'}
+          href={cancelHref}
           className="px-5 py-3 rounded-xl border border-border bg-card hover:bg-muted transition-all text-sm font-medium"
         >
           Zrušit

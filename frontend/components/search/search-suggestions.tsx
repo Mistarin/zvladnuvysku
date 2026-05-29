@@ -105,9 +105,16 @@ export function SearchSuggestions({
                     <div className="min-w-0">
                       <p className="text-sm font-medium text-foreground truncate">{deck.title}</p>
                       {deck.subject && (
-                        <p className="text-xs text-muted-foreground truncate">
-                          {deck.subject.short_tag} · {deck.subject.name}
-                        </p>
+                        <div className="min-w-0">
+                          <p className="text-xs text-muted-foreground truncate">
+                            {deck.subject.short_tag} · {deck.subject.name}
+                          </p>
+                          {deck.subject.faculty && (
+                            <p className="text-[11px] text-muted-foreground/80 truncate">
+                              {deck.subject.faculty}
+                            </p>
+                          )}
+                        </div>
                       )}
                     </div>
                   </div>
