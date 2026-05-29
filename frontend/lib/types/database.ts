@@ -165,6 +165,18 @@ export interface Database {
         Insert: Omit<Database['public']['Tables']['subject_materials']['Row'], 'id' | 'created_at' | 'is_approved'> & { is_approved?: boolean }
         Update: Partial<Database['public']['Tables']['subject_materials']['Insert']>
       }
+      profiles: {
+        Row: {
+          user_id: string
+          display_name: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: Omit<Database['public']['Tables']['profiles']['Row'], 'created_at' | 'updated_at'> & {
+          display_name?: string | null
+        }
+        Update: Partial<Database['public']['Tables']['profiles']['Insert']>
+      }
       feedback: {
         Row: {
           id: string
@@ -196,7 +208,22 @@ export interface Database {
         }
       }
     }
-    Functions: Record<string, never>
+    Functions: {
+      get_hall_of_fame: {
+        Args: {
+          period_key?: 'week' | 'month' | 'all'
+          entry_limit?: number
+        }
+        Returns: {
+          user_id: string
+          display_name: string
+          total_score: number
+          flashcard_count: number
+          material_count: number
+          subject_count: number
+        }[]
+      }
+    }
     Enums: Record<string, never>
   }
 }
@@ -215,9 +242,13 @@ export type TeacherInsert = Database['public']['Tables']['teachers']['Insert']
 export type TeacherRating = Database['public']['Tables']['teacher_ratings']['Row']
 export type SubjectTeacher = Database['public']['Tables']['subject_teachers']['Row']
 export type SubjectMaterial = Database['public']['Tables']['subject_materials']['Row']
+export type Profile = Database['public']['Tables']['profiles']['Row']
 export type Feedback = Database['public']['Tables']['feedback']['Row']
 export type TeacherRatingStats = Database['public']['Tables']['teacher_rating_stats']['Row']
 export type SubjectSearchView = Database['public']['Views']['subject_search_view']['Row']
+
+export type HallOfFameRow = Database['public']['Functions']['get_hall_of_fame']['Returns'][number]
+export type HallOfFamePeriod = 'week' | 'month' | 'all'
 
 // Extended types with joins
 export type SubjectWithStats = SubjectSearchView & {

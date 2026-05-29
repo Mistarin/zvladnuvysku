@@ -22,6 +22,34 @@ interface SubjectProposalFormProps {
   userId: string
 }
 
+interface SubjectSearchResult {
+  id: string
+  name: string
+  short_tag: string
+}
+
+interface TeacherSearchResult {
+  id: string
+  name: string
+  faculty: string
+}
+
+interface SubjectDetails {
+  name: string | null
+  short_tag: string | null
+  description: string | null
+  target_audience: string | null
+  real_requirements: string | null
+  difficulty: number | null
+  time_intensity: number | null
+  attendance_type: string | null
+  exam_from_home: boolean | null
+  credits: number | null
+  semester: string | null
+  faculty: string | null
+  year: number | null
+}
+
 const SEMESTER_OPTIONS = [
   { value: 'zimní', label: '❄️ Zimní' },
   { value: 'letní', label: '☀️ Letní' },
@@ -54,6 +82,16 @@ const TARGET_AUDIENCE_TEMPLATE = `- Vhodné pro...
 
 const REQUIREMENTS_TEMPLATE = `- Znalost...
 - Schopnost...`
+
+const DEFAULT_FORM = {
+  name: '', short_tag: '', description: DESCRIPTION_TEMPLATE,
+  target_audience: TARGET_AUDIENCE_TEMPLATE,
+  real_requirements: REQUIREMENTS_TEMPLATE,
+  difficulty: 3, time_intensity: 3,
+  attendance_type: '',
+  exam_from_home: false,
+  credits: '', semester: '', faculty: '', year: '', note: '',
+}
 
 function FieldLabel({ children, required }: { children: React.ReactNode; required?: boolean }) {
   return (
@@ -97,27 +135,20 @@ export function SubjectProposalForm({ userId }: SubjectProposalFormProps) {
   const [type, setType] = useState<'new' | 'edit'>('new')
   const [subjectSearch, setSubjectSearch] = useState('')
   const [subjectId, setSubjectId] = useState<string | null>(null)
-  const [searchResults, setSearchResults] = useState<{ id: string; name: string; short_tag: string }[]>([])
+  const [searchResults, setSearchResults] = useState<SubjectSearchResult[]>([])
+  const [isLoadingSubject, setIsLoadingSubject] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const [selectedTeachers, setSelectedTeachers] = useState<{ id?: string, name: string, faculty: string }[]>([])
   const [teacherSearch, setTeacherSearch] = useState('')
-  const [teacherSearchResults, setTeacherSearchResults] = useState<{ id: string, name: string, faculty: string }[]>([])
+  const [teacherSearchResults, setTeacherSearchResults] = useState<TeacherSearchResult[]>([])
   const [isAddingNewTeacher, setIsAddingNewTeacher] = useState(false)
   const [newTeacherName, setNewTeacherName] = useState('')
   const [newTeacherFaculty, setNewTeacherFaculty] = useState('')
 
-  const [form, setForm] = useState({
-    name: '', short_tag: '', description: DESCRIPTION_TEMPLATE,
-    target_audience: TARGET_AUDIENCE_TEMPLATE,
-    real_requirements: REQUIREMENTS_TEMPLATE,
-    difficulty: 3, time_intensity: 3,
-    attendance_type: '',
-    exam_from_home: false,
-    credits: '', semester: '', faculty: '', year: '', note: '',
-  })
+  const [form, setForm] = useState(DEFAULT_FORM)
 
   const set = (k: keyof typeof form, v: string | number | boolean) =>
     setForm((f) => ({ ...f, [k]: v }))
@@ -135,6 +166,45 @@ export function SubjectProposalForm({ userId }: SubjectProposalFormProps) {
   }
 
   const [materials, setMaterials] = useState<File[]>([])
+
+  const applySubjectToForm = (subject: SubjectDetails) => {
+    setForm({
+      name: subject.name ?? '',
+      short_tag: subject.short_tag ?? '',
+      description: subject.description ?? '',
+      target_audience: subject.target_audience ?? '',
+      real_requirements: subject.real_requirements ?? '',
+      difficulty: subject.difficulty ?? 3,
+      time_intensity: subject.time_intensity ?? 3,
+      attendance_type: subject.attendance_type ?? '',
+      exam_from_home: subject.exam_from_home ?? false,
+      credits: subject.credits ? String(subject.credits) : '',
+      semester: subject.semester ?? '',
+      faculty: subject.faculty ?? '',
+      year: subject.year ? String(subject.year) : '',
+      note: '',
+    })
+  }
+
+  const loadSubjectDetails = async (selectedSubjectId: string) => {
+    setIsLoadingSubject(true)
+    setError(null)
+    const supabase = createClient()
+    const { data, error: subjectError } = await supabase
+      .from('subjects')
+      .select('name, short_tag, description, target_audience, real_requirements, difficulty, time_intensity, attendance_type, exam_from_home, credits, semester, faculty, year')
+      .eq('id', selectedSubjectId)
+      .single()
+
+    setIsLoadingSubject(false)
+
+    if (subjectError || !data) {
+      setError('Nepodařilo se načíst data vybraného předmětu.')
+      return
+    }
+
+    applySubjectToForm(data as SubjectDetails)
+  }
 
   const searchTeachers = async (q: string) => {
     setTeacherSearch(q)
@@ -223,7 +293,18 @@ export function SubjectProposalForm({ userId }: SubjectProposalFormProps) {
         <h2 className="font-semibold text-foreground">Typ návrhu</h2>
         <div className="flex gap-3">
           {[{ v: 'new' as const, label: 'Nový předmět' }, { v: 'edit' as const, label: 'Úprava existujícího' }].map(({ v, label }) => (
-            <button key={v} type="button" onClick={() => { setType(v); setSubjectId(null); setSubjectSearch(''); }}
+            <button key={v} type="button" onClick={() => {
+              setType(v)
+              setSubjectId(null)
+              setSubjectSearch('')
+              setSearchResults([])
+              setSelectedTeachers([])
+              setTeacherSearch('')
+              setTeacherSearchResults([])
+              setMaterials([])
+              setError(null)
+              setForm(DEFAULT_FORM)
+            }}
               className={`flex-1 py-2.5 rounded-xl text-sm font-medium border transition-all ${type === v ? 'accent-gradient text-white border-transparent' : 'border-border text-muted-foreground hover:text-foreground hover:bg-muted'}`}>
               {label}
             </button>
@@ -238,13 +319,23 @@ export function SubjectProposalForm({ userId }: SubjectProposalFormProps) {
             {searchResults.length > 0 && !subjectId && (
               <div className="absolute z-10 w-full mt-1 rounded-xl border border-border bg-popover shadow-xl overflow-hidden">
                 {searchResults.map((s) => (
-                  <button key={s.id} type="button" onClick={() => { setSubjectId(s.id); setSubjectSearch(s.name); setSearchResults([]) }}
+                  <button key={s.id} type="button" onClick={async () => {
+                    setSubjectId(s.id)
+                    setSubjectSearch(s.name)
+                    setSearchResults([])
+                    await loadSubjectDetails(s.id)
+                  }}
                     className="w-full text-left px-3 py-2.5 text-sm hover:bg-muted transition-colors flex items-center gap-2">
                     <span className="font-mono text-xs bg-primary/10 text-primary px-1.5 py-0.5 rounded">{s.short_tag}</span>
                     <span>{s.name}</span>
                   </button>
                 ))}
               </div>
+            )}
+            {subjectId && (
+              <p className="text-xs text-muted-foreground">
+                {isLoadingSubject ? 'Načítám aktuální data předmětu…' : 'Formulář byl předvyplněn aktuálními daty. Uprav, co je potřeba.'}
+              </p>
             )}
           </div>
         )}
@@ -256,7 +347,7 @@ export function SubjectProposalForm({ userId }: SubjectProposalFormProps) {
           <h2 className="font-semibold text-foreground">
             {type === 'new' ? 'Informace o předmětu' : 'Nové/opravené informace'}
           </h2>
-          <p className="text-xs text-muted-foreground mt-0.5">{type === 'edit' ? 'Vyplň jen pole, která chceš změnit.' : 'Vyplň co nejvíce informací.'}</p>
+          <p className="text-xs text-muted-foreground mt-0.5">{type === 'edit' ? 'Po výběru předmětu se načtou aktuální údaje, které můžeš rovnou upravit.' : 'Vyplň co nejvíce informací.'}</p>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

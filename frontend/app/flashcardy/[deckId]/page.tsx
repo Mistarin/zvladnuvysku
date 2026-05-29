@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import type { FlashcardDeck, Flashcard } from '@/lib/types/database'
 import { CardListItem } from '@/components/flashcard/card-list-item'
+import { DeleteDeckButton } from '@/components/flashcard/delete-deck-button'
 
 interface PageProps {
   params: Promise<{ deckId: string }>
@@ -119,9 +120,4 @@ export default async function DeckDetailPage({ params }: PageProps) {
       </div>
     </div>
   )
-}
-
-function DeleteDeckButton({ deckId: _deckId }: { deckId: string }) {
-  // Placeholder — full delete flow would use a client component + server action
-  return null
 }

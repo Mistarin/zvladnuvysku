@@ -12,9 +12,14 @@ const navLinks = [
   { href: "/flashcardy", label: "Kartičky" },
   { href: "/materialy", label: "Materiály" },
   { href: "/ucitele", label: "Vyučující" },
+  { href: "/#hall-of-fame", label: "Hall of Fame" },
 ];
 
 function isActiveLink(pathname: string, href: string) {
+  if (href.includes("#")) {
+    const baseHref = href.split("#")[0] || "/";
+    return pathname === baseHref;
+  }
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 

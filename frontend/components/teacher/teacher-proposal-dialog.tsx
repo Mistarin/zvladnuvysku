@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
 import { proposeTeacher } from "@/app/ucitele/actions";
 import * as Dialog from "@radix-ui/react-dialog";
 import { X, Loader2 } from "lucide-react";
@@ -12,17 +11,7 @@ interface TeacherProposalDialogProps {
 
 const FACULTIES = ["FSS", "FU", "FF", "LF", "PdF", "PřF"];
 
-function generateSlug(text: string) {
-  return text
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)+/g, "");
-}
-
 export function TeacherProposalDialog({ trigger }: TeacherProposalDialogProps) {
-  const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [isOpen, setIsOpen] = useState(false);
@@ -30,33 +19,26 @@ export function TeacherProposalDialog({ trigger }: TeacherProposalDialogProps) {
 
   const [formData, setFormData] = useState({
     name: "",
-    slug: "",
     faculty: "FSS",
     department: "",
   });
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newName = e.target.value;
-    setFormData((prev) => {
-      const autoSlug = generateSlug(prev.name);
-      if (prev.slug === autoSlug || prev.slug === "") {
-        return { ...prev, name: newName, slug: generateSlug(newName) };
-      }
-      return { ...prev, name: newName };
-    });
+    setFormData((prev) => ({ ...prev, name: newName }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
-    if (!formData.name.trim() || !formData.slug.trim()) {
-      setError("Jméno a slug jsou povinné");
+    if (!formData.name.trim()) {
+      setError("Jméno je povinné");
       return;
     }
 
     startTransition(async () => {
-      const result = await proposeTeacher(formData as any);
+      const result = await proposeTeacher(formData);
 
       if (result.error) {
         setError(result.error);
@@ -65,7 +47,7 @@ export function TeacherProposalDialog({ trigger }: TeacherProposalDialogProps) {
         setTimeout(() => {
           setIsOpen(false);
           setSuccess(false);
-          setFormData({ name: "", slug: "", faculty: "FSS", department: "" });
+          setFormData({ name: "", faculty: "FSS", department: "" });
         }, 2000);
       }
     });
@@ -112,18 +94,6 @@ export function TeacherProposalDialog({ trigger }: TeacherProposalDialogProps) {
                   onChange={handleNameChange}
                   className="w-full px-3 py-2 bg-background border border-border rounded-md text-sm outline-none focus:ring-1 focus:ring-primary/50 focus:border-primary/50"
                   placeholder="např. doc. RNDr. Jan Novák, Ph.D."
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label htmlFor="slug" className="text-sm font-medium">URL Slug</label>
-                <input
-                  id="slug"
-                  value={formData.slug}
-                  onChange={(e) => setFormData(prev => ({ ...prev, slug: e.target.value }))}
-                  className="w-full px-3 py-2 bg-background border border-border rounded-md text-sm outline-none focus:ring-1 focus:ring-primary/50 focus:border-primary/50"
-                  placeholder="např. jan-novak"
                   required
                 />
               </div>

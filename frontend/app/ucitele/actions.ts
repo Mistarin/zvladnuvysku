@@ -12,6 +12,11 @@ function generateSlug(text: string) {
     .replace(/(^-|-$)+/g, "");
 }
 
+function withSlugSuffix(slug: string, attempt: number) {
+  if (attempt === 0) return slug;
+  return `${slug}-${attempt + 1}`;
+}
+
 export async function proposeTeacher(data: {
   name: string;
   slug?: string;
@@ -21,21 +26,32 @@ export async function proposeTeacher(data: {
   try {
     const supabase = await createClient();
 
-    const slug = data.slug?.trim() || generateSlug(data.name);
+    const baseSlug = data.slug?.trim() || generateSlug(data.name);
+    let lastError: { code?: string; message?: string } | null = null;
 
-    const { error } = await (supabase.from("teachers") as any).insert({
-      name: data.name,
-      slug,
-      faculty: data.faculty,
-      department: data.department || null,
-      is_approved: false,
-    });
+    for (let attempt = 0; attempt < 5; attempt += 1) {
+      const slug = withSlugSuffix(baseSlug, attempt);
+      const { error } = await (supabase.from("teachers") as any).insert({
+        name: data.name,
+        slug,
+        faculty: data.faculty,
+        department: data.department || null,
+        is_approved: false,
+      });
 
-    if (error) throw error;
+      if (!error) {
+        revalidatePath("/ucitele");
+        revalidatePath("/admin");
+        return { success: true };
+      }
 
-    revalidatePath("/ucitele");
-    revalidatePath("/admin");
-    return { success: true };
+      lastError = error;
+      if (error.code !== "23505") {
+        throw error;
+      }
+    }
+
+    throw new Error(lastError?.message || "Nepodařilo se navrhnout vyučujícího");
   } catch (err: any) {
     console.error("Error proposing teacher:", err.message);
     return { error: err.message || "Nepodařilo se navrhnout vyučujícího" };
