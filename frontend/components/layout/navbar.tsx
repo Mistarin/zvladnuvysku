@@ -121,28 +121,6 @@ export function Navbar({ initialUser }: NavbarProps) {
               </Link>
             ))}
 
-            {user && (
-              <Link
-                href="/navrhnout"
-                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-150 ${
-                  pathname === "/navrhnout" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                }`}
-              >
-                Navrhnout předmět
-              </Link>
-            )}
-
-            {isAdmin && (
-              <Link
-                href="/admin"
-                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-150 ${
-                  pathname === "/admin" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                }`}
-              >
-                Admin
-              </Link>
-            )}
-
             <div className="ml-1">
               <SettingsMenu />
             </div>
@@ -280,28 +258,6 @@ export function Navbar({ initialUser }: NavbarProps) {
               {link.label}
             </Link>
           ))}
-          {user && (
-            <Link
-              href="/navrhnout"
-              onClick={() => setMobileMenuOpen(false)}
-              className={`block px-4 py-2 rounded-lg text-sm font-medium ${
-                pathname === "/navrhnout" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted"
-              }`}
-            >
-              Navrhnout předmět
-            </Link>
-          )}
-          {isAdmin && (
-            <Link
-              href="/admin"
-              onClick={() => setMobileMenuOpen(false)}
-              className={`block px-4 py-2 rounded-lg text-sm font-medium ${
-                pathname === "/admin" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted"
-              }`}
-            >
-              Admin
-            </Link>
-          )}
           <div className="border-t border-border pt-3 mt-3">
             {user ? (
               <div className="space-y-2">
