@@ -4,6 +4,7 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/layout/theme-provider";
 import { SoundProvider } from "@/components/layout/sound-provider";
 import { Navbar } from "@/components/layout/navbar";
+import { Footer } from "@/components/layout/footer";
 
 const inter = Inter({
   subsets: ["latin", "latin-ext"],
@@ -53,6 +54,7 @@ export default function RootLayout({
           <SoundProvider>
             <Navbar />
             <main className="flex-1">{children}</main>
+            <Footer />
             <FeedbackButton />
           </SoundProvider>
         </ThemeProvider>
