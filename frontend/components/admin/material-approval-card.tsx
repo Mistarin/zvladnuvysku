@@ -14,6 +14,8 @@ export function MaterialApprovalCard({ material, subjectName }: MaterialApproval
   const [isApproving, setIsApproving] = useState(false);
   const [isRejecting, setIsRejecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [rejectReason, setRejectReason] = useState("");
+  const [showReject, setShowReject] = useState(false);
 
   const supabase = createClient();
   const { data: publicUrlData } = supabase.storage.from("study_materials").getPublicUrl(material.file_path);
@@ -29,14 +31,14 @@ export function MaterialApprovalCard({ material, subjectName }: MaterialApproval
   };
 
   const handleReject = async () => {
-    if (!window.confirm("Opravdu zamítnout a smazat tento materiál?")) return;
     setIsRejecting(true);
     setError(null);
-    const result = await rejectMaterial(material.id, material.file_path);
+    const result = await rejectMaterial(material.id, rejectReason);
     if (!result.success) {
       setError(result.error);
     }
     setIsRejecting(false);
+    setShowReject(false);
   };
 
   const isWorking = isApproving || isRejecting;
@@ -74,13 +76,37 @@ export function MaterialApprovalCard({ material, subjectName }: MaterialApproval
       )}
 
       <div className="flex justify-end gap-2 pt-2 border-t border-border/50">
-        <button
-          onClick={handleReject}
-          disabled={isWorking}
-          className="px-4 py-2 text-sm font-medium text-destructive hover:bg-destructive/10 rounded-lg transition-colors disabled:opacity-50"
-        >
-          {isRejecting ? "Mažu..." : "Zamítnout (Smazat)"}
-        </button>
+        {showReject ? (
+          <div className="flex flex-1 items-center gap-2">
+            <input
+              value={rejectReason}
+              onChange={(event) => setRejectReason(event.target.value)}
+              placeholder="Důvod zamítnutí (volitelné)"
+              className="flex-1 rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-destructive/40 focus:border-destructive/40"
+            />
+            <button
+              onClick={handleReject}
+              disabled={isWorking}
+              className="px-4 py-2 text-sm font-medium text-destructive hover:bg-destructive/10 rounded-lg transition-colors disabled:opacity-50"
+            >
+              {isRejecting ? "Zamítám..." : "Potvrdit"}
+            </button>
+            <button
+              onClick={() => setShowReject(false)}
+              className="text-xs text-muted-foreground hover:text-foreground"
+            >
+              Zrušit
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={() => setShowReject(true)}
+            disabled={isWorking}
+            className="px-4 py-2 text-sm font-medium text-destructive hover:bg-destructive/10 rounded-lg transition-colors disabled:opacity-50"
+          >
+            Zamítnout
+          </button>
+        )}
         <button
           onClick={handleApprove}
           disabled={isWorking}

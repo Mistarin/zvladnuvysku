@@ -1,36 +1,41 @@
 "use client";
 
-import { useState } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { useState, useTransition } from "react";
+import { submitFeedback } from "@/app/actions/feedback";
 
 export function FeedbackButton() {
   const [isOpen, setIsOpen] = useState(false);
   const [type, setType] = useState<"bug" | "feature" | "other">("bug");
   const [message, setMessage] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [isPending, startTransition] = useTransition();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!message.trim()) return;
 
-    setIsSubmitting(true);
-    const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    setError(null);
 
-    await (supabase.from("feedback") as any).insert({
-      type,
-      message: message.trim(),
-      user_id: user?.id || null,
+    startTransition(async () => {
+      const result = await submitFeedback({
+        type,
+        message,
+        sourceType: "general",
+      });
+
+      if (!result.success) {
+        setError(result.error);
+        return;
+      }
+
+      setSuccess(true);
+      setTimeout(() => {
+        setIsOpen(false);
+        setSuccess(false);
+        setMessage("");
+      }, 2500);
     });
-
-    setIsSubmitting(false);
-    setSuccess(true);
-    setTimeout(() => {
-      setIsOpen(false);
-      setSuccess(false);
-      setMessage("");
-    }, 2500);
   };
 
   return (
@@ -88,11 +93,17 @@ export function FeedbackButton() {
                 </div>
                 <button
                   type="submit"
-                  disabled={isSubmitting || !message.trim()}
+                  disabled={isPending || !message.trim()}
                   className="w-full py-2.5 rounded-xl font-medium text-sm accent-gradient text-white hover:opacity-90 disabled:opacity-50 transition-all"
                 >
-                  {isSubmitting ? "Odesílám..." : "Odeslat administrátorovi"}
+                  {isPending ? "Odesílám..." : "Odeslat administrátorovi"}
                 </button>
+                {error && (
+                  <p className="text-sm text-destructive">{error}</p>
+                )}
+                <p className="text-xs text-muted-foreground">
+                  Pokud jsi přihlášený, stav zprávy uvidíš v Mojí aktivitě.
+                </p>
               </form>
             )}
           </div>

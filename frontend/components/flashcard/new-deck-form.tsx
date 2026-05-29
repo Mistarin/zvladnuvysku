@@ -9,6 +9,7 @@ import { createClient } from '@/lib/supabase/client'
 import {
   FLASHCARD_MEDIA_BUCKET,
   FLASHCARD_MEDIA_PREFIX,
+  groupFlashcardMediaPaths,
   type DeckSubjectRef,
   getFlashcardMediaUrl,
   normalizeFlashcard,
@@ -486,14 +487,18 @@ export function NewDeckForm({ initialSubject = null, userId, initialDeckData }: 
 
       const uniqueRemovedPaths = [...new Set(removedPaths.filter(Boolean))]
       if (uniqueRemovedPaths.length > 0) {
-        await supabase.storage.from(FLASHCARD_MEDIA_BUCKET).remove(uniqueRemovedPaths)
+        for (const entry of groupFlashcardMediaPaths(uniqueRemovedPaths)) {
+          await supabase.storage.from(entry.bucket).remove(entry.paths)
+        }
       }
 
       router.push(`/flashcardy/${deckId}`)
       router.refresh()
     } catch (err: unknown) {
       if (uploadedPaths.length > 0) {
-        await supabase.storage.from(FLASHCARD_MEDIA_BUCKET).remove(uploadedPaths)
+        for (const entry of groupFlashcardMediaPaths(uploadedPaths)) {
+          await supabase.storage.from(entry.bucket).remove(entry.paths)
+        }
       }
       setError(err instanceof Error ? err.message : 'Nastala chyba.')
       setLoading(false)

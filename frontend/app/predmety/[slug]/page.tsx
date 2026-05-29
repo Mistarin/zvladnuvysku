@@ -6,6 +6,7 @@ import { DifficultyBadge, StarRating } from "@/components/subject/difficulty-bad
 import { RatingForm } from "@/components/subject/rating-form";
 import { RatingStats } from "@/components/subject/rating-stats";
 import { MaterialUploadForm } from "@/components/subject/material-upload-form";
+import { ReportIssueDialog } from "@/components/feedback/report-issue-dialog";
 import type { Subject, SubjectRatingStats } from "@/lib/types/database";
 import { BookOpen, Target, MessageSquare, Star, Users, Layers, FileText, CheckCircle2, XCircle, Clock, Calendar, Diamond } from "lucide-react";
 import { formatCredits } from "@/lib/utils";
@@ -63,7 +64,7 @@ export default async function PredmetDetailPage({ params }: PageProps) {
   ] = await Promise.all([
     supabase.auth.getUser(),
     supabase.from("subject_teachers").select("teachers(id, slug, name, faculty, teacher_rating_stats(avg_rating, rating_count))").eq("subject_id", subject.id),
-    supabase.from("subject_materials").select("id, title, file_path, size_bytes, created_at, is_approved").eq("subject_id", subject.id).order("created_at", { ascending: false }),
+    supabase.from("subject_materials").select("id, title, file_path, size_bytes, created_at, is_approved").eq("subject_id", subject.id).eq("is_approved", true).order("created_at", { ascending: false }),
     supabase.from('subject_ratings').select('id, overall_rating, comment, created_at').eq('subject_id', subject.id).eq('comment_is_approved', true).not('comment', 'is', null).order('created_at', { ascending: false }),
     supabase.from('flashcard_decks').select('*', { count: 'exact', head: true }).eq('subject_id', subject.id).eq('is_public', true),
     supabase.from("subject_rating_stats").select("*").eq("subject_id", subject.id).single()
@@ -271,6 +272,14 @@ export default async function PredmetDetailPage({ params }: PageProps) {
                     <p className="text-foreground/90 text-sm italic leading-relaxed">
                       "{rating.comment}"
                     </p>
+                    <div className="pt-2">
+                      <ReportIssueDialog
+                        sourceType="subject_rating"
+                        sourceId={rating.id}
+                        sourceLabel={`Komentář u předmětu ${subject.name}`}
+                        compact
+                      />
+                    </div>
                   </div>
                 ))}
               </div>
@@ -387,35 +396,47 @@ export default async function PredmetDetailPage({ params }: PageProps) {
               const { data: publicUrlData } = supabase.storage.from('study_materials').getPublicUrl(m.file_path);
               
               return (
-                <a
+                <div
                   key={m.id}
-                  href={publicUrlData.publicUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-3 p-3 rounded-lg border border-border bg-card hover:bg-muted hover:border-primary/50 transition-all group"
+                  className="rounded-lg border border-border bg-card p-3 transition-all hover:border-primary/50 hover:bg-muted"
                 >
-                  <div className="flex-shrink-0">
-                    <FileText className="w-8 h-8 text-sky-500/80 group-hover:text-sky-500 transition-colors" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="font-medium text-sm text-foreground group-hover:text-primary transition-colors truncate">
-                      {m.title}
+                  <a
+                    href={publicUrlData.publicUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group flex items-center gap-3"
+                  >
+                    <div className="flex-shrink-0">
+                      <FileText className="w-8 h-8 text-sky-500/80 group-hover:text-sky-500 transition-colors" />
                     </div>
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className="text-[10px] uppercase font-semibold text-primary/80 bg-primary/10 px-1.5 py-0.5 rounded">
-                        PDF
-                      </span>
-                      <span className="text-xs text-muted-foreground truncate">
-                        {(m.size_bytes / 1024 / 1024).toFixed(1)} MB
-                      </span>
-                      {!m.is_approved && (
-                        <span className="text-[10px] uppercase font-semibold text-amber-600 bg-amber-500/10 px-1.5 py-0.5 rounded ml-auto">
-                          Ke schválení
+                    <div className="flex-1 min-w-0">
+                      <div className="font-medium text-sm text-foreground group-hover:text-primary transition-colors truncate">
+                        {m.title}
+                      </div>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-[10px] uppercase font-semibold text-primary/80 bg-primary/10 px-1.5 py-0.5 rounded">
+                          PDF
                         </span>
-                      )}
+                        <span className="text-xs text-muted-foreground truncate">
+                          {(m.size_bytes / 1024 / 1024).toFixed(1)} MB
+                        </span>
+                        {!m.is_approved && (
+                          <span className="text-[10px] uppercase font-semibold text-amber-600 bg-amber-500/10 px-1.5 py-0.5 rounded ml-auto">
+                            Ke schválení
+                          </span>
+                        )}
+                      </div>
                     </div>
+                  </a>
+                  <div className="mt-2">
+                    <ReportIssueDialog
+                      sourceType="material"
+                      sourceId={m.id}
+                      sourceLabel={`Materiál ${m.title} u předmětu ${subject.name}`}
+                      compact
+                    />
                   </div>
-                </a>
+                </div>
               );
             })}
           </div>
@@ -426,7 +447,21 @@ export default async function PredmetDetailPage({ params }: PageProps) {
         )}
 
         <div className="pt-4 max-w-xl">
-          <MaterialUploadForm subjectId={subject.id} />
+          {isLoggedIn ? (
+            <MaterialUploadForm subjectId={subject.id} />
+          ) : (
+            <div className="rounded-xl border border-dashed border-border bg-background/40 p-5 text-center">
+              <p className="text-sm text-muted-foreground">
+                Pro nahrání materiálu se musíš přihlásit.
+              </p>
+              <Link
+                href="/prihlaseni"
+                className="mt-3 inline-flex rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90"
+              >
+                Přihlásit se
+              </Link>
+            </div>
+          )}
         </div>
       </div>
 
@@ -442,4 +477,3 @@ export default async function PredmetDetailPage({ params }: PageProps) {
     </div>
   );
 }
-

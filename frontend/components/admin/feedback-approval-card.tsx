@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { resolveFeedback } from "@/app/admin/actions";
+import { setFeedbackStatus } from "@/app/admin/actions";
 import { Check } from "lucide-react";
 
 interface FeedbackApprovalCardProps {
@@ -11,19 +11,23 @@ interface FeedbackApprovalCardProps {
     message: string;
     created_at: string;
     user_id: string | null;
+    status: "new" | "in_progress" | "resolved";
+    source_label?: string | null;
   };
 }
 
 export function FeedbackApprovalCard({ feedback }: FeedbackApprovalCardProps) {
-  const [isResolving, setIsResolving] = useState(false);
+  const [isWorking, setIsWorking] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleResolve = async () => {
-    setIsResolving(true);
-    const result = await resolveFeedback(feedback.id);
+  const handleStatusChange = async (status: "new" | "in_progress" | "resolved") => {
+    setIsWorking(true);
+    setError(null);
+    const result = await setFeedbackStatus(feedback.id, status);
     if (!result.success) {
-      alert("Chyba: " + result.error);
-      setIsResolving(false);
+      setError(result.error);
     }
+    setIsWorking(false);
   };
 
   const typeLabels = {
@@ -50,15 +54,37 @@ export function FeedbackApprovalCard({ feedback }: FeedbackApprovalCardProps) {
       <p className="text-sm text-foreground/90 whitespace-pre-wrap leading-relaxed">
         {feedback.message}
       </p>
+      {feedback.source_label && (
+        <p className="text-xs text-muted-foreground">
+          Kontext: <span className="font-medium text-foreground">{feedback.source_label}</span>
+        </p>
+      )}
+      {error && (
+        <p className="text-sm text-destructive">{error}</p>
+      )}
 
-      <div className="flex items-center justify-end pt-2 border-t border-border/50">
+      <div className="flex flex-wrap items-center justify-end gap-2 pt-2 border-t border-border/50">
         <button
-          onClick={handleResolve}
-          disabled={isResolving}
+          onClick={() => handleStatusChange("new")}
+          disabled={isWorking || feedback.status === "new"}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium bg-slate-500/10 text-slate-600 hover:bg-slate-500/20 disabled:opacity-50 transition-colors"
+        >
+          Nové
+        </button>
+        <button
+          onClick={() => handleStatusChange("in_progress")}
+          disabled={isWorking || feedback.status === "in_progress"}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium bg-amber-500/10 text-amber-600 hover:bg-amber-500/20 disabled:opacity-50 transition-colors"
+        >
+          Rozpracováno
+        </button>
+        <button
+          onClick={() => handleStatusChange("resolved")}
+          disabled={isWorking || feedback.status === "resolved"}
           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20 disabled:opacity-50 transition-colors"
         >
           <Check className="w-4 h-4" />
-          {isResolving ? "Řeším..." : "Vyřešeno"}
+          {isWorking ? "Ukládám..." : "Vyřešeno"}
         </button>
       </div>
     </div>

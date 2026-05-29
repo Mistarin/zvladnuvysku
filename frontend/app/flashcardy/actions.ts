@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
-import { FLASHCARD_MEDIA_BUCKET } from '@/lib/flashcards'
+import { groupFlashcardMediaPaths } from '@/lib/flashcards'
 
 type ActionResult = { success: true } | { success: false; error: string }
 type DeckOwnerRecord = { id: string; creator_id: string }
@@ -53,12 +53,14 @@ export async function deleteOwnDeck(deckId: string): Promise<ActionResult> {
     ]
 
     if (mediaPaths.length > 0) {
-      const { error: storageError } = await supabase.storage
-        .from(FLASHCARD_MEDIA_BUCKET)
-        .remove(mediaPaths)
+      for (const entry of groupFlashcardMediaPaths(mediaPaths)) {
+        const { error: storageError } = await supabase.storage
+          .from(entry.bucket)
+          .remove(entry.paths)
 
-      if (storageError) {
-        return { success: false, error: `Nepodařilo se smazat obrázky balíčku: ${storageError.message}` }
+        if (storageError) {
+          return { success: false, error: `Nepodařilo se smazat obrázky balíčku: ${storageError.message}` }
+        }
       }
     }
 

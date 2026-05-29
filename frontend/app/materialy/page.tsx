@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { SearchLandingBar } from "@/components/search/search-landing-bar";
+import { ReportIssueDialog } from "@/components/feedback/report-issue-dialog";
 import { FileText, ExternalLink } from "lucide-react";
 import { formatFileSize } from "@/lib/utils";
 
@@ -136,6 +137,12 @@ export default async function MaterialListPage({ searchParams }: PageProps) {
                     Otevřít PDF
                     <ExternalLink className="w-4 h-4" />
                   </a>
+                  <ReportIssueDialog
+                    sourceType="material"
+                    sourceId={material.id}
+                    sourceLabel={`Materiál ${material.title}`}
+                    compact
+                  />
                 </div>
               </div>
             );

@@ -19,6 +19,7 @@ export function MaterialUploadForm({ subjectId }: MaterialUploadFormProps) {
   const [title, setTitle] = useState("");
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
@@ -26,17 +27,20 @@ export function MaterialUploadForm({ subjectId }: MaterialUploadFormProps) {
 
     if (selectedFile.type !== "application/pdf") {
       setError("Povolene jsou pouze PDF soubory.");
+      setSuccessMessage(null);
       setFile(null);
       return;
     }
 
     if (selectedFile.size > MAX_FILE_SIZE) {
       setError(`Soubor je příliš velký (${(selectedFile.size / 1024 / 1024).toFixed(2)} MB). Maximální povolená velikost je 2 MB.`);
+      setSuccessMessage(null);
       setFile(null);
       return;
     }
 
     setError(null);
+    setSuccessMessage(null);
     setFile(selectedFile);
     // Autofill title if empty
     if (!title) {
@@ -50,6 +54,7 @@ export function MaterialUploadForm({ subjectId }: MaterialUploadFormProps) {
 
     setIsUploading(true);
     setError(null);
+    setSuccessMessage(null);
 
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
@@ -82,7 +87,9 @@ export function MaterialUploadForm({ subjectId }: MaterialUploadFormProps) {
         uploader_id: user.id,
         title: title.trim(),
         file_path: uploadData.path,
-        size_bytes: file.size
+        size_bytes: file.size,
+        moderation_status: 'pending',
+        is_approved: false,
       } as never);
 
       if (dbError) {
@@ -95,6 +102,7 @@ export function MaterialUploadForm({ subjectId }: MaterialUploadFormProps) {
       setIsOpen(false);
       setFile(null);
       setTitle("");
+      setSuccessMessage("Materiál byl nahrán a teď čeká na schválení moderátorem. Stav uvidíš v Mojí aktivitě.");
       router.refresh();
       
     } catch (err: any) {
@@ -106,13 +114,20 @@ export function MaterialUploadForm({ subjectId }: MaterialUploadFormProps) {
 
   if (!isOpen) {
     return (
-      <button 
-        onClick={() => setIsOpen(true)}
-        className="w-full py-3 px-4 rounded-xl border-2 border-dashed border-border text-muted-foreground hover:border-primary/50 hover:text-foreground hover:bg-muted/30 transition-all flex flex-col items-center justify-center gap-2"
-      >
-        <span className="text-xl">📄</span>
-        <span className="text-sm font-medium">Nahrát studijní materiál (PDF)</span>
-      </button>
+      <div className="space-y-3">
+        <button 
+          onClick={() => setIsOpen(true)}
+          className="w-full py-3 px-4 rounded-xl border-2 border-dashed border-border text-muted-foreground hover:border-primary/50 hover:text-foreground hover:bg-muted/30 transition-all flex flex-col items-center justify-center gap-2"
+        >
+          <span className="text-xl">📄</span>
+          <span className="text-sm font-medium">Nahrát studijní materiál (PDF)</span>
+        </button>
+        {successMessage && (
+          <p className="rounded-lg bg-emerald-500/10 px-3 py-2 text-sm text-emerald-700">
+            {successMessage}
+          </p>
+        )}
+      </div>
     );
   }
 

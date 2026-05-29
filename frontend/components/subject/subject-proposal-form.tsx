@@ -93,6 +93,22 @@ const DEFAULT_FORM = {
   credits: '', semester: '', faculty: '', year: '', note: '',
 }
 
+const FIELD_LABELS: Record<string, string> = {
+  name: 'Název',
+  short_tag: 'Zkratka',
+  description: 'Popis',
+  target_audience: 'Pro koho je předmět',
+  real_requirements: 'Reálné požadavky',
+  difficulty: 'Obtížnost',
+  time_intensity: 'Časová náročnost',
+  attendance_type: 'Docházka',
+  exam_from_home: 'Zkouška z domova',
+  credits: 'Kredity',
+  semester: 'Semestr',
+  faculty: 'Fakulta',
+  year: 'Ročník',
+}
+
 function FieldLabel({ children, required }: { children: React.ReactNode; required?: boolean }) {
   return (
     <label className="block text-xs font-medium text-muted-foreground mb-1">
@@ -131,10 +147,24 @@ function Textarea({ hint, ...props }: React.TextareaHTMLAttributes<HTMLTextAreaE
   )
 }
 
+function normalizeDiffValue(value: string | number | boolean | null | undefined) {
+  if (typeof value === 'string') return value.trim()
+  if (typeof value === 'boolean') return value ? 'true' : 'false'
+  if (value === null || value === undefined) return ''
+  return String(value)
+}
+
+function formatDiffValue(value: string | number | boolean | null | undefined) {
+  if (typeof value === 'boolean') return value ? 'Ano' : 'Ne'
+  if (value === null || value === undefined || value === '') return '—'
+  return String(value)
+}
+
 export function SubjectProposalForm({ userId }: SubjectProposalFormProps) {
   const [type, setType] = useState<'new' | 'edit'>('new')
   const [subjectSearch, setSubjectSearch] = useState('')
   const [subjectId, setSubjectId] = useState<string | null>(null)
+  const [originalSubject, setOriginalSubject] = useState<SubjectDetails | null>(null)
   const [searchResults, setSearchResults] = useState<SubjectSearchResult[]>([])
   const [isLoadingSubject, setIsLoadingSubject] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -168,6 +198,7 @@ export function SubjectProposalForm({ userId }: SubjectProposalFormProps) {
   const [materials, setMaterials] = useState<File[]>([])
 
   const applySubjectToForm = (subject: SubjectDetails) => {
+    setOriginalSubject(subject)
     setForm({
       name: subject.name ?? '',
       short_tag: subject.short_tag ?? '',
@@ -205,6 +236,25 @@ export function SubjectProposalForm({ userId }: SubjectProposalFormProps) {
 
     applySubjectToForm(data as SubjectDetails)
   }
+
+  const diffEntries = type === 'edit' && originalSubject
+    ? (Object.entries({
+        name: form.name,
+        short_tag: form.short_tag,
+        description: form.description,
+        target_audience: form.target_audience,
+        real_requirements: form.real_requirements,
+        difficulty: form.difficulty,
+        time_intensity: form.time_intensity,
+        attendance_type: form.attendance_type,
+        exam_from_home: form.exam_from_home,
+        credits: form.credits,
+        semester: form.semester,
+        faculty: form.faculty,
+        year: form.year,
+      }) as [keyof SubjectDetails, string | number | boolean][])
+        .filter(([key, value]) => normalizeDiffValue(value) !== normalizeDiffValue(originalSubject[key]))
+    : []
 
   const searchTeachers = async (q: string) => {
     setTeacherSearch(q)
@@ -296,6 +346,7 @@ export function SubjectProposalForm({ userId }: SubjectProposalFormProps) {
             <button key={v} type="button" onClick={() => {
               setType(v)
               setSubjectId(null)
+              setOriginalSubject(null)
               setSubjectSearch('')
               setSearchResults([])
               setSelectedTeachers([])
@@ -525,6 +576,54 @@ export function SubjectProposalForm({ userId }: SubjectProposalFormProps) {
           </div>
         </div>
       </div>
+
+      {/* Materiály */}
+      {type === 'edit' && subjectId && (
+        <div className="glass-card p-6 space-y-4">
+          <div>
+            <h2 className="font-semibold text-foreground">Náhled změn</h2>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Tohle se oproti aktuálním datům změní po schválení moderátorem.
+            </p>
+          </div>
+
+          {diffEntries.length === 0 && selectedTeachers.length === 0 && materials.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              Zatím jsi nic nezměnil.
+            </p>
+          ) : (
+            <div className="space-y-3">
+              {diffEntries.map(([key, value]) => (
+                <div key={key} className="rounded-xl border border-amber-500/20 bg-amber-500/10 px-4 py-3">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-amber-700">
+                    {FIELD_LABELS[key] ?? key}
+                  </p>
+                  <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                    <div>
+                      <p className="text-[11px] text-muted-foreground">Aktuálně</p>
+                      <p className="text-sm text-foreground/70">{formatDiffValue(originalSubject?.[key] ?? null)}</p>
+                    </div>
+                    <div>
+                      <p className="text-[11px] text-muted-foreground">Nově</p>
+                      <p className="text-sm font-medium text-foreground">{formatDiffValue(value)}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+              {selectedTeachers.length > 0 && (
+                <div className="rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm text-foreground">
+                  Přidá se {selectedTeachers.length} {selectedTeachers.length === 1 ? 'vyučující' : selectedTeachers.length < 5 ? 'vyučující' : 'vyučujících'}.
+                </div>
+              )}
+              {materials.length > 0 && (
+                <div className="rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm text-foreground">
+                  Přidá se {materials.length} {materials.length === 1 ? 'materiál' : materials.length < 5 ? 'materiály' : 'materiálů'} k moderaci.
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Materiály */}
       <div className="glass-card p-6 space-y-4">

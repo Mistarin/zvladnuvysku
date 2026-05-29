@@ -141,6 +141,13 @@ export function Navbar() {
                         <p className="text-sm font-medium text-foreground truncate">{user.email}</p>
                       </div>
                       <div className="p-1">
+                        <Link
+                          href="/moje-aktivita"
+                          onClick={() => setUserMenuOpen(false)}
+                          className="block w-full px-3 py-2 text-sm text-foreground hover:bg-muted rounded-lg transition-colors"
+                        >
+                          Moje aktivita
+                        </Link>
                         <button
                           onClick={handleSignOut}
                           className="w-full text-left px-3 py-2 text-sm text-destructive hover:bg-destructive/10 rounded-lg transition-colors"
@@ -253,6 +260,13 @@ export function Navbar() {
             {user ? (
               <div className="space-y-2">
                 <div className="px-4 py-2 text-sm text-foreground opacity-70 truncate">{user.email}</div>
+                <Link
+                  href="/moje-aktivita"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="block px-4 py-2 text-sm font-medium text-foreground hover:bg-muted rounded-lg transition-colors"
+                >
+                  Moje aktivita
+                </Link>
                 <button
                   onClick={handleSignOut}
                   className="w-full text-left px-4 py-2 text-sm text-destructive hover:bg-destructive/10 rounded-lg transition-colors font-medium"

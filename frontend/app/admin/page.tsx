@@ -57,7 +57,7 @@ export default async function AdminPage(props: {
   let materialsQuery = supabase
     .from('subject_materials')
     .select('*, subject:subject_id(name, faculty)')
-    .eq('is_approved', false)
+    .eq('moderation_status', 'pending')
     .order('created_at', { ascending: true })
     
   const { data: rawMaterials } = await materialsQuery
@@ -86,7 +86,7 @@ export default async function AdminPage(props: {
   // Fetch unresolved feedback
   const { data: rawFeedback } = await (supabase.from('feedback') as any)
     .select('*')
-    .eq('is_resolved', false)
+    .neq('status', 'resolved')
   let unresolvedFeedback: any[] = rawFeedback || []
 
   // Fetch unapproved teachers

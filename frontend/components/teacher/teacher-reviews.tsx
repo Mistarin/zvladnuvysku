@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { ReportIssueDialog } from "@/components/feedback/report-issue-dialog";
 
 export async function TeacherReviews({ teacherId }: { teacherId: string }) {
   const supabase = await createClient();
@@ -43,9 +44,17 @@ export async function TeacherReviews({ teacherId }: { teacherId: string }) {
           </div>
           {review.review ? (
             review.comment_is_approved ? (
-              <p className="text-foreground text-sm leading-relaxed whitespace-pre-wrap">
-                {review.review}
-              </p>
+              <div className="space-y-3">
+                <p className="text-foreground text-sm leading-relaxed whitespace-pre-wrap">
+                  {review.review}
+                </p>
+                <ReportIssueDialog
+                  sourceType="teacher_rating"
+                  sourceId={review.id}
+                  sourceLabel="Recenze vyučujícího"
+                  compact
+                />
+              </div>
             ) : (
               <p className="text-amber-500/80 text-sm italic">
                 Komentář čeká na schválení administrátorem.

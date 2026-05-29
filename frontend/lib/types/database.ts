@@ -161,9 +161,39 @@ export interface Database {
           size_bytes: number
           created_at: string
           is_approved: boolean
+          moderation_status: 'pending' | 'approved' | 'rejected'
+          rejection_reason: string | null
+          moderated_at: string | null
         }
-        Insert: Omit<Database['public']['Tables']['subject_materials']['Row'], 'id' | 'created_at' | 'is_approved'> & { is_approved?: boolean }
+        Insert: Omit<Database['public']['Tables']['subject_materials']['Row'], 'id' | 'created_at' | 'is_approved' | 'moderated_at'> & {
+          is_approved?: boolean
+          moderation_status?: 'pending' | 'approved' | 'rejected'
+          rejection_reason?: string | null
+          moderated_at?: string | null
+        }
         Update: Partial<Database['public']['Tables']['subject_materials']['Insert']>
+      }
+      subject_proposals: {
+        Row: {
+          id: string
+          type: 'new' | 'edit'
+          subject_id: string | null
+          data: Json
+          note: string | null
+          proposed_by: string
+          status: 'pending' | 'approved' | 'rejected'
+          rejection_reason: string | null
+          reviewed_by: string | null
+          reviewed_at: string | null
+          created_at: string
+        }
+        Insert: Omit<Database['public']['Tables']['subject_proposals']['Row'], 'id' | 'status' | 'rejection_reason' | 'reviewed_by' | 'reviewed_at' | 'created_at'> & {
+          status?: 'pending' | 'approved' | 'rejected'
+          rejection_reason?: string | null
+          reviewed_by?: string | null
+          reviewed_at?: string | null
+        }
+        Update: Partial<Database['public']['Tables']['subject_proposals']['Insert']>
       }
       profiles: {
         Row: {
@@ -184,9 +214,20 @@ export interface Database {
           type: 'bug' | 'feature' | 'other'
           message: string
           is_resolved: boolean
+          status: 'new' | 'in_progress' | 'resolved'
+          source_type: 'general' | 'material' | 'subject_rating' | 'teacher_rating' | null
+          source_id: string | null
+          source_label: string | null
           created_at: string
+          updated_at: string
         }
-        Insert: Omit<Database['public']['Tables']['feedback']['Row'], 'id' | 'created_at' | 'is_resolved'> & { is_resolved?: boolean }
+        Insert: Omit<Database['public']['Tables']['feedback']['Row'], 'id' | 'created_at' | 'is_resolved' | 'updated_at'> & {
+          is_resolved?: boolean
+          status?: 'new' | 'in_progress' | 'resolved'
+          source_type?: 'general' | 'material' | 'subject_rating' | 'teacher_rating' | null
+          source_id?: string | null
+          source_label?: string | null
+        }
         Update: Partial<Database['public']['Tables']['feedback']['Insert']>
       }
       teacher_rating_stats: {
@@ -242,6 +283,7 @@ export type TeacherInsert = Database['public']['Tables']['teachers']['Insert']
 export type TeacherRating = Database['public']['Tables']['teacher_ratings']['Row']
 export type SubjectTeacher = Database['public']['Tables']['subject_teachers']['Row']
 export type SubjectMaterial = Database['public']['Tables']['subject_materials']['Row']
+export type SubjectProposalRecord = Database['public']['Tables']['subject_proposals']['Row']
 export type Profile = Database['public']['Tables']['profiles']['Row']
 export type Feedback = Database['public']['Tables']['feedback']['Row']
 export type TeacherRatingStats = Database['public']['Tables']['teacher_rating_stats']['Row']

@@ -128,6 +128,7 @@ export async function approveProposal(proposalId: string): Promise<ActionResult>
     if (statusError) return { success: false, error: 'Chyba při aktualizaci stavu' }
 
     revalidatePath('/admin')
+    revalidatePath('/moje-aktivita')
     return { success: true }
   } catch (err) {
     return { success: false, error: err instanceof Error ? err.message : 'Neznámá chyba' }
@@ -159,6 +160,7 @@ export async function rejectProposal(proposalId: string, reason?: string): Promi
     }
 
     revalidatePath('/admin')
+    revalidatePath('/moje-aktivita')
     return { success: true }
   } catch (err) {
     return { success: false, error: err instanceof Error ? err.message : 'Neznámá chyba' }
@@ -224,44 +226,45 @@ export async function approveMaterial(materialId: string): Promise<ActionResult>
     const { supabase } = await getAdminClient()
     const { error } = await supabase
       .from('subject_materials')
-      .update({ is_approved: true } as never)
+      .update({
+        is_approved: true,
+        moderation_status: 'approved',
+        rejection_reason: null,
+        moderated_at: new Date().toISOString(),
+      } as never)
       .eq('id', materialId)
 
     if (error) return { success: false, error: `Chyba při schvalování materiálu: ${error.message}` }
     revalidatePath('/admin')
     revalidatePath('/predmety/[slug]', 'page')
+    revalidatePath('/moje-aktivita')
     return { success: true }
   } catch (err: any) {
     return { success: false, error: err.message || 'Neočekávaná chyba' }
   }
 }
 
-export async function rejectMaterial(materialId: string, filePath: string): Promise<ActionResult> {
+export async function rejectMaterial(materialId: string, reason?: string): Promise<ActionResult> {
   try {
     const { supabase } = await getAdminClient()
-    
-    // The storage trigger will automatically delete the database row if we delete the file first
-    const { error: storageError } = await supabase.storage
-      .from('study_materials')
-      .remove([filePath])
 
-    if (storageError) {
-      // If file doesn't exist in storage, we just delete the row
-      console.warn("Storage delete failed or file not found:", storageError)
-    }
-
-    // Try deleting the row directly in case the trigger didn't fire or file was already gone
     const { error: dbError } = await supabase
       .from('subject_materials')
-      .delete()
+      .update({
+        is_approved: false,
+        moderation_status: 'rejected',
+        rejection_reason: reason?.trim() || null,
+        moderated_at: new Date().toISOString(),
+      } as never)
       .eq('id', materialId)
       
-    if (dbError && dbError.code !== 'P0002') { 
-      return { success: false, error: `Chyba při mazání materiálu: ${dbError.message}` }
+    if (dbError) { 
+      return { success: false, error: `Chyba při zamítnutí materiálu: ${dbError.message}` }
     }
     
     revalidatePath('/admin')
     revalidatePath('/predmety/[slug]', 'page')
+    revalidatePath('/moje-aktivita')
     return { success: true }
   } catch (err: any) {
     return { success: false, error: err.message || 'Neočekávaná chyba' }
@@ -315,12 +318,33 @@ export async function resolveFeedback(feedbackId: string): Promise<ActionResult>
     const { supabase } = await getAdminClient()
 
     const { error } = await (supabase.from('feedback') as any)
-      .update({ is_resolved: true })
+      .update({ is_resolved: true, status: 'resolved' })
       .eq('id', feedbackId)
 
     if (error) return { success: false, error: 'Chyba při aktualizaci stavu zpětné vazby' }
 
     revalidatePath('/admin')
+    return { success: true }
+  } catch (err) {
+    return { success: false, error: err instanceof Error ? err.message : 'Neznámá chyba' }
+  }
+}
+
+export async function setFeedbackStatus(
+  feedbackId: string,
+  status: 'new' | 'in_progress' | 'resolved'
+): Promise<ActionResult> {
+  try {
+    const { supabase } = await getAdminClient()
+
+    const { error } = await (supabase.from('feedback') as any)
+      .update({ status, is_resolved: status === 'resolved' })
+      .eq('id', feedbackId)
+
+    if (error) return { success: false, error: 'Chyba při aktualizaci stavu zpětné vazby' }
+
+    revalidatePath('/admin')
+    revalidatePath('/moje-aktivita')
     return { success: true }
   } catch (err) {
     return { success: false, error: err instanceof Error ? err.message : 'Neznámá chyba' }
