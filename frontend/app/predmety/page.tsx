@@ -1,4 +1,7 @@
-import { SubjectsBrowser } from "@/components/subject/subjects-browser";
+import { Suspense } from "react";
+import { SubjectsFilterPanel } from "@/components/subject/subjects-filter-panel";
+import { SubjectsResultsPanel } from "@/components/subject/subjects-results-panel";
+import { SubjectsResultsSkeleton } from "@/components/subject/subjects-results-skeleton";
 import {
   getSubjectFiltersFromSearchParams,
   getSubjectPageFromSearchParams,
@@ -12,10 +15,7 @@ interface PredmetyPageProps {
 
 export default async function PredmetyPage({ searchParams }: PredmetyPageProps) {
   const resolvedSearchParams = (await searchParams) ?? {};
-  const filters = getSubjectFiltersFromSearchParams(resolvedSearchParams);
-  const sort = getSubjectSortFromSearchParams(resolvedSearchParams);
-  const page = getSubjectPageFromSearchParams(resolvedSearchParams);
-  const { subjects, totalCount } = await getSubjectsPage(filters, sort, page);
+  const key = JSON.stringify(resolvedSearchParams);
 
   return (
     <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
@@ -25,7 +25,27 @@ export default async function PredmetyPage({ searchParams }: PredmetyPageProps) 
           Procházej předměty Ostravské univerzity. Filtruj podle obtížnosti, semestru nebo katedry.
         </p>
       </div>
-      <SubjectsBrowser subjects={subjects} totalCount={totalCount} page={page} />
+      <div className="space-y-6">
+        <SubjectsFilterPanel />
+        <Suspense key={key} fallback={<SubjectsResultsSkeleton />}>
+          <SubjectsResultsSection searchParams={resolvedSearchParams} />
+        </Suspense>
+      </div>
     </div>
+  );
+}
+
+async function SubjectsResultsSection({
+  searchParams,
+}: {
+  searchParams: Record<string, string | string[] | undefined>;
+}) {
+  const filters = getSubjectFiltersFromSearchParams(searchParams);
+  const sort = getSubjectSortFromSearchParams(searchParams);
+  const page = getSubjectPageFromSearchParams(searchParams);
+  const { subjects, totalCount } = await getSubjectsPage(filters, sort, page);
+
+  return (
+    <SubjectsResultsPanel subjects={subjects} totalCount={totalCount} page={page} />
   );
 }
