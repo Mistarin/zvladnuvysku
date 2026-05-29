@@ -188,16 +188,16 @@ export default function HomePage() {
             )}
           </div>
 
-          <p className={`home-hint ${isFocused ? "home-hint--hidden" : ""}`}>
-            {searchMode === "flashcards"
-              ? <><span className="font-mono text-primary">.F</span> režim — hledáš flashcard balíčky</>
-              : searchMode === "materials"
-                ? <><span className="font-mono text-sky-700">.M</span> režim — hledáš studijní materiály</>
-                : "Jednotný studentský hub. Proč generovat stokrát to, co už dávno existuje?"}
-          </p>
+          <div className={`home-search-helper ${isFocused ? "home-search-helper--hidden" : ""}`}>
+            <p className="home-hint">
+              {searchMode === "flashcards"
+                ? <><span className="font-mono text-primary">.F</span> režim — hledáš flashcard balíčky</>
+                : searchMode === "materials"
+                  ? <><span className="font-mono text-sky-700">.M</span> režim — hledáš studijní materiály</>
+                  : "Jednotný studentský hub. Proč generovat stokrát to, co už dávno existuje?"}
+            </p>
 
-          {searchMode === "subjects" && !isFocused && (
-            <div className="mt-3 flex flex-wrap items-center justify-center gap-2 text-xs text-muted-foreground">
+            <div className={`home-search-modes ${searchMode === "subjects" ? "" : "home-search-modes--hidden"}`}>
               <span>Zkratky hledání:</span>
               <span className="rounded-full border border-border bg-card px-2.5 py-1">
                 <span className="font-mono text-primary">.f</span> balíčky
@@ -206,7 +206,7 @@ export default function HomePage() {
                 <span className="font-mono text-sky-700">.m</span> materiály
               </span>
             </div>
-          )}
+          </div>
         </div>
       </section>
 
