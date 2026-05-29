@@ -31,19 +31,17 @@ export function useMaterialSearch(query: string): UseMaterialSearchReturn {
       return
     }
 
+    const cached = materialSearchCache.get(materialQuery)
+    if (cached && cached.expiresAt > Date.now()) {
+      setMaterialResults(cached.data)
+      setIsMaterialLoading(false)
+      return
+    }
+
     let cancelled = false
     setIsMaterialLoading(true)
 
     const timeoutId = window.setTimeout(() => {
-      const cached = materialSearchCache.get(materialQuery)
-      if (cached && cached.expiresAt > Date.now()) {
-        if (!cancelled) {
-          setMaterialResults(cached.data)
-          setIsMaterialLoading(false)
-        }
-        return
-      }
-
       searchMaterials(materialQuery)
         .then((data) => {
           if (!cancelled) {
@@ -61,7 +59,7 @@ export function useMaterialSearch(query: string): UseMaterialSearchReturn {
             setIsMaterialLoading(false)
           }
         })
-    }, 120)
+    }, 80)
 
     return () => {
       cancelled = true

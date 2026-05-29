@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Diamond } from "lucide-react";
 import type { FilterConfig } from "@/hooks/use-subject-filters";
 import type { SubjectFilters } from "@/lib/subjects";
@@ -24,9 +24,39 @@ export function SearchFilters({
   activeFilterCount,
 }: SearchFiltersProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [queryInput, setQueryInput] = useState(filters.query ?? "");
+  const queryCommitTimeoutRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    setQueryInput(filters.query ?? "");
+  }, [filters.query]);
+
+  useEffect(() => {
+    return () => {
+      if (queryCommitTimeoutRef.current !== null) {
+        window.clearTimeout(queryCommitTimeoutRef.current);
+      }
+    };
+  }, []);
 
   function setFilter<K extends keyof SubjectFilters>(key: K, value: SubjectFilters[K]) {
     onFilterChange(key, value);
+  }
+
+  function commitQuery(nextQuery: string) {
+    const normalizedQuery = nextQuery.trim();
+    onFilterChange("query", (normalizedQuery ? nextQuery : undefined) as SubjectFilters["query"]);
+  }
+
+  function scheduleQueryCommit(nextQuery: string) {
+    if (queryCommitTimeoutRef.current !== null) {
+      window.clearTimeout(queryCommitTimeoutRef.current);
+    }
+
+    queryCommitTimeoutRef.current = window.setTimeout(() => {
+      commitQuery(nextQuery);
+      queryCommitTimeoutRef.current = null;
+    }, 250);
   }
 
   function getArrayFilterValue(key: keyof SubjectFilters) {
@@ -64,13 +94,40 @@ export function SearchFilters({
           id="predmety-search"
           type="text"
           placeholder="Hledat předmět nebo zkratku…"
-          value={filters.query ?? ''}
-          onChange={e => onFilterChange('query', e.target.value as SubjectFilters['query'])}
+          value={queryInput}
+          onChange={(e) => {
+            const nextQuery = e.target.value;
+            setQueryInput(nextQuery);
+            scheduleQueryCommit(nextQuery);
+          }}
+          onBlur={() => {
+            if (queryCommitTimeoutRef.current !== null) {
+              window.clearTimeout(queryCommitTimeoutRef.current);
+              queryCommitTimeoutRef.current = null;
+            }
+            commitQuery(queryInput);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              if (queryCommitTimeoutRef.current !== null) {
+                window.clearTimeout(queryCommitTimeoutRef.current);
+                queryCommitTimeoutRef.current = null;
+              }
+              commitQuery(queryInput);
+            }
+          }}
           className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-border bg-card text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-1 focus:ring-primary/40 focus:border-primary/40 transition-all"
         />
-        {filters.query && (
+        {queryInput && (
           <button
-            onClick={() => onFilterChange('query', undefined)}
+            onClick={() => {
+              if (queryCommitTimeoutRef.current !== null) {
+                window.clearTimeout(queryCommitTimeoutRef.current);
+                queryCommitTimeoutRef.current = null;
+              }
+              setQueryInput("");
+              onFilterChange("query", undefined);
+            }}
             className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
             aria-label="Vymazat hledání"
           >

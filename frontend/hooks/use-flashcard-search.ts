@@ -32,19 +32,17 @@ export function useFlashcardSearch(query: string): UseFlashcardSearchReturn {
       return
     }
 
+    const cached = deckSearchCache.get(flashcardQuery)
+    if (cached && cached.expiresAt > Date.now()) {
+      setDeckResults(cached.data)
+      setIsDeckLoading(false)
+      return
+    }
+
     let cancelled = false
     setIsDeckLoading(true)
 
     const timeoutId = window.setTimeout(() => {
-      const cached = deckSearchCache.get(flashcardQuery)
-      if (cached && cached.expiresAt > Date.now()) {
-        if (!cancelled) {
-          setDeckResults(cached.data)
-          setIsDeckLoading(false)
-        }
-        return
-      }
-
       searchFlashcardDecks(flashcardQuery)
         .then((data) => {
           if (!cancelled) {
@@ -62,7 +60,7 @@ export function useFlashcardSearch(query: string): UseFlashcardSearchReturn {
             setIsDeckLoading(false)
           }
         })
-    }, 120)
+    }, 80)
 
     return () => {
       cancelled = true
