@@ -469,14 +469,19 @@ export function SubjectProposalForm() {
                 <option value="">– vybrat –</option>
                 {ATTENDANCE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
               </Select>
-              <label className="flex items-center gap-2 cursor-pointer pt-1">
-                <input 
-                  type="checkbox" 
-                  checked={form.exam_from_home} 
+              <label className="flex cursor-pointer items-center gap-3 pt-1">
+                <input
+                  type="checkbox"
+                  checked={form.exam_from_home}
                   onChange={(e) => set('exam_from_home', e.target.checked)}
-                  className="w-4 h-4 rounded border-border text-primary focus:ring-primary/40 bg-background"
+                  className="peer sr-only"
                 />
-                <span className="text-sm font-medium">Zkouška z domova</span>
+                <span className="flex items-center gap-2 rounded-full border border-border bg-background px-3 py-1.5 transition-all peer-checked:border-emerald-500/20 peer-checked:bg-emerald-500/10">
+                  <span className="flex h-5 w-5 items-center justify-center rounded-full border border-border bg-background text-[11px] font-bold text-transparent transition-all peer-checked:border-emerald-500 peer-checked:bg-emerald-500 peer-checked:text-white">
+                    ✓
+                  </span>
+                  <span className="text-sm font-medium text-foreground">Zkouška z domova</span>
+                </span>
               </label>
             </div>
           </div>

@@ -153,8 +153,11 @@ export function SubjectTable({
                         </span>
                       )}
                       {subject.exam_from_home && (
-                        <span className="inline-block px-1.5 py-0.5 text-[10px] font-semibold rounded uppercase tracking-wider bg-primary/10 text-primary border border-primary/20">
-                          🏠 Z domova
+                        <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
+                          <span className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-emerald-500 text-[9px] font-bold text-white">
+                            ✓
+                          </span>
+                          Z domova
                         </span>
                       )}
                     </div>
@@ -176,7 +179,9 @@ export function SubjectTable({
 
                   <td className="px-4 py-3 text-center">
                     {subject.time_intensity ? (
-                      <DifficultyBadge difficulty={subject.time_intensity} />
+                      <span className="inline-flex whitespace-nowrap">
+                        <DifficultyBadge difficulty={subject.time_intensity} />
+                      </span>
                     ) : (
                       <span className="text-muted-foreground text-sm">—</span>
                     )}

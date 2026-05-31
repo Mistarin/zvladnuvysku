@@ -384,7 +384,7 @@ function SubjectMeta({ subject }: { subject: Subject }) {
       {(subject.faculty || subject.department) && <span className="rounded-lg bg-muted/50 px-2 py-1 text-sm text-muted-foreground">{[subject.faculty, subject.department].filter(Boolean).join(" · ")}</span>}
       {subject.credits && <span className="flex items-center gap-1.5 rounded-lg bg-blue-500/10 px-2.5 py-1 text-sm font-medium text-blue-600 dark:text-blue-400"><Diamond className="h-3.5 w-3.5" /> {formatCredits(subject.credits)}</span>}
       {subject.difficulty && <DifficultyBadge difficulty={subject.difficulty} size="lg" showLabel />}
-      {subject.time_intensity && <span className="flex items-center gap-1.5 rounded-lg bg-purple-500/10 px-2.5 py-1 text-sm font-medium text-purple-600 dark:text-purple-400"><Clock className="h-3.5 w-3.5" /> Náročnost: {subject.time_intensity}/5</span>}
+      {subject.time_intensity && <span className="flex items-center gap-1.5 rounded-lg bg-purple-500/10 px-2.5 py-1 text-sm font-medium text-purple-600 dark:text-purple-400 whitespace-nowrap"><Clock className="h-3.5 w-3.5" /> Náročnost: {subject.time_intensity}/5</span>}
       {renderAttendance(subject.attendance_type)}
       {subject.semester && <span className="rounded-lg bg-slate-500/10 px-2.5 py-1 text-sm font-medium text-slate-600 dark:text-slate-400">{SEMESTER_LABELS[subject.semester] || subject.semester}</span>}
       {subject.year && <span className="flex items-center gap-1.5 rounded-lg bg-indigo-500/10 px-2.5 py-1 text-sm font-medium text-indigo-600 dark:text-indigo-400"><Calendar className="h-3.5 w-3.5" /> {subject.year}. ročník</span>}

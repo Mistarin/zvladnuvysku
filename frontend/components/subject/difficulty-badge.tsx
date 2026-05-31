@@ -38,7 +38,7 @@ export function DifficultyBadge({
   return (
     <span
       className={`
-        inline-flex items-center gap-1 rounded-full font-medium
+        inline-flex items-center gap-1 rounded-full font-medium whitespace-nowrap
         badge-difficulty-${clampedDifficulty}
         ${sizeClasses[size]}
       `}

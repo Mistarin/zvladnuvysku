@@ -12,11 +12,11 @@ interface NavbarProps {
   initialUser: User | null;
 }
 const navLinks = [
-  { href: "/predmety", label: "Předměty" },
-  { href: "/flashcardy", label: "Kartičky" },
-  { href: "/materialy", label: "Materiály" },
-  { href: "/ucitele", label: "Vyučující" },
-  { href: "/#hall-of-fame", label: "Hall of Fame" },
+  { href: "/predmety", label: "Předměty", prefetch: true },
+  { href: "/flashcardy", label: "Kartičky", prefetch: true },
+  { href: "/materialy", label: "Materiály", prefetch: true },
+  { href: "/ucitele", label: "Vyučující", prefetch: true },
+  { href: "/#hall-of-fame", label: "Hall of Fame", prefetch: false },
 ];
 
 function isActiveLink(pathname: string, href: string) {
@@ -91,6 +91,7 @@ export function Navbar({ initialUser }: NavbarProps) {
           {/* Logo */}
           <Link
             href="/"
+            prefetch
             onClick={() => setMobileMenuOpen(false)}
             id="nav-logo"
             className="flex items-center gap-2 group"
@@ -113,6 +114,7 @@ export function Navbar({ initialUser }: NavbarProps) {
               <Link
                 key={link.href}
                 href={link.href}
+                prefetch={link.prefetch}
                 className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-150 ${
                   linkIsActive(link.href) ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-muted"
                 }`}
@@ -143,6 +145,7 @@ export function Navbar({ initialUser }: NavbarProps) {
                       <div className="p-1">
                         <Link
                           href="/moje-aktivita"
+                          prefetch
                           onClick={() => setUserMenuOpen(false)}
                           className="block w-full rounded-lg px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted"
                         >
@@ -150,6 +153,7 @@ export function Navbar({ initialUser }: NavbarProps) {
                         </Link>
                         <Link
                           href="/navrhnout"
+                          prefetch
                           onClick={() => setUserMenuOpen(false)}
                           className="block w-full rounded-lg px-3 py-2 text-sm text-foreground transition-colors hover:bg-muted"
                         >
@@ -157,6 +161,7 @@ export function Navbar({ initialUser }: NavbarProps) {
                         </Link>
                         <Link
                           href="/moje-aktivita"
+                          prefetch
                           onClick={() => setUserMenuOpen(false)}
                           className="block w-full rounded-lg px-3 py-2 text-sm text-foreground transition-colors hover:bg-muted"
                         >
@@ -165,6 +170,7 @@ export function Navbar({ initialUser }: NavbarProps) {
                         {isAdmin && (
                           <Link
                             href="/admin"
+                            prefetch
                             onClick={() => setUserMenuOpen(false)}
                             className="block w-full rounded-lg px-3 py-2 text-sm text-foreground transition-colors hover:bg-muted"
                           >
@@ -187,6 +193,7 @@ export function Navbar({ initialUser }: NavbarProps) {
               <div className="flex items-center gap-2 ml-2">
                 <Link
                   href="/prihlaseni"
+                  prefetch
                   className="px-4 py-1.5 text-sm font-semibold rounded-lg bg-foreground text-background hover:scale-105 transition-transform"
                 >
                   Přihlásit
@@ -229,6 +236,7 @@ export function Navbar({ initialUser }: NavbarProps) {
               <Link
                 key={link.href}
                 href={link.href}
+                prefetch={link.prefetch}
                 onClick={() => setMobileMenuOpen(false)}
                 className={`shrink-0 rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${
                   linkIsActive(link.href)
@@ -250,6 +258,7 @@ export function Navbar({ initialUser }: NavbarProps) {
             <Link
               key={link.href}
               href={link.href}
+              prefetch={link.prefetch}
               onClick={() => setMobileMenuOpen(false)}
               className={`block px-4 py-2 rounded-lg text-sm font-medium ${
                 linkIsActive(link.href) ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted"
@@ -264,6 +273,7 @@ export function Navbar({ initialUser }: NavbarProps) {
                 <div className="px-4 py-2 text-sm text-foreground opacity-70 truncate">{user.email}</div>
                 <Link
                   href="/moje-aktivita"
+                  prefetch
                   onClick={() => setMobileMenuOpen(false)}
                   className="block rounded-lg px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted"
                 >
@@ -271,6 +281,7 @@ export function Navbar({ initialUser }: NavbarProps) {
                 </Link>
                 <Link
                   href="/navrhnout"
+                  prefetch
                   onClick={() => setMobileMenuOpen(false)}
                   className="block rounded-lg px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted"
                 >
@@ -278,6 +289,7 @@ export function Navbar({ initialUser }: NavbarProps) {
                 </Link>
                 <Link
                   href="/moje-aktivita"
+                  prefetch
                   onClick={() => setMobileMenuOpen(false)}
                   className="block rounded-lg px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted"
                 >
@@ -286,6 +298,7 @@ export function Navbar({ initialUser }: NavbarProps) {
                 {isAdmin && (
                   <Link
                     href="/admin"
+                    prefetch
                     onClick={() => setMobileMenuOpen(false)}
                     className="block rounded-lg px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted"
                   >
@@ -302,6 +315,7 @@ export function Navbar({ initialUser }: NavbarProps) {
             ) : (
               <Link
                 href="/prihlaseni"
+                prefetch
                 onClick={() => setMobileMenuOpen(false)}
                 className="block text-center px-4 py-2 text-sm font-semibold rounded-lg bg-foreground text-background"
               >
