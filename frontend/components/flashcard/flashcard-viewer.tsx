@@ -261,7 +261,6 @@ export function FlashcardViewer({
                 <AnswerReveal
                   answerText={getFlashcardAnswerText(question)}
                   extra={typedAnswer.trim() ? `Tvoje odpověď: ${typedAnswer.trim()}` : 'Bez vyplněné odpovědi.'}
-                  onContinue={continueToRating}
                 />
               )}
             </div>
