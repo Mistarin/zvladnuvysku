@@ -181,6 +181,7 @@ export interface Database {
           data: Json
           note: string | null
           proposed_by: string
+          submission_token: string | null
           status: 'pending' | 'approved' | 'rejected'
           rejection_reason: string | null
           reviewed_by: string | null
@@ -189,6 +190,7 @@ export interface Database {
         }
         Insert: Omit<Database['public']['Tables']['subject_proposals']['Row'], 'id' | 'status' | 'rejection_reason' | 'reviewed_by' | 'reviewed_at' | 'created_at'> & {
           status?: 'pending' | 'approved' | 'rejected'
+          submission_token?: string | null
           rejection_reason?: string | null
           reviewed_by?: string | null
           reviewed_at?: string | null

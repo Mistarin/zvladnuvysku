@@ -108,6 +108,7 @@ export async function approveProposal(proposalId: string): Promise<ActionResult>
           title: m.title,
           file_path: m.file_path,
           size_bytes: m.size_bytes,
+          is_approved: true,
           moderation_status: 'approved',
           rejection_reason: null,
         }))
@@ -136,6 +137,7 @@ export async function approveProposal(proposalId: string): Promise<ActionResult>
           title: m.title,
           file_path: m.file_path,
           size_bytes: m.size_bytes,
+          is_approved: true,
           moderation_status: 'approved',
           rejection_reason: null,
         }))
@@ -290,6 +292,7 @@ export async function approveMaterial(materialId: string): Promise<ActionResult>
     const { error } = await supabase
       .from('subject_materials')
       .update({
+        is_approved: true,
         moderation_status: 'approved',
         rejection_reason: null,
         moderated_at: new Date().toISOString(),
@@ -313,6 +316,7 @@ export async function rejectMaterial(materialId: string, reason?: string): Promi
     const { error: dbError } = await supabase
       .from('subject_materials')
       .update({
+        is_approved: false,
         moderation_status: 'rejected',
         rejection_reason: reason?.trim() || null,
         moderated_at: new Date().toISOString(),

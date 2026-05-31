@@ -89,3 +89,8 @@ DROP POLICY IF EXISTS "Uploader čte své materiály" ON subject_materials;
 CREATE POLICY "Uploader čte své materiály"
   ON subject_materials FOR SELECT TO authenticated
   USING ((select auth.uid()) = uploader_id);
+
+DROP POLICY IF EXISTS "Veřejné čtení schválených materiálů" ON subject_materials;
+CREATE POLICY "Veřejné čtení schválených materiálů"
+  ON subject_materials FOR SELECT TO public
+  USING (moderation_status = 'approved');

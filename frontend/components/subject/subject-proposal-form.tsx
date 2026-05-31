@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { Check } from 'lucide-react'
 import {
   getSubjectDetailsForProposal,
   submitSubjectProposal,
@@ -112,6 +113,8 @@ const FIELD_LABELS: Record<string, string> = {
   year: 'Ročník',
 }
 
+const SUBMIT_TIMEOUT_MS = 30000
+
 function FieldLabel({ children, required }: { children: React.ReactNode; required?: boolean }) {
   return (
     <label className="mb-1 block whitespace-nowrap text-xs font-medium text-muted-foreground">
@@ -175,6 +178,7 @@ export function SubjectProposalForm() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [submissionToken, setSubmissionToken] = useState(() => crypto.randomUUID())
 
   const [selectedTeachers, setSelectedTeachers] = useState<{ id?: string, name: string, faculty: string }[]>([])
   const [teacherSearch, setTeacherSearch] = useState('')
@@ -296,6 +300,7 @@ export function SubjectProposalForm() {
     const payload = {
       type,
       subjectId,
+      submissionToken,
       form,
       teachers: selectedTeachers,
       materialFiles: materials.map((file) => ({ name: file.name, size: file.size })),
@@ -305,11 +310,27 @@ export function SubjectProposalForm() {
     formData.set('payload', JSON.stringify(payload))
     materials.forEach((file, index) => formData.set(`material:${index}`, file))
 
-    const result = await submitSubjectProposal(formData)
+    try {
+      const result = await Promise.race([
+        submitSubjectProposal(formData),
+        new Promise<{ success: false; error: string }>((resolve) => {
+          setTimeout(() => {
+            resolve({
+              success: false,
+              error: 'Odeslání trvá příliš dlouho. Zkus to prosím znovu. Pokud nahráváš PDF, ověř, že bucket `study_materials` v Supabase existuje a upload neblokuje RLS.',
+            })
+          }, SUBMIT_TIMEOUT_MS)
+        }),
+      ])
 
-    setIsSubmitting(false)
-    if (!result.success) { setError(result.error); return }
-    setSuccess(true)
+      if (!result.success) { setError(result.error); return }
+      setSuccess(true)
+      setSubmissionToken(crypto.randomUUID())
+    } catch (submitError) {
+      setError(submitError instanceof Error ? submitError.message : 'Nepodařilo se odeslat návrh.')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   if (success) {
@@ -428,7 +449,7 @@ export function SubjectProposalForm() {
           />
         </div>
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 2xl:grid-cols-4">
           <div>
             <FieldLabel>Obtížnost (1–5)</FieldLabel>
             <Input type="number" min={1} max={5} value={form.difficulty} onChange={(e) => set('difficulty', Number(e.target.value))} />
@@ -447,7 +468,7 @@ export function SubjectProposalForm() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 2xl:grid-cols-3">
           <div>
             <FieldLabel>Semestr</FieldLabel>
             <Select value={form.semester} onChange={(e) => set('semester', e.target.value)}>
@@ -462,24 +483,24 @@ export function SubjectProposalForm() {
               {FACULTY_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
             </Select>
           </div>
-          <div className="md:col-span-2 xl:col-span-1">
+          <div className="lg:col-span-2 2xl:col-span-1">
             <FieldLabel>Docházka</FieldLabel>
             <div className="space-y-4">
               <Select value={form.attendance_type} onChange={(e) => set('attendance_type', e.target.value)}>
                 <option value="">– vybrat –</option>
                 {ATTENDANCE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
               </Select>
-              <div className="flex justify-center xl:justify-start">
-                <label className="flex w-full max-w-sm cursor-pointer items-center justify-center gap-3">
+              <div className="flex justify-start">
+                <label className="flex w-full max-w-md cursor-pointer items-center justify-start gap-3">
                   <input
                     type="checkbox"
                     checked={form.exam_from_home}
                     onChange={(e) => set('exam_from_home', e.target.checked)}
                     className="peer sr-only"
                   />
-                  <span className="flex w-full items-center justify-center gap-3 rounded-2xl border-2 border-border bg-background px-5 py-3 transition-all peer-checked:border-emerald-500/30 peer-checked:bg-emerald-500/10">
-                    <span className="flex h-7 w-7 items-center justify-center rounded-full border-2 border-border bg-background text-sm font-bold text-transparent transition-all peer-checked:border-emerald-500 peer-checked:bg-emerald-500 peer-checked:text-white">
-                      ✓
+                  <span className="flex w-full items-center justify-start gap-3 rounded-2xl border-2 border-border bg-background px-5 py-3 text-left transition-all peer-checked:border-emerald-500/30 peer-checked:bg-emerald-500/10">
+                    <span className="flex h-7 w-7 items-center justify-center rounded-full border-2 border-border bg-background text-sm text-transparent transition-all peer-checked:border-emerald-500 peer-checked:bg-emerald-500 peer-checked:text-white">
+                      <Check className="h-4 w-4" strokeWidth={3} />
                     </span>
                     <span className="whitespace-nowrap text-base font-semibold text-foreground">Zkouška z domova</span>
                   </span>

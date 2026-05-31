@@ -12,6 +12,7 @@ CREATE TABLE subjects (
   real_requirements text,                -- Reálné požadavky od studentů
   difficulty smallint CHECK (difficulty BETWEEN 1 AND 5),
   time_intensity smallint CHECK (time_intensity BETWEEN 1 AND 5),
+  attendance_type text CHECK (attendance_type IN ('optional', 'recommended', 'required')),
   attendance_required boolean DEFAULT false,
   credits smallint,
   semester text CHECK (semester IN ('zimní', 'letní', 'oba')),

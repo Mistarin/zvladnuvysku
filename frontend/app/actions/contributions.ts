@@ -9,6 +9,7 @@ type ActionResult = { success: true } | { success: false; error: string }
 type SubjectProposalInput = {
   type: 'new' | 'edit'
   subjectId: string | null
+  submissionToken: string
   form: {
     name: string
     short_tag: string
@@ -85,6 +86,21 @@ type SubjectDetailsResult =
 
 const MAX_PDF_FILE_SIZE = 2 * 1024 * 1024
 
+function sanitizeProposalFilename(filename: string, fallbackExtension = 'pdf') {
+  const trimmed = filename.trim()
+  const extension = trimmed.split('.').pop() || fallbackExtension
+  const baseName = trimmed.replace(/\.[^/.]+$/, '') || 'soubor'
+  const safeBaseName = baseName
+    .normalize('NFKD')
+    .replace(/[^\w\s-]/g, '')
+    .trim()
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .toLowerCase() || 'soubor'
+
+  return `${safeBaseName}.${extension.toLowerCase()}`
+}
+
 function getFileEntry(formData: FormData, key: string) {
   const entry = formData.get(key)
   return entry instanceof File && entry.size > 0 ? entry : null
@@ -107,6 +123,10 @@ export async function submitSubjectProposal(formData: FormData): Promise<ActionR
     return { success: false, error: 'Vyber předmět, který chceš upravit.' }
   }
 
+  if (!payload.submissionToken?.trim()) {
+    return { success: false, error: 'Chybí identifikátor odeslání návrhu.' }
+  }
+
   try {
     const supabase = await createClient()
     const {
@@ -119,7 +139,7 @@ export async function submitSubjectProposal(formData: FormData): Promise<ActionR
 
     const uploadedMaterials: Array<{ title: string; file_path: string; size_bytes: number }> = []
     const uploadedPaths: string[] = []
-    const proposalFilesKey = crypto.randomUUID()
+    const proposalFilesKey = payload.submissionToken.trim()
 
     for (const [index, materialMeta] of payload.materialFiles.entries()) {
       const file = getFileEntry(formData, `material:${index}`)
@@ -133,12 +153,12 @@ export async function submitSubjectProposal(formData: FormData): Promise<ActionR
         return { success: false, error: `Soubor ${materialMeta.name} přesahuje limit 2 MB.` }
       }
 
-      const fileExtension = file.name.split('.').pop() || 'pdf'
-      const filePath = `proposals/${proposalFilesKey}/${crypto.randomUUID()}.${fileExtension}`
+      const safeFilename = sanitizeProposalFilename(file.name)
+      const filePath = `proposals/${proposalFilesKey}/${index}-${safeFilename}`
 
       const { error: uploadError } = await supabase.storage
         .from('study_materials')
-        .upload(filePath, file, { upsert: false })
+        .upload(filePath, file, { upsert: true })
 
       if (uploadError) {
         throw new Error(`Nepodařilo se nahrát soubor ${materialMeta.name}: ${uploadError.message}`)
@@ -170,15 +190,37 @@ export async function submitSubjectProposal(formData: FormData): Promise<ActionR
       materials: uploadedMaterials.length > 0 ? uploadedMaterials : undefined,
     }
 
-    const { error } = await supabase.from('subject_proposals').insert({
+    let { error } = await supabase.from('subject_proposals').insert({
       type: payload.type,
       subject_id: payload.type === 'edit' ? payload.subjectId : null,
       data: proposalData,
       note: payload.form.note || null,
       proposed_by: user.id,
+      submission_token: proposalFilesKey,
     } as never)
 
+    const isLegacySubmissionTokenError =
+      typeof error?.message === 'string' &&
+      (error.message.includes("'submission_token' column of 'subject_proposals'") ||
+        error.message.includes('column "submission_token" of relation "subject_proposals" does not exist'))
+
+    if (isLegacySubmissionTokenError) {
+      const retryResult = await supabase.from('subject_proposals').insert({
+        type: payload.type,
+        subject_id: payload.type === 'edit' ? payload.subjectId : null,
+        data: proposalData,
+        note: payload.form.note || null,
+        proposed_by: user.id,
+      } as never)
+      error = retryResult.error
+    }
+
     if (error) {
+      if (error.code === '23505') {
+        revalidatePath('/admin')
+        revalidatePath('/moje-aktivita')
+        return { success: true }
+      }
       if (uploadedPaths.length > 0) {
         await supabase.storage.from('study_materials').remove(uploadedPaths)
       }
