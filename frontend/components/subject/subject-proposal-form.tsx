@@ -114,7 +114,7 @@ const FIELD_LABELS: Record<string, string> = {
 
 function FieldLabel({ children, required }: { children: React.ReactNode; required?: boolean }) {
   return (
-    <label className="block text-xs font-medium text-muted-foreground mb-1">
+    <label className="mb-1 block whitespace-nowrap text-xs font-medium text-muted-foreground">
       {children}{required && <span className="text-destructive ml-0.5">*</span>}
     </label>
   )
@@ -323,9 +323,9 @@ export function SubjectProposalForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-8">
       {/* Typ návrhu */}
-      <div className="glass-card p-6 space-y-4">
+      <div className="glass-card rounded-[1.75rem] p-7 sm:p-8 space-y-5">
         <h2 className="font-semibold text-foreground">Typ návrhu</h2>
         <div className="flex gap-3">
           {[{ v: 'new' as const, label: 'Nový předmět' }, { v: 'edit' as const, label: 'Úprava existujícího' }].map(({ v, label }) => (
@@ -379,7 +379,7 @@ export function SubjectProposalForm() {
       </div>
 
       {/* Data předmětu */}
-      <div className="glass-card p-6 space-y-4">
+      <div className="glass-card rounded-[1.75rem] p-7 sm:p-8 space-y-5">
         <div>
           <h2 className="font-semibold text-foreground">
             {type === 'new' ? 'Informace o předmětu' : 'Nové/opravené informace'}
@@ -428,7 +428,7 @@ export function SubjectProposalForm() {
           />
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <div>
             <FieldLabel>Obtížnost (1–5)</FieldLabel>
             <Input type="number" min={1} max={5} value={form.difficulty} onChange={(e) => set('difficulty', Number(e.target.value))} />
@@ -447,7 +447,7 @@ export function SubjectProposalForm() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
           <div>
             <FieldLabel>Semestr</FieldLabel>
             <Select value={form.semester} onChange={(e) => set('semester', e.target.value)}>
@@ -462,27 +462,29 @@ export function SubjectProposalForm() {
               {FACULTY_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
             </Select>
           </div>
-          <div>
+          <div className="md:col-span-2 xl:col-span-1">
             <FieldLabel>Docházka</FieldLabel>
-            <div className="space-y-3">
+            <div className="space-y-4">
               <Select value={form.attendance_type} onChange={(e) => set('attendance_type', e.target.value)}>
                 <option value="">– vybrat –</option>
                 {ATTENDANCE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
               </Select>
-              <label className="flex cursor-pointer items-center gap-3 pt-1">
-                <input
-                  type="checkbox"
-                  checked={form.exam_from_home}
-                  onChange={(e) => set('exam_from_home', e.target.checked)}
-                  className="peer sr-only"
-                />
-                <span className="flex items-center gap-2 rounded-full border border-border bg-background px-3 py-1.5 transition-all peer-checked:border-emerald-500/20 peer-checked:bg-emerald-500/10">
-                  <span className="flex h-5 w-5 items-center justify-center rounded-full border border-border bg-background text-[11px] font-bold text-transparent transition-all peer-checked:border-emerald-500 peer-checked:bg-emerald-500 peer-checked:text-white">
-                    ✓
+              <div className="flex justify-center xl:justify-start">
+                <label className="flex w-full max-w-sm cursor-pointer items-center justify-center gap-3">
+                  <input
+                    type="checkbox"
+                    checked={form.exam_from_home}
+                    onChange={(e) => set('exam_from_home', e.target.checked)}
+                    className="peer sr-only"
+                  />
+                  <span className="flex w-full items-center justify-center gap-3 rounded-2xl border-2 border-border bg-background px-5 py-3 transition-all peer-checked:border-emerald-500/30 peer-checked:bg-emerald-500/10">
+                    <span className="flex h-7 w-7 items-center justify-center rounded-full border-2 border-border bg-background text-sm font-bold text-transparent transition-all peer-checked:border-emerald-500 peer-checked:bg-emerald-500 peer-checked:text-white">
+                      ✓
+                    </span>
+                    <span className="whitespace-nowrap text-base font-semibold text-foreground">Zkouška z domova</span>
                   </span>
-                  <span className="text-sm font-medium text-foreground">Zkouška z domova</span>
-                </span>
-              </label>
+                </label>
+              </div>
             </div>
           </div>
         </div>

@@ -14,7 +14,7 @@ export default async function NavrhnoutPage() {
   if (!user) redirect('/prihlaseni')
 
   return (
-    <div className="container mx-auto max-w-2xl px-4 sm:px-6 lg:px-8 py-8">
+    <div className="container mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
       <div className="space-y-2 mb-8">
         <h1 className="text-3xl font-bold text-foreground">Navrhnout předmět</h1>
         <p className="text-muted-foreground">

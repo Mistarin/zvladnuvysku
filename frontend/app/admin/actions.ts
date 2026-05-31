@@ -168,22 +168,41 @@ export async function approveProposal(proposalId: string): Promise<ActionResult>
 export async function rejectProposal(proposalId: string, reason?: string): Promise<ActionResult> {
   try {
     const { supabase, userId } = await getAdminClient()
+    const basePayload = {
+      status: 'rejected',
+      reviewed_by: userId,
+      reviewed_at: new Date().toISOString(),
+    }
+    const extendedPayload = {
+      ...basePayload,
+      rejection_reason: reason?.trim() || null,
+    }
 
-    const { error } = await (supabase as unknown as {
+    const proposalsTable = (supabase as unknown as {
       from: (t: string) => {
         update: (d: unknown) => {
           eq: (k: string, v: string) => Promise<{ error: unknown }>
         }
       }
-    })
-      .from('subject_proposals')
-      .update({
-        status: 'rejected',
-        rejection_reason: reason?.trim() || null,
-        reviewed_by: userId,
-        reviewed_at: new Date().toISOString(),
-      })
+    }).from('subject_proposals')
+
+    let { error } = await proposalsTable
+      .update(extendedPayload)
       .eq('id', proposalId)
+
+    const isLegacySchemaError =
+      typeof error === 'object' &&
+      error &&
+      'message' in error &&
+      typeof error.message === 'string' &&
+      error.message.includes("'rejection_reason' column of 'subject_proposals'")
+
+    if (isLegacySchemaError) {
+      const retryResult = await proposalsTable
+        .update(basePayload)
+        .eq('id', proposalId)
+      error = retryResult.error
+    }
 
     if (error) {
       console.error('Reject error:', error)

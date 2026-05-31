@@ -25,6 +25,30 @@ const FIELD_LABELS: Record<string, string> = {
   credits: 'Kredity', semester: 'Semestr', faculty: 'Fakulta', year: 'Ročník',
 }
 
+function formatProposalValue(value: unknown): string {
+  if (typeof value === 'boolean') return value ? 'Ano' : 'Ne'
+  if (typeof value === 'string' || typeof value === 'number') return String(value)
+  if (Array.isArray(value)) {
+    return value
+      .map((item) => {
+        if (typeof item === 'string' || typeof item === 'number') return String(item)
+        if (item && typeof item === 'object') {
+          const record = item as Record<string, unknown>
+          return record.name || record.title || record.short_tag
+            ? [record.name, record.title, record.short_tag].filter(Boolean).join(' · ')
+            : JSON.stringify(item)
+        }
+        return String(item)
+      })
+      .join('\n')
+  }
+  if (value && typeof value === 'object') {
+    const record = value as Record<string, unknown>
+    return JSON.stringify(record, null, 2)
+  }
+  return String(value)
+}
+
 interface ProposalCardProps {
   proposal: SubjectProposal
   currentSubjectData?: Record<string, unknown> | null
@@ -101,16 +125,18 @@ export function ProposalCard({ proposal, currentSubjectData }: ProposalCardProps
           const label = FIELD_LABELS[key] ?? key
           const current = currentSubjectData?.[key]
           const changed = proposal.type === 'edit' && current !== undefined && current !== value
+          const formattedValue = formatProposalValue(value)
+          const formattedCurrent = changed ? formatProposalValue(current) : null
 
           return (
-            <div key={key} className={`flex gap-2 text-sm rounded-lg px-3 py-2 ${changed ? 'bg-amber-500/10 border border-amber-500/20' : 'bg-muted/50'}`}>
+            <div key={key} className={`flex flex-col gap-2 rounded-lg px-3 py-3 text-sm ${changed ? 'bg-amber-500/10 border border-amber-500/20' : 'bg-muted/50'}`}>
               <span className="flex items-center gap-1 text-xs font-medium text-muted-foreground min-w-[130px]">
                 <Tag className="w-3 h-3" /> {label}
               </span>
               <div className="flex-1 space-y-0.5">
-                <span className="text-foreground">{String(value)}</span>
-                {changed && (
-                  <div className="text-xs text-muted-foreground line-through">{String(current)}</div>
+                <div className="whitespace-pre-wrap break-words text-foreground">{formattedValue}</div>
+                {changed && formattedCurrent && (
+                  <div className="whitespace-pre-wrap break-words text-xs text-muted-foreground line-through">{formattedCurrent}</div>
                 )}
               </div>
             </div>
