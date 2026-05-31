@@ -27,8 +27,7 @@ export default async function NovyBalicekPage({ searchParams }: PageProps) {
   let initialSubject: DeckSubjectRef | null = null
 
   if (subject) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data } = await (supabase as any)
+    const { data } = await supabase
       .from('subjects')
       .select('id, slug, name, short_tag, faculty')
       .eq('slug', subject)

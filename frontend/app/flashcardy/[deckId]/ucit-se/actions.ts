@@ -3,7 +3,7 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { calculateNextReview, type SM2Result } from '@/lib/sm2'
-import type { CardProgress } from '@/lib/types/database'
+import type { CardProgress, Database } from '@/lib/types/database'
 
 export async function saveCardReview(
   cardId: string,
@@ -34,7 +34,7 @@ export async function saveCardReview(
 
   const result = calculateNextReview(quality, easeFactor, intervalDays, repetitions)
 
-  const upsertData = {
+  const upsertData: Database['public']['Tables']['card_progress']['Insert'] = {
     user_id: user.id,
     card_id: cardId,
     ease_factor: result.nextEaseFactor,
@@ -45,8 +45,7 @@ export async function saveCardReview(
     last_reviewed_at: new Date().toISOString(),
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  await (supabase.from('card_progress') as any).upsert(upsertData, { onConflict: 'user_id,card_id' })
+  await supabase.from('card_progress').upsert(upsertData as never, { onConflict: 'user_id,card_id' })
 
   return result
 }

@@ -9,21 +9,6 @@ import {
 import { getSubjectCache, searchInCache, type SubjectCacheEntry } from '@/lib/subject-cache'
 import { getTeacherCache, searchTeachersInCache, type TeacherCacheEntry } from '@/lib/teacher-cache'
 
-// NOTE: Run this SQL in Supabase before using this form:
-// CREATE TABLE subject_proposals (
-//   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-//   type text NOT NULL CHECK (type IN ('new', 'edit')),
-//   subject_id uuid REFERENCES subjects(id),
-//   data jsonb NOT NULL DEFAULT '{}',
-//   note text,
-//   proposed_by uuid NOT NULL REFERENCES auth.users(id),
-//   status text NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected')),
-//   rejection_reason text,
-//   reviewed_by uuid REFERENCES auth.users(id),
-//   reviewed_at timestamptz,
-//   created_at timestamptz NOT NULL DEFAULT now()
-// );
-
 interface SubjectSearchResult {
   id: string
   name: string

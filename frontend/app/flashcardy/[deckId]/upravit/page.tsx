@@ -13,8 +13,7 @@ interface PageProps {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { deckId } = await params
   const supabase = await createClient()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data } = await (supabase as any).from('flashcard_decks').select('title').eq('id', deckId).single()
+  const { data } = await supabase.from('flashcard_decks').select('title').eq('id', deckId).single()
   return { title: `Upravit — ${(data as { title: string } | null)?.title ?? 'Balíček'}` }
 }
 
@@ -49,8 +48,7 @@ export default async function UpravitBalicekPage({ params }: PageProps) {
 
   let initialSubject: DeckSubjectRef | null = null
   if (flashcardDeck.subject_id) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: subject } = await (supabase as any)
+    const { data: subject } = await supabase
       .from('subjects')
       .select('id, slug, name, short_tag, faculty')
       .eq('id', flashcardDeck.subject_id)

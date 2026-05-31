@@ -190,7 +190,7 @@ export async function submitSubjectProposal(formData: FormData): Promise<ActionR
       materials: uploadedMaterials.length > 0 ? uploadedMaterials : undefined,
     }
 
-    let { error } = await supabase.from('subject_proposals').insert({
+    const { error } = await supabase.from('subject_proposals').insert({
       type: payload.type,
       subject_id: payload.type === 'edit' ? payload.subjectId : null,
       data: proposalData,
@@ -198,22 +198,6 @@ export async function submitSubjectProposal(formData: FormData): Promise<ActionR
       proposed_by: user.id,
       submission_token: proposalFilesKey,
     } as never)
-
-    const isLegacySubmissionTokenError =
-      typeof error?.message === 'string' &&
-      (error.message.includes("'submission_token' column of 'subject_proposals'") ||
-        error.message.includes('column "submission_token" of relation "subject_proposals" does not exist'))
-
-    if (isLegacySubmissionTokenError) {
-      const retryResult = await supabase.from('subject_proposals').insert({
-        type: payload.type,
-        subject_id: payload.type === 'edit' ? payload.subjectId : null,
-        data: proposalData,
-        note: payload.form.note || null,
-        proposed_by: user.id,
-      } as never)
-      error = retryResult.error
-    }
 
     if (error) {
       if (error.code === '23505') {

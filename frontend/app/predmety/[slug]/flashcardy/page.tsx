@@ -36,9 +36,7 @@ export default async function SubjectFlashcardyPage({ params }: PageProps) {
   const { slug } = await params
   const supabase = await createClient()
 
-  // Fetch subject — cast needed due to Database type structure
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: subjectRaw, error } = await (supabase as any)
+  const { data: subjectRaw, error } = await supabase
     .from('subjects')
     .select('id, name, slug')
     .eq('slug', slug)
@@ -52,9 +50,7 @@ export default async function SubjectFlashcardyPage({ params }: PageProps) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  // Fetch public decks for this subject
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: decksRaw } = await (supabase as any)
+  const { data: decksRaw } = await supabase
     .from('flashcard_decks')
     .select('*')
     .eq('subject_id', subject.id)
@@ -68,8 +64,7 @@ export default async function SubjectFlashcardyPage({ params }: PageProps) {
   if (user && flashcardDecks.length > 0) {
     const deckIds = flashcardDecks.map((d) => d.id)
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: cardsRaw } = await (supabase as any)
+    const { data: cardsRaw } = await supabase
       .from('flashcards')
       .select('id, deck_id')
       .in('deck_id', deckIds)
@@ -80,8 +75,7 @@ export default async function SubjectFlashcardyPage({ params }: PageProps) {
       const allCardIds = cards.map((c) => c.id)
       const today = new Date().toISOString()
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data: progressRaw } = await (supabase as any)
+      const { data: progressRaw } = await supabase
         .from('card_progress')
         .select('card_id')
         .eq('user_id', user.id)
