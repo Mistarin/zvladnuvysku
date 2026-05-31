@@ -97,11 +97,15 @@ export interface Database {
           usefulness: number | null
           workload: number | null
           overall: number
+          overall_rating: number | null
           comment: string | null
           comment_is_approved: boolean | null
           created_at: string
         }
-        Insert: Omit<Database['public']['Tables']['subject_ratings']['Row'], 'id' | 'created_at' | 'comment_is_approved'> & { comment_is_approved?: boolean | null }
+        Insert: Omit<Database['public']['Tables']['subject_ratings']['Row'], 'id' | 'created_at' | 'comment_is_approved' | 'overall_rating'> & {
+          comment_is_approved?: boolean | null
+          overall_rating?: number | null
+        }
         Update: Partial<Database['public']['Tables']['subject_ratings']['Insert']>
       }
       subject_rating_stats: {
