@@ -130,7 +130,7 @@ export function FlashcardViewer({
                 </p>
               </div>
             ) : (
-              <AnswerReveal answerText={getFlashcardAnswerText(question)} onContinue={continueToRating} />
+              <AnswerReveal answerText={getFlashcardAnswerText(question)} />
             )}
           </>
         )}
@@ -269,7 +269,7 @@ export function FlashcardViewer({
         )}
       </div>
 
-      {stage === 'rating' && (
+      {(stage === 'rating' || (question.question_type === 'classic_flashcard' && stage === 'revealed')) && (
         <div className="w-full animate-slide-up">
           <p className="text-center text-sm text-muted-foreground mb-3">Jak dobře jste si vzpomněli?</p>
           <div className="grid grid-cols-3 gap-3">
@@ -299,11 +299,9 @@ function getQuestionTypeTitle(question: FlashcardQuestion): string {
 function AnswerReveal({
   answerText,
   extra,
-  onContinue,
 }: {
   answerText: string
   extra?: string
-  onContinue: () => void
 }) {
   return (
     <div className="space-y-4">
@@ -311,15 +309,6 @@ function AnswerReveal({
         <span className="text-xs font-semibold text-primary/70 uppercase tracking-wider">Správná odpověď</span>
         <p className="text-lg text-foreground leading-relaxed whitespace-pre-wrap">{answerText}</p>
         {extra && <p className="text-sm text-muted-foreground">{extra}</p>}
-      </div>
-      <div className="flex justify-end">
-        <button
-          type="button"
-          onClick={onContinue}
-          className="px-5 py-2.5 rounded-xl font-medium border border-border bg-card hover:bg-muted transition-colors"
-        >
-          Pokračovat na self-check
-        </button>
       </div>
     </div>
   )
