@@ -281,6 +281,20 @@ export interface Database {
           next_level_xp: number
         }[]
       }
+      get_public_profile_subject_proposals: {
+        Args: {
+          profile_user_id: string
+          entry_limit?: number
+        }
+        Returns: {
+          proposal_id: string
+          proposal_type: string
+          created_at: string
+          subject_name: string
+          subject_short_tag: string | null
+          subject_slug: string | null
+        }[]
+      }
     }
     Enums: Record<string, never>
   }

@@ -5,6 +5,7 @@ import { useMemo, useState, useTransition } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { Loader2, PencilLine, Trophy, X } from "lucide-react";
 import { upsertDisplayName } from "@/app/actions/hall-of-fame";
+import { getPublicProfilePath } from "@/lib/public-profile";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type {
@@ -154,7 +155,7 @@ function LeaderboardRow({ entry, index }: { entry: HallOfFameRow; index: number 
 
   return (
     <Link
-      href={`/profil/${entry.user_id}`}
+      href={getPublicProfilePath(entry.user_id)}
       className="grid gap-4 rounded-3xl border border-border/60 bg-background/75 px-4 py-4 shadow-sm transition-colors hover:border-primary/40 hover:bg-background sm:grid-cols-[auto_1fr_auto] sm:items-center sm:px-5"
     >
       <div className="flex items-center gap-3">

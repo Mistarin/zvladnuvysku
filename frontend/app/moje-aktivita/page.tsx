@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { getPublicProfilePath } from "@/lib/public-profile";
 import { createClient } from "@/lib/supabase/server";
 import type { Feedback, FlashcardDeck, Profile, SubjectMaterial, SubjectProposalRecord } from "@/lib/types/database";
 
@@ -27,7 +28,8 @@ export default async function MyActivityPage() {
     .select("display_name")
     .eq("user_id", user.id)
     .maybeSingle();
-  const hasDisplayName = Boolean(profile?.display_name?.trim());
+  const typedProfile = profile as Pick<Profile, "display_name"> | null;
+  const hasDisplayName = Boolean(typedProfile?.display_name?.trim());
 
   return (
     <div className="container mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
@@ -39,7 +41,7 @@ export default async function MyActivityPage() {
           </p>
         </div>
         <Link
-          href={hasDisplayName ? `/profil/${user.id}` : "/#hall-of-fame"}
+          href={hasDisplayName ? getPublicProfilePath(user.id) : "/#hall-of-fame"}
           className="inline-flex items-center justify-center rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted"
         >
           {hasDisplayName ? "Otevřít veřejný profil" : "Upravit Hall of Fame profil"}
