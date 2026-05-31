@@ -2,8 +2,6 @@ import type { Flashcard, Json } from "@/lib/types/database";
 
 export const FLASHCARD_MEDIA_BUCKET = "flashcard_media";
 export const FLASHCARD_MEDIA_PREFIX = "questions";
-export const LEGACY_FLASHCARD_MEDIA_BUCKET = "study_materials";
-export const LEGACY_FLASHCARD_MEDIA_PREFIX = "flashcard-media";
 
 export type FlashcardQuestionType =
   | "classic_flashcard"
@@ -197,9 +195,7 @@ export function getFlashcardMediaUrl(mediaPath: string | null): string | null {
 }
 
 export function getFlashcardMediaBucket(mediaPath: string | null | undefined): string {
-  if (typeof mediaPath === "string" && mediaPath.startsWith(`${LEGACY_FLASHCARD_MEDIA_PREFIX}/`)) {
-    return LEGACY_FLASHCARD_MEDIA_BUCKET;
-  }
+  void mediaPath;
   return FLASHCARD_MEDIA_BUCKET;
 }
 

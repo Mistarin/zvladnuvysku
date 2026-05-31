@@ -22,6 +22,13 @@ export default async function MyActivityPage() {
     redirect("/prihlaseni");
   }
 
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("display_name")
+    .eq("user_id", user.id)
+    .maybeSingle();
+  const hasDisplayName = Boolean(profile?.display_name?.trim());
+
   return (
     <div className="container mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
       <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
@@ -32,10 +39,10 @@ export default async function MyActivityPage() {
           </p>
         </div>
         <Link
-          href="/#hall-of-fame"
+          href={hasDisplayName ? `/profil/${user.id}` : "/#hall-of-fame"}
           className="inline-flex items-center justify-center rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted"
         >
-          Upravit Hall of Fame profil
+          {hasDisplayName ? "Otevřít veřejný profil" : "Upravit Hall of Fame profil"}
         </Link>
       </div>
 

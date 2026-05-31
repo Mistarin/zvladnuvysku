@@ -43,7 +43,6 @@ const SEMESTER_LABELS: Record<string, string> = {
 
 type TeacherStats = {
   avg_rating: number | null;
-  rating_count?: number | null;
   total_ratings?: number | null;
 };
 
@@ -57,14 +56,14 @@ type SubjectTeacherJoinRow = {
 
 type SubjectMaterialListItem = Pick<
   Database["public"]["Tables"]["subject_materials"]["Row"],
-  "id" | "title" | "file_path" | "size_bytes" | "created_at" | "is_approved"
+  "id" | "title" | "file_path" | "size_bytes" | "created_at"
 >;
 
 type SubjectComment = Pick<
   Database["public"]["Tables"]["subject_ratings"]["Row"],
   "id" | "created_at" | "comment"
 > & {
-  overall_rating: number | null;
+  overall: number | null;
 };
 
 export default async function PredmetDetailPage({ params }: PageProps) {
@@ -164,7 +163,7 @@ async function SubjectRatingsSection({
   const [{ data: rawRatings }, { data: ratingStatsData }] = await Promise.all([
     supabase
       .from("subject_ratings")
-      .select("id, overall_rating, comment, created_at")
+      .select("id, overall, comment, created_at")
       .eq("subject_id", subject.id)
       .eq("comment_is_approved", true)
       .not("comment", "is", null)
@@ -202,7 +201,7 @@ async function SubjectRatingsSection({
                     <span className="text-xs text-muted-foreground">•</span>
                     <span className="text-xs text-muted-foreground">{new Date(rating.created_at).toLocaleDateString("cs-CZ")}</span>
                   </div>
-                  {rating.overall_rating && <div className="text-sm font-bold text-amber-500">{rating.overall_rating}/5 ★</div>}
+                  {rating.overall && <div className="text-sm font-bold text-amber-500">{rating.overall}/5 ★</div>}
                 </div>
                 <p className="text-sm italic leading-relaxed text-foreground/90">&ldquo;{rating.comment}&rdquo;</p>
                 <div className="pt-2">
@@ -230,7 +229,7 @@ async function SubjectSidebarSection({
   const [{ data: stData }, { count: deckCount }] = await Promise.all([
     supabase
       .from("subject_teachers")
-      .select("teachers(id, slug, name, faculty, teacher_rating_stats(avg_rating, rating_count))")
+      .select("teachers(id, slug, name, faculty, teacher_rating_stats(avg_rating, total_ratings))")
       .eq("subject_id", subjectId),
     supabase.from("flashcard_decks").select("*", { count: "exact", head: true }).eq("subject_id", subjectId).eq("is_public", true),
   ]);
@@ -249,7 +248,7 @@ async function SubjectSidebarSection({
             {teachers.map((teacher) => {
               const stats = Array.isArray(teacher.teacher_rating_stats) ? teacher.teacher_rating_stats[0] : teacher.teacher_rating_stats;
               const avgRating = stats?.avg_rating;
-              const ratingCount = stats?.rating_count ?? stats?.total_ratings ?? 0;
+              const ratingCount = stats?.total_ratings ?? 0;
               return (
                 <div key={teacher.id} className="flex flex-col gap-2 rounded-xl border border-border bg-card p-4 shadow-sm">
                   <Link href={`/ucitele/${teacher.slug}`} className="group flex flex-col">
@@ -319,9 +318,9 @@ async function SubjectMaterialsSection({
   const supabase = await createClient();
   const { data: materialsData, error } = await supabase
     .from("subject_materials")
-    .select("id, title, file_path, size_bytes, created_at, is_approved")
+    .select("id, title, file_path, size_bytes, created_at")
     .eq("subject_id", subject.id)
-    .eq("is_approved", true)
+    .eq("moderation_status", "approved")
     .order("created_at", { ascending: false });
 
   if (error) {

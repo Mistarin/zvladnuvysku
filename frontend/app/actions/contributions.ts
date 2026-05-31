@@ -249,7 +249,6 @@ export async function uploadSubjectMaterial(formData: FormData): Promise<ActionR
       file_path: uploadData.path,
       size_bytes: file.size,
       moderation_status: 'pending',
-      is_approved: false,
       rejection_reason: null,
     }
 

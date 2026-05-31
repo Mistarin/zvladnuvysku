@@ -51,7 +51,7 @@ const getCachedMaterialSearch = unstable_cache(
     let request = supabase
       .from('subject_materials')
       .select('id, title, file_path, size_bytes, created_at, subject:subject_id(name, slug, short_tag)')
-      .eq('is_approved', true)
+      .eq('moderation_status', 'approved')
       .order('created_at', { ascending: false })
       .limit(8)
 

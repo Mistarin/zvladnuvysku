@@ -264,6 +264,23 @@ export interface Database {
           subject_count: number
         }[]
       }
+      get_public_profile_stats: {
+        Args: {
+          profile_user_id: string
+        }
+        Returns: {
+          flashcard_count: number
+          material_count: number
+          subject_count: number
+          subject_comment_count: number
+          teacher_review_count: number
+          approved_score: number
+          total_xp: number
+          level: number
+          level_progress_xp: number
+          next_level_xp: number
+        }[]
+      }
     }
     Enums: Record<string, never>
   }

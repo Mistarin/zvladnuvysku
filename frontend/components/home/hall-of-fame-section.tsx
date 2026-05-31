@@ -153,7 +153,10 @@ function LeaderboardRow({ entry, index }: { entry: HallOfFameRow; index: number 
   }, [index]);
 
   return (
-    <div className="grid gap-4 rounded-3xl border border-border/60 bg-background/75 px-4 py-4 shadow-sm sm:grid-cols-[auto_1fr_auto] sm:items-center sm:px-5">
+    <Link
+      href={`/profil/${entry.user_id}`}
+      className="grid gap-4 rounded-3xl border border-border/60 bg-background/75 px-4 py-4 shadow-sm transition-colors hover:border-primary/40 hover:bg-background sm:grid-cols-[auto_1fr_auto] sm:items-center sm:px-5"
+    >
       <div className="flex items-center gap-3">
         <div className="flex size-12 items-center justify-center rounded-2xl bg-muted text-base font-semibold text-foreground">
           {medal ?? `#${index + 1}`}
@@ -178,7 +181,7 @@ function LeaderboardRow({ entry, index }: { entry: HallOfFameRow; index: number 
           score
         </p>
       </div>
-    </div>
+    </Link>
   );
 }
 

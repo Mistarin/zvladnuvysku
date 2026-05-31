@@ -168,7 +168,7 @@ async function AdminQueuesSection({
     id: string;
     comment: string | null;
     created_at: string;
-    overall_rating: number | null;
+    overall: number | null;
     subject: Pick<Database["public"]["Tables"]["subjects"]["Row"], "name" | "faculty"> | null;
   };
   type TeacherCommentQueueItem = {
@@ -239,7 +239,7 @@ async function AdminQueuesSection({
   const filteredFeedback = unresolvedFeedback.filter((feedback) => matchesQuery(feedback.message, feedback.source_label, feedback.source_type, feedback.type));
 
   const unapprovedComments = [
-    ...unapprovedSubjectRatings.map((r) => ({ id: r.id, type: "subject" as const, comment: r.comment ?? "", created_at: r.created_at, targetName: r.subject?.name || "Neznámý předmět", overall_rating: r.overall_rating })),
+    ...unapprovedSubjectRatings.map((r) => ({ id: r.id, type: "subject" as const, comment: r.comment ?? "", created_at: r.created_at, targetName: r.subject?.name || "Neznámý předmět", overall_rating: r.overall })),
     ...unapprovedTeacherRatings.map((r) => ({ id: r.id, type: "teacher" as const, comment: r.review ?? "", created_at: r.created_at, targetName: r.teacher?.name || "Neznámý učitel", overall_rating: r.rating })),
   ].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
 
