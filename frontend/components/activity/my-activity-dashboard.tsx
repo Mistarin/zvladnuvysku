@@ -4,6 +4,7 @@ import { type ReactNode, useMemo, useState, useTransition } from 'react'
 import Link from 'next/link'
 import { AlertCircle, BookOpen, CheckCircle2, ChevronDown, ChevronUp, Clock3, Loader2, UserCircle2 } from 'lucide-react'
 import { markActivityItemRead, markActivityItemUnread } from '@/app/actions/activity'
+import { deletePendingSubjectProposal } from '@/app/actions/contributions'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
@@ -38,16 +39,33 @@ export type ActivityAttention = {
   acknowledged: boolean
 }
 
+export type ActivityAction =
+  | {
+      type: 'link'
+      href: string
+      label: string
+    }
+  | {
+      type: 'deletePendingProposal'
+      proposalId: string
+      label: string
+    }
+
 export type ActivityCardData = {
   id: string
   title: string
   subtitle?: string
   supportingText?: string
+  subjectFilter?: {
+    key: string
+    label: string
+  }
   link?: ActivityLink
   badges: ActivityBadge[]
   meta: ActivityMeta[]
   body?: string
   panels?: ActivityPanel[]
+  actions?: ActivityAction[]
   attention?: ActivityAttention
 }
 
@@ -89,6 +107,7 @@ export function MyActivityDashboard({ displayName, sections: initialSections }: 
   const [activeTabs, setActiveTabs] = useState<Record<string, string>>(() =>
     Object.fromEntries(initialSections.map((section) => [section.id, getInitialTabId(section)])),
   )
+  const [subjectFilters, setSubjectFilters] = useState<Record<string, string>>({})
   const [error, setError] = useState<string | null>(null)
   const [pendingKey, setPendingKey] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
@@ -120,6 +139,29 @@ export function MyActivityDashboard({ displayName, sections: initialSections }: 
     })
   }
 
+  const handleDeletePendingProposal = (proposalId: string) => {
+    if (!window.confirm('Opravdu chceš smazat tento čekající návrh?')) {
+      return
+    }
+
+    const itemKey = `delete-subject-proposal:${proposalId}`
+    const previousSections = sections
+    setError(null)
+    setPendingKey(itemKey)
+    setSections((currentSections) => removeActivityCard(currentSections, `proposal-${proposalId}`))
+
+    startTransition(async () => {
+      const result = await deletePendingSubjectProposal(proposalId)
+
+      if (!result.success) {
+        setSections(previousSections)
+        setError(result.error)
+      }
+
+      setPendingKey((currentKey) => (currentKey === itemKey ? null : currentKey))
+    })
+  }
+
   return (
     <div className="space-y-8">
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
@@ -142,8 +184,13 @@ export function MyActivityDashboard({ displayName, sections: initialSections }: 
           return null
         }
 
-        const visibleItems = activeTab.items.slice(0, 3)
-        const olderItems = activeTab.items.slice(3)
+        const subjectOptions = getSectionSubjectOptions(section)
+        const selectedSubject = subjectFilters[section.id] ?? ''
+        const filteredActiveItems = selectedSubject
+          ? activeTab.items.filter((item) => item.subjectFilter?.key === selectedSubject)
+          : activeTab.items
+        const visibleItems = filteredActiveItems.slice(0, 3)
+        const olderItems = filteredActiveItems.slice(3)
         const expandKey = `${section.id}:${activeTab.id}`
         const isExpanded = expandedTabs[expandKey] ?? false
 
@@ -192,7 +239,28 @@ export function MyActivityDashboard({ displayName, sections: initialSections }: 
               </div>
 
               <div className="mt-4 border-t border-border/70 pt-4">
-                <p className="mb-4 text-sm text-muted-foreground">{activeTab.description}</p>
+                <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <p className="text-sm text-muted-foreground">{activeTab.description}</p>
+                  {subjectOptions.length > 1 ? (
+                    <select
+                      value={selectedSubject}
+                      onChange={(event) =>
+                        setSubjectFilters((current) => ({
+                          ...current,
+                          [section.id]: event.target.value,
+                        }))
+                      }
+                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary/40 focus:ring-1 focus:ring-primary/40 sm:w-64"
+                    >
+                      <option value="">Všechny předměty</option>
+                      {subjectOptions.map((subject) => (
+                        <option key={subject.key} value={subject.key}>
+                          {subject.label}
+                        </option>
+                      ))}
+                    </select>
+                  ) : null}
+                </div>
 
                 {visibleItems.length > 0 ? (
                   <div className="space-y-3">
@@ -200,8 +268,9 @@ export function MyActivityDashboard({ displayName, sections: initialSections }: 
                       <ActivityCard
                         key={item.id}
                         item={item}
-                        isPending={isPending && pendingKey === (item.attention ? getAttentionKey(item.attention) : null)}
+                        pendingKey={isPending ? pendingKey : null}
                         onAttentionToggle={handleAttentionToggle}
+                        onDeletePendingProposal={handleDeletePendingProposal}
                       />
                     ))}
 
@@ -227,8 +296,9 @@ export function MyActivityDashboard({ displayName, sections: initialSections }: 
                               <ActivityCard
                                 key={item.id}
                                 item={item}
-                                isPending={isPending && pendingKey === (item.attention ? getAttentionKey(item.attention) : null)}
+                                pendingKey={isPending ? pendingKey : null}
                                 onAttentionToggle={handleAttentionToggle}
+                                onDeletePendingProposal={handleDeletePendingProposal}
                               />
                             ))}
                           </div>
@@ -238,7 +308,7 @@ export function MyActivityDashboard({ displayName, sections: initialSections }: 
                   </div>
                 ) : (
                   <div className="rounded-2xl border border-dashed border-border bg-background/40 px-4 py-8 text-center text-sm text-muted-foreground">
-                    {activeTab.empty}
+                    {selectedSubject ? 'Pro vybraný předmět tu nic není.' : activeTab.empty}
                   </div>
                 )}
               </div>
@@ -247,6 +317,22 @@ export function MyActivityDashboard({ displayName, sections: initialSections }: 
         )
       })}
     </div>
+  )
+}
+
+function getSectionSubjectOptions(section: ActivitySectionData) {
+  const subjects = new Map<string, string>()
+
+  for (const tab of section.tabs) {
+    for (const item of tab.items) {
+      if (item.subjectFilter) {
+        subjects.set(item.subjectFilter.key, item.subjectFilter.label)
+      }
+    }
+  }
+
+  return Array.from(subjects, ([key, label]) => ({ key, label })).sort((left, right) =>
+    left.label.localeCompare(right.label, 'cs'),
   )
 }
 
@@ -267,13 +353,17 @@ function SummaryCard({ card }: { card: SummaryCardData }) {
 
 function ActivityCard({
   item,
-  isPending,
+  pendingKey,
   onAttentionToggle,
+  onDeletePendingProposal,
 }: {
   item: ActivityCardData
-  isPending: boolean
+  pendingKey: string | null
   onAttentionToggle: (attention: ActivityAttention) => void
+  onDeletePendingProposal: (proposalId: string) => void
 }) {
+  const attentionPending = Boolean(item.attention && pendingKey === getAttentionKey(item.attention))
+
   return (
     <div className={cn('rounded-2xl border border-border bg-background/70 p-4', item.attention?.acknowledged ? 'opacity-75' : null)}>
       <div className="flex flex-col gap-3">
@@ -358,16 +448,50 @@ function ActivityCard({
           </div>
         ) : null}
 
+        {item.actions?.length ? (
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            {item.actions.map((action) => {
+              if (action.type === 'link') {
+                return (
+                  <Link
+                    key={`${item.id}-${action.href}`}
+                    href={action.href}
+                    className="inline-flex h-7 items-center justify-center rounded-lg border border-border bg-background px-2.5 text-[0.8rem] font-medium transition-colors hover:bg-muted hover:text-foreground"
+                  >
+                    {action.label}
+                  </Link>
+                )
+              }
+
+              const deletePending = pendingKey === `delete-subject-proposal:${action.proposalId}`
+              return (
+                <Button
+                  key={`${item.id}-${action.proposalId}`}
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={deletePending}
+                  onClick={() => onDeletePendingProposal(action.proposalId)}
+                  className="border-destructive/30 text-destructive hover:bg-destructive/10"
+                >
+                  {deletePending ? <Loader2 className="size-4 animate-spin" /> : null}
+                  {action.label}
+                </Button>
+              )
+            })}
+          </div>
+        ) : null}
+
         {item.attention ? (
           <div className="flex items-center justify-end">
             <Button
               type="button"
               variant={item.attention.acknowledged ? 'ghost' : 'outline'}
               size="sm"
-              disabled={isPending}
+              disabled={attentionPending}
               onClick={() => onAttentionToggle(item.attention!)}
             >
-              {isPending ? <Loader2 className="size-4 animate-spin" /> : null}
+              {attentionPending ? <Loader2 className="size-4 animate-spin" /> : null}
               {item.attention.acknowledged ? 'Vrátit do pozornosti' : 'Označit jako přečtené'}
             </Button>
           </div>
@@ -479,6 +603,16 @@ function patchAcknowledgedState(
           ? { ...item, attention: { ...item.attention, acknowledged } }
           : item
       }),
+    })),
+  }))
+}
+
+function removeActivityCard(sections: ActivitySectionData[], cardId: string) {
+  return sections.map((section) => ({
+    ...section,
+    tabs: section.tabs.map((tab) => ({
+      ...tab,
+      items: tab.items.filter((item) => item.id !== cardId),
     })),
   }))
 }

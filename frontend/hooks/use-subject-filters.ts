@@ -23,7 +23,7 @@ export interface FilterConfig {
 export const FILTER_CONFIG: FilterConfig[] = [
   {
     key: 'timeIntensityMax',
-    label: 'Max. Náročnost',
+    label: 'Náročnost do',
     type: 'slider',
     min: 1,
     max: 5,

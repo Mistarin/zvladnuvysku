@@ -22,7 +22,7 @@ interface TeacherSearchResult {
   faculty: string
 }
 
-interface SubjectDetails {
+export interface SubjectDetails {
   name: string | null
   short_tag: string | null
   description: string | null
@@ -163,13 +163,46 @@ function formatDiffValue(value: string | number | boolean | null | undefined) {
 
 interface SubjectProposalFormProps {
   hasDisplayName: boolean
+  initialProposal?: InitialSubjectProposal | null
 }
 
-export function SubjectProposalForm({ hasDisplayName: initialHasDisplayName }: SubjectProposalFormProps) {
-  const [type, setType] = useState<'new' | 'edit'>('new')
-  const [subjectSearch, setSubjectSearch] = useState('')
-  const [subjectId, setSubjectId] = useState<string | null>(null)
-  const [originalSubject, setOriginalSubject] = useState<SubjectDetails | null>(null)
+export type InitialSubjectProposal = {
+  id: string
+  type: 'new' | 'edit'
+  subjectId: string | null
+  subjectLabel: string
+  form: Partial<typeof DEFAULT_FORM>
+  teachers: Array<{ id?: string; name: string; faculty?: string | null }>
+  originalSubject?: SubjectDetails | null
+}
+
+function getInitialForm(initialProposal?: InitialSubjectProposal | null) {
+  if (!initialProposal) {
+    return DEFAULT_FORM
+  }
+
+  return {
+    ...DEFAULT_FORM,
+    ...initialProposal.form,
+    difficulty: Number(initialProposal.form.difficulty ?? DEFAULT_FORM.difficulty),
+    time_intensity: Number(initialProposal.form.time_intensity ?? DEFAULT_FORM.time_intensity),
+    exam_from_home: Boolean(initialProposal.form.exam_from_home ?? DEFAULT_FORM.exam_from_home),
+  }
+}
+
+function getInitialTeachers(initialProposal?: InitialSubjectProposal | null) {
+  return initialProposal?.teachers.map((teacher) => ({
+    id: teacher.id,
+    name: teacher.name,
+    faculty: teacher.faculty ?? '',
+  })) ?? []
+}
+
+export function SubjectProposalForm({ hasDisplayName: initialHasDisplayName, initialProposal }: SubjectProposalFormProps) {
+  const [type, setType] = useState<'new' | 'edit'>(initialProposal?.type ?? 'new')
+  const [subjectSearch, setSubjectSearch] = useState(initialProposal?.subjectLabel ?? '')
+  const [subjectId, setSubjectId] = useState<string | null>(initialProposal?.subjectId ?? null)
+  const [originalSubject, setOriginalSubject] = useState<SubjectDetails | null>(initialProposal?.originalSubject ?? null)
   const [searchResults, setSearchResults] = useState<SubjectSearchResult[]>([])
   const [isLoadingSubject, setIsLoadingSubject] = useState(false)
   const [subjectCache, setSubjectCache] = useState<SubjectCacheEntry[]>([])
@@ -181,14 +214,16 @@ export function SubjectProposalForm({ hasDisplayName: initialHasDisplayName }: S
   const [hasDisplayName, setHasDisplayName] = useState(initialHasDisplayName)
   const [showDisplayNameModal, setShowDisplayNameModal] = useState(false)
 
-  const [selectedTeachers, setSelectedTeachers] = useState<{ id?: string, name: string, faculty: string }[]>([])
+  const [selectedTeachers, setSelectedTeachers] = useState<{ id?: string, name: string, faculty: string }[]>(() =>
+    getInitialTeachers(initialProposal),
+  )
   const [teacherSearch, setTeacherSearch] = useState('')
   const [teacherSearchResults, setTeacherSearchResults] = useState<TeacherSearchResult[]>([])
   const [isAddingNewTeacher, setIsAddingNewTeacher] = useState(false)
   const [newTeacherName, setNewTeacherName] = useState('')
   const [newTeacherFaculty, setNewTeacherFaculty] = useState('')
 
-  const [form, setForm] = useState(DEFAULT_FORM)
+  const [form, setForm] = useState(() => getInitialForm(initialProposal))
 
   const set = (k: keyof typeof form, v: string | number | boolean) =>
     setForm((f) => ({ ...f, [k]: v }))
@@ -311,6 +346,7 @@ export function SubjectProposalForm({ hasDisplayName: initialHasDisplayName }: S
     setIsSubmitting(true)
     setError(null)
     const payload = {
+      proposalId: initialProposal?.id ?? null,
       type,
       subjectId,
       submissionToken,
@@ -349,8 +385,9 @@ export function SubjectProposalForm({ hasDisplayName: initialHasDisplayName }: S
   if (success) {
     return (
       <div className="glass-card p-8 text-center space-y-3">
-        <div className="text-4xl">🎉</div>
-        <h2 className="text-xl font-semibold text-foreground">Návrh odeslán!</h2>
+        <h2 className="text-xl font-semibold text-foreground">
+          {initialProposal ? 'Návrh upraven!' : 'Návrh odeslán!'}
+        </h2>
         <p className="text-muted-foreground text-sm">Moderátor ho brzy zkontroluje.</p>
       </div>
     )
@@ -361,7 +398,14 @@ export function SubjectProposalForm({ hasDisplayName: initialHasDisplayName }: S
     <form onSubmit={handleSubmit} className="space-y-8">
       {/* Typ návrhu */}
       <div className="glass-card rounded-[1.75rem] p-7 sm:p-8 space-y-5">
-        <h2 className="font-semibold text-foreground">Typ návrhu</h2>
+        <div>
+          <h2 className="font-semibold text-foreground">Typ návrhu</h2>
+          {initialProposal ? (
+            <p className="mt-1 text-xs text-muted-foreground">
+              Upravuješ čekající návrh z Moje aktivita. Po uložení zůstane ve stavu čeká na schválení.
+            </p>
+          ) : null}
+        </div>
         <div className="flex gap-3">
           {[{ v: 'new' as const, label: 'Nový předmět' }, { v: 'edit' as const, label: 'Úprava existujícího' }].map(({ v, label }) => (
             <button key={v} type="button" onClick={() => {

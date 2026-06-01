@@ -22,6 +22,19 @@ type ProposalData = {
   name?: string;
   short_tag?: string;
   slug?: string;
+  description?: string;
+  target_audience?: string;
+  real_requirements?: string;
+  difficulty?: number;
+  time_intensity?: number;
+  attendance_type?: string;
+  exam_from_home?: boolean;
+  credits?: number;
+  semester?: string;
+  faculty?: string;
+  year?: number;
+  teachers?: Array<{ id?: string; name?: string; faculty?: string | null }>;
+  materials?: Array<{ title?: string; file_path?: string; size_bytes?: number }>;
 };
 
 type ProposalWithSubjectState = {
@@ -295,6 +308,8 @@ function buildProposalCard(item: ProposalWithSubjectState, acknowledgementSet: S
     });
   }
 
+  panels.push(...buildProposalDataPanels(proposalData));
+
   if (proposal.rejection_reason) {
     panels.push({
       label: "Důvod zamítnutí",
@@ -325,8 +340,79 @@ function buildProposalCard(item: ProposalWithSubjectState, acknowledgementSet: S
       ...(linkedStateMeta?.detail ? [{ label: "Aktualizace", value: linkedStateMeta.detail }] : []),
     ],
     panels,
+    actions: proposal.status === "pending"
+      ? [
+          { type: "link", href: `/navrhnout?proposal=${proposal.id}`, label: "Upravit návrh" },
+          { type: "deletePendingProposal", proposalId: proposal.id, label: "Smazat návrh" },
+        ]
+      : undefined,
     attention,
   };
+}
+
+function buildProposalDataPanels(proposalData: ProposalData): NonNullable<ActivityCardData["panels"]> {
+  const lines = [
+    formatProposalLine("Název", proposalData.name),
+    formatProposalLine("Zkratka", proposalData.short_tag),
+    formatProposalLine("Popis", proposalData.description),
+    formatProposalLine("Pro koho", proposalData.target_audience),
+    formatProposalLine("Reálné požadavky", proposalData.real_requirements),
+    formatProposalLine("Obtížnost", proposalData.difficulty),
+    formatProposalLine("Časová náročnost", proposalData.time_intensity),
+    formatProposalLine("Docházka", proposalData.attendance_type),
+    formatProposalLine("Zkouška z domova", typeof proposalData.exam_from_home === "boolean" ? (proposalData.exam_from_home ? "ano" : "ne") : undefined),
+    formatProposalLine("Kredity", proposalData.credits),
+    formatProposalLine("Semestr", proposalData.semester),
+    formatProposalLine("Fakulta", proposalData.faculty),
+    formatProposalLine("Ročník", proposalData.year),
+    formatProposalLine("Vyučující", formatProposalTeachers(proposalData.teachers)),
+    formatProposalLine("Materiály", formatProposalMaterials(proposalData.materials)),
+  ].filter((line): line is string => Boolean(line));
+
+  if (lines.length === 0) {
+    return [];
+  }
+
+  return [{
+    label: "Co jsi odeslal(a)",
+    value: lines.join("\n"),
+    tone: "info" as const,
+  }];
+}
+
+function formatProposalLine(label: string, value: string | number | null | undefined) {
+  if (value === null || value === undefined) {
+    return null;
+  }
+
+  const text = String(value).trim();
+  return text ? `${label}: ${text}` : null;
+}
+
+function formatProposalTeachers(teachers: ProposalData["teachers"]) {
+  if (!Array.isArray(teachers) || teachers.length === 0) {
+    return null;
+  }
+
+  return teachers
+    .map((teacher) => {
+      const name = teacher.name?.trim();
+      if (!name) return null;
+      return teacher.faculty ? `${name} (${teacher.faculty})` : name;
+    })
+    .filter(Boolean)
+    .join(", ");
+}
+
+function formatProposalMaterials(materials: ProposalData["materials"]) {
+  if (!Array.isArray(materials) || materials.length === 0) {
+    return null;
+  }
+
+  return materials
+    .map((material) => material.title?.trim())
+    .filter(Boolean)
+    .join(", ");
 }
 
 function buildMaterialCard(material: MaterialWithSubject, acknowledgementSet: Set<string>): ActivityCardData {
@@ -348,6 +434,12 @@ function buildMaterialCard(material: MaterialWithSubject, acknowledgementSet: Se
     title: material.title,
     subtitle: subjectLabel,
     supportingText: `Nahráno ${formatDateTime(material.created_at)}`,
+    subjectFilter: material.subject
+      ? {
+          key: material.subject.slug,
+          label: subjectLabel ?? material.subject.name,
+        }
+      : undefined,
     link: fileUrl
       ? {
           href: fileUrl,
@@ -398,6 +490,12 @@ function buildDeckCard(deck: DeckWithSubject): ActivityCardData {
     id: `deck-${deck.id}`,
     title: deck.title,
     subtitle: deck.subject ? `${deck.subject.short_tag} · ${deck.subject.name}` : undefined,
+    subjectFilter: deck.subject
+      ? {
+          key: deck.subject.slug,
+          label: `${deck.subject.short_tag} · ${deck.subject.name}`,
+        }
+      : undefined,
     link: {
       href: `/flashcardy/${deck.id}`,
       label: "Otevřít balíček",

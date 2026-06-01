@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ProfileSubjectContributions, type ProfileDeckContribution, type ProfileMaterialContribution } from "@/components/profile/profile-subject-contributions";
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/types/database";
 import { getStoragePublicUrl } from "@/lib/storage";
@@ -103,15 +104,13 @@ export default async function PublicProfilePage({ params }: PageProps) {
       .select("id, title, card_count, updated_at, subject:subject_id(slug, short_tag, name)")
       .eq("creator_id", userId)
       .eq("is_public", true)
-      .order("updated_at", { ascending: false })
-      .limit(12),
+      .order("updated_at", { ascending: false }),
     supabase
       .from("subject_materials")
       .select("id, title, file_path, size_bytes, created_at, subject:subject_id(slug, short_tag, name)")
       .eq("uploader_id", userId)
       .eq("moderation_status", "approved")
-      .order("created_at", { ascending: false })
-      .limit(12),
+      .order("created_at", { ascending: false }),
     supabase
       .from("subject_ratings")
       .select("id, overall, comment, created_at, subject:subject_id(slug, short_tag, name)")
@@ -144,6 +143,19 @@ export default async function PublicProfilePage({ params }: PageProps) {
   const stats = ((statsData ?? [])[0] ?? null) as PublicProfileStats | null;
   const decks = (decksData ?? []) as PublicDeck[];
   const materials = (materialsData ?? []) as ApprovedMaterial[];
+  const profileDecks: ProfileDeckContribution[] = decks.map((deck) => ({
+    id: deck.id,
+    title: deck.title,
+    card_count: deck.card_count,
+    subject: deck.subject,
+  }));
+  const profileMaterials: ProfileMaterialContribution[] = materials.map((material) => ({
+    id: material.id,
+    title: material.title,
+    url: getStoragePublicUrl("study_materials", material.file_path),
+    sizeLabel: `${(material.size_bytes / 1024 / 1024).toFixed(1)} MB`,
+    subject: material.subject,
+  }));
   const subjectComments = (subjectCommentsData ?? []) as ApprovedSubjectComment[];
   const teacherReviews = (teacherReviewsData ?? []) as ApprovedTeacherReview[];
 
@@ -207,44 +219,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
 
       {/* Content sections */}
       <div className="grid gap-8 xl:grid-cols-2">
-        <ProfileSection title="Veřejné balíčky kartiček" empty="Zatím žádné veřejné balíčky.">
-          {decks.map((deck) => (
-            <div key={deck.id} className="rounded-2xl border border-border bg-card p-4">
-              <Link href={`/flashcardy/${deck.id}`} className="font-semibold text-foreground hover:text-primary">
-                {deck.title}
-              </Link>
-              <p className="mt-1 text-sm text-muted-foreground">{deck.card_count} karet</p>
-              {deck.subject && (
-                <Link href={`/predmety/${deck.subject.slug}`} className="mt-1 block text-xs text-muted-foreground hover:text-foreground">
-                  {deck.subject.short_tag} · {deck.subject.name}
-                </Link>
-              )}
-            </div>
-          ))}
-        </ProfileSection>
-
-        <ProfileSection title="Schválené materiály" empty="Zatím žádné schválené materiály.">
-          {materials.map((material) => (
-            <div key={material.id} className="rounded-2xl border border-border bg-card p-4">
-              <a
-                href={getStoragePublicUrl("study_materials", material.file_path) ?? ""}
-                target="_blank"
-                rel="noreferrer"
-                className="font-semibold text-foreground hover:text-primary"
-              >
-                {material.title}
-              </a>
-              <p className="mt-1 text-sm text-muted-foreground">
-                {(material.size_bytes / 1024 / 1024).toFixed(1)} MB
-              </p>
-              {material.subject && (
-                <Link href={`/predmety/${material.subject.slug}`} className="mt-1 block text-xs text-muted-foreground hover:text-foreground">
-                  {material.subject.short_tag} · {material.subject.name}
-                </Link>
-              )}
-            </div>
-          ))}
-        </ProfileSection>
+        <ProfileSubjectContributions decks={profileDecks} materials={profileMaterials} />
 
         <ProfileSection title="Komentáře k předmětům" empty="Zatím žádné schválené komentáře k předmětům.">
           {subjectComments.map((comment) => (

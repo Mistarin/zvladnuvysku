@@ -7,6 +7,7 @@ import type { Database, SubjectRating, TeacherRating } from '@/lib/types/databas
 type ActionResult = { success: true } | { success: false; error: string }
 
 type SubjectProposalInput = {
+  proposalId?: string | null
   type: 'new' | 'edit'
   subjectId: string | null
   submissionToken: string
@@ -28,6 +29,24 @@ type SubjectProposalInput = {
   }
   teachers: Array<{ id?: string; name: string; faculty?: string | null }>
   materialFiles: Array<{ name: string; size: number }>
+}
+
+type SubjectProposalData = {
+  name?: string
+  short_tag?: string
+  description?: string
+  target_audience?: string
+  real_requirements?: string
+  difficulty?: number
+  time_intensity?: number
+  attendance_type?: string
+  exam_from_home?: boolean
+  credits?: number
+  semester?: string
+  faculty?: string
+  year?: number
+  teachers?: Array<{ id?: string; name: string; faculty?: string | null }>
+  materials?: Array<{ title: string; file_path: string; size_bytes: number }>
 }
 
 type SubjectRatingInput = {
@@ -116,6 +135,37 @@ function isPdfFile(file: File) {
 
 function hasText(value: unknown) {
   return typeof value === 'string' && value.trim().length > 0
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
+
+function getProposalMaterials(data: unknown): NonNullable<SubjectProposalData['materials']> {
+  if (!isRecord(data) || !Array.isArray(data.materials)) {
+    return []
+  }
+
+  return data.materials.flatMap((material) => {
+    if (
+      !isRecord(material) ||
+      typeof material.title !== 'string' ||
+      typeof material.file_path !== 'string' ||
+      typeof material.size_bytes !== 'number'
+    ) {
+      return []
+    }
+
+    return [{
+      title: material.title,
+      file_path: material.file_path,
+      size_bytes: material.size_bytes,
+    }]
+  })
+}
+
+function getProposalMaterialPaths(data: unknown) {
+  return getProposalMaterials(data).map((material) => material.file_path).filter(Boolean)
 }
 
 function isRatingValue(value: unknown) {
@@ -225,9 +275,39 @@ export async function submitSubjectProposal(formData: FormData): Promise<ActionR
       return { success: false, error: 'Pro odeslání návrhu je potřeba se přihlásit.' }
     }
 
-    const uploadedMaterials: Array<{ title: string; file_path: string; size_bytes: number }> = []
+    const proposalId = typeof payload.proposalId === 'string' && payload.proposalId.trim()
+      ? payload.proposalId.trim()
+      : null
+    let existingProposal: { data: unknown; submission_token: string | null } | null = null
+
+    if (proposalId) {
+      const { data: pendingProposal, error: proposalError } = await supabase
+        .from('subject_proposals')
+        .select('data, submission_token')
+        .eq('id', proposalId)
+        .eq('proposed_by', user.id)
+        .eq('status', 'pending')
+        .maybeSingle()
+
+      if (proposalError) {
+        return { success: false, error: `Nepodařilo se načíst původní návrh: ${proposalError.message}` }
+      }
+
+      if (!pendingProposal) {
+        return { success: false, error: 'Tento návrh už nejde upravit. Buď neexistuje, nebo už byl vyřízen.' }
+      }
+
+      existingProposal = pendingProposal as { data: unknown; submission_token: string | null }
+    }
+
+    const existingMaterials = getProposalMaterials(existingProposal?.data)
+    if (existingMaterials.length + payload.materialFiles.length > MAX_PROPOSAL_MATERIALS) {
+      return { success: false, error: `Návrh může mít maximálně ${MAX_PROPOSAL_MATERIALS} PDF souborů.` }
+    }
+
+    const uploadedMaterials: NonNullable<SubjectProposalData['materials']> = []
     const uploadedPaths: string[] = []
-    const proposalFilesKey = payload.submissionToken.trim()
+    const proposalFilesKey = payload.submissionToken.trim() || existingProposal?.submission_token || proposalId || ''
     const cleanupUploadedPaths = async () => {
       if (uploadedPaths.length > 0) {
         await supabase.storage.from('study_materials').remove(uploadedPaths)
@@ -274,7 +354,7 @@ export async function submitSubjectProposal(formData: FormData): Promise<ActionR
       faculty: teacher.faculty?.trim() || payload.form.faculty.trim() || undefined,
     }))
 
-    const proposalData = {
+    const proposalData: SubjectProposalData = {
       name: payload.form.name || undefined,
       short_tag: payload.form.short_tag || undefined,
       description: payload.form.description || undefined,
@@ -289,17 +369,30 @@ export async function submitSubjectProposal(formData: FormData): Promise<ActionR
       faculty: payload.form.faculty || undefined,
       year: payload.form.year ? Number(payload.form.year) : undefined,
       teachers: normalizedTeachers.length > 0 ? normalizedTeachers : undefined,
-      materials: uploadedMaterials.length > 0 ? uploadedMaterials : undefined,
+      materials: existingMaterials.length + uploadedMaterials.length > 0
+        ? [...existingMaterials, ...uploadedMaterials]
+        : undefined,
     }
 
-    const { error } = await supabase.from('subject_proposals').insert({
+    const proposalRow = {
       type: payload.type,
       subject_id: payload.type === 'edit' ? payload.subjectId : null,
       data: proposalData,
       note: payload.form.note || null,
-      proposed_by: user.id,
       submission_token: proposalFilesKey,
-    } as never)
+    }
+
+    const { error } = proposalId
+      ? await supabase
+          .from('subject_proposals')
+          .update(proposalRow as never)
+          .eq('id', proposalId)
+          .eq('proposed_by', user.id)
+          .eq('status', 'pending')
+      : await supabase.from('subject_proposals').insert({
+          ...proposalRow,
+          proposed_by: user.id,
+        } as never)
 
     if (error) {
       if (error.code === '23505') {
@@ -310,7 +403,7 @@ export async function submitSubjectProposal(formData: FormData): Promise<ActionR
       if (uploadedPaths.length > 0) {
         await cleanupUploadedPaths()
       }
-      return { success: false, error: `Nepodařilo se odeslat návrh: ${error.message}` }
+      return { success: false, error: `Nepodařilo se ${proposalId ? 'upravit' : 'odeslat'} návrh: ${error.message}` }
     }
 
     // Only revalidate the user-facing page, not /admin (admin revalidates on its own page load)
@@ -321,6 +414,68 @@ export async function submitSubjectProposal(formData: FormData): Promise<ActionR
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Nepodařilo se odeslat návrh předmětu.',
+    }
+  }
+}
+
+export async function deletePendingSubjectProposal(proposalId: string): Promise<ActionResult> {
+  if (!proposalId.trim()) {
+    return { success: false, error: 'Chybí návrh ke smazání.' }
+  }
+
+  try {
+    const supabase = await createClient()
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+
+    if (!user) {
+      return { success: false, error: 'Pro smazání návrhu je potřeba se přihlásit.' }
+    }
+
+    const { data: proposal, error: loadError } = await supabase
+      .from('subject_proposals')
+      .select('id, data')
+      .eq('id', proposalId)
+      .eq('proposed_by', user.id)
+      .eq('status', 'pending')
+      .maybeSingle()
+
+    if (loadError) {
+      return { success: false, error: `Nepodařilo se načíst návrh: ${loadError.message}` }
+    }
+
+    if (!proposal) {
+      return { success: false, error: 'Tento návrh už nejde smazat. Buď neexistuje, nebo už byl vyřízen.' }
+    }
+
+    const { error: deleteError } = await supabase
+      .from('subject_proposals')
+      .delete()
+      .eq('id', proposalId)
+      .eq('proposed_by', user.id)
+      .eq('status', 'pending')
+
+    if (deleteError) {
+      return { success: false, error: `Nepodařilo se smazat návrh: ${deleteError.message}` }
+    }
+
+    const materialPaths = getProposalMaterialPaths((proposal as { data: unknown }).data)
+    if (materialPaths.length > 0) {
+      const { error: storageError } = await supabase.storage.from('study_materials').remove(materialPaths)
+      if (storageError) {
+        console.error('[deletePendingSubjectProposal] Failed to remove proposal files:', storageError.message)
+      }
+    }
+
+    try { revalidatePath('/moje-aktivita') } catch { /* ignore revalidation errors */ }
+    try { revalidatePath('/navrhnout') } catch { /* ignore revalidation errors */ }
+    return { success: true }
+  } catch (error) {
+    console.error('[deletePendingSubjectProposal] Unexpected failure:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Nepodařilo se smazat návrh předmětu.',
     }
   }
 }

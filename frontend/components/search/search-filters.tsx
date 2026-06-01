@@ -216,6 +216,7 @@ export function SearchFilters({
                   const defaultValue = isMaxSlider ? (config.max ?? 5) : (config.min ?? 1);
                   const currentValue = getNumberFilterValue(filterKey, defaultValue);
                   const isAtDefault = currentValue === defaultValue;
+                  const valueLabel = isMaxSlider ? `≤ ${currentValue}` : String(currentValue);
 
                   return (
                     <div className="flex flex-col gap-2 pt-1">
@@ -237,13 +238,15 @@ export function SearchFilters({
                           }}
                           className="w-full accent-primary"
                         />
-                        <span className={`text-sm font-bold min-w-[1.5rem] text-right px-2 py-0.5 rounded-md ${isAtDefault ? "text-muted-foreground bg-muted/50" : "text-foreground bg-muted"}`}>
-                          {currentValue}
+                        <span className={`text-sm font-bold min-w-[2.5rem] text-right px-2 py-0.5 rounded-md ${isAtDefault ? "text-muted-foreground bg-muted/50" : "text-foreground bg-muted"}`}>
+                          {valueLabel}
                         </span>
                       </div>
-                      {isAtDefault && (
+                      {isAtDefault ? (
                         <p className="text-xs text-muted-foreground/70">Filtr neaktivní</p>
-                      )}
+                      ) : isMaxSlider ? (
+                        <p className="text-xs text-muted-foreground/70">Zobrazí vybranou hodnotu i všechno nižší.</p>
+                      ) : null}
                     </div>
                   );
                 })()}
