@@ -46,6 +46,47 @@ export interface BrokenMaterialAuditItem {
   error_message: string | null
 }
 
+function generateSlug(value: string) {
+  return value
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '')
+}
+
+function withSlugSuffix(baseSlug: string, attempt: number) {
+  if (attempt === 0) return baseSlug
+  return `${baseSlug}-${attempt + 1}`
+}
+
+async function insertSubjectWithUniqueSlug(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  payload: SubjectInsert
+) {
+  const baseSlug = generateSlug(payload.slug?.trim() || payload.short_tag?.trim() || payload.name?.trim() || 'predmet') || 'predmet'
+  let lastError: { code?: string; message?: string } | null = null
+
+  for (let attempt = 0; attempt < 10; attempt += 1) {
+    const nextPayload: SubjectInsert = {
+      ...payload,
+      slug: withSlugSuffix(baseSlug, attempt),
+    }
+
+    const { data, error } = await supabase.from('subjects').insert(nextPayload as never).select().single()
+    if (!error && data) {
+      return { data: data as Database['public']['Tables']['subjects']['Row'], error: null }
+    }
+
+    lastError = error ?? null
+    if (error?.code !== '23505') {
+      return { data: null, error }
+    }
+  }
+
+  return { data: null, error: lastError }
+}
+
 async function getAdminClient() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -92,13 +133,9 @@ export async function approveProposal(proposalId: string): Promise<ActionResult>
       const materials = insertData.materials
       delete insertData.materials
 
-      if (!insertData.slug) {
-        const base = insertData.short_tag || insertData.name || 'predmet'
-        insertData.slug = base.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
-      }
-      const { data: insertedSubjectData, error: insertError } = await supabase.from('subjects').insert(insertData as never).select().single()
+      const { data: insertedSubjectData, error: insertError } = await insertSubjectWithUniqueSlug(supabase, insertData)
       if (insertError || !insertedSubjectData) return { success: false, error: `Chyba při vkládání: ${insertError?.message ?? 'Předmět se nepodařilo vytvořit.'}` }
-      const insertedSubject = insertedSubjectData as Database['public']['Tables']['subjects']['Row']
+      const insertedSubject = insertedSubjectData
       approvedSubjectId = insertedSubject.id
 
       if (teachers && teachers.length > 0) {
