@@ -57,6 +57,19 @@ export async function GET(request: Request) {
 
   if (error || !data.user) {
     console.error('Auth confirm error:', error)
+    const {
+      data: { user: existingUser },
+    } = await supabase.auth.getUser()
+
+    if (existingUser && isAllowedSchoolEmail(existingUser.email ?? '')) {
+      return buildPostAuthRedirectResponse({
+        supabase,
+        userId: existingUser.id,
+        origin,
+        redirectPath,
+      })
+    }
+
     return NextResponse.redirect(`${origin}/auth/error?reason=verify_failed`)
   }
 
