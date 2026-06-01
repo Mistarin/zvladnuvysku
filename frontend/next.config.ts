@@ -4,6 +4,9 @@ import path from "path";
 const nextConfig: NextConfig = {
   experimental: {
     viewTransition: true, // nativní page transitions
+    serverActions: {
+      bodySizeLimit: "24mb",
+    },
   },
   images: {
     remotePatterns: [
