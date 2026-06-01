@@ -1,5 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { ReportIssueDialog } from "@/components/feedback/report-issue-dialog";
+import { PublicUserLink } from "@/components/profile/public-user-link";
+import { getPublicUserSummaryMap } from "@/lib/public-user-summaries";
 import type { TeacherRating } from "@/lib/types/database";
 
 export async function TeacherReviews({ teacherId }: { teacherId: string }) {
@@ -7,7 +9,7 @@ export async function TeacherReviews({ teacherId }: { teacherId: string }) {
 
   const { data: reviews, error } = await supabase
     .from("teacher_ratings")
-    .select("id, rating, review, created_at, comment_is_approved")
+    .select("id, rating, review, created_at, comment_is_approved, user_id")
     .eq("teacher_id", teacherId)
     .order("created_at", { ascending: false });
 
@@ -24,20 +26,33 @@ export async function TeacherReviews({ teacherId }: { teacherId: string }) {
     );
   }
 
+  const typedReviews = reviews as TeacherRating[];
+  const reviewerSummaries = await getPublicUserSummaryMap(
+    typedReviews.map((review) => review.user_id),
+    supabase,
+  );
+
   return (
     <div className="space-y-4">
-      {(reviews as TeacherRating[]).map((review) => (
+      {typedReviews.map((review) => (
         <div key={review.id} className="glass-card p-5">
           <div className="flex justify-between items-start mb-3">
-            <div className="flex gap-1">
-              {[1, 2, 3, 4, 5].map((star) => (
-                <span 
-                  key={star} 
-                  className={star <= (review.rating || 0) ? "text-yellow-400" : "text-muted opacity-40 grayscale"}
-                >
-                  ⭐
-                </span>
-              ))}
+            <div className="space-y-2 min-w-0">
+              <div className="flex gap-1">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <span
+                    key={star}
+                    className={star <= (review.rating || 0) ? "text-yellow-400" : "text-muted opacity-40 grayscale"}
+                  >
+                    ⭐
+                  </span>
+                ))}
+              </div>
+              <PublicUserLink
+                userId={review.user_id}
+                summary={reviewerSummaries[review.user_id] ?? null}
+                fallbackLabel="Student"
+              />
             </div>
             <span className="text-xs text-muted-foreground">
               {new Date(review.created_at).toLocaleDateString("cs-CZ")}

@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 import { setFeedbackStatus } from "@/app/admin/actions";
+import { PublicUserLink } from "@/components/profile/public-user-link";
 import { Check } from "lucide-react";
+import type { PublicUserSummary } from "@/lib/public-user-summaries";
 
 interface FeedbackApprovalCardProps {
   feedback: {
@@ -14,6 +16,7 @@ interface FeedbackApprovalCardProps {
     status: "new" | "in_progress" | "resolved";
     source_label?: string | null;
     source_type?: "general" | "material" | "subject_rating" | "teacher_rating" | null;
+    author?: PublicUserSummary | null;
   };
 }
 
@@ -78,6 +81,16 @@ export function FeedbackApprovalCard({ feedback }: FeedbackApprovalCardProps) {
             </span>
           )}
         </p>
+      )}
+      {feedback.user_id ? (
+        <PublicUserLink
+          userId={feedback.user_id}
+          summary={feedback.author ?? null}
+          fallbackLabel={`Uživatel ${feedback.user_id.slice(0, 8)}…`}
+          allowFallbackLink
+        />
+      ) : (
+        <p className="text-xs text-muted-foreground">Odesláno anonymně</p>
       )}
       {error && (
         <p className="text-sm text-destructive">{error}</p>

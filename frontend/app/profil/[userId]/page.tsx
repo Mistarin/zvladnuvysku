@@ -86,6 +86,9 @@ export default async function PublicProfilePage({ params }: PageProps) {
   };
 
   const [
+    {
+      data: { user: viewer },
+    },
     { data: profile },
     { data: statsData, error: statsError },
     { data: decksData },
@@ -93,6 +96,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
     { data: subjectCommentsData },
     { data: teacherReviewsData },
   ] = await Promise.all([
+    supabase.auth.getUser(),
     supabase.from("profiles").select("user_id, display_name").eq("user_id", userId).maybeSingle(),
     typedSupabase.rpc("get_public_profile_stats", { profile_user_id: userId }),
     supabase
@@ -129,7 +133,11 @@ export default async function PublicProfilePage({ params }: PageProps) {
 
   const typedProfile = profile as { user_id: string; display_name: string | null } | null;
   const displayName = typedProfile?.display_name?.trim();
-  if (!displayName || statsError) {
+  const viewerRole = viewer?.app_metadata?.role as string | undefined;
+  const canViewWithoutPublicName = viewer?.id === userId || viewerRole === "admin" || viewerRole === "moderator";
+  const visibleName = displayName || (canViewWithoutPublicName ? `Uživatel ${userId.slice(0, 8)}…` : null);
+
+  if (!visibleName || statsError) {
     notFound();
   }
 
@@ -150,7 +158,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
       <nav className="mb-6 flex items-center gap-2 text-sm text-muted-foreground">
         <Link href="/" className="transition-colors hover:text-foreground">Domů</Link>
         <span>/</span>
-        <span className="font-medium text-foreground">{displayName}</span>
+        <span className="font-medium text-foreground">{visibleName}</span>
       </nav>
 
       <div className="mb-8 rounded-[2rem] border border-border/70 bg-card p-6 shadow-sm sm:p-8">
@@ -160,7 +168,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
               Veřejný profil
             </span>
             <div>
-              <h1 className="text-3xl font-bold text-foreground sm:text-4xl">{displayName}</h1>
+              <h1 className="text-3xl font-bold text-foreground sm:text-4xl">{visibleName}</h1>
               <p className="mt-2 text-sm text-muted-foreground sm:text-base">
                 Level {stats.level} · {stats.total_xp} XP · Každý schválený bod přidává 10 XP.
               </p>
@@ -175,12 +183,14 @@ export default async function PublicProfilePage({ params }: PageProps) {
             <div className="mt-3 h-3 overflow-hidden rounded-full bg-muted">
               <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${progressPercent}%` }} />
             </div>
-            <Link
-              href={getPublicProfileContributionsPath(userId)}
-              className="mt-4 inline-flex text-sm font-medium text-primary hover:underline"
-            >
-              Otevřít příspěvky →
-            </Link>
+            {displayName ? (
+              <Link
+                href={getPublicProfileContributionsPath(userId)}
+                className="mt-4 inline-flex text-sm font-medium text-primary hover:underline"
+              >
+                Otevřít příspěvky →
+              </Link>
+            ) : null}
           </div>
         </div>
       </div>

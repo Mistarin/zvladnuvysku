@@ -26,6 +26,9 @@ export async function proposeTeacher(data: {
 }) {
   try {
     const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
     const baseSlug = data.slug?.trim() || generateSlug(data.name);
     let lastError: { code?: string; message?: string } | null = null;
@@ -38,6 +41,7 @@ export async function proposeTeacher(data: {
         faculty: data.faculty,
         department: data.department || null,
         is_approved: false,
+        proposed_by: user?.id ?? null,
       };
       const { error } = await supabase.from("teachers").insert(teacherInsert as never);
 

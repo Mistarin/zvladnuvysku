@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { approveRatingComment, rejectRatingComment } from "@/app/admin/actions";
+import { PublicUserLink } from "@/components/profile/public-user-link";
+import type { PublicUserSummary } from "@/lib/public-user-summaries";
 
 interface RatingApprovalCardProps {
   rating: {
@@ -11,6 +13,8 @@ interface RatingApprovalCardProps {
     created_at: string;
     targetName: string; // jméno předmětu nebo učitele
     overall_rating?: number | null; // pro info o tom kolik dal hvězdiček
+    user_id: string;
+    author?: PublicUserSummary | null;
   };
 }
 
@@ -62,6 +66,14 @@ export function RatingApprovalCard({ rating }: RatingApprovalCardProps) {
           <p className="text-sm text-muted-foreground mt-1">
             Napsáno {new Date(rating.created_at).toLocaleDateString('cs-CZ')}
           </p>
+          <div className="mt-2">
+            <PublicUserLink
+              userId={rating.user_id}
+              summary={rating.author ?? null}
+              fallbackLabel={`Uživatel ${rating.user_id.slice(0, 8)}…`}
+              allowFallbackLink
+            />
+          </div>
         </div>
       </div>
 

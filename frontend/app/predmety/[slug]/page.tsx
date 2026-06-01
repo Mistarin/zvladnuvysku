@@ -8,6 +8,8 @@ import { RatingForm } from "@/components/subject/rating-form";
 import { RatingStats } from "@/components/subject/rating-stats";
 import { MaterialUploadForm } from "@/components/subject/material-upload-form";
 import { ReportIssueDialog } from "@/components/feedback/report-issue-dialog";
+import { PublicUserLink } from "@/components/profile/public-user-link";
+import { getPublicUserSummaryMap } from "@/lib/public-user-summaries";
 import type { Database, Subject, SubjectRatingStats } from "@/lib/types/database";
 import { BookOpen, Target, MessageSquare, Star, Users, Layers, FileText, CheckCircle2, XCircle, Clock, Calendar, Diamond } from "lucide-react";
 import { formatCredits } from "@/lib/utils";
@@ -61,7 +63,7 @@ type SubjectMaterialListItem = Pick<
 
 type SubjectComment = Pick<
   Database["public"]["Tables"]["subject_ratings"]["Row"],
-  "id" | "created_at" | "comment"
+  "id" | "created_at" | "comment" | "user_id"
 > & {
   overall: number | null;
 };
@@ -163,7 +165,7 @@ async function SubjectRatingsSection({
   const [{ data: rawRatings }, { data: ratingStatsData }] = await Promise.all([
     supabase
       .from("subject_ratings")
-      .select("id, overall, comment, created_at")
+      .select("id, overall, comment, created_at, user_id")
       .eq("subject_id", subject.id)
       .eq("comment_is_approved", true)
       .not("comment", "is", null)
@@ -172,6 +174,10 @@ async function SubjectRatingsSection({
   ]);
 
   const ratingsWithComments = (rawRatings ?? []) as SubjectComment[];
+  const reviewerSummaries = await getPublicUserSummaryMap(
+    ratingsWithComments.map((rating) => rating.user_id),
+    supabase,
+  );
   const ratingStats = ratingStatsData as SubjectRatingStats | null;
   const totalRatings = ratingStats?.total_ratings ?? 0;
 
@@ -197,7 +203,11 @@ async function SubjectRatingsSection({
               <div key={rating.id} className="glass-card space-y-2 p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <div className="text-sm font-medium text-foreground">Anonymní student</div>
+                    <PublicUserLink
+                      userId={rating.user_id}
+                      summary={reviewerSummaries[rating.user_id] ?? null}
+                      fallbackLabel="Student"
+                    />
                     <span className="text-xs text-muted-foreground">•</span>
                     <span className="text-xs text-muted-foreground">{new Date(rating.created_at).toLocaleDateString("cs-CZ")}</span>
                   </div>

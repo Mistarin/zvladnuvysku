@@ -11,6 +11,7 @@ import { FacultyFilter } from "@/components/admin/faculty-filter";
 import { FeedbackApprovalCard } from "@/components/admin/feedback-approval-card";
 import { TeacherApprovalCard } from "@/components/admin/teacher-approval-card";
 import { MaterialStorageAudit } from "@/components/admin/material-storage-audit";
+import { getPublicUserSummaryMap } from "@/lib/public-user-summaries";
 import type { Database } from "@/lib/types/database";
 
 export const metadata: Metadata = {
@@ -169,6 +170,7 @@ async function AdminQueuesSection({
     comment: string | null;
     created_at: string;
     overall: number | null;
+    user_id: string;
     subject: Pick<Database["public"]["Tables"]["subjects"]["Row"], "name" | "faculty"> | null;
   };
   type TeacherCommentQueueItem = {
@@ -176,6 +178,7 @@ async function AdminQueuesSection({
     review: string | null;
     created_at: string;
     rating: number | null;
+    user_id: string;
     teacher: Pick<Database["public"]["Tables"]["teachers"]["Row"], "name" | "faculty"> | null;
   };
   type FeedbackItem = Database["public"]["Tables"]["feedback"]["Row"];
@@ -222,6 +225,18 @@ async function AdminQueuesSection({
     .limit(queueItemLimit);
   let unapprovedTeachers = (rawTeachers ?? []) as TeacherItem[];
 
+  const userSummaries = await getPublicUserSummaryMap(
+    [
+      ...proposals.map((proposal) => proposal.proposed_by),
+      ...unapprovedMaterials.map((material) => material.uploader_id),
+      ...unapprovedSubjectRatings.map((rating) => rating.user_id),
+      ...unapprovedTeacherRatings.map((rating) => rating.user_id),
+      ...unapprovedTeachers.map((teacher) => teacher.proposed_by),
+      ...unresolvedFeedback.map((feedback) => feedback.user_id),
+    ],
+    supabase,
+  );
+
   if (facultyFilter) {
     proposals = proposals.filter((p) => (p.data as { faculty?: string }).faculty === facultyFilter);
     unapprovedMaterials = unapprovedMaterials.filter((m) => m.subject?.faculty === facultyFilter);
@@ -231,22 +246,51 @@ async function AdminQueuesSection({
   }
 
   const matchesQuery = (...values: Array<string | null | undefined>) => !query || values.some((value) => value?.toLowerCase().includes(query));
-  proposals = proposals.filter((proposal) => matchesQuery(String(proposal.data.name ?? ""), String(proposal.data.short_tag ?? ""), String(proposal.note ?? ""), proposal.proposed_by, proposal.proposed_by_email));
-  unapprovedMaterials = unapprovedMaterials.filter((material) => matchesQuery(material.title, material.subject?.name, material.file_path));
-  unapprovedSubjectRatings = unapprovedSubjectRatings.filter((rating) => matchesQuery(rating.comment, rating.subject?.name));
-  unapprovedTeacherRatings = unapprovedTeacherRatings.filter((rating) => matchesQuery(rating.review, rating.teacher?.name));
-  unapprovedTeachers = unapprovedTeachers.filter((teacher) => matchesQuery(teacher.name, teacher.slug, teacher.department, teacher.faculty));
-  const filteredFeedback = unresolvedFeedback.filter((feedback) => matchesQuery(feedback.message, feedback.source_label, feedback.source_type, feedback.type));
+  proposals = proposals.filter((proposal) => matchesQuery(
+    String(proposal.data.name ?? ""),
+    String(proposal.data.short_tag ?? ""),
+    String(proposal.note ?? ""),
+    proposal.proposed_by,
+    proposal.proposed_by_email,
+    userSummaries[proposal.proposed_by]?.displayName,
+  ));
+  unapprovedMaterials = unapprovedMaterials.filter((material) => matchesQuery(material.title, material.subject?.name, material.file_path, userSummaries[material.uploader_id]?.displayName));
+  unapprovedSubjectRatings = unapprovedSubjectRatings.filter((rating) => matchesQuery(rating.comment, rating.subject?.name, userSummaries[rating.user_id]?.displayName));
+  unapprovedTeacherRatings = unapprovedTeacherRatings.filter((rating) => matchesQuery(rating.review, rating.teacher?.name, userSummaries[rating.user_id]?.displayName));
+  unapprovedTeachers = unapprovedTeachers.filter((teacher) => matchesQuery(teacher.name, teacher.slug, teacher.department, teacher.faculty, teacher.proposed_by ? userSummaries[teacher.proposed_by]?.displayName : undefined));
+  const filteredFeedback = unresolvedFeedback.filter((feedback) => matchesQuery(feedback.message, feedback.source_label, feedback.source_type, feedback.type, feedback.user_id ? userSummaries[feedback.user_id]?.displayName : undefined));
 
   const unapprovedComments = [
-    ...unapprovedSubjectRatings.map((r) => ({ id: r.id, type: "subject" as const, comment: r.comment ?? "", created_at: r.created_at, targetName: r.subject?.name || "Neznámý předmět", overall_rating: r.overall })),
-    ...unapprovedTeacherRatings.map((r) => ({ id: r.id, type: "teacher" as const, comment: r.review ?? "", created_at: r.created_at, targetName: r.teacher?.name || "Neznámý učitel", overall_rating: r.rating })),
+    ...unapprovedSubjectRatings.map((r) => ({
+      id: r.id,
+      type: "subject" as const,
+      comment: r.comment ?? "",
+      created_at: r.created_at,
+      targetName: r.subject?.name || "Neznámý předmět",
+      overall_rating: r.overall,
+      user_id: r.user_id,
+      author: userSummaries[r.user_id] ?? null,
+    })),
+    ...unapprovedTeacherRatings.map((r) => ({
+      id: r.id,
+      type: "teacher" as const,
+      comment: r.review ?? "",
+      created_at: r.created_at,
+      targetName: r.teacher?.name || "Neznámý učitel",
+      overall_rating: r.rating,
+      user_id: r.user_id,
+      author: userSummaries[r.user_id] ?? null,
+    })),
   ].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
 
   const subjectIds = proposals.filter((p) => p.type === "edit" && p.subject_id).map((p) => p.subject_id as string);
   const { data: currentSubjects } = subjectIds.length ? await supabase.from("subjects").select("*").in("id", subjectIds) : { data: [] as Database["public"]["Tables"]["subjects"]["Row"][] };
   const subjectsMap = Object.fromEntries((currentSubjects ?? []).map((subject) => [subject.id, subject]));
-  const proposalsWithEmail = proposals.map((proposal) => ({ ...proposal, proposed_by_email: undefined as string | undefined }));
+  const proposalsWithEmail = proposals.map((proposal) => ({
+    ...proposal,
+    proposed_by_email: undefined as string | undefined,
+    proposed_by_profile: userSummaries[proposal.proposed_by] ?? null,
+  }));
 
   const allDone = proposalsWithEmail.length === 0 && unapprovedMaterials.length === 0 && unapprovedComments.length === 0 && filteredFeedback.length === 0 && unapprovedTeachers.length === 0;
   const isQueueVisible = (queueKey: Exclude<QueueKey, "all">) => queueFilter === "all" || queueFilter === queueKey;
@@ -287,7 +331,13 @@ async function AdminQueuesSection({
             <QueueSection icon="📚" title="Nové materiály" countLabel={formatCount(unapprovedMaterials.length, "materiál", "materiály", "materiálů")}>
               <div className="space-y-4">
                 {unapprovedMaterials.map((material) => (
-                  <MaterialApprovalCard key={material.id} material={material} subjectName={material.subject?.name} subjectSlug={material.subject?.slug} />
+                  <MaterialApprovalCard
+                    key={material.id}
+                    material={material}
+                    subjectName={material.subject?.name}
+                    subjectSlug={material.subject?.slug}
+                    author={userSummaries[material.uploader_id] ?? null}
+                  />
                 ))}
               </div>
             </QueueSection>
@@ -302,14 +352,28 @@ async function AdminQueuesSection({
           {isQueueVisible("feedback") && filteredFeedback.length > 0 && (
             <QueueSection icon="💡" title="Zpětná vazba" countLabel={formatCount(filteredFeedback.length, "zpráva", "zprávy", "zpráv")}>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                {filteredFeedback.map((feedback) => <FeedbackApprovalCard key={feedback.id} feedback={feedback} />)}
+                {filteredFeedback.map((feedback) => (
+                  <FeedbackApprovalCard
+                    key={feedback.id}
+                    feedback={{
+                      ...feedback,
+                      author: feedback.user_id ? userSummaries[feedback.user_id] ?? null : null,
+                    }}
+                  />
+                ))}
               </div>
             </QueueSection>
           )}
           {isQueueVisible("teachers") && unapprovedTeachers.length > 0 && (
             <QueueSection icon="🧑‍🏫" title="Noví učitelé" countLabel={formatCount(unapprovedTeachers.length, "učitel", "učitelé", "učitelů")}>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                {unapprovedTeachers.map((teacher) => <TeacherApprovalCard key={teacher.id} teacher={teacher} />)}
+                {unapprovedTeachers.map((teacher) => (
+                  <TeacherApprovalCard
+                    key={teacher.id}
+                    teacher={teacher}
+                    author={teacher.proposed_by ? userSummaries[teacher.proposed_by] ?? null : null}
+                  />
+                ))}
               </div>
             </QueueSection>
           )}

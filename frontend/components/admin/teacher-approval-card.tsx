@@ -4,14 +4,17 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { updateTeacher, deleteTeacher } from "@/app/admin/ucitele/actions";
 import { TeacherFormDialog } from "@/components/admin/teacher-form-dialog";
+import { PublicUserLink } from "@/components/profile/public-user-link";
 import { CheckCircle, XCircle, Pencil, Loader2 } from "lucide-react";
+import type { PublicUserSummary } from "@/lib/public-user-summaries";
 import type { Teacher } from "@/lib/types/database";
 
 interface TeacherApprovalCardProps {
   teacher: Teacher;
+  author?: PublicUserSummary | null;
 }
 
-export function TeacherApprovalCard({ teacher }: TeacherApprovalCardProps) {
+export function TeacherApprovalCard({ teacher, author }: TeacherApprovalCardProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -61,6 +64,20 @@ export function TeacherApprovalCard({ teacher }: TeacherApprovalCardProps) {
           <div className="text-xs text-muted-foreground mt-1">
             Slug: <span className="font-mono">{teacher.slug}</span>
           </div>
+          {teacher.proposed_by ? (
+            <div className="mt-2">
+              <PublicUserLink
+                userId={teacher.proposed_by}
+                summary={author ?? null}
+                fallbackLabel={`Uživatel ${teacher.proposed_by.slice(0, 8)}…`}
+                allowFallbackLink
+              />
+            </div>
+          ) : (
+            <div className="mt-2 text-xs text-muted-foreground">
+              Autor návrhu není dostupný.
+            </div>
+          )}
         </div>
       </div>
 

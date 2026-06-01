@@ -129,9 +129,13 @@ export interface Database {
           faculty: string
           department: string | null
           is_approved: boolean | null
+          proposed_by: string | null
           created_at: string
         }
-        Insert: Omit<Database['public']['Tables']['teachers']['Row'], 'id' | 'created_at'>
+        Insert: Omit<Database['public']['Tables']['teachers']['Row'], 'id' | 'created_at' | 'is_approved' | 'proposed_by'> & {
+          is_approved?: boolean | null
+          proposed_by?: string | null
+        }
         Update: Partial<Database['public']['Tables']['teachers']['Insert']>
       }
       teacher_ratings: {
@@ -285,6 +289,17 @@ export interface Database {
           level: number
           level_progress_xp: number
           next_level_xp: number
+        }[]
+      }
+      get_public_profile_summaries: {
+        Args: {
+          profile_user_ids: string[]
+        }
+        Returns: {
+          user_id: string
+          display_name: string | null
+          total_xp: number
+          level: number
         }[]
       }
       get_public_profile_subject_proposals: {

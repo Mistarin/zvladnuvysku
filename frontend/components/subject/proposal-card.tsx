@@ -3,6 +3,8 @@
 import { useState } from 'react'
 import { CheckCircle, XCircle, User, Calendar, Tag, FileEdit, FilePlus } from 'lucide-react'
 import { approveProposal, rejectProposal } from '@/app/admin/actions'
+import { PublicUserLink } from '@/components/profile/public-user-link'
+import type { PublicUserSummary } from '@/lib/public-user-summaries'
 
 // Inline type until subject_proposals is in generated types
 export interface SubjectProposal {
@@ -13,6 +15,7 @@ export interface SubjectProposal {
   note: string | null
   proposed_by: string
   proposed_by_email?: string
+  proposed_by_profile?: PublicUserSummary | null
   status: 'pending' | 'approved' | 'rejected'
   created_at: string
 }
@@ -114,7 +117,12 @@ export function ProposalCard({ proposal, currentSubjectData }: ProposalCardProps
         </span>
         <span className="flex items-center gap-1 text-xs text-muted-foreground">
           <User className="w-3 h-3" />
-          {proposal.proposed_by_email ?? proposal.proposed_by.slice(0, 8) + '…'}
+          <PublicUserLink
+            userId={proposal.proposed_by}
+            summary={proposal.proposed_by_profile ?? null}
+            fallbackLabel={proposal.proposed_by_email ?? proposal.proposed_by.slice(0, 8) + '…'}
+            allowFallbackLink
+          />
         </span>
       </div>
 

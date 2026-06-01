@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useState } from "react";
 import { approveMaterial, rejectMaterial } from "@/app/admin/actions";
+import { PublicUserLink } from "@/components/profile/public-user-link";
+import type { PublicUserSummary } from "@/lib/public-user-summaries";
 import type { SubjectMaterial } from "@/lib/types/database";
 import { getStoragePublicUrl } from "@/lib/storage";
 
@@ -10,9 +12,10 @@ interface MaterialApprovalCardProps {
   material: SubjectMaterial;
   subjectName?: string;
   subjectSlug?: string;
+  author?: PublicUserSummary | null;
 }
 
-export function MaterialApprovalCard({ material, subjectName, subjectSlug }: MaterialApprovalCardProps) {
+export function MaterialApprovalCard({ material, subjectName, subjectSlug, author }: MaterialApprovalCardProps) {
   const [isApproving, setIsApproving] = useState(false);
   const [isRejecting, setIsRejecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -61,6 +64,14 @@ export function MaterialApprovalCard({ material, subjectName, subjectSlug }: Mat
           <p className="text-xs text-muted-foreground mt-1">
             Nahráno {new Date(material.created_at).toLocaleString("cs-CZ")}
           </p>
+          <div className="mt-2">
+            <PublicUserLink
+              userId={material.uploader_id}
+              summary={author ?? null}
+              fallbackLabel={`Uživatel ${material.uploader_id.slice(0, 8)}…`}
+              allowFallbackLink
+            />
+          </div>
         </div>
         <div className="flex flex-col items-end gap-2">
           <a 
