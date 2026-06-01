@@ -63,6 +63,7 @@ async function getAdminClient() {
 export async function approveProposal(proposalId: string): Promise<ActionResult> {
   try {
     const { supabase, userId } = await getAdminClient()
+    const reviewedAt = new Date().toISOString()
 
     // Fetch the proposal
     const { data: proposal, error: fetchError } = await (supabase as unknown as {
@@ -81,6 +82,8 @@ export async function approveProposal(proposalId: string): Promise<ActionResult>
 
     if (fetchError || !proposal) return { success: false, error: 'Návrh nenalezen' }
 
+    let approvedSubjectId = proposal.subject_id
+
     if (proposal.type === 'new') {
       const insertData = { ...(proposal.data as ProposalPayload) }
       const teachers = insertData.teachers
@@ -96,6 +99,7 @@ export async function approveProposal(proposalId: string): Promise<ActionResult>
       const { data: insertedSubjectData, error: insertError } = await supabase.from('subjects').insert(insertData as never).select().single()
       if (insertError || !insertedSubjectData) return { success: false, error: `Chyba při vkládání: ${insertError?.message ?? 'Předmět se nepodařilo vytvořit.'}` }
       const insertedSubject = insertedSubjectData as Database['public']['Tables']['subjects']['Row']
+      approvedSubjectId = insertedSubject.id
 
       if (teachers && teachers.length > 0) {
         await processTeachers(supabase, insertedSubject.id, teachers)
@@ -154,7 +158,7 @@ export async function approveProposal(proposalId: string): Promise<ActionResult>
       }
     })
       .from('subject_proposals')
-      .update({ status: 'approved', reviewed_by: userId, reviewed_at: new Date().toISOString() })
+      .update({ status: 'approved', reviewed_by: userId, reviewed_at: reviewedAt, subject_id: approvedSubjectId })
       .eq('id', proposalId)
 
     if (statusError) return { success: false, error: 'Chyba při aktualizaci stavu' }
@@ -229,6 +233,7 @@ export async function deleteSubject(subjectId: string): Promise<ActionResult> {
     const { error } = await supabase.from('subjects').delete().eq('id', subjectId)
     if (error) return { success: false, error: `Chyba při mazání: ${error.message}` }
     revalidatePath('/admin')
+    revalidatePath('/moje-aktivita')
     revalidatePath('/predmety')
     return { success: true }
   } catch (err) {
@@ -242,6 +247,7 @@ export async function updateSubject(subjectId: string, data: Record<string, unkn
     const { error } = await supabase.from('subjects').update(data as never).eq('id', subjectId)
     if (error) return { success: false, error: `Chyba při ukládání: ${error.message}` }
     revalidatePath('/admin')
+    revalidatePath('/moje-aktivita')
     revalidatePath('/predmety')
     revalidatePath(`/predmety/${data.slug ?? subjectId}`)
     return { success: true }
