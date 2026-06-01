@@ -1,11 +1,12 @@
-import { Suspense, type ReactNode } from "react";
+import { Suspense } from "react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { AlertCircle, BookOpen, CheckCircle2, Clock3, UserCircle2 } from "lucide-react";
+import { MyActivityDashboard, type ActivityAttention, type ActivityCardData, type ActivitySectionData, type StatusTone } from "@/components/activity/my-activity-dashboard";
 import { getPublicProfilePath } from "@/lib/public-profile";
 import { createClient } from "@/lib/supabase/server";
-import type { Feedback, FlashcardDeck, Profile, Subject, SubjectMaterial, SubjectProposalRecord } from "@/lib/types/database";
-import { cn, formatFileSize } from "@/lib/utils";
+import { getStoragePublicUrl } from "@/lib/storage";
+import type { ActivityAcknowledgement, Feedback, FlashcardDeck, Profile, Subject, SubjectMaterial, SubjectProposalRecord } from "@/lib/types/database";
+import { formatFileSize } from "@/lib/utils";
 
 type DeckWithSubject = FlashcardDeck & {
   subject: { name: string; slug: string; short_tag: string } | null;
@@ -30,15 +31,7 @@ type ProposalWithSubjectState = {
   linkedState: "active" | "updated" | "deleted" | "unknown" | null;
 };
 
-type StatusTone = "success" | "warning" | "danger" | "muted" | "info";
-
-type ActivityGroup = {
-  id: string;
-  title: string;
-  description: string;
-  tone: StatusTone;
-  items: ReactNode[];
-};
+type ActivityAcknowledgementRow = Pick<ActivityAcknowledgement, "item_type" | "item_id" | "state_token">;
 
 export default async function MyActivityPage() {
   const supabase = await createClient();
@@ -90,6 +83,7 @@ async function MyActivitySections({ userId }: { userId: string }) {
     { data: materials },
     { data: proposals },
     { data: feedback },
+    { data: acknowledgements },
   ] = await Promise.all([
     supabase.from("profiles").select("*").eq("user_id", userId).maybeSingle(),
     supabase.from("flashcard_decks").select("*, subject:subject_id(name, slug, short_tag)").eq("creator_id", userId).order("updated_at", { ascending: false }),
@@ -104,6 +98,7 @@ async function MyActivitySections({ userId }: { userId: string }) {
       };
     }).from("subject_proposals").select("*").eq("proposed_by", userId).order("created_at", { ascending: false }),
     supabase.from("feedback").select("*").eq("user_id", userId).order("created_at", { ascending: false }),
+    supabase.from("activity_acknowledgements").select("item_type, item_id, state_token").eq("user_id", userId),
   ]);
 
   const typedProfile = profile as Profile | null;
@@ -111,6 +106,8 @@ async function MyActivitySections({ userId }: { userId: string }) {
   const myMaterials = (materials ?? []) as MaterialWithSubject[];
   const myProposals = (proposals ?? []) as SubjectProposalRecord[];
   const myFeedback = (feedback ?? []) as Feedback[];
+  const myAcknowledgements = (acknowledgements ?? []) as ActivityAcknowledgementRow[];
+  const acknowledgementSet = new Set(myAcknowledgements.map((item) => `${item.item_type}:${item.item_id}:${item.state_token}`));
 
   const proposalSubjectIds = Array.from(
     new Set(myProposals.map((proposal) => proposal.subject_id).filter((subjectId): subjectId is string => Boolean(subjectId))),
@@ -158,437 +155,320 @@ async function MyActivitySections({ userId }: { userId: string }) {
     };
   });
 
-  const pendingMaterials = myMaterials.filter((material) => material.moderation_status === "pending");
-  const approvedMaterials = myMaterials.filter((material) => material.moderation_status === "approved");
-  const rejectedMaterials = myMaterials.filter((material) => material.moderation_status === "rejected");
-
-  const pendingProposals = proposalsWithState.filter(({ proposal }) => proposal.status === "pending");
-  const approvedProposals = proposalsWithState.filter(({ proposal }) => proposal.status === "approved");
-  const rejectedProposals = proposalsWithState.filter(({ proposal }) => proposal.status === "rejected");
-
-  const newFeedback = myFeedback.filter((item) => item.status === "new");
-  const inProgressFeedback = myFeedback.filter((item) => item.status === "in_progress");
-  const resolvedFeedback = myFeedback.filter((item) => item.status === "resolved");
-
-  const publicDecks = myDecks.filter((deck) => deck.is_public);
-  const privateDecks = myDecks.filter((deck) => !deck.is_public);
-
-  const pendingReviewCount = pendingMaterials.length + pendingProposals.length;
-  const approvedContributionCount = approvedMaterials.length + approvedProposals.length;
-  const attentionCount =
-    rejectedMaterials.length +
-    rejectedProposals.length +
-    approvedProposals.filter(({ linkedState }) => linkedState === "deleted" || linkedState === "updated").length;
-  const openFeedbackCount = newFeedback.length + inProgressFeedback.length;
-
-  const proposalGroups: ActivityGroup[] = [
+  const sections: ActivitySectionData[] = [
     {
-      id: "proposal-pending",
-      title: "Čeká na schválení",
-      description: "Nové návrhy a úpravy čekající na kontrolu.",
-      tone: "warning",
-      items: pendingProposals.map((item) => <ProposalCard key={item.proposal.id} item={item} />),
+      id: "proposals",
+      title: "Návrhy předmětů",
+      description: "Přepni si mezi čekajícími, schválenými a zamítnutými návrhy. U schválených uvidíš i pozdější úpravy nebo smazání předmětu.",
+      actionHref: "/navrhnout",
+      actionLabel: "Poslat nový návrh",
+      tabs: [
+        {
+          id: "pending",
+          label: "Čeká",
+          description: "Nové návrhy a úpravy čekající na kontrolu.",
+          empty: "V čekajících návrzích teď nic není.",
+          tone: "warning",
+          items: proposalsWithState.filter(({ proposal }) => proposal.status === "pending").map((item) => buildProposalCard(item, acknowledgementSet)),
+        },
+        {
+          id: "approved",
+          label: "Schváleno",
+          description: "Schválené návrhy včetně následných změn na navázaném předmětu.",
+          empty: "Ve schválených návrzích teď nic není.",
+          tone: "success",
+          items: proposalsWithState.filter(({ proposal }) => proposal.status === "approved").map((item) => buildProposalCard(item, acknowledgementSet)),
+        },
+        {
+          id: "rejected",
+          label: "Zamítnuto",
+          description: "Návrhy vrácené k doplnění nebo přepracování.",
+          empty: "V zamítnutých návrzích teď nic není.",
+          tone: "danger",
+          items: proposalsWithState.filter(({ proposal }) => proposal.status === "rejected").map((item) => buildProposalCard(item, acknowledgementSet)),
+        },
+      ],
     },
     {
-      id: "proposal-approved",
-      title: "Schváleno",
-      description: "Schválené návrhy včetně pozdějších změn na navázaném předmětu.",
-      tone: "success",
-      items: approvedProposals.map((item) => <ProposalCard key={item.proposal.id} item={item} />),
+      id: "materials",
+      title: "Nahrané materiály",
+      description: "Přehled podle moderace. Poslední tři položky jsou hned vidět, starší si můžeš rozbalit.",
+      tabs: [
+        {
+          id: "pending",
+          label: "Čeká",
+          description: "Materiály, které ještě neprošly moderací.",
+          empty: "V čekajících materiálech teď nic není.",
+          tone: "warning",
+          items: myMaterials.filter((material) => material.moderation_status === "pending").map((material) => buildMaterialCard(material, acknowledgementSet)),
+        },
+        {
+          id: "approved",
+          label: "Schváleno",
+          description: "Materiály dostupné ostatním uživatelům.",
+          empty: "Ve schválených materiálech teď nic není.",
+          tone: "success",
+          items: myMaterials.filter((material) => material.moderation_status === "approved").map((material) => buildMaterialCard(material, acknowledgementSet)),
+        },
+        {
+          id: "rejected",
+          label: "Zamítnuto",
+          description: "Materiály vrácené k doplnění nebo opravě.",
+          empty: "V zamítnutých materiálech teď nic není.",
+          tone: "danger",
+          items: myMaterials.filter((material) => material.moderation_status === "rejected").map((material) => buildMaterialCard(material, acknowledgementSet)),
+        },
+      ],
     },
     {
-      id: "proposal-rejected",
-      title: "Zamítnuto",
-      description: "Návrhy, které potřebují přepracovat nebo doplnit.",
-      tone: "danger",
-      items: rejectedProposals.map((item) => <ProposalCard key={item.proposal.id} item={item} />),
+      id: "feedback",
+      title: "Feedback a nahlášené problémy",
+      description: "Tři přehledné stavy pro to, jestli se problém řeší, čeká nebo už je uzavřený.",
+      tabs: [
+        {
+          id: "new",
+          label: "Nové",
+          description: "Zprávy, které ještě nikdo nezačal řešit.",
+          empty: "V novém feedbacku teď nic není.",
+          tone: "muted",
+          items: myFeedback.filter((item) => item.status === "new").map((item) => buildFeedbackCard(item, acknowledgementSet)),
+        },
+        {
+          id: "in_progress",
+          label: "Rozpracováno",
+          description: "Feedback, na kterém už se pracuje.",
+          empty: "V rozpracovaném feedbacku teď nic není.",
+          tone: "warning",
+          items: myFeedback.filter((item) => item.status === "in_progress").map((item) => buildFeedbackCard(item, acknowledgementSet)),
+        },
+        {
+          id: "resolved",
+          label: "Vyřešeno",
+          description: "Uzavřené podněty a opravené problémy.",
+          empty: "Ve vyřešeném feedbacku teď nic není.",
+          tone: "success",
+          items: myFeedback.filter((item) => item.status === "resolved").map((item) => buildFeedbackCard(item, acknowledgementSet)),
+        },
+      ],
+    },
+    {
+      id: "decks",
+      title: "Moje balíčky kartiček",
+      description: "Rychlé rozdělení na veřejné a soukromé balíčky.",
+      actionHref: "/flashcardy",
+      actionLabel: "Otevřít dashboard kartiček",
+      tabs: [
+        {
+          id: "public",
+          label: "Veřejné",
+          description: "Balíčky viditelné pro ostatní uživatele.",
+          empty: "Ve veřejných balíčcích teď nic není.",
+          tone: "success",
+          items: myDecks.filter((deck) => deck.is_public).map((deck) => buildDeckCard(deck)),
+        },
+        {
+          id: "private",
+          label: "Soukromé",
+          description: "Balíčky jen pro tebe nebo ještě nepřipravené ke sdílení.",
+          empty: "V soukromých balíčcích teď nic není.",
+          tone: "muted",
+          items: myDecks.filter((deck) => !deck.is_public).map((deck) => buildDeckCard(deck)),
+        },
+      ],
     },
   ];
 
-  const materialGroups: ActivityGroup[] = [
-    {
-      id: "material-pending",
-      title: "Čeká na schválení",
-      description: "Materiály, které ještě neprošly moderací.",
-      tone: "warning",
-      items: pendingMaterials.map((material) => <MaterialCard key={material.id} material={material} />),
-    },
-    {
-      id: "material-approved",
-      title: "Schváleno",
-      description: "Materiály dostupné ostatním uživatelům.",
-      tone: "success",
-      items: approvedMaterials.map((material) => <MaterialCard key={material.id} material={material} />),
-    },
-    {
-      id: "material-rejected",
-      title: "Zamítnuto",
-      description: "Materiály vrácené k doplnění nebo opravě.",
-      tone: "danger",
-      items: rejectedMaterials.map((material) => <MaterialCard key={material.id} material={material} />),
-    },
-  ];
-
-  const feedbackGroups: ActivityGroup[] = [
-    {
-      id: "feedback-new",
-      title: "Nové",
-      description: "Zprávy, které ještě nikdo nezačal řešit.",
-      tone: "muted",
-      items: newFeedback.map((item) => <FeedbackCard key={item.id} item={item} />),
-    },
-    {
-      id: "feedback-progress",
-      title: "Rozpracováno",
-      description: "Feedback, na kterém už se pracuje.",
-      tone: "warning",
-      items: inProgressFeedback.map((item) => <FeedbackCard key={item.id} item={item} />),
-    },
-    {
-      id: "feedback-resolved",
-      title: "Vyřešeno",
-      description: "Uzavřené podněty a opravené problémy.",
-      tone: "success",
-      items: resolvedFeedback.map((item) => <FeedbackCard key={item.id} item={item} />),
-    },
-  ];
-
-  const deckGroups: ActivityGroup[] = [
-    {
-      id: "deck-public",
-      title: "Veřejné",
-      description: "Balíčky viditelné pro ostatní uživatele.",
-      tone: "success",
-      items: publicDecks.map((deck) => <DeckCard key={deck.id} deck={deck} />),
-    },
-    {
-      id: "deck-private",
-      title: "Soukromé",
-      description: "Balíčky jen pro tebe nebo ještě nepřipravené ke sdílení.",
-      tone: "muted",
-      items: privateDecks.map((deck) => <DeckCard key={deck.id} deck={deck} />),
-    },
-  ];
-
-  return (
-    <>
-      <div className="mb-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
-        <SummaryCard
-          icon={<UserCircle2 className="h-4 w-4" />}
-          label="Veřejné jméno"
-          value={typedProfile?.display_name?.trim() || "Chybí"}
-          meta={typedProfile?.display_name?.trim() ? "Zobrazuje se u profilu a recenzí." : "Doplň si ho pro veřejný profil a recenze."}
-        />
-        <SummaryCard
-          icon={<BookOpen className="h-4 w-4" />}
-          label="Balíčky"
-          value={String(myDecks.length)}
-          meta={`${publicDecks.length} veřejné · ${privateDecks.length} soukromé`}
-        />
-        <SummaryCard
-          icon={<Clock3 className="h-4 w-4" />}
-          label="Čeká na schválení"
-          value={String(pendingReviewCount)}
-          meta={`${pendingProposals.length} návrhy · ${pendingMaterials.length} materiály`}
-          tone="warning"
-        />
-        <SummaryCard
-          icon={<CheckCircle2 className="h-4 w-4" />}
-          label="Schválené příspěvky"
-          value={String(approvedContributionCount)}
-          meta={`${approvedProposals.length} návrhy · ${approvedMaterials.length} materiály`}
-          tone="success"
-        />
-        <SummaryCard
-          icon={<AlertCircle className="h-4 w-4" />}
-          label="Potřebuje pozornost"
-          value={String(attentionCount + openFeedbackCount)}
-          meta={`${attentionCount} příspěvky · ${openFeedbackCount} otevřený feedback`}
-          tone={attentionCount + openFeedbackCount > 0 ? "danger" : "muted"}
-        />
-      </div>
-
-      <div className="space-y-8">
-        <ActivitySection
-          title="Návrhy předmětů"
-          description="U schválených návrhů uvidíš i to, jestli byl navázaný předmět od té doby upraven nebo smazán."
-          empty="Zatím jsi neposlal žádný návrh předmětu."
-          actionHref="/navrhnout"
-          actionLabel="Poslat nový návrh"
-          groups={proposalGroups}
-        />
-
-        <div className="grid gap-8 xl:grid-cols-2">
-          <ActivitySection
-            title="Nahrané materiály"
-            description="Rozdělené podle moderace, aby bylo hned vidět, co ještě čeká a co se vrátilo."
-            empty="Zatím jsi nenahrál žádný materiál."
-            groups={materialGroups}
-          />
-          <ActivitySection
-            title="Feedback a nahlášené problémy"
-            description="Přehled, v jaké fázi je každý nahlášený problém nebo návrh."
-            empty="Zatím jsi neposlal žádnou zprávu."
-            groups={feedbackGroups}
-          />
-        </div>
-
-        <ActivitySection
-          title="Moje balíčky kartiček"
-          description="Rychlé rozdělení na veřejné a soukromé balíčky."
-          empty="Zatím jsi nevytvořil žádný balíček."
-          actionHref="/flashcardy"
-          actionLabel="Otevřít dashboard kartiček"
-          groups={deckGroups}
-        />
-      </div>
-    </>
-  );
+  return <MyActivityDashboard displayName={typedProfile?.display_name ?? null} sections={sections} />;
 }
 
-function SummaryCard({
-  icon,
-  label,
-  value,
-  meta,
-  tone = "muted",
-}: {
-  icon: ReactNode;
-  label: string;
-  value: string;
-  meta: string;
-  tone?: Exclude<StatusTone, "info">;
-}) {
-  return (
-    <div className="rounded-2xl border border-border bg-card p-4">
-      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-        <span className={cn("inline-flex h-8 w-8 items-center justify-center rounded-full", getToneSurfaceClass(tone))}>{icon}</span>
-        <span>{label}</span>
-      </div>
-      <p className="mt-3 text-xl font-semibold text-foreground">{value}</p>
-      <p className="mt-2 text-sm text-muted-foreground">{meta}</p>
-    </div>
-  );
-}
-
-function ActivitySection({
-  title,
-  description,
-  empty,
-  groups,
-  actionHref,
-  actionLabel,
-}: {
-  title: string;
-  description: string;
-  empty: string;
-  groups: ActivityGroup[];
-  actionHref?: string;
-  actionLabel?: string;
-}) {
-  const visibleGroups = groups.filter((group) => group.items.length > 0);
-
-  return (
-    <section className="space-y-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h2 className="text-xl font-bold text-foreground">{title}</h2>
-          <p className="mt-1 text-sm text-muted-foreground">{description}</p>
-        </div>
-        {actionHref && actionLabel ? (
-          <Link href={actionHref} className="text-sm font-medium text-primary hover:underline">
-            {actionLabel}
-          </Link>
-        ) : null}
-      </div>
-
-      {visibleGroups.length > 0 ? (
-        <div className="space-y-4">
-          {visibleGroups.map((group) => (
-            <StatusGroup key={group.id} title={group.title} description={group.description} tone={group.tone} count={group.items.length}>
-              {group.items}
-            </StatusGroup>
-          ))}
-        </div>
-      ) : (
-        <div className="rounded-2xl border border-dashed border-border bg-background/40 px-4 py-8 text-center text-sm text-muted-foreground">{empty}</div>
-      )}
-    </section>
-  );
-}
-
-function StatusGroup({
-  title,
-  description,
-  tone,
-  count,
-  children,
-}: {
-  title: string;
-  description: string;
-  tone: StatusTone;
-  count: number;
-  children: ReactNode;
-}) {
-  return (
-    <div className="rounded-2xl border border-border bg-card p-4">
-      <div className="mb-4 flex flex-col gap-3 border-b border-border/70 pb-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <div className="flex items-center gap-2">
-            <h3 className="font-semibold text-foreground">{title}</h3>
-            <StatusBadge tone={tone}>{count}</StatusBadge>
-          </div>
-          <p className="mt-1 text-sm text-muted-foreground">{description}</p>
-        </div>
-      </div>
-      <div className="space-y-3">{children}</div>
-    </div>
-  );
-}
-
-function ProposalCard({ item }: { item: ProposalWithSubjectState }) {
+function buildProposalCard(item: ProposalWithSubjectState, acknowledgementSet: Set<string>): ActivityCardData {
   const { proposal, proposalData, linkedSubject, linkedState } = item;
   const title = proposalData.name || proposalData.short_tag || "Návrh předmětu";
   const linkedStateMeta = getProposalLinkedStateMeta(linkedState, linkedSubject?.updated_at);
+  const panels: NonNullable<ActivityCardData["panels"]> = [];
 
-  return (
-    <div className="rounded-2xl border border-border bg-background/70 p-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-2">
-            <p className="font-semibold text-foreground">{title}</p>
-            <StatusBadge tone={getProposalStatusTone(proposal.status)}>{getProposalStatusLabel(proposal.status)}</StatusBadge>
-            {linkedStateMeta ? <StatusBadge tone={linkedStateMeta.tone}>{linkedStateMeta.label}</StatusBadge> : null}
-          </div>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {proposal.type === "new" ? "Nový předmět" : "Úprava existujícího"} · Odesláno {formatDate(proposal.created_at)}
-          </p>
-          {linkedSubject ? (
-            <Link href={`/predmety/${linkedSubject.slug}`} className="mt-2 inline-flex items-center gap-2 text-sm text-primary hover:underline">
-              {linkedSubject.short_tag} · {linkedSubject.name}
-            </Link>
-          ) : null}
-        </div>
-      </div>
+  if (proposal.note?.trim()) {
+    panels.push({
+      label: "Tvoje poznámka",
+      value: proposal.note,
+      tone: "default" as const,
+    });
+  }
 
-      <div className="mt-4 grid gap-3 text-sm text-muted-foreground sm:grid-cols-2">
-        {proposal.reviewed_at ? <MetaRow label="Vyřízeno" value={formatDateTime(proposal.reviewed_at)} /> : null}
-        {linkedStateMeta?.detail ? <MetaRow label="Aktualizace" value={linkedStateMeta.detail} /> : null}
-      </div>
+  if (proposal.rejection_reason) {
+    panels.push({
+      label: "Důvod zamítnutí",
+      value: proposal.rejection_reason,
+      tone: "danger" as const,
+    });
+  }
 
-      {proposal.note?.trim() ? (
-        <div className="mt-4 rounded-xl border border-border/70 bg-card px-3 py-2">
-          <p className="text-xs font-medium text-muted-foreground">Tvoje poznámka</p>
-          <p className="mt-1 whitespace-pre-wrap text-sm text-foreground/90">{proposal.note}</p>
-        </div>
-      ) : null}
+  const attention = getProposalAttention(item, acknowledgementSet);
 
-      {proposal.rejection_reason ? (
-        <div className="mt-4 rounded-xl border border-destructive/20 bg-destructive/5 px-3 py-2">
-          <p className="text-xs font-medium text-destructive">Důvod zamítnutí</p>
-          <p className="mt-1 text-sm text-destructive">{proposal.rejection_reason}</p>
-        </div>
-      ) : null}
-    </div>
-  );
+  return {
+    id: `proposal-${proposal.id}`,
+    title,
+    subtitle: `${proposal.type === "new" ? "Nový předmět" : "Úprava existujícího"} · Odesláno ${formatDate(proposal.created_at)}`,
+    link: linkedSubject
+      ? {
+          href: `/predmety/${linkedSubject.slug}`,
+          label: `${linkedSubject.short_tag} · ${linkedSubject.name}`,
+        }
+      : undefined,
+    badges: [
+      { label: getProposalStatusLabel(proposal.status), tone: getProposalStatusTone(proposal.status) },
+      ...(linkedStateMeta ? [{ label: linkedStateMeta.label, tone: linkedStateMeta.tone }] : []),
+      ...(attention?.acknowledged ? [{ label: "Přečteno", tone: "muted" as const }] : []),
+    ],
+    meta: [
+      ...(proposal.reviewed_at ? [{ label: "Vyřízeno", value: formatDateTime(proposal.reviewed_at) }] : []),
+      ...(linkedStateMeta?.detail ? [{ label: "Aktualizace", value: linkedStateMeta.detail }] : []),
+    ],
+    panels,
+    attention,
+  };
 }
 
-function MaterialCard({ material }: { material: MaterialWithSubject }) {
-  return (
-    <div className="rounded-2xl border border-border bg-background/70 p-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-2">
-            <p className="font-semibold text-foreground">{material.title}</p>
-            <StatusBadge tone={getMaterialStatusTone(material.moderation_status)}>{getMaterialStatusLabel(material.moderation_status)}</StatusBadge>
-          </div>
-          {material.subject ? (
-            <Link href={`/predmety/${material.subject.slug}`} className="mt-1 block text-sm text-primary hover:underline">
-              {material.subject.short_tag} · {material.subject.name}
-            </Link>
-          ) : null}
-        </div>
-      </div>
+function buildMaterialCard(material: MaterialWithSubject, acknowledgementSet: Set<string>): ActivityCardData {
+  const attention = getMaterialAttention(material, acknowledgementSet);
+  const subjectLabel = material.subject ? `${material.subject.short_tag} · ${material.subject.name}` : undefined;
+  const fileUrl = getStoragePublicUrl("study_materials", material.file_path);
+  const panels = material.rejection_reason
+    ? [
+        {
+          label: "Důvod zamítnutí",
+          value: material.rejection_reason,
+          tone: "danger" as const,
+        },
+      ]
+    : undefined;
 
-      <div className="mt-4 grid gap-3 text-sm text-muted-foreground sm:grid-cols-2">
-        <MetaRow label="Nahráno" value={formatDateTime(material.created_at)} />
-        <MetaRow label="Velikost" value={formatFileSize(material.size_bytes)} />
-        {material.moderated_at ? <MetaRow label="Moderováno" value={formatDateTime(material.moderated_at)} /> : null}
-      </div>
-
-      {material.rejection_reason ? (
-        <div className="mt-4 rounded-xl border border-destructive/20 bg-destructive/5 px-3 py-2">
-          <p className="text-xs font-medium text-destructive">Důvod zamítnutí</p>
-          <p className="mt-1 text-sm text-destructive">{material.rejection_reason}</p>
-        </div>
-      ) : null}
-    </div>
-  );
+  return {
+    id: `material-${material.id}`,
+    title: material.title,
+    subtitle: subjectLabel,
+    supportingText: `Nahráno ${formatDateTime(material.created_at)}`,
+    link: fileUrl
+      ? {
+          href: fileUrl,
+          label: "Otevřít soubor",
+          external: true,
+        }
+      : material.subject
+        ? {
+            href: `/predmety/${material.subject.slug}`,
+            label: "Otevřít předmět",
+          }
+        : undefined,
+    badges: [
+      { label: getMaterialStatusLabel(material.moderation_status), tone: getMaterialStatusTone(material.moderation_status) },
+      ...(attention?.acknowledged ? [{ label: "Přečteno", tone: "muted" as const }] : []),
+    ],
+    meta: [
+      { label: "Velikost", value: formatFileSize(material.size_bytes) },
+      ...(material.moderated_at ? [{ label: "Moderováno", value: formatDateTime(material.moderated_at) }] : []),
+    ],
+    panels,
+    attention,
+  };
 }
 
-function FeedbackCard({ item }: { item: Feedback }) {
-  return (
-    <div className="rounded-2xl border border-border bg-background/70 p-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-2">
-            <p className="font-semibold text-foreground">{getFeedbackTypeLabel(item.type)}</p>
-            <StatusBadge tone={getFeedbackStatusTone(item.status)}>{getFeedbackStatusLabel(item.status)}</StatusBadge>
-          </div>
-          {item.source_label ? <p className="mt-1 text-sm text-muted-foreground">Kontext: {item.source_label}</p> : null}
-        </div>
-      </div>
+function buildFeedbackCard(item: Feedback, acknowledgementSet: Set<string>): ActivityCardData {
+  const attention = getFeedbackAttention(item, acknowledgementSet);
 
-      <p className="mt-4 whitespace-pre-wrap text-sm text-foreground/90">{item.message}</p>
-
-      <div className="mt-4 grid gap-3 text-sm text-muted-foreground sm:grid-cols-2">
-        <MetaRow label="Odesláno" value={formatDateTime(item.created_at)} />
-        <MetaRow label="Naposledy změněno" value={formatDateTime(item.updated_at)} />
-      </div>
-    </div>
-  );
+  return {
+    id: `feedback-${item.id}`,
+    title: getFeedbackTypeLabel(item.type),
+    subtitle: item.source_label ? `Kontext: ${item.source_label}` : undefined,
+    badges: [
+      { label: getFeedbackStatusLabel(item.status), tone: getFeedbackStatusTone(item.status) },
+      ...(attention?.acknowledged ? [{ label: "Přečteno", tone: "muted" as const }] : []),
+    ],
+    meta: [
+      { label: "Odesláno", value: formatDateTime(item.created_at) },
+      { label: "Naposledy změněno", value: formatDateTime(item.updated_at) },
+    ],
+    body: item.message,
+    attention,
+  };
 }
 
-function DeckCard({ deck }: { deck: DeckWithSubject }) {
-  return (
-    <div className="rounded-2xl border border-border bg-background/70 p-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-2">
-            <Link href={`/flashcardy/${deck.id}`} className="font-semibold text-foreground hover:text-primary">
-              {deck.title}
-            </Link>
-            <StatusBadge tone={deck.is_public ? "success" : "muted"}>{deck.is_public ? "Veřejný" : "Soukromý"}</StatusBadge>
-          </div>
-          {deck.subject ? <p className="mt-1 text-sm text-muted-foreground">{deck.subject.short_tag} · {deck.subject.name}</p> : null}
-        </div>
-      </div>
-
-      <div className="mt-4 grid gap-3 text-sm text-muted-foreground sm:grid-cols-2">
-        <MetaRow label="Karet" value={String(deck.card_count)} />
-        <MetaRow label="Naposledy upraveno" value={formatDateTime(deck.updated_at)} />
-      </div>
-    </div>
-  );
+function buildDeckCard(deck: DeckWithSubject): ActivityCardData {
+  return {
+    id: `deck-${deck.id}`,
+    title: deck.title,
+    subtitle: deck.subject ? `${deck.subject.short_tag} · ${deck.subject.name}` : undefined,
+    link: {
+      href: `/flashcardy/${deck.id}`,
+      label: "Otevřít balíček",
+    },
+    badges: [{ label: deck.is_public ? "Veřejný" : "Soukromý", tone: deck.is_public ? "success" : "muted" }],
+    meta: [
+      { label: "Karet", value: String(deck.card_count) },
+      { label: "Naposledy upraveno", value: formatDateTime(deck.updated_at) },
+    ],
+  };
 }
 
-function MetaRow({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground/80">{label}</p>
-      <p className="mt-1 text-sm text-foreground/90">{value}</p>
-    </div>
-  );
+function getProposalAttention(item: ProposalWithSubjectState, acknowledgementSet: Set<string>): ActivityAttention | undefined {
+  if (item.proposal.status !== "rejected" && item.linkedState !== "updated" && item.linkedState !== "deleted") {
+    return undefined;
+  }
+
+  const stateToken = buildProposalStateToken(item);
+  return {
+    itemType: "subject_proposal",
+    itemId: item.proposal.id,
+    stateToken,
+    acknowledged: acknowledgementSet.has(`subject_proposal:${item.proposal.id}:${stateToken}`),
+  };
 }
 
-function StatusBadge({ tone, children }: { tone: StatusTone; children: ReactNode }) {
-  return <span className={cn("inline-flex rounded-full px-2.5 py-1 text-xs font-semibold", getToneSurfaceClass(tone))}>{children}</span>;
+function getMaterialAttention(material: MaterialWithSubject, acknowledgementSet: Set<string>): ActivityAttention | undefined {
+  if (material.moderation_status !== "rejected") {
+    return undefined;
+  }
+
+  const stateToken = buildMaterialStateToken(material);
+  return {
+    itemType: "subject_material",
+    itemId: material.id,
+    stateToken,
+    acknowledged: acknowledgementSet.has(`subject_material:${material.id}:${stateToken}`),
+  };
+}
+
+function getFeedbackAttention(item: Feedback, acknowledgementSet: Set<string>): ActivityAttention | undefined {
+  if (item.status !== "new" && item.status !== "in_progress") {
+    return undefined;
+  }
+
+  const stateToken = buildFeedbackStateToken(item);
+  return {
+    itemType: "feedback",
+    itemId: item.id,
+    stateToken,
+    acknowledged: acknowledgementSet.has(`feedback:${item.id}:${stateToken}`),
+  };
+}
+
+function buildProposalStateToken(item: ProposalWithSubjectState) {
+  const { proposal, linkedState, linkedSubject } = item;
+  return [proposal.status, proposal.reviewed_at ?? "", proposal.rejection_reason ?? "", linkedState ?? "", linkedSubject?.updated_at ?? ""].join("|");
+}
+
+function buildMaterialStateToken(material: MaterialWithSubject) {
+  return [material.moderation_status, material.moderated_at ?? "", material.rejection_reason ?? ""].join("|");
+}
+
+function buildFeedbackStateToken(item: Feedback) {
+  return [item.status, item.updated_at].join("|");
 }
 
 function MyActivitySkeleton() {
   return (
-    <>
-      <div className="mb-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+    <div className="space-y-8">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
         {Array.from({ length: 5 }).map((_, index) => (
           <div key={index} className="rounded-2xl border border-border bg-card p-4">
             <div className="h-4 w-24 animate-pulse rounded bg-muted" />
@@ -598,25 +478,27 @@ function MyActivitySkeleton() {
         ))}
       </div>
 
-      <div className="space-y-8">
-        {Array.from({ length: 3 }).map((_, index) => (
-          <section key={index} className="space-y-4">
-            <div className="h-6 w-48 animate-pulse rounded bg-muted" />
-            <div className="rounded-2xl border border-border bg-card p-4">
-              <div className="h-4 w-40 animate-pulse rounded bg-muted" />
-              <div className="mt-4 space-y-3">
-                {Array.from({ length: 2 }).map((__, itemIndex) => (
-                  <div key={itemIndex} className="rounded-2xl border border-border bg-background/70 p-4">
-                    <div className="h-4 w-2/3 animate-pulse rounded bg-muted" />
-                    <div className="mt-2 h-4 w-1/2 animate-pulse rounded bg-muted" />
-                  </div>
-                ))}
-              </div>
+      {Array.from({ length: 4 }).map((_, index) => (
+        <section key={index} className="space-y-4">
+          <div className="h-6 w-48 animate-pulse rounded bg-muted" />
+          <div className="rounded-2xl border border-border bg-card p-4">
+            <div className="grid grid-cols-3 gap-2">
+              {Array.from({ length: 3 }).map((__, buttonIndex) => (
+                <div key={buttonIndex} className="h-12 animate-pulse rounded-xl bg-muted" />
+              ))}
             </div>
-          </section>
-        ))}
-      </div>
-    </>
+            <div className="mt-4 space-y-3">
+              {Array.from({ length: 3 }).map((__, itemIndex) => (
+                <div key={itemIndex} className="rounded-2xl border border-border bg-background/70 p-4">
+                  <div className="h-4 w-2/3 animate-pulse rounded bg-muted" />
+                  <div className="mt-2 h-4 w-1/2 animate-pulse rounded bg-muted" />
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      ))}
+    </div>
   );
 }
 
@@ -687,21 +569,6 @@ function getProposalLinkedStateMeta(linkedState: ProposalWithSubjectState["linke
       };
     default:
       return null;
-  }
-}
-
-function getToneSurfaceClass(tone: StatusTone) {
-  switch (tone) {
-    case "success":
-      return "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400";
-    case "warning":
-      return "bg-amber-500/10 text-amber-700 dark:text-amber-400";
-    case "danger":
-      return "bg-destructive/10 text-destructive";
-    case "info":
-      return "bg-sky-500/10 text-sky-700 dark:text-sky-400";
-    default:
-      return "bg-muted text-muted-foreground";
   }
 }
 

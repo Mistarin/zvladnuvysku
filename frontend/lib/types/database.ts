@@ -240,6 +240,20 @@ export interface Database {
         }
         Update: Partial<Database['public']['Tables']['feedback']['Insert']>
       }
+      activity_acknowledgements: {
+        Row: {
+          id: string
+          user_id: string
+          item_type: string
+          item_id: string
+          state_token: string
+          created_at: string
+        }
+        Insert: Omit<Database['public']['Tables']['activity_acknowledgements']['Row'], 'id' | 'created_at'> & {
+          created_at?: string
+        }
+        Update: Partial<Database['public']['Tables']['activity_acknowledgements']['Insert']>
+      }
       teacher_rating_stats: {
         Row: {
           teacher_id: string
@@ -338,6 +352,7 @@ export type SubjectMaterial = Database['public']['Tables']['subject_materials'][
 export type SubjectProposalRecord = Database['public']['Tables']['subject_proposals']['Row']
 export type Profile = Database['public']['Tables']['profiles']['Row']
 export type Feedback = Database['public']['Tables']['feedback']['Row']
+export type ActivityAcknowledgement = Database['public']['Tables']['activity_acknowledgements']['Row']
 export type TeacherRatingStats = Database['public']['Tables']['teacher_rating_stats']['Row']
 export type SubjectSearchView = Database['public']['Views']['subject_search_view']['Row']
 
