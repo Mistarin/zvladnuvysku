@@ -184,29 +184,26 @@ export function HallOfFameSection({
 // ---- Podium component ----
 
 function PodiumSection({ entries }: { entries: HallOfFameRow[] }) {
-  // Reorder: 2nd, 1st, 3rd (podium layout)
-  const ordered = [entries[1], entries[0], entries[2]].filter(Boolean) as HallOfFameRow[];
-  const podiumOrder = [1, 0, 2]; // maps ordered index back to original position
+  // Tag each entry with its real rank BEFORE reordering for visual layout
+  const first  = entries[0] ? { entry: entries[0], rank: 1, heightClass: "h-28", sizeClass: "text-3xl" } : null;
+  const second = entries[1] ? { entry: entries[1], rank: 2, heightClass: "h-20", sizeClass: "text-xl"  } : null;
+  const third  = entries[2] ? { entry: entries[2], rank: 3, heightClass: "h-16", sizeClass: "text-lg"  } : null;
 
-  const heights = ["h-20", "h-28", "h-16"]; // 2nd, 1st, 3rd
-  const sizes = ["text-xl", "text-3xl", "text-lg"];
+  // Visual podium order: 2nd (left), 1st (center, tallest), 3rd (right)
+  const podiumItems = [second, first, third].filter(Boolean) as NonNullable<typeof first>[];
 
   return (
     <div className="flex items-end justify-center gap-2 sm:gap-4 pt-4 pb-2">
-      {ordered.map((entry, orderedIdx) => {
-        const originalIdx = podiumOrder[orderedIdx];
-        const rank = originalIdx + 1;
-        return (
-          <PodiumColumn
-            key={entry.user_id}
-            entry={entry}
-            rank={rank}
-            heightClass={heights[orderedIdx]}
-            sizeClass={sizes[orderedIdx]}
-            isFirst={rank === 1}
-          />
-        );
-      })}
+      {podiumItems.map(({ entry, rank, heightClass, sizeClass }) => (
+        <PodiumColumn
+          key={entry.user_id}
+          entry={entry}
+          rank={rank}
+          heightClass={heightClass}
+          sizeClass={sizeClass}
+          isFirst={rank === 1}
+        />
+      ))}
     </div>
   );
 }
