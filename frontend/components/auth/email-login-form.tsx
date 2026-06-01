@@ -27,7 +27,7 @@ export function EmailLoginForm() {
     const { error } = await supabase.auth.signInWithOtp({
       email: trimmedEmail,
       options: {
-        emailRedirectTo: getAuthCallbackUrl('/moje-aktivita'),
+        emailRedirectTo: getAuthCallbackUrl('/'),
       },
     })
 

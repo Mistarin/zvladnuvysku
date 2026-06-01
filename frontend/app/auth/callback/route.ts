@@ -9,7 +9,7 @@ export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
   const rawNext = searchParams.get('next')
-  const next = rawNext?.startsWith('/') ? rawNext : '/moje-aktivita'
+  const next = rawNext?.startsWith('/') ? rawNext : '/'
 
   if (!code) {
     return NextResponse.redirect(`${origin}/auth/error?reason=no_code`)
