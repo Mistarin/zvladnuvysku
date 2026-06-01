@@ -4,18 +4,22 @@ import { useState, useTransition } from "react";
 import { proposeTeacher } from "@/app/ucitele/actions";
 import * as Dialog from "@radix-ui/react-dialog";
 import { X, Loader2 } from "lucide-react";
+import { WelcomeDisplayNameModal } from "@/components/layout/welcome-display-name-modal";
 
 interface TeacherProposalDialogProps {
   trigger?: React.ReactNode;
+  hasDisplayName: boolean;
 }
 
 const FACULTIES = ["FSS", "FU", "FF", "LF", "PdF", "PřF"];
 
-export function TeacherProposalDialog({ trigger }: TeacherProposalDialogProps) {
+export function TeacherProposalDialog({ trigger, hasDisplayName: initialHasDisplayName }: TeacherProposalDialogProps) {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [hasDisplayName, setHasDisplayName] = useState(initialHasDisplayName);
+  const [showDisplayNameModal, setShowDisplayNameModal] = useState(false);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -34,6 +38,10 @@ export function TeacherProposalDialog({ trigger }: TeacherProposalDialogProps) {
 
     if (!formData.name.trim()) {
       setError("Jméno je povinné");
+      return;
+    }
+    if (!hasDisplayName) {
+      setShowDisplayNameModal(true);
       return;
     }
 
@@ -152,6 +160,14 @@ export function TeacherProposalDialog({ trigger }: TeacherProposalDialogProps) {
           </Dialog.Close>
         </Dialog.Content>
       </Dialog.Portal>
+      <WelcomeDisplayNameModal
+        open={showDisplayNameModal}
+        onOpenChange={setShowDisplayNameModal}
+        initialDisplayName=""
+        onCompleted={(displayName) => {
+          setHasDisplayName(Boolean(displayName));
+        }}
+      />
     </Dialog.Root>
   );
 }

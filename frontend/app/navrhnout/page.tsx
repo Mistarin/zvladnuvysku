@@ -12,6 +12,14 @@ export default async function NavrhnoutPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/prihlaseni')
+  const profile = (
+    await supabase
+      .from('profiles')
+      .select('display_name')
+      .eq('user_id', user.id)
+      .maybeSingle()
+  ).data ?? null
+  const hasDisplayName = Boolean((profile as { display_name?: string | null } | null)?.display_name?.trim())
 
   return (
     <div className="container mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
@@ -21,7 +29,7 @@ export default async function NavrhnoutPage() {
           Chybí ti tady nějaký předmět, nebo máš lepší informace? Pošli nám návrh a moderátor ho brzy zkontroluje.
         </p>
       </div>
-      <SubjectProposalForm />
+      <SubjectProposalForm hasDisplayName={hasDisplayName} />
     </div>
   )
 }

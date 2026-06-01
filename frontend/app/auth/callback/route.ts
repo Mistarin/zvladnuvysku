@@ -48,6 +48,25 @@ export async function GET(request: Request) {
     )
   }
 
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('display_name')
+    .eq('user_id', data.user.id)
+    .maybeSingle()
+
+  const displayName = (profile as { display_name?: string | null } | null)?.display_name?.trim()
+  const response = NextResponse.redirect(`${origin}${next}`)
+
+  if (!displayName) {
+    response.cookies.set('needs_display_name', '1', {
+      path: '/',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24 * 7,
+    })
+  } else {
+    response.cookies.delete('needs_display_name')
+  }
+
   // Vše OK — přesměrovat na cílovou stránku
-  return NextResponse.redirect(`${origin}${next}`)
+  return response
 }

@@ -6,6 +6,7 @@ import {
   getSubjectDetailsForProposal,
   submitSubjectProposal,
 } from '@/app/actions/contributions'
+import { WelcomeDisplayNameModal } from '@/components/layout/welcome-display-name-modal'
 import { getSubjectCache, searchInCache, type SubjectCacheEntry } from '@/lib/subject-cache'
 import { getTeacherCache, searchTeachersInCache, type TeacherCacheEntry } from '@/lib/teacher-cache'
 
@@ -151,7 +152,11 @@ function formatDiffValue(value: string | number | boolean | null | undefined) {
   return String(value)
 }
 
-export function SubjectProposalForm() {
+interface SubjectProposalFormProps {
+  hasDisplayName: boolean
+}
+
+export function SubjectProposalForm({ hasDisplayName: initialHasDisplayName }: SubjectProposalFormProps) {
   const [type, setType] = useState<'new' | 'edit'>('new')
   const [subjectSearch, setSubjectSearch] = useState('')
   const [subjectId, setSubjectId] = useState<string | null>(null)
@@ -164,6 +169,8 @@ export function SubjectProposalForm() {
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [submissionToken, setSubmissionToken] = useState(() => crypto.randomUUID())
+  const [hasDisplayName, setHasDisplayName] = useState(initialHasDisplayName)
+  const [showDisplayNameModal, setShowDisplayNameModal] = useState(false)
 
   const [selectedTeachers, setSelectedTeachers] = useState<{ id?: string, name: string, faculty: string }[]>([])
   const [teacherSearch, setTeacherSearch] = useState('')
@@ -280,6 +287,10 @@ export function SubjectProposalForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (type === 'edit' && !subjectId) { setError('Vyber předmět, který chceš upravit.'); return }
+    if (!hasDisplayName) {
+      setShowDisplayNameModal(true)
+      return
+    }
     setIsSubmitting(true)
     setError(null)
     const payload = {
@@ -329,6 +340,7 @@ export function SubjectProposalForm() {
   }
 
   return (
+    <>
     <form onSubmit={handleSubmit} className="space-y-8">
       {/* Typ návrhu */}
       <div className="glass-card rounded-[1.75rem] p-7 sm:p-8 space-y-5">
@@ -697,5 +709,14 @@ export function SubjectProposalForm() {
         {isSubmitting ? 'Odesílám...' : 'Odeslat návrh'}
       </button>
     </form>
+    <WelcomeDisplayNameModal
+      open={showDisplayNameModal}
+      onOpenChange={setShowDisplayNameModal}
+      initialDisplayName=""
+      onCompleted={(displayName) => {
+        setHasDisplayName(Boolean(displayName))
+      }}
+    />
+    </>
   )
 }

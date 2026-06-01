@@ -4,10 +4,12 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRating } from '@/hooks/use-rating'
 import { getMySubjectRating } from '@/app/actions/contributions'
+import { WelcomeDisplayNameModal } from '@/components/layout/welcome-display-name-modal'
 
 interface RatingFormProps {
   subjectId: string
   isLoggedIn: boolean
+  hasDisplayName: boolean
 }
 
 function StarPicker({
@@ -46,7 +48,7 @@ function StarPicker({
   )
 }
 
-export function RatingForm({ subjectId, isLoggedIn }: RatingFormProps) {
+export function RatingForm({ subjectId, isLoggedIn, hasDisplayName: initialHasDisplayName }: RatingFormProps) {
   const { submit, isSubmitting, error, success } = useRating()
 
   const [overall, setOverall] = useState(0)
@@ -54,6 +56,8 @@ export function RatingForm({ subjectId, isLoggedIn }: RatingFormProps) {
   const [usefulness, setUsefulness] = useState(0)
   const [workload, setWorkload] = useState(0)
   const [comment, setComment] = useState('')
+  const [hasDisplayName, setHasDisplayName] = useState(initialHasDisplayName)
+  const [showDisplayNameModal, setShowDisplayNameModal] = useState(false)
 
   useEffect(() => {
     if (!isLoggedIn) return;
@@ -106,6 +110,10 @@ export function RatingForm({ subjectId, isLoggedIn }: RatingFormProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (overall === 0) return
+    if (!hasDisplayName) {
+      setShowDisplayNameModal(true)
+      return
+    }
     await submit({
       subjectId,
       overall,
@@ -117,56 +125,67 @@ export function RatingForm({ subjectId, isLoggedIn }: RatingFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
-      {/* Celkové hodnocení — povinné */}
-      <div>
-        <StarPicker
-          label="Celkové hodnocení *"
-          value={overall}
-          onChange={setOverall}
-        />
-        {overall === 0 && (
-          <p className="text-xs text-muted-foreground/70 mt-1">Povinné</p>
+    <>
+      <form onSubmit={handleSubmit} className="space-y-5">
+        {/* Celkové hodnocení — povinné */}
+        <div>
+          <StarPicker
+            label="Celkové hodnocení *"
+            value={overall}
+            onChange={setOverall}
+          />
+          {overall === 0 && (
+            <p className="text-xs text-muted-foreground/70 mt-1">Povinné</p>
+          )}
+        </div>
+
+        {/* Volitelné dimenze */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <StarPicker label="Obtížnost" value={difficulty} onChange={setDifficulty} />
+          <StarPicker label="Užitečnost" value={usefulness} onChange={setUsefulness} />
+          <StarPicker label="Pracovní zátěž" value={workload} onChange={setWorkload} />
+        </div>
+
+        {/* Komentář */}
+        <div className="space-y-1">
+          <label className="text-xs text-muted-foreground" htmlFor="rating-comment">
+            Komentář <span className="opacity-50">(max 2000 znaků)</span>
+          </label>
+          <textarea
+            id="rating-comment"
+            value={comment}
+            onChange={(e) => setComment(e.target.value)}
+            maxLength={2000}
+            rows={3}
+            placeholder="Sdílej svou zkušenost s předmětem..."
+            className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground resize-none outline-none focus:ring-1 focus:ring-primary/40 focus:border-primary/40 transition-all"
+          />
+          <p className="text-xs text-muted-foreground/50 text-right">
+            {comment.length}/2000
+          </p>
+        </div>
+
+        {error && (
+          <p className="text-sm text-destructive">{error}</p>
         )}
-      </div>
 
-      {/* Volitelné dimenze */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <StarPicker label="Obtížnost" value={difficulty} onChange={setDifficulty} />
-        <StarPicker label="Užitečnost" value={usefulness} onChange={setUsefulness} />
-        <StarPicker label="Pracovní zátěž" value={workload} onChange={setWorkload} />
-      </div>
+        <button
+          type="submit"
+          disabled={isSubmitting || overall === 0}
+          className="w-full py-2.5 rounded-xl font-medium text-sm accent-gradient text-white hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {isSubmitting ? 'Ukládám...' : 'Uložit hodnocení'}
+        </button>
+      </form>
 
-      {/* Komentář */}
-      <div className="space-y-1">
-        <label className="text-xs text-muted-foreground" htmlFor="rating-comment">
-          Komentář <span className="opacity-50">(max 2000 znaků)</span>
-        </label>
-        <textarea
-          id="rating-comment"
-          value={comment}
-          onChange={(e) => setComment(e.target.value)}
-          maxLength={2000}
-          rows={3}
-          placeholder="Sdílej svou zkušenost s předmětem..."
-          className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground resize-none outline-none focus:ring-1 focus:ring-primary/40 focus:border-primary/40 transition-all"
-        />
-        <p className="text-xs text-muted-foreground/50 text-right">
-          {comment.length}/2000
-        </p>
-      </div>
-
-      {error && (
-        <p className="text-sm text-destructive">{error}</p>
-      )}
-
-      <button
-        type="submit"
-        disabled={isSubmitting || overall === 0}
-        className="w-full py-2.5 rounded-xl font-medium text-sm accent-gradient text-white hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        {isSubmitting ? 'Ukládám...' : 'Uložit hodnocení'}
-      </button>
-    </form>
+      <WelcomeDisplayNameModal
+        open={showDisplayNameModal}
+        onOpenChange={setShowDisplayNameModal}
+        initialDisplayName=""
+        onCompleted={(displayName) => {
+          setHasDisplayName(Boolean(displayName))
+        }}
+      />
+    </>
   )
 }

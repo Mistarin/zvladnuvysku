@@ -69,6 +69,16 @@ export default async function TeacherDetailPage({ params }: PageProps) {
 
   const { data: { user } } = await supabase.auth.getUser();
   const isLoggedIn = !!user;
+  const profile = user
+    ? (
+        await supabase
+          .from("profiles")
+          .select("display_name")
+          .eq("user_id", user.id)
+          .maybeSingle()
+      ).data ?? null
+    : null;
+  const hasDisplayName = Boolean((profile as { display_name?: string | null } | null)?.display_name?.trim());
 
   const facColor = FACULTY_COLORS[t.faculty] || "var(--foreground)";
 
@@ -151,7 +161,7 @@ export default async function TeacherDetailPage({ params }: PageProps) {
         <div className="md:col-span-2 space-y-8">
           <div className="glass-card p-6">
             <h3 className="font-semibold text-xl mb-4">Ohodnoťte vyučujícího</h3>
-            <TeacherRatingForm teacherId={t.id} isLoggedIn={isLoggedIn} />
+            <TeacherRatingForm teacherId={t.id} isLoggedIn={isLoggedIn} hasDisplayName={hasDisplayName} />
           </div>
 
           <div className="space-y-4">

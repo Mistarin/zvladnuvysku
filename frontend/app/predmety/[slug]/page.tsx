@@ -88,6 +88,16 @@ export default async function PredmetDetailPage({ params }: PageProps) {
 
   const subject = data as Subject;
   const isLoggedIn = Boolean(user);
+  const profile = user
+    ? (
+        await supabase
+          .from("profiles")
+          .select("display_name")
+          .eq("user_id", user.id)
+          .maybeSingle()
+      ).data ?? null
+    : null;
+  const hasDisplayName = Boolean((profile as { display_name?: string | null } | null)?.display_name?.trim());
 
   return (
     <div className="container mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
@@ -130,7 +140,7 @@ export default async function PredmetDetailPage({ params }: PageProps) {
           <hr className="my-6 border-border" />
 
           <Suspense fallback={<RatingsSectionSkeleton />}>
-            <SubjectRatingsSection subject={subject} isLoggedIn={isLoggedIn} />
+            <SubjectRatingsSection subject={subject} isLoggedIn={isLoggedIn} hasDisplayName={hasDisplayName} />
           </Suspense>
         </div>
 
@@ -142,7 +152,7 @@ export default async function PredmetDetailPage({ params }: PageProps) {
       <hr className="my-8 border-border" />
 
       <Suspense fallback={<MaterialsSectionSkeleton isLoggedIn={isLoggedIn} />}>
-        <SubjectMaterialsSection subject={subject} isLoggedIn={isLoggedIn} />
+        <SubjectMaterialsSection subject={subject} isLoggedIn={isLoggedIn} hasDisplayName={hasDisplayName} />
       </Suspense>
 
       <div className="mt-8 border-t border-border pt-6">
@@ -157,9 +167,11 @@ export default async function PredmetDetailPage({ params }: PageProps) {
 async function SubjectRatingsSection({
   subject,
   isLoggedIn,
+  hasDisplayName,
 }: {
   subject: Subject;
   isLoggedIn: boolean;
+  hasDisplayName: boolean;
 }) {
   const supabase = await createClient();
   const [{ data: rawRatings }, { data: ratingStatsData }] = await Promise.all([
@@ -189,7 +201,7 @@ async function SubjectRatingsSection({
         </h2>
         <RatingStats stats={ratingStats} totalRatings={totalRatings} />
         <div className="rounded-xl border border-border bg-card p-4 shadow-sm sm:p-6">
-          <RatingForm subjectId={subject.id} isLoggedIn={isLoggedIn} />
+          <RatingForm subjectId={subject.id} isLoggedIn={isLoggedIn} hasDisplayName={hasDisplayName} />
         </div>
       </div>
 
@@ -321,9 +333,11 @@ async function SubjectSidebarSection({
 async function SubjectMaterialsSection({
   subject,
   isLoggedIn,
+  hasDisplayName,
 }: {
   subject: Subject;
   isLoggedIn: boolean;
+  hasDisplayName: boolean;
 }) {
   const supabase = await createClient();
   const { data: materialsData, error } = await supabase
@@ -373,7 +387,7 @@ async function SubjectMaterialsSection({
 
       <div className="max-w-xl pt-4">
         {isLoggedIn ? (
-          <MaterialUploadForm subjectId={subject.id} />
+          <MaterialUploadForm subjectId={subject.id} hasDisplayName={hasDisplayName} />
         ) : (
           <div className="rounded-xl border border-dashed border-border bg-background/40 p-5 text-center">
             <p className="text-sm text-muted-foreground">Pro nahrání materiálu se musíš přihlásit.</p>

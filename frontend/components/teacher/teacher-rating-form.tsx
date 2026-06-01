@@ -4,13 +4,15 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { getMyTeacherRating, saveTeacherRating } from "@/app/actions/contributions";
+import { WelcomeDisplayNameModal } from "@/components/layout/welcome-display-name-modal";
 
 interface TeacherRatingFormProps {
   teacherId: string;
   isLoggedIn: boolean;
+  hasDisplayName: boolean;
 }
 
-export function TeacherRatingForm({ teacherId, isLoggedIn }: TeacherRatingFormProps) {
+export function TeacherRatingForm({ teacherId, isLoggedIn, hasDisplayName: initialHasDisplayName }: TeacherRatingFormProps) {
   const router = useRouter();
   const [rating, setRating] = useState<number>(0);
   const [hoverRating, setHoverRating] = useState<number>(0);
@@ -18,6 +20,8 @@ export function TeacherRatingForm({ teacherId, isLoggedIn }: TeacherRatingFormPr
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [hasDisplayName, setHasDisplayName] = useState(initialHasDisplayName);
+  const [showDisplayNameModal, setShowDisplayNameModal] = useState(false);
 
   useEffect(() => {
     if (!isLoggedIn) return;
@@ -42,6 +46,10 @@ export function TeacherRatingForm({ teacherId, isLoggedIn }: TeacherRatingFormPr
     e.preventDefault();
     if (!rating) {
       setError("Vyberte hodnocení 1-5 hvězdiček.");
+      return;
+    }
+    if (!hasDisplayName) {
+      setShowDisplayNameModal(true);
       return;
     }
     
@@ -90,53 +98,64 @@ export function TeacherRatingForm({ teacherId, isLoggedIn }: TeacherRatingFormPr
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div>
-        <label className="block text-sm font-medium text-foreground mb-2">
-          Celkové hodnocení
-        </label>
-        <div 
-          className="flex gap-1"
-          onMouseLeave={() => setHoverRating(0)}
-        >
-          {[1, 2, 3, 4, 5].map((star) => (
-            <button
-              key={star}
-              type="button"
-              className="text-2xl transition-transform hover:scale-110 focus:outline-none"
-              onMouseEnter={() => setHoverRating(star)}
-              onClick={() => setRating(star)}
-            >
-              <span className={(hoverRating || rating) >= star ? "text-yellow-400" : "text-muted opacity-40 grayscale"}>
-                ⭐
-              </span>
-            </button>
-          ))}
+    <>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium text-foreground mb-2">
+            Celkové hodnocení
+          </label>
+          <div 
+            className="flex gap-1"
+            onMouseLeave={() => setHoverRating(0)}
+          >
+            {[1, 2, 3, 4, 5].map((star) => (
+              <button
+                key={star}
+                type="button"
+                className="text-2xl transition-transform hover:scale-110 focus:outline-none"
+                onMouseEnter={() => setHoverRating(star)}
+                onClick={() => setRating(star)}
+              >
+                <span className={(hoverRating || rating) >= star ? "text-yellow-400" : "text-muted opacity-40 grayscale"}>
+                  ⭐
+                </span>
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
 
-      <div>
-        <label className="block text-sm font-medium text-foreground mb-2">
-          Slovní hodnocení (volitelné)
-        </label>
-        <textarea
-          rows={3}
-          value={review}
-          onChange={(e) => setReview(e.target.value)}
-          placeholder="Jaké má učitel nároky? Jaký je jeho styl výuky? Zde se můžete rozepsat..."
-          className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-1 focus:ring-primary/50 transition-all resize-y"
-        />
-      </div>
+        <div>
+          <label className="block text-sm font-medium text-foreground mb-2">
+            Slovní hodnocení (volitelné)
+          </label>
+          <textarea
+            rows={3}
+            value={review}
+            onChange={(e) => setReview(e.target.value)}
+            placeholder="Jaké má učitel nároky? Jaký je jeho styl výuky? Zde se můžete rozepsat..."
+            className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-1 focus:ring-primary/50 transition-all resize-y"
+          />
+        </div>
 
-      {error && <p className="text-sm text-destructive font-medium">{error}</p>}
+        {error && <p className="text-sm text-destructive font-medium">{error}</p>}
 
-      <button
-        type="submit"
-        disabled={isSubmitting || !rating}
-        className="w-full sm:w-auto px-6 py-2.5 bg-primary text-primary-foreground rounded-lg font-medium text-sm transition-all hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        {isSubmitting ? "Ukládám..." : "Odeslat hodnocení"}
-      </button>
-    </form>
+        <button
+          type="submit"
+          disabled={isSubmitting || !rating}
+          className="w-full sm:w-auto px-6 py-2.5 bg-primary text-primary-foreground rounded-lg font-medium text-sm transition-all hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {isSubmitting ? "Ukládám..." : "Odeslat hodnocení"}
+        </button>
+      </form>
+
+      <WelcomeDisplayNameModal
+        open={showDisplayNameModal}
+        onOpenChange={setShowDisplayNameModal}
+        initialDisplayName=""
+        onCompleted={(displayName) => {
+          setHasDisplayName(Boolean(displayName));
+        }}
+      />
+    </>
   );
 }

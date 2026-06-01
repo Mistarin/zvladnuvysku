@@ -20,6 +20,21 @@ const FACULTY_COLORS: Record<string, string> = {
 };
 
 export default async function TeachersPage() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const profile = user
+    ? (
+        await supabase
+          .from("profiles")
+          .select("display_name")
+          .eq("user_id", user.id)
+          .maybeSingle()
+      ).data ?? null
+    : null;
+  const hasDisplayName = Boolean((profile as { display_name?: string | null } | null)?.display_name?.trim());
+
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 max-w-6xl">
       <div className="flex justify-between items-end mb-8">
@@ -32,6 +47,7 @@ export default async function TeachersPage() {
           </p>
         </div>
         <TeacherProposalDialog 
+          hasDisplayName={hasDisplayName}
           trigger={
             <button className="px-4 py-2 bg-primary text-primary-foreground rounded-lg font-medium text-sm hover:opacity-90 transition-opacity">
               + Přidat vyučujícího
