@@ -201,8 +201,8 @@ export async function submitSubjectProposal(formData: FormData): Promise<ActionR
 
     if (error) {
       if (error.code === '23505') {
-        revalidatePath('/admin')
-        revalidatePath('/moje-aktivita')
+        // Duplicate submission token — treat as success (idempotent submit)
+        try { revalidatePath('/moje-aktivita') } catch { /* ignore revalidation errors */ }
         return { success: true }
       }
       if (uploadedPaths.length > 0) {
@@ -211,8 +211,8 @@ export async function submitSubjectProposal(formData: FormData): Promise<ActionR
       return { success: false, error: `Nepodařilo se odeslat návrh: ${error.message}` }
     }
 
-    revalidatePath('/admin')
-    revalidatePath('/moje-aktivita')
+    // Only revalidate the user-facing page, not /admin (admin revalidates on its own page load)
+    try { revalidatePath('/moje-aktivita') } catch { /* ignore revalidation errors */ }
     return { success: true }
   } catch (error) {
     return {
