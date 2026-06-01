@@ -15,9 +15,17 @@ const REASONS: Record<string, { title: string; desc: string }> = {
     title: 'Přihlášení selhalo',
     desc: 'Nastala chyba při ověřování tvého účtu. Zkus to prosím znovu.',
   },
+  verify_failed: {
+    title: 'Přihlášení selhalo',
+    desc: 'Přihlašovací odkaz je neplatný, už byl použit nebo vypršel. Zkus si poslat nový.',
+  },
   no_code: {
     title: 'Neplatný odkaz',
     desc: 'Přihlašovací odkaz je neplatný nebo vypršel. Zkus se přihlásit znovu.',
+  },
+  invalid_link: {
+    title: 'Neplatný odkaz',
+    desc: 'Přihlašovací odkaz je poškozený nebo neúplný. Zkus si poslat nový.',
   },
 }
 

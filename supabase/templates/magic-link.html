@@ -1,0 +1,38 @@
+<div style="font-family: Inter, Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 24px; background: #ffffff; border-radius: 12px;">
+  <div style="text-align: center; margin-bottom: 28px;">
+    <img
+      src="https://zvladnuvysku.cz/logo-v2.png"
+      alt="ZvládnuVýšku"
+      width="56"
+      height="56"
+      style="display: block; margin: 0 auto 16px; border: 0;"
+    >
+    <h1 style="margin: 16px 0 4px; font-size: 22px; font-weight: 700; color: #111;">Přihlásit se do ZvládnuVýšku</h1>
+    <p style="margin: 0; font-size: 14px; color: #666;">Studentský hub Ostravské univerzity</p>
+  </div>
+
+  <p style="font-size: 15px; color: #333; margin-bottom: 8px;">Ahoj,</p>
+  <p style="font-size: 15px; color: #333; margin-bottom: 24px;">
+    Klikni na tlačítko níže a přihlásíš se do ZvládnuVýšku. Odkaz je platný <strong>10 minut</strong> a lze ho použít pouze jednou.
+  </p>
+
+  <div style="text-align: center; margin-bottom: 28px;">
+    <a href="https://zvladnuvysku.cz/auth/confirm?token_hash={{ .TokenHash }}&type=magiclink&redirect_to={{ .RedirectTo }}"
+       style="display: inline-block; padding: 14px 32px; background: linear-gradient(135deg, #769722, #5a7319); color: white; font-weight: 600; font-size: 15px; border-radius: 10px; text-decoration: none;">
+      Přihlásit se →
+    </a>
+  </div>
+
+  <p style="font-size: 13px; color: #999; margin-bottom: 4px;">
+    Pokud se ti tlačítko nezobrazuje, zkopíruj tento odkaz do prohlížeče:
+  </p>
+  <p style="font-size: 12px; color: #769722; word-break: break-all; margin-bottom: 24px;">
+    https://zvladnuvysku.cz/auth/confirm?token_hash={{ .TokenHash }}&type=magiclink&redirect_to={{ .RedirectTo }}
+  </p>
+
+  <hr style="border: none; border-top: 1px solid #eee; margin-bottom: 20px;">
+  <p style="font-size: 12px; color: #aaa; text-align: center; margin: 0;">
+    Pokud jsi tento email nevyžadoval(a), ignoruj ho - nic se nestane.<br>
+    ZvládnuVýšku • Ostravská univerzita
+  </p>
+</div>

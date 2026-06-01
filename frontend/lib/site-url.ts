@@ -30,12 +30,6 @@ export function getSiteUrl() {
   return "http://localhost:3000"
 }
 
-export function getAuthCallbackUrl(next = "/") {
-  const url = new URL("/auth/callback", getSiteUrl())
-
-  if (next.startsWith("/")) {
-    url.searchParams.set("next", next)
-  }
-
-  return url.toString()
+export function getSitePathUrl(path = "/") {
+  return new URL(path.startsWith("/") ? path : `/${path}`, getSiteUrl()).toString()
 }
