@@ -56,7 +56,7 @@ export function HallOfFameSection({
       <div className="relative overflow-hidden rounded-[2rem] border border-border/60 bg-card/80 p-6 shadow-[0_30px_80px_-45px_rgba(15,23,42,0.45)] backdrop-blur sm:p-8">
         {/* Header glow — matches brand-sync-color */}
         <div
-          className="pointer-events-none absolute inset-x-0 top-0 h-40"
+          className="pointer-events-none absolute inset-x-0 top-0 h-52 sm:h-60"
           style={{
             background:
               "radial-gradient(circle at top, color-mix(in srgb, var(--brand-sync-color) 18%, transparent), transparent 70%)",
@@ -65,8 +65,8 @@ export function HallOfFameSection({
         />
 
         <div className="relative flex flex-col gap-8">
-          <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-            <div className="max-w-2xl space-y-3">
+          <div className="flex flex-col gap-6 pb-8 sm:gap-7 sm:pb-10 lg:flex-row lg:items-end lg:justify-between lg:pb-12">
+            <div className="max-w-2xl space-y-4">
               {/* Badge — uses brand-sync-color */}
               <div
                 className="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em]"
@@ -81,11 +81,11 @@ export function HallOfFameSection({
               </div>
               <div>
                 <h2 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-                  Nejaktivnější studentská komunita
+                  Nejaktivnější studenti komunity
                 </h2>
                 <p className="mt-2 text-sm leading-6 text-muted-foreground sm:text-base">
-                  Veřejný žebříček studentů, kteří nejvíc pomáhají ostatním přes kartičky,
-                  materiály a nové předměty.
+                  Veřejný žebříček studentů, kteří nejvíc pomáhají ostatním sdílením
+                  kartiček, studijních materiálů a návrhů nových předmětů.
                 </p>
               </div>
             </div>
