@@ -100,6 +100,15 @@ const FIELD_LABELS: Record<string, string> = {
 }
 
 const SUBMIT_TIMEOUT_MS = 30000
+const MAX_PROPOSAL_MATERIALS = 8
+
+function createSubmissionToken() {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID()
+  }
+
+  return `${Date.now()}-${Math.random().toString(36).slice(2, 12)}`
+}
 
 function FieldLabel({ children, required }: { children: React.ReactNode; required?: boolean }) {
   return (
@@ -168,7 +177,7 @@ export function SubjectProposalForm({ hasDisplayName: initialHasDisplayName }: S
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [submissionToken, setSubmissionToken] = useState(() => crypto.randomUUID())
+  const [submissionToken, setSubmissionToken] = useState(createSubmissionToken)
   const [hasDisplayName, setHasDisplayName] = useState(initialHasDisplayName)
   const [showDisplayNameModal, setShowDisplayNameModal] = useState(false)
 
@@ -287,6 +296,14 @@ export function SubjectProposalForm({ hasDisplayName: initialHasDisplayName }: S
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (type === 'edit' && !subjectId) { setError('Vyber předmět, který chceš upravit.'); return }
+    if (type === 'new' && (!form.name.trim() || !form.short_tag.trim())) {
+      setError('U nového předmětu vyplň název i zkratku.')
+      return
+    }
+    if (materials.length > MAX_PROPOSAL_MATERIALS) {
+      setError(`Najednou lze přiložit maximálně ${MAX_PROPOSAL_MATERIALS} PDF souborů.`)
+      return
+    }
     if (!hasDisplayName) {
       setShowDisplayNameModal(true)
       return
@@ -321,7 +338,7 @@ export function SubjectProposalForm({ hasDisplayName: initialHasDisplayName }: S
 
       if (!result.success) { setError(result.error); return }
       setSuccess(true)
-      setSubmissionToken(crypto.randomUUID())
+      setSubmissionToken(createSubmissionToken())
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : 'Nepodařilo se odeslat návrh.')
     } finally {
@@ -547,7 +564,14 @@ export function SubjectProposalForm({ hasDisplayName: initialHasDisplayName }: S
                   </div>
                 )}
                 <div className="mt-2 text-right">
-                  <button type="button" onClick={() => setIsAddingNewTeacher(true)} className="text-xs text-primary hover:underline">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setNewTeacherFaculty((currentFaculty) => currentFaculty || form.faculty)
+                      setIsAddingNewTeacher(true)
+                    }}
+                    className="text-xs text-primary hover:underline"
+                  >
                     Nenašel(a) jsi učitele? Přidej ho!
                   </button>
                 </div>
@@ -573,9 +597,9 @@ export function SubjectProposalForm({ hasDisplayName: initialHasDisplayName }: S
                   <button type="button" 
                     disabled={!newTeacherName || !newTeacherFaculty}
                     onClick={() => {
-                      setSelectedTeachers(prev => [...prev, { name: newTeacherName, faculty: newTeacherFaculty }])
+                      setSelectedTeachers(prev => [...prev, { name: newTeacherName.trim(), faculty: newTeacherFaculty }])
                       setNewTeacherName('')
-                      setNewTeacherFaculty('')
+                      setNewTeacherFaculty(form.faculty)
                       setIsAddingNewTeacher(false)
                     }} 
                     className="px-3 py-1.5 text-xs bg-primary text-primary-foreground rounded-md disabled:opacity-50">
@@ -652,12 +676,22 @@ export function SubjectProposalForm({ hasDisplayName: initialHasDisplayName }: S
             id="proposal-materials-upload"
             onChange={(e) => {
               if (e.target.files) {
-                const newFiles = Array.from(e.target.files);
+                const remainingSlots = MAX_PROPOSAL_MATERIALS - materials.length;
+                if (remainingSlots <= 0) {
+                  setError(`Najednou lze přiložit maximálně ${MAX_PROPOSAL_MATERIALS} PDF souborů.`);
+                  e.target.value = '';
+                  return;
+                }
+
+                const newFiles = Array.from(e.target.files).slice(0, remainingSlots);
                 const validFiles = newFiles.filter(f => f.size <= 2 * 1024 * 1024);
                 if (newFiles.length !== validFiles.length) {
                   setError("Některé soubory byly přeskočeny, protože přesahují limit 2 MB.");
+                } else if (e.target.files.length > remainingSlots) {
+                  setError(`Přidáno jen ${remainingSlots} souborů. Najednou lze přiložit maximálně ${MAX_PROPOSAL_MATERIALS}.`);
                 }
                 setMaterials(prev => [...prev, ...validFiles]);
+                e.target.value = '';
               }
             }}
           />

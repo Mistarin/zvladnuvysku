@@ -25,7 +25,7 @@ type TeacherInsert = Database['public']['Tables']['teachers']['Insert']
 type SubjectTeacherInsert = Database['public']['Tables']['subject_teachers']['Insert']
 type FeedbackUpdate = Database['public']['Tables']['feedback']['Update']
 
-type ProposalTeacher = { id?: string; name: string; faculty: string }
+type ProposalTeacher = { id?: string; name: string; faculty?: string | null }
 type ProposalMaterial = { title: string; file_path: string; size_bytes: number }
 type ProposalPayload = SubjectInsert & {
   teachers?: ProposalTeacher[]
@@ -102,7 +102,8 @@ export async function approveProposal(proposalId: string): Promise<ActionResult>
       approvedSubjectId = insertedSubject.id
 
       if (teachers && teachers.length > 0) {
-        await processTeachers(supabase, insertedSubject.id, teachers)
+        const teacherResult = await processTeachers(supabase, insertedSubject.id, teachers)
+        if (!teacherResult.success) return teacherResult
       }
 
       if (materials && materials.length > 0) {
@@ -116,7 +117,8 @@ export async function approveProposal(proposalId: string): Promise<ActionResult>
           moderation_status: 'approved',
           rejection_reason: null,
         }))
-        await supabase.from('subject_materials').insert(materialsToInsert as never)
+        const { error: materialsError } = await supabase.from('subject_materials').insert(materialsToInsert as never)
+        if (materialsError) return { success: false, error: `Předmět byl vytvořen, ale materiály se nepodařilo připojit: ${materialsError.message}` }
       }
     } else if (proposal.type === 'edit' && proposal.subject_id) {
       const subjectId = proposal.subject_id
@@ -131,7 +133,8 @@ export async function approveProposal(proposalId: string): Promise<ActionResult>
       if (updateError) return { success: false, error: `Chyba při úpravě: ${updateError.message}` }
 
       if (teachers && teachers.length > 0) {
-        await processTeachers(supabase, subjectId, teachers)
+        const teacherResult = await processTeachers(supabase, subjectId, teachers)
+        if (!teacherResult.success) return teacherResult
       }
       
       if (materials && materials.length > 0) {
@@ -145,7 +148,8 @@ export async function approveProposal(proposalId: string): Promise<ActionResult>
           moderation_status: 'approved',
           rejection_reason: null,
         }))
-        await supabase.from('subject_materials').insert(materialsToInsert as never)
+        const { error: materialsError } = await supabase.from('subject_materials').insert(materialsToInsert as never)
+        if (materialsError) return { success: false, error: `Změny byly uloženy, ale materiály se nepodařilo připojit: ${materialsError.message}` }
       }
     }
 
@@ -260,20 +264,26 @@ async function processTeachers(
   supabase: Awaited<ReturnType<typeof createClient>>,
   subjectId: string,
   teachers: ProposalTeacher[]
-) {
+): Promise<ActionResult> {
   for (const t of teachers) {
     let teacherId = t.id
     if (!teacherId) {
+      const faculty = t.faculty?.trim()
+      if (!faculty) {
+        return { success: false, error: `U nového vyučujícího ${t.name} chybí fakulta.` }
+      }
+
       // Create new teacher
       const slug = t.name.toLowerCase().replace(/[^a-z0-9á-ž]+/g, '-').replace(/(^-|-$)/g, '')
       const teacherInsert: TeacherInsert = {
         name: t.name,
-        faculty: t.faculty,
+        faculty,
         slug: slug + '-' + Math.floor(Math.random() * 1000),
         department: null,
         is_approved: true,
       }
-      const { data: newTeacherData } = await supabase.from('teachers').insert(teacherInsert as never).select().single()
+      const { data: newTeacherData, error: teacherError } = await supabase.from('teachers').insert(teacherInsert as never).select().single()
+      if (teacherError) return { success: false, error: `Nepodařilo se vytvořit vyučujícího ${t.name}: ${teacherError.message}` }
       const newT = newTeacherData as Database['public']['Tables']['teachers']['Row'] | null
       if (newT) teacherId = newT.id
     }
@@ -286,10 +296,12 @@ async function processTeachers(
       }
       const { error } = await supabase.from('subject_teachers').insert(subjectTeacherInsert as never)
       if (error && error.code !== '23505') { // Ignore unique violation if already linked
-        console.error('Failed to link teacher:', error)
+        return { success: false, error: `Nepodařilo se připojit vyučujícího k předmětu: ${error.message}` }
       }
     }
   }
+
+  return { success: true }
 }
 
 export async function approveMaterial(materialId: string): Promise<ActionResult> {

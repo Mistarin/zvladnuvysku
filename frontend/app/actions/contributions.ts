@@ -26,7 +26,7 @@ type SubjectProposalInput = {
     year: string
     note: string
   }
-  teachers: Array<{ id?: string; name: string; faculty: string }>
+  teachers: Array<{ id?: string; name: string; faculty?: string | null }>
   materialFiles: Array<{ name: string; size: number }>
 }
 
@@ -85,6 +85,7 @@ type SubjectDetailsResult =
   | { success: false; error: string }
 
 const MAX_PDF_FILE_SIZE = 2 * 1024 * 1024
+const MAX_PROPOSAL_MATERIALS = 8
 
 function sanitizeProposalFilename(filename: string, fallbackExtension = 'pdf') {
   const trimmed = filename.trim()
@@ -103,7 +104,93 @@ function sanitizeProposalFilename(filename: string, fallbackExtension = 'pdf') {
 
 function getFileEntry(formData: FormData, key: string) {
   const entry = formData.get(key)
-  return entry instanceof File && entry.size > 0 ? entry : null
+  if (!entry || typeof entry === 'string') return null
+
+  const file = entry as File
+  return typeof file.name === 'string' && typeof file.size === 'number' && file.size > 0 ? file : null
+}
+
+function isPdfFile(file: File) {
+  return file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')
+}
+
+function hasText(value: unknown) {
+  return typeof value === 'string' && value.trim().length > 0
+}
+
+function isRatingValue(value: unknown) {
+  return typeof value === 'number' && Number.isFinite(value) && value >= 1 && value <= 5
+}
+
+function isOptionalIntegerInRange(value: unknown, min: number, max: number) {
+  if (value === null || value === undefined) return true
+  if (typeof value !== 'string') return false
+  if (!value.trim()) return true
+  const parsed = Number(value)
+  return Number.isInteger(parsed) && parsed >= min && parsed <= max
+}
+
+function validateSubjectProposalPayload(payload: SubjectProposalInput) {
+  if (!payload || typeof payload !== 'object' || !payload.form || typeof payload.form !== 'object') {
+    return 'Neplatná data návrhu.'
+  }
+
+  if (payload.type !== 'new' && payload.type !== 'edit') {
+    return 'Neplatný typ návrhu.'
+  }
+
+  if (payload.type === 'edit' && !hasText(payload.subjectId)) {
+    return 'Vyber předmět, který chceš upravit.'
+  }
+
+  if (payload.type === 'new' && (!hasText(payload.form.name) || !hasText(payload.form.short_tag))) {
+    return 'U nového předmětu vyplň název i zkratku.'
+  }
+
+  if (!isRatingValue(payload.form.difficulty) || !isRatingValue(payload.form.time_intensity)) {
+    return 'Obtížnost a časová náročnost musí být v rozsahu 1 až 5.'
+  }
+
+  if (!isOptionalIntegerInRange(payload.form.credits, 1, 30)) {
+    return 'Kredity musí být celé číslo v rozsahu 1 až 30.'
+  }
+
+  if (!isOptionalIntegerInRange(payload.form.year, 1, 5)) {
+    return 'Ročník musí být celé číslo v rozsahu 1 až 5.'
+  }
+
+  if (!Array.isArray(payload.teachers) || !Array.isArray(payload.materialFiles)) {
+    return 'Neplatná data návrhu.'
+  }
+
+  if (payload.materialFiles.length > MAX_PROPOSAL_MATERIALS) {
+    return `Najednou lze přiložit maximálně ${MAX_PROPOSAL_MATERIALS} PDF souborů.`
+  }
+
+  const invalidTeacher = payload.teachers.find(
+    (teacher) =>
+      !teacher ||
+      typeof teacher !== 'object' ||
+      !hasText(teacher.name) ||
+      (!hasText(teacher.id) && !hasText(teacher.faculty) && !hasText(payload.form.faculty))
+  )
+  if (invalidTeacher) {
+    return 'Nový vyučující musí mít vyplněné jméno i fakultu.'
+  }
+
+  const invalidMaterialMeta = payload.materialFiles.find(
+    (material) =>
+      !material ||
+      typeof material !== 'object' ||
+      !hasText(material.name) ||
+      typeof material.size !== 'number' ||
+      material.size < 0
+  )
+  if (invalidMaterialMeta) {
+    return 'Neplatná metadata přiloženého souboru.'
+  }
+
+  return null
 }
 
 export async function submitSubjectProposal(formData: FormData): Promise<ActionResult> {
@@ -119,11 +206,12 @@ export async function submitSubjectProposal(formData: FormData): Promise<ActionR
     return { success: false, error: 'Nepodařilo se zpracovat data návrhu.' }
   }
 
-  if (payload.type === 'edit' && !payload.subjectId) {
-    return { success: false, error: 'Vyber předmět, který chceš upravit.' }
+  const validationError = validateSubjectProposalPayload(payload)
+  if (validationError) {
+    return { success: false, error: validationError }
   }
 
-  if (!payload.submissionToken?.trim()) {
+  if (typeof payload.submissionToken !== 'string' || !payload.submissionToken.trim()) {
     return { success: false, error: 'Chybí identifikátor odeslání návrhu.' }
   }
 
@@ -140,16 +228,23 @@ export async function submitSubjectProposal(formData: FormData): Promise<ActionR
     const uploadedMaterials: Array<{ title: string; file_path: string; size_bytes: number }> = []
     const uploadedPaths: string[] = []
     const proposalFilesKey = payload.submissionToken.trim()
+    const cleanupUploadedPaths = async () => {
+      if (uploadedPaths.length > 0) {
+        await supabase.storage.from('study_materials').remove(uploadedPaths)
+      }
+    }
 
     for (const [index, materialMeta] of payload.materialFiles.entries()) {
       const file = getFileEntry(formData, `material:${index}`)
       if (!file) continue
 
-      if (file.type !== 'application/pdf') {
+      if (!isPdfFile(file)) {
+        await cleanupUploadedPaths()
         return { success: false, error: `Soubor ${materialMeta.name} není PDF.` }
       }
 
       if (file.size > MAX_PDF_FILE_SIZE) {
+        await cleanupUploadedPaths()
         return { success: false, error: `Soubor ${materialMeta.name} přesahuje limit 2 MB.` }
       }
 
@@ -161,7 +256,8 @@ export async function submitSubjectProposal(formData: FormData): Promise<ActionR
         .upload(filePath, file, { upsert: true })
 
       if (uploadError) {
-        throw new Error(`Nepodařilo se nahrát soubor ${materialMeta.name}: ${uploadError.message}`)
+        await cleanupUploadedPaths()
+        return { success: false, error: `Nepodařilo se nahrát soubor ${materialMeta.name}: ${uploadError.message}` }
       }
 
       uploadedPaths.push(filePath)
@@ -171,6 +267,12 @@ export async function submitSubjectProposal(formData: FormData): Promise<ActionR
         size_bytes: file.size,
       })
     }
+
+    const normalizedTeachers = payload.teachers.map((teacher) => ({
+      ...teacher,
+      name: teacher.name.trim(),
+      faculty: teacher.faculty?.trim() || payload.form.faculty.trim() || undefined,
+    }))
 
     const proposalData = {
       name: payload.form.name || undefined,
@@ -186,7 +288,7 @@ export async function submitSubjectProposal(formData: FormData): Promise<ActionR
       semester: payload.form.semester || undefined,
       faculty: payload.form.faculty || undefined,
       year: payload.form.year ? Number(payload.form.year) : undefined,
-      teachers: payload.teachers.length > 0 ? payload.teachers : undefined,
+      teachers: normalizedTeachers.length > 0 ? normalizedTeachers : undefined,
       materials: uploadedMaterials.length > 0 ? uploadedMaterials : undefined,
     }
 
@@ -206,7 +308,7 @@ export async function submitSubjectProposal(formData: FormData): Promise<ActionR
         return { success: true }
       }
       if (uploadedPaths.length > 0) {
-        await supabase.storage.from('study_materials').remove(uploadedPaths)
+        await cleanupUploadedPaths()
       }
       return { success: false, error: `Nepodařilo se odeslat návrh: ${error.message}` }
     }
@@ -215,6 +317,7 @@ export async function submitSubjectProposal(formData: FormData): Promise<ActionR
     try { revalidatePath('/moje-aktivita') } catch { /* ignore revalidation errors */ }
     return { success: true }
   } catch (error) {
+    console.error('[submitSubjectProposal] Unexpected failure:', error)
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Nepodařilo se odeslat návrh předmětu.',
@@ -239,7 +342,7 @@ export async function uploadSubjectMaterial(formData: FormData): Promise<ActionR
     return { success: false, error: 'Vyber PDF soubor.' }
   }
 
-  if (file.type !== 'application/pdf') {
+  if (!isPdfFile(file)) {
     return { success: false, error: 'Povolene jsou pouze PDF soubory.' }
   }
 
