@@ -78,7 +78,7 @@ type SummaryCardData = {
   id: string
   label: string
   value: string
-  meta: string
+  meta: ReactNode
   tone: Exclude<StatusTone, 'info'>
   icon: ReactNode
 }
@@ -404,7 +404,23 @@ function buildSummaryCards(displayName: string | null, sections: ActivitySection
       id: 'display-name',
       label: 'Veřejné jméno',
       value: displayName?.trim() || 'Chybí',
-      meta: displayName?.trim() ? 'Zobrazuje se u profilu a recenzí.' : 'Doplň si ho pro veřejný profil a recenze.',
+      meta: displayName?.trim()
+        ? (
+            <>
+              Zobrazuje se u profilu a recenzí.{' '}
+              <Link href="/#hall-of-fame" className="text-primary hover:underline">
+                Upravit
+              </Link>
+            </>
+          )
+        : (
+            <>
+              Chybí —{' '}
+              <Link href="/#hall-of-fame" className="text-primary hover:underline">
+                Nastavit jméno
+              </Link>
+            </>
+          ),
       tone: 'muted',
       icon: <UserCircle2 className="h-4 w-4" />,
     },
@@ -426,9 +442,9 @@ function buildSummaryCards(displayName: string | null, sections: ActivitySection
     },
     {
       id: 'approved',
-      label: 'Schválené příspěvky',
+      label: 'Schváleno celkem',
       value: String(approvedProposals + approvedMaterials),
-      meta: `${approvedProposals} návrhy · ${approvedMaterials} materiály`,
+      meta: `${approvedProposals} návrhy předmětů · ${approvedMaterials} materiály`,
       tone: 'success',
       icon: <CheckCircle2 className="h-4 w-4" />,
     },

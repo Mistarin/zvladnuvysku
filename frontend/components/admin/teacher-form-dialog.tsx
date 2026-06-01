@@ -5,13 +5,15 @@ import { useRouter } from "next/navigation";
 import { createTeacher, updateTeacher } from "@/app/admin/ucitele/actions";
 import type { Teacher } from "@/lib/types/database";
 import * as Dialog from "@radix-ui/react-dialog";
-import { X, Loader2 } from "lucide-react";
+import { X, Loader2, ChevronDown } from "lucide-react";
 
 interface TeacherFormDialogProps {
   teacher?: Teacher;
   trigger?: React.ReactNode;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
+  /** Existing department names for autocomplete */
+  departmentSuggestions?: string[];
 }
 
 const FACULTIES = ["FSS", "FU", "FF", "LF", "PdF", "PřF"];
@@ -26,7 +28,19 @@ function generateSlug(text: string) {
     .replace(/(^-|-$)+/g, "");
 }
 
-export function TeacherFormDialog({ teacher, trigger, open, onOpenChange }: TeacherFormDialogProps) {
+/** Auto-capitalise first letter of every typed word / first character */
+function capitaliseFirst(value: string): string {
+  if (!value) return value;
+  return value.charAt(0).toUpperCase() + value.slice(1);
+}
+
+export function TeacherFormDialog({
+  teacher,
+  trigger,
+  open,
+  onOpenChange,
+  departmentSuggestions = [],
+}: TeacherFormDialogProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -45,9 +59,16 @@ export function TeacherFormDialog({ teacher, trigger, open, onOpenChange }: Teac
     department: teacher?.department || "",
   });
 
+  const [deptInput, setDeptInput] = useState(teacher?.department || "");
+  const [showDeptDropdown, setShowDeptDropdown] = useState(false);
+
+  const filteredDepts = departmentSuggestions.filter(
+    (d) => d.toLowerCase().includes(deptInput.toLowerCase()) && d !== deptInput
+  );
+
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newName = e.target.value;
-    setFormData(prev => {
+    setFormData((prev) => {
       // Pokud uživatel slug ručně nezměnil, generujeme ho automaticky podle jména
       const autoSlug = generateSlug(prev.name);
       if (prev.slug === autoSlug || prev.slug === "") {
@@ -55,6 +76,19 @@ export function TeacherFormDialog({ teacher, trigger, open, onOpenChange }: Teac
       }
       return { ...prev, name: newName };
     });
+  };
+
+  const handleDeptChange = (value: string) => {
+    const capitalised = capitaliseFirst(value);
+    setDeptInput(capitalised);
+    setFormData((prev) => ({ ...prev, department: capitalised }));
+    setShowDeptDropdown(true);
+  };
+
+  const selectDept = (dept: string) => {
+    setDeptInput(dept);
+    setFormData((prev) => ({ ...prev, department: dept }));
+    setShowDeptDropdown(false);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -67,8 +101,8 @@ export function TeacherFormDialog({ teacher, trigger, open, onOpenChange }: Teac
     }
 
     startTransition(async () => {
-      const result = isEditing 
-        ? await updateTeacher(teacher.id, formData)
+      const result = isEditing
+        ? await updateTeacher(teacher.id, { ...formData, department: formData.department || null })
         : await createTeacher({ ...formData, department: formData.department || null, is_approved: true });
 
       if (result.error) {
@@ -119,7 +153,7 @@ export function TeacherFormDialog({ teacher, trigger, open, onOpenChange }: Teac
               <input
                 id="slug"
                 value={formData.slug}
-                onChange={(e) => setFormData(prev => ({ ...prev, slug: e.target.value }))}
+                onChange={(e) => setFormData((prev) => ({ ...prev, slug: e.target.value }))}
                 className="w-full px-3 py-2 bg-background border border-border rounded-md text-sm outline-none focus:ring-1 focus:ring-primary/50 focus:border-primary/50"
                 placeholder="např. jan-novak"
                 required
@@ -133,10 +167,10 @@ export function TeacherFormDialog({ teacher, trigger, open, onOpenChange }: Teac
                 <select
                   id="faculty"
                   value={formData.faculty}
-                  onChange={(e) => setFormData(prev => ({ ...prev, faculty: e.target.value }))}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, faculty: e.target.value }))}
                   className="w-full px-3 py-2 bg-background border border-border rounded-md text-sm outline-none focus:ring-1 focus:ring-primary/50 focus:border-primary/50"
                 >
-                  {FACULTIES.map(fac => (
+                  {FACULTIES.map((fac) => (
                     <option key={fac} value={fac}>{fac}</option>
                   ))}
                 </select>
@@ -144,13 +178,41 @@ export function TeacherFormDialog({ teacher, trigger, open, onOpenChange }: Teac
 
               <div className="space-y-2">
                 <label htmlFor="department" className="text-sm font-medium">Katedra</label>
-                <input
-                  id="department"
-                  value={formData.department}
-                  onChange={(e) => setFormData(prev => ({ ...prev, department: e.target.value }))}
-                  className="w-full px-3 py-2 bg-background border border-border rounded-md text-sm outline-none focus:ring-1 focus:ring-primary/50 focus:border-primary/50"
-                  placeholder="Zkratka nebo název"
-                />
+                <div className="relative">
+                  <input
+                    id="department"
+                    value={deptInput}
+                    onChange={(e) => handleDeptChange(e.target.value)}
+                    onFocus={() => setShowDeptDropdown(true)}
+                    onBlur={() => setTimeout(() => setShowDeptDropdown(false), 150)}
+                    className="w-full px-3 py-2 pr-8 bg-background border border-border rounded-md text-sm outline-none focus:ring-1 focus:ring-primary/50 focus:border-primary/50"
+                    placeholder="Název katedry"
+                    autoCapitalize="sentences"
+                  />
+                  {departmentSuggestions.length > 0 && (
+                    <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+                  )}
+
+                  {showDeptDropdown && filteredDepts.length > 0 && (
+                    <div className="absolute left-0 right-0 top-full mt-1 z-10 bg-card border border-border rounded-lg shadow-lg max-h-40 overflow-y-auto">
+                      {filteredDepts.map((dept) => (
+                        <button
+                          key={dept}
+                          type="button"
+                          onMouseDown={() => selectDept(dept)}
+                          className="w-full text-left px-3 py-2 text-sm hover:bg-muted transition-colors"
+                        >
+                          {dept}
+                        </button>
+                      ))}
+                      {deptInput && !departmentSuggestions.includes(deptInput) && (
+                        <div className="px-3 py-2 text-xs text-muted-foreground border-t border-border">
+                          + Vytvořit: <span className="font-semibold text-foreground">{deptInput}</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 

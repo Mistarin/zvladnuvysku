@@ -3,6 +3,7 @@
 import { useState, useCallback, useRef, useDeferredValue } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { Search, BarChart3, FlipVertical } from "lucide-react";
 import { SearchBar } from "@/components/search/search-bar";
 import { SearchSuggestions } from "@/components/search/search-suggestions";
 import { useSearch } from "@/hooks/use-search";
@@ -10,34 +11,38 @@ import { useFlashcardSearch } from "@/hooks/use-flashcard-search";
 import { useMaterialSearch } from "@/hooks/use-material-search";
 import { parseSearchMode } from "@/lib/search-mode";
 
+interface SiteStats {
+  subjectCount: number;
+  materialCount: number;
+  deckCount: number;
+}
+
+interface HomePageClientProps {
+  siteStats: SiteStats;
+}
+
 const FEATURES = [
   {
-    icon: "🔍",
+    Icon: Search,
     title: "Chytré vyhledávání",
     desc: "Najdi předmět podle názvu nebo zkratky. Výsledky okamžitě.",
     href: "/predmety",
   },
   {
-    icon: "📊",
+    Icon: BarChart3,
     title: "Reálné hodnocení",
     desc: "Obtížnost, časová náročnost a docházka od skutečných studentů.",
     href: "/predmety",
   },
   {
-    icon: "🃏",
+    Icon: FlipVertical,
     title: "Kartičky",
     desc: "Spaced repetition učení přizpůsobené každému předmětu.",
     href: "/flashcardy",
   },
 ];
 
-const STATS = [
-  { value: "500+", label: "předmětů" },
-  { value: "100%", label: "zdarma" },
-  { value: "OU", label: "Ostravská univerzita" },
-];
-
-export function HomePageClient() {
+export function HomePageClient({ siteStats }: HomePageClientProps) {
   const router = useRouter();
   const [isFocused, setIsFocused] = useState(false);
   const { query, setQuery, results, isLoading, clearSearch } = useSearch();
@@ -95,6 +100,12 @@ export function HomePageClient() {
         ? "Název materiálu…"
         : "Předmět, zkratka, katedra…";
 
+  const stats = [
+    { value: siteStats.subjectCount.toString(), label: "předmětů" },
+    { value: siteStats.materialCount.toString(), label: "materiálů" },
+    { value: siteStats.deckCount.toString(), label: "balíčků kartiček" },
+  ];
+
   return (
     <div className="relative overflow-hidden">
       <section className="home-hero">
@@ -132,7 +143,7 @@ export function HomePageClient() {
                 ? "Hledáš balíček kartiček? Zkus zadat název nebo předmět."
                 : searchMode === "materials"
                   ? "Hledáš materiál? Zkus název souboru nebo předmětu."
-                  : `„Protože reálné zkušenosti studentů jsou víc než jen sylabus."`}
+                  : `\u201eProtože reálné zkušenosti studentů jsou víc než jen sylabus.\u201c`}
             </p>
           </div>
         </div>
@@ -194,11 +205,11 @@ export function HomePageClient() {
             </p>
 
             <div className={`home-search-modes ${searchMode === "subjects" ? "" : "home-search-modes--hidden"}`}>
-              <span>Zkratky hledání:</span>
-              <span className="rounded-full border border-border bg-card px-2.5 py-1">
+              <span className="keyboard-shortcut-hint">Zkratky hledání:</span>
+              <span className="rounded-full border border-border bg-card px-2.5 py-1 keyboard-shortcut-hint">
                 <span className="font-mono text-primary">.f</span> kartičky
               </span>
-              <span className="rounded-full border border-border bg-card px-2.5 py-1">
+              <span className="rounded-full border border-border bg-card px-2.5 py-1 keyboard-shortcut-hint">
                 <span className="font-mono text-sky-700">.m</span> materiály
               </span>
             </div>
@@ -206,8 +217,9 @@ export function HomePageClient() {
         </div>
       </section>
 
+      {/* Real stats row */}
       <div className="home-stats animate-fade-in">
-        {STATS.map((stat) => (
+        {stats.map((stat) => (
           <div key={stat.label} className="text-center">
             <div className="text-2xl sm:text-3xl font-bold text-foreground">
               {stat.value}
@@ -219,6 +231,7 @@ export function HomePageClient() {
         ))}
       </div>
 
+      {/* Features section */}
       <section className="container mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-16 border-t border-border/50">
         <div className="text-center mb-10">
           <h2 className="text-2xl sm:text-3xl font-bold text-foreground">
@@ -230,23 +243,31 @@ export function HomePageClient() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-          {FEATURES.map((feature, idx) => (
+          {FEATURES.map(({ Icon, title, desc, href }, idx) => (
             <Link
-              key={feature.title}
-              href={feature.href}
-              className="glass-card hover-card p-6 text-center space-y-3 animate-slide-up block"
+              key={title}
+              href={href}
+              className="glass-card hover-card p-6 text-center space-y-4 animate-slide-up block"
               style={{ animationDelay: `${idx * 80}ms` }}
             >
-              <div className="text-4xl">{feature.icon}</div>
+              <div className="mx-auto w-12 h-12 rounded-2xl flex items-center justify-center"
+                style={{ background: "color-mix(in srgb, var(--accent-color) 14%, transparent)" }}>
+                <Icon className="w-6 h-6" style={{ color: "var(--accent-color)" }} />
+              </div>
               <h3 className="text-lg font-semibold text-foreground">
-                {feature.title}
+                {title}
               </h3>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                {feature.desc}
+                {desc}
               </p>
             </Link>
           ))}
         </div>
+
+        {/* Unofficial disclaimer */}
+        <p className="mt-10 text-center text-xs text-muted-foreground/60">
+          ZvládnuVýšku je neoficiální studentský web — není spojen s Ostravskou univerzitou ani jejími fakultami.
+        </p>
       </section>
 
       <section className="container mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-16 border-t border-border/50">

@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getPublicProfileContributionsPath } from "@/lib/public-profile";
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/types/database";
 import { getStoragePublicUrl } from "@/lib/storage";
@@ -136,6 +135,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
   const viewerRole = viewer?.app_metadata?.role as string | undefined;
   const canViewWithoutPublicName = viewer?.id === userId || viewerRole === "admin" || viewerRole === "moderator";
   const visibleName = displayName || (canViewWithoutPublicName ? `Uživatel ${userId.slice(0, 8)}…` : null);
+  const isOwnProfile = viewer?.id === userId;
 
   if (!visibleName || statsError) {
     notFound();
@@ -161,6 +161,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
         <span className="font-medium text-foreground">{visibleName}</span>
       </nav>
 
+      {/* Profile header */}
       <div className="mb-8 rounded-[2rem] border border-border/70 bg-card p-6 shadow-sm sm:p-8">
         <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
           <div className="space-y-3">
@@ -170,40 +171,41 @@ export default async function PublicProfilePage({ params }: PageProps) {
             <div>
               <h1 className="text-3xl font-bold text-foreground sm:text-4xl">{visibleName}</h1>
               <p className="mt-2 text-sm text-muted-foreground sm:text-base">
-                Level {stats.level} · {stats.total_xp} XP · Každý schválený bod přidává 10 XP.
+                Level {stats.level} · {stats.total_xp} XP
               </p>
             </div>
           </div>
 
-          <div className="w-full max-w-md rounded-3xl border border-border bg-background/70 p-5">
+          {/* XP progress — no link to /prispevky */}
+          <div className="w-full max-w-md rounded-3xl border border-border bg-background/70 p-5 space-y-3">
             <div className="flex items-center justify-between text-sm">
               <span className="font-medium text-foreground">Progress do dalšího levelu</span>
               <span className="text-muted-foreground">{stats.level_progress_xp}/{stats.next_level_xp} XP</span>
             </div>
-            <div className="mt-3 h-3 overflow-hidden rounded-full bg-muted">
+            <div className="h-3 overflow-hidden rounded-full bg-muted">
               <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${progressPercent}%` }} />
             </div>
-            {displayName ? (
+            {isOwnProfile && (
               <Link
-                href={getPublicProfileContributionsPath(userId)}
-                className="mt-4 inline-flex text-sm font-medium text-primary hover:underline"
+                href="/#hall-of-fame"
+                className="inline-flex text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
               >
-                Otevřít příspěvky →
+                Každý schválený bod přidává 10 XP →
               </Link>
-            ) : null}
+            )}
           </div>
         </div>
       </div>
 
-      <div className="mb-8 grid gap-4 md:grid-cols-3 xl:grid-cols-6">
+      {/* Stats grid — no duplicate Level */}
+      <div className="mb-8 grid gap-4 sm:grid-cols-2 md:grid-cols-4">
         <SummaryCard label="XP" value={String(stats.total_xp)} />
-        <SummaryCard label="Level" value={String(stats.level)} />
         <SummaryCard label="Kartičky" value={String(stats.flashcard_count)} />
         <SummaryCard label="Materiály" value={String(stats.material_count)} />
-        <SummaryCard label="Předměty" value={String(stats.subject_count)} />
         <SummaryCard label="Komentáře" value={String(stats.subject_comment_count + stats.teacher_review_count)} />
       </div>
 
+      {/* Content sections */}
       <div className="grid gap-8 xl:grid-cols-2">
         <ProfileSection title="Veřejné balíčky kartiček" empty="Zatím žádné veřejné balíčky.">
           {decks.map((deck) => (

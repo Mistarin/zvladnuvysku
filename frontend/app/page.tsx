@@ -3,11 +3,26 @@ import { HallOfFameSection } from "@/components/home/hall-of-fame-section";
 import { HomePageClient } from "@/components/home/home-page-client";
 import { getHallOfFame } from "@/lib/hall-of-fame";
 import { createClient } from "@/lib/supabase/server";
+import { createPublicServerClient } from "@/lib/supabase/public-server";
 
 export default async function HomePage() {
+  // Fetch real site-wide stats for the homepage
+  const supabase = createPublicServerClient();
+  const [subjectsRes, materialsRes, decksRes] = await Promise.all([
+    supabase.from("subjects").select("*", { count: "exact", head: true }),
+    supabase.from("subject_materials").select("*", { count: "exact", head: true }).eq("moderation_status", "approved"),
+    supabase.from("flashcard_decks").select("*", { count: "exact", head: true }).eq("is_public", true),
+  ]);
+
+  const siteStats = {
+    subjectCount: subjectsRes.count ?? 0,
+    materialCount: materialsRes.count ?? 0,
+    deckCount: decksRes.count ?? 0,
+  };
+
   return (
     <>
-      <HomePageClient />
+      <HomePageClient siteStats={siteStats} />
       <Suspense fallback={<HallOfFameSkeleton />}>
         <HallOfFameSectionServer />
       </Suspense>

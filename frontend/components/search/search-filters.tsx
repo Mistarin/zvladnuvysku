@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Diamond } from "lucide-react";
 import type { FilterConfig } from "@/hooks/use-subject-filters";
 import type { SubjectFilters } from "@/lib/subjects";
 
@@ -176,9 +175,12 @@ export function SearchFilters({
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {filterConfig.map((config) => (
               <div key={config.key} className="space-y-2">
-                <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                  {config.label}
-                </h4>
+                {/* Boolean filters get special styling — no duplicate label */}
+                {config.type !== "boolean" && (
+                  <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                    {config.label}
+                  </h4>
+                )}
 
                 {config.type === "multiselect" && config.options && (
                   <div className="flex flex-wrap gap-1.5">
@@ -208,35 +210,43 @@ export function SearchFilters({
                   </div>
                 )}
 
-                {config.type === "slider" && (
-                  <div className="flex flex-col gap-2 pt-1">
-                    <div className="flex items-center gap-3">
-                      {(() => {
-                        const filterKey = config.key as keyof SubjectFilters;
-                        const fallback = config.key.includes('Max') ? config.max ?? 0 : config.min ?? 0;
-                        const currentValue = getNumberFilterValue(filterKey, fallback);
+                {config.type === "slider" && (() => {
+                  const filterKey = config.key as keyof SubjectFilters;
+                  const isMaxSlider = config.key.includes("Max");
+                  const defaultValue = isMaxSlider ? (config.max ?? 5) : (config.min ?? 1);
+                  const currentValue = getNumberFilterValue(filterKey, defaultValue);
+                  const isAtDefault = currentValue === defaultValue;
 
-                        return (
-                      <input
-                        type="range"
-                        min={config.min}
-                        max={config.max}
-                        step={config.step || 1}
-                        value={currentValue}
-                        onChange={(e) => setFilter(filterKey, Number(e.target.value) as SubjectFilters[typeof filterKey])}
-                        className="w-full accent-primary"
-                      />
-                        );
-                      })()}
-                      <span className="text-sm font-bold text-foreground min-w-[1.5rem] text-right bg-muted px-2 py-0.5 rounded-md">
-                        {getNumberFilterValue(
-                          config.key as keyof SubjectFilters,
-                          config.key.includes('Max') ? config.max ?? 0 : config.min ?? 0
-                        )}
-                      </span>
+                  return (
+                    <div className="flex flex-col gap-2 pt-1">
+                      <div className="flex items-center gap-3">
+                        <input
+                          type="range"
+                          min={config.min}
+                          max={config.max}
+                          step={config.step || 1}
+                          value={currentValue}
+                          onChange={(e) => {
+                            const newValue = Number(e.target.value);
+                            // When slider returns to default — deactivate the filter
+                            if (newValue === defaultValue) {
+                              setFilter(filterKey, undefined);
+                            } else {
+                              setFilter(filterKey, newValue as SubjectFilters[typeof filterKey]);
+                            }
+                          }}
+                          className="w-full accent-primary"
+                        />
+                        <span className={`text-sm font-bold min-w-[1.5rem] text-right px-2 py-0.5 rounded-md ${isAtDefault ? "text-muted-foreground bg-muted/50" : "text-foreground bg-muted"}`}>
+                          {currentValue}
+                        </span>
+                      </div>
+                      {isAtDefault && (
+                        <p className="text-xs text-muted-foreground/70">Filtr neaktivní</p>
+                      )}
                     </div>
-                  </div>
-                )}
+                  );
+                })()}
 
                 {config.type === "select" && config.options && (() => {
                   const filterVal = filters[config.key as keyof SubjectFilters];
@@ -251,9 +261,9 @@ export function SearchFilters({
                           setFilter(config.key as keyof SubjectFilters, undefined);
                           return;
                         }
-                        const isNumber = typeof config.options![0].value === 'number';
+                        const isNumber = typeof config.options![0].value === "number";
                         const newVal = isNumber ? Number(val) : val;
-                        const isArrayType = ['attendanceType', 'semester', 'year'].includes(config.key);
+                        const isArrayType = ["attendanceType", "semester", "year"].includes(config.key);
                         
                         const filterKey = config.key as keyof SubjectFilters;
                         const nextValue = isArrayType ? [newVal] : newVal;
@@ -266,7 +276,7 @@ export function SearchFilters({
                         <option 
                           key={opt.value} 
                           value={opt.value}
-                          style={{ color: opt.color, fontWeight: opt.color ? 'bold' : 'normal' }}
+                          style={{ color: opt.color, fontWeight: opt.color ? "bold" : "normal" }}
                         >
                           {opt.label}
                         </option>
@@ -276,37 +286,32 @@ export function SearchFilters({
                 })()}
 
                 {config.type === "boolean" && (
-                  <label className="flex items-center gap-2 cursor-pointer p-2 rounded-lg hover:bg-muted/50 transition-colors">
-                    <input
-                      type="checkbox"
-                      checked={getBooleanFilterValue(config.key as keyof SubjectFilters)}
-                      onChange={(e) => setFilter(config.key as keyof SubjectFilters, e.target.checked ? true : undefined)}
-                      className="w-4 h-4 rounded border-border text-primary focus:ring-primary/40 bg-background"
-                    />
+                  <label className="flex items-center gap-3 cursor-pointer group">
+                    {/* Custom styled checkbox */}
+                    <div className="relative flex-shrink-0">
+                      <input
+                        type="checkbox"
+                        checked={getBooleanFilterValue(config.key as keyof SubjectFilters)}
+                        onChange={(e) => setFilter(config.key as keyof SubjectFilters, e.target.checked ? true : undefined)}
+                        className="sr-only"
+                      />
+                      <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all ${
+                        getBooleanFilterValue(config.key as keyof SubjectFilters)
+                          ? "bg-primary border-primary"
+                          : "bg-background border-border group-hover:border-primary/50"
+                      }`}>
+                        {getBooleanFilterValue(config.key as keyof SubjectFilters) && (
+                          <svg width="12" height="10" viewBox="0 0 12 10" fill="none">
+                            <path d="M1 5L4.5 8.5L11 1.5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                          </svg>
+                        )}
+                      </div>
+                    </div>
                     <span className="text-sm font-medium text-foreground">{config.label}</span>
                   </label>
                 )}
               </div>
             ))}
-            
-            {/* Quick Filters */}
-            <div className="space-y-2">
-              <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                Rychlé volby
-              </h4>
-              <button
-                onClick={() => {
-                  setFilter('timeIntensityMax', 2);
-                  setFilter('ratingMin', 4);
-                  setFilter('teacherRatingMin', 4);
-                  setFilter('attendanceType', ['volná']);
-                }}
-                title="Vybere předměty s náročností max 2, volnou docházkou a hodnocením učitele i předmětu minimálně 4 ⭐"
-                className="w-full flex items-center justify-center gap-1.5 text-sm font-medium px-3 py-2 rounded-lg bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20 transition-colors border border-emerald-500/20"
-              >
-                <Diamond className="w-4 h-4" /> Kredity zdarma
-              </button>
-            </div>
           </div>
         </div>
       )}
