@@ -57,21 +57,21 @@ const FACULTY_OPTIONS = [
 ]
 
 const ATTENDANCE_OPTIONS = [
-  { value: 'volná', label: '🟢 Volná docházka' },
-  { value: 'povinná', label: '🔴 Povinná (vše)' },
-  { value: 'povinné přednášky', label: '🟠 Povinné přednášky' },
-  { value: 'povinná cvičení', label: '🟡 Povinná cvičení' },
+  { value: 'volná', label: 'Volná docházka' },
+  { value: 'povinná', label: 'Povinná (vše)' },
+  { value: 'povinné přednášky', label: 'Povinné přednášky' },
+  { value: 'povinná cvičení', label: 'Povinná cvičení' },
 ]
 
-const DESCRIPTION_TEMPLATE = `- Předmět se zabývá...
-- Výuka probíhá formou...
+const DESCRIPTION_TEMPLATE = `- Řeší se hlavně...
+- Výuka probíhá...
 - Zakončení je...`
 
-const TARGET_AUDIENCE_TEMPLATE = `- Vhodné pro...
-- Nevhodné pro...`
+const TARGET_AUDIENCE_TEMPLATE = `- Hodí se pro studenty, kteří...
+- Nedává moc smysl, pokud...`
 
-const REQUIREMENTS_TEMPLATE = `- Znalost...
-- Schopnost...`
+const REQUIREMENTS_TEMPLATE = `- Reálně se hodí umět...
+- Počítej s tím, že...`
 
 const DEFAULT_FORM = {
   name: '', short_tag: '', description: DESCRIPTION_TEMPLATE,

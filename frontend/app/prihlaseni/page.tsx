@@ -49,16 +49,6 @@ export default async function PrihlaseniPage({ searchParams }: PageProps) {
           </p>
         </div>
 
-        {/* Info — WHY first, THEN the form */}
-        <div className="rounded-xl border border-border bg-muted/30 p-4 text-xs text-muted-foreground space-y-1">
-          <p className="font-medium text-foreground text-sm">K čemu slouží přihlášení?</p>
-          <ul className="space-y-0.5 list-disc list-inside">
-            <li>Hodnocení předmětů</li>
-            <li>Vytváření a ukládání kartiček</li>
-            <li>Sledování pokroku studia</li>
-          </ul>
-        </div>
-
         {/* Login card */}
         <div className="glass-card p-6 space-y-5">
           <EmailLoginForm redirectTo={redirect_to} />
@@ -72,6 +62,15 @@ export default async function PrihlaseniPage({ searchParams }: PageProps) {
           <p className="text-xs text-center text-muted-foreground leading-relaxed">
             Zadej svůj školní email. Zašleme ti jednorázový odkaz pro přihlášení, nepotřebuješ žádné heslo.
           </p>
+        </div>
+
+        <div className="rounded-xl border border-border bg-muted/30 p-4 text-xs text-muted-foreground space-y-1">
+          <p className="font-medium text-foreground text-sm">K čemu slouží přihlášení?</p>
+          <ul className="space-y-0.5 list-disc list-inside">
+            <li>Hodnocení předmětů</li>
+            <li>Vytváření a ukládání kartiček</li>
+            <li>Sledování pokroku studia</li>
+          </ul>
         </div>
 
       </div>
