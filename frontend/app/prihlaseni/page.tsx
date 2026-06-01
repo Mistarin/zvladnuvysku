@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import Image from 'next/image'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { EmailLoginForm } from '@/components/auth/email-login-form'
@@ -20,9 +21,14 @@ export default async function PrihlaseniPage() {
 
         {/* Header */}
         <div className="text-center space-y-2">
-          <div className="w-14 h-14 rounded-2xl accent-gradient flex items-center justify-center text-white font-bold text-xl mx-auto">
-            ZV
-          </div>
+          <Image
+            src="/logo-v2.png"
+            alt="ZvládnuVýšku"
+            width={72}
+            height={72}
+            className="mx-auto"
+            priority
+          />
           <h1 className="text-2xl font-bold text-foreground">Přihlásit se</h1>
           <p className="text-sm text-muted-foreground">
             Pouze pro studenty Ostravské univerzity

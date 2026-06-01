@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 
 function GitHubIcon() {
   return (
@@ -35,9 +36,13 @@ export function Footer() {
           <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
             <div className="space-y-3 max-w-2xl">
               <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded accent-gradient flex items-center justify-center text-white text-[10px] font-bold shrink-0">
-                  ZV
-                </div>
+                <Image
+                  src="/logo-v2.png"
+                  alt="ZvládnuVýšku"
+                  width={28}
+                  height={28}
+                  className="shrink-0"
+                />
                 <p className="text-sm text-muted-foreground">
                   © {year}{" "}
                   <span className="font-medium text-foreground">ZvládnuVýšku</span>
