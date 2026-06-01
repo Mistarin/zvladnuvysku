@@ -11,9 +11,10 @@ interface SessionResult {
 
 interface UseFlashcardSessionOptions {
   cards: Flashcard[]
+  canSaveProgress: boolean
 }
 
-export function useFlashcardSession({ cards }: UseFlashcardSessionOptions) {
+export function useFlashcardSession({ cards, canSaveProgress }: UseFlashcardSessionOptions) {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [sessionResults, setSessionResults] = useState<SessionResult[]>([])
   const [isComplete, setIsComplete] = useState(false)
@@ -26,7 +27,9 @@ export function useFlashcardSession({ cards }: UseFlashcardSessionOptions) {
       if (!currentCard) return
 
       // Save review in background (don't block UI)
-      saveCardReview(currentCard.id, quality).catch(console.error)
+      if (canSaveProgress) {
+        saveCardReview(currentCard.id, quality).catch(console.error)
+      }
 
       setSessionResults((prev) => [...prev, { cardId: currentCard.id, quality }])
 
@@ -37,7 +40,7 @@ export function useFlashcardSession({ cards }: UseFlashcardSessionOptions) {
         setCurrentIndex(nextIndex)
       }
     },
-    [currentCard, currentIndex, totalCards]
+    [canSaveProgress, currentCard, currentIndex, totalCards]
   )
 
   return {

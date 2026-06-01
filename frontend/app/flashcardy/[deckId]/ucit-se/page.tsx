@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { notFound, redirect } from 'next/navigation'
+import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { FlashcardStudySession } from '@/components/flashcard/flashcard-study-session'
 import type { FlashcardDeck, Flashcard, CardProgress } from '@/lib/types/database'
@@ -24,8 +24,6 @@ export default async function UcitSePage({ params }: PageProps) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  if (!user) redirect('/prihlaseni')
-
   const { data: deck, error } = await supabase
     .from('flashcard_decks')
     .select('*')
@@ -36,7 +34,7 @@ export default async function UcitSePage({ params }: PageProps) {
 
   const flashcardDeck = deck as FlashcardDeck
 
-  if (!flashcardDeck.is_public && flashcardDeck.creator_id !== user.id) {
+  if (!flashcardDeck.is_public && flashcardDeck.creator_id !== user?.id) {
     notFound()
   }
 
@@ -50,11 +48,13 @@ export default async function UcitSePage({ params }: PageProps) {
 
   // Fetch user's progress to sort: due first, then new
   const today = new Date().toISOString()
-  const { data: progress } = await supabase
-    .from('card_progress')
-    .select('*')
-    .eq('user_id', user.id)
-    .in('card_id', allCards.map((c) => c.id))
+  const { data: progress } = user && allCards.length > 0
+    ? await supabase
+        .from('card_progress')
+        .select('*')
+        .eq('user_id', user.id)
+        .in('card_id', allCards.map((c) => c.id))
+    : { data: null }
 
   const progressMap = new Map<string, CardProgress>(
     ((progress ?? []) as CardProgress[]).map((p) => [p.card_id, p])
@@ -104,6 +104,7 @@ export default async function UcitSePage({ params }: PageProps) {
       <FlashcardStudySession
         cards={sortedCards}
         subjectSlug={subjectSlug}
+        canSaveProgress={Boolean(user)}
       />
     </div>
   )

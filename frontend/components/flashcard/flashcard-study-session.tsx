@@ -9,13 +9,18 @@ import { SessionSummary } from './session-summary'
 interface FlashcardStudySessionProps {
   cards: Flashcard[]
   subjectSlug?: string
+  canSaveProgress?: boolean
 }
 
-export function FlashcardStudySession({ cards, subjectSlug }: FlashcardStudySessionProps) {
+export function FlashcardStudySession({
+  cards,
+  subjectSlug,
+  canSaveProgress = false,
+}: FlashcardStudySessionProps) {
   const [sessionKey, setSessionKey] = useState(0)
 
   const { currentCard, currentIndex, totalCards, isComplete, rate, sessionResults } =
-    useFlashcardSession({ cards })
+    useFlashcardSession({ cards, canSaveProgress })
 
   const handleRestart = () => {
     setSessionKey((k) => k + 1)
