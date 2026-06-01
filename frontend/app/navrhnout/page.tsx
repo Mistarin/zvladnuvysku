@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 export default async function NavrhnoutPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/prihlaseni')
+  if (!user) redirect('/prihlaseni?redirect_to=/navrhnout')
   const profile = (
     await supabase
       .from('profiles')

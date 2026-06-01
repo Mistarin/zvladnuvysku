@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Image from 'next/image'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { EmailLoginForm } from '@/components/auth/email-login-form'
@@ -9,15 +10,28 @@ export const metadata: Metadata = {
   description: 'Přihlaste se svým školním účtem Ostravské univerzity (@osu.cz).',
 }
 
-export default async function PrihlaseniPage() {
+interface PageProps {
+  searchParams: Promise<{ redirect_to?: string }>
+}
+
+export default async function PrihlaseniPage({ searchParams }: PageProps) {
   // Pokud je už přihlášen — přesměruj
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (user) redirect('/')
+  const { redirect_to } = await searchParams
+  if (user) redirect(redirect_to || '/')
 
   return (
-    <div className="min-h-[calc(100vh-56px)] flex items-center justify-center px-4">
-      <div className="w-full max-w-sm space-y-8">
+    <div className="min-h-[calc(100dvh-56px)] flex items-center justify-center px-4">
+      <div className="w-full max-w-sm space-y-6">
+
+        {/* Back link */}
+        <Link
+          href="/"
+          className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
+        >
+          ← Zpět na hlavní stránku
+        </Link>
 
         {/* Header */}
         <div className="text-center space-y-2">
@@ -35,9 +49,19 @@ export default async function PrihlaseniPage() {
           </p>
         </div>
 
+        {/* Info — WHY first, THEN the form */}
+        <div className="rounded-xl border border-border bg-muted/30 p-4 text-xs text-muted-foreground space-y-1">
+          <p className="font-medium text-foreground text-sm">K čemu slouží přihlášení?</p>
+          <ul className="space-y-0.5 list-disc list-inside">
+            <li>Hodnocení předmětů</li>
+            <li>Vytváření a ukládání kartiček</li>
+            <li>Sledování pokroku studia</li>
+          </ul>
+        </div>
+
         {/* Login card */}
         <div className="glass-card p-6 space-y-5">
-          <EmailLoginForm />
+          <EmailLoginForm redirectTo={redirect_to} />
 
           <div className="flex items-center gap-3">
             <div className="flex-1 h-px bg-border" />
@@ -48,16 +72,6 @@ export default async function PrihlaseniPage() {
           <p className="text-xs text-center text-muted-foreground leading-relaxed">
             Zadej svůj školní email. Zašleme ti jednorázový odkaz pro přihlášení, nepotřebuješ žádné heslo.
           </p>
-        </div>
-
-        {/* Info */}
-        <div className="rounded-xl border border-border bg-muted/30 p-4 text-xs text-muted-foreground space-y-1">
-          <p className="font-medium text-foreground text-sm">K čemu slouží přihlášení?</p>
-          <ul className="space-y-0.5 list-disc list-inside">
-            <li>Hodnocení předmětů</li>
-            <li>Vytváření a ukládání kartiček</li>
-            <li>Sledování pokroku studia</li>
-          </ul>
         </div>
 
       </div>

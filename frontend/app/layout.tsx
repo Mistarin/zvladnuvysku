@@ -4,14 +4,15 @@ import { ThemeProvider } from "@/components/layout/theme-provider";
 import { SoundProvider } from "@/components/layout/sound-provider";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
+import { FeedbackButton } from "@/components/layout/feedback-button";
 import { WelcomeDisplayNameModal } from "@/components/layout/welcome-display-name-modal";
 import { createClient } from "@/lib/supabase/server";
 import { cookies } from "next/headers";
 
 export const metadata: Metadata = {
   title: {
-    template: "%s | ZvladnuVysku",
-    default: "ZvladnuVysku — Studentský hub Ostravské univerzity",
+    template: "%s | Zvládnu Výšku",
+    default: "Zvládnu Výšku — Studentský hub Ostravské univerzity",
   },
   description:
     "Najdi svůj předmět na Ostravské univerzitě. Hodnocení obtížnosti, kartičky, reálné zkušenosti studentů.",
@@ -30,8 +31,6 @@ export const metadata: Metadata = {
     type: "website",
   },
 };
-
-import { FeedbackButton } from "@/components/layout/feedback-button";
 
 export default async function RootLayout({
   children,

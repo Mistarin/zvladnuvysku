@@ -42,7 +42,7 @@ export default async function AuthErrorPage({ searchParams }: PageProps) {
       <div className="max-w-md w-full text-center space-y-6">
         {/* Icon */}
         <div className="w-16 h-16 rounded-2xl bg-destructive/10 border border-destructive/20 flex items-center justify-center mx-auto text-3xl">
-          🔒
+          ⚠️
         </div>
 
         {/* Text */}

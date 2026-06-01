@@ -15,23 +15,26 @@ const FEATURES = [
     icon: "🔍",
     title: "Chytré vyhledávání",
     desc: "Najdi předmět podle názvu nebo zkratky. Výsledky okamžitě.",
+    href: "/predmety",
   },
   {
     icon: "📊",
     title: "Reálné hodnocení",
     desc: "Obtížnost, časová náročnost a docházka od skutečných studentů.",
+    href: "/predmety",
   },
   {
     icon: "🃏",
     title: "Kartičky",
     desc: "Spaced repetition učení přizpůsobené každému předmětu.",
+    href: "/flashcardy",
   },
 ];
 
 const STATS = [
-  { value: "20+", label: "předmětů" },
+  { value: "500+", label: "předmětů" },
+  { value: "100%", label: "zdarma" },
   { value: "OU", label: "Ostravská univerzita" },
-  { value: "CS", label: "Jen čeština" },
 ];
 
 export function HomePageClient() {
@@ -104,7 +107,7 @@ export function HomePageClient() {
             }`}
             aria-hidden={isFocused}
           >
-            <h1 className="home-title whitespace-nowrap">
+            <h1 className="home-title text-balance">
               Najdi svůj{" "}
               <span className="home-title-accent">
                 {searchMode === "flashcards"
@@ -124,12 +127,12 @@ export function HomePageClient() {
             }`}
             aria-hidden={!isFocused}
           >
-            <p className="text-lg md:text-xl font-medium text-muted-foreground/80 tracking-tight px-4 whitespace-nowrap">
+            <p className="text-lg md:text-xl font-medium text-muted-foreground/80 tracking-tight px-4 text-balance text-center max-w-md">
               {searchMode === "flashcards"
                 ? "Hledáš balíček kartiček? Zkus zadat název nebo předmět."
                 : searchMode === "materials"
                   ? "Hledáš materiál? Zkus název souboru nebo předmětu."
-                  : `„Protože reálné zkušenosti studentů jsou víc než jen sylabus.“`}
+                  : `„Protože reálné zkušenosti studentů jsou víc než jen sylabus."`}
             </p>
           </div>
         </div>
@@ -228,9 +231,10 @@ export function HomePageClient() {
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
           {FEATURES.map((feature, idx) => (
-            <div
+            <Link
               key={feature.title}
-              className="glass-card hover-card p-6 text-center space-y-3 animate-slide-up"
+              href={feature.href}
+              className="glass-card hover-card p-6 text-center space-y-3 animate-slide-up block"
               style={{ animationDelay: `${idx * 80}ms` }}
             >
               <div className="text-4xl">{feature.icon}</div>
@@ -240,7 +244,7 @@ export function HomePageClient() {
               <p className="text-sm text-muted-foreground leading-relaxed">
                 {feature.desc}
               </p>
-            </div>
+            </Link>
           ))}
         </div>
       </section>

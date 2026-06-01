@@ -59,7 +59,7 @@ export function FlashcardViewer({
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [onRate, question.question_type, stage])
 
-  const progress = (currentIndex / totalCards) * 100
+  const progress = ((currentIndex + 1) / totalCards) * 100
   const mediaUrl = getFlashcardMediaUrl(question.media_path)
 
   const multipleChoiceCorrect = question.question_type === 'multiple_choice'
@@ -125,8 +125,8 @@ export function FlashcardViewer({
                 >
                   Otočit kartičku
                 </button>
-                <p className="text-xs text-muted-foreground">
-                  Klikni nebo stiskni <kbd className="px-1.5 py-0.5 bg-muted border border-border rounded text-xs font-mono">Mezerník</kbd> pro odhalení odpovědi
+                <p className="text-xs text-muted-foreground keyboard-shortcut-hint">
+                  Klikni nebo stiskni <kbd className="px-1.5 py-0.5 bg-muted border border-border rounded text-xs font-mono">Mezerník</kbd> pro odhalеní odpovědi
                 </p>
               </div>
             ) : (
@@ -270,7 +270,7 @@ export function FlashcardViewer({
 
       {(stage === 'rating' || (question.question_type === 'classic_flashcard' && stage === 'revealed')) && (
         <div className="w-full animate-slide-up">
-          <p className="text-center text-sm text-muted-foreground mb-3">Jak dobře jste si vzpomněli?</p>
+          <p className="text-center text-sm text-muted-foreground mb-3">Jak ti to šlo?</p>
           <div className="grid grid-cols-3 gap-3">
             <RatingButton emoji="😕" label="Nevím" shortcut="1" onClick={() => onRate(1)} tone="danger" />
             <RatingButton emoji="🤔" label="Skoro" shortcut="2" onClick={() => onRate(3)} tone="warning" />
@@ -370,11 +370,11 @@ function RatingButton({
   return (
     <button
       onClick={onClick}
-      className={`flex flex-col items-center gap-1 px-4 py-3 rounded-xl border-2 transition-all hover:scale-105 active:scale-95 font-medium ${toneClasses}`}
+      className={`flex flex-col items-center gap-1 px-4 py-3 rounded-xl border-2 transition-all active:scale-95 font-medium ${toneClasses}`}
     >
       <span className="text-lg">{emoji}</span>
       <span className="text-sm">{label}</span>
-      <span className="text-xs opacity-60">[{shortcut}]</span>
+      <span className="text-xs opacity-60 keyboard-shortcut-hint">[{shortcut}]</span>
     </button>
   )
 }

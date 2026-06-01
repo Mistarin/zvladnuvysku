@@ -56,6 +56,11 @@ export function Navbar({ initialUser }: NavbarProps) {
     return () => window.removeEventListener("hashchange", updateHash);
   }, []);
 
+  // Close mobile menu on route change
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [pathname]);
+
   function linkIsActive(href: string) {
     if (href.includes("#")) {
       const [baseHref, hash] = href.split("#");
@@ -99,8 +104,8 @@ export function Navbar({ initialUser }: NavbarProps) {
             <Image
               src="/logo-v2.png"
               alt="ZvládnuVýšku Logo"
-              width={56}
-              height={56}
+              width={36}
+              height={36}
               className="shrink-0 group-hover:scale-105 transition-transform duration-200"
             />
             <span className="font-semibold text-foreground tracking-tight">
@@ -108,7 +113,7 @@ export function Navbar({ initialUser }: NavbarProps) {
             </span>
           </Link>
 
-          {/* Desktop Right Side */}
+          {/* Desktop nav links */}
           <div className="hidden md:flex items-center gap-1">
             {navLinks.map((link) => (
               <Link
@@ -129,9 +134,12 @@ export function Navbar({ initialUser }: NavbarProps) {
 
             {user ? (
               <div className="relative ml-1">
+                {/* Avatar — min 44×44px touch target via padding trick */}
                 <button
                   onClick={() => setUserMenuOpen((o) => !o)}
-                  className="w-8 h-8 rounded-full accent-gradient flex items-center justify-center text-white text-xs font-bold hover:opacity-90 transition-opacity"
+                  className="w-8 h-8 p-0 m-1.5 rounded-full accent-gradient flex items-center justify-center text-white text-xs font-bold hover:opacity-90 transition-opacity"
+                  aria-label="Uživatelské menu"
+                  aria-expanded={userMenuOpen}
                 >
                   {initials}
                 </button>
@@ -149,7 +157,7 @@ export function Navbar({ initialUser }: NavbarProps) {
                           onClick={() => setUserMenuOpen(false)}
                           className="block w-full rounded-lg px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted"
                         >
-                          Dashboard
+                          Moje aktivita
                         </Link>
                         <Link
                           href="/navrhnout"
@@ -159,14 +167,6 @@ export function Navbar({ initialUser }: NavbarProps) {
                         >
                           Navrhnout předmět
                         </Link>
-                        <Link
-                          href="/moje-aktivita"
-                          prefetch
-                          onClick={() => setUserMenuOpen(false)}
-                          className="block w-full rounded-lg px-3 py-2 text-sm text-foreground transition-colors hover:bg-muted"
-                        >
-                          Moje aktivita
-                        </Link>
                         {isAdmin && (
                           <Link
                             href="/admin"
@@ -174,7 +174,7 @@ export function Navbar({ initialUser }: NavbarProps) {
                             onClick={() => setUserMenuOpen(false)}
                             className="block w-full rounded-lg px-3 py-2 text-sm text-foreground transition-colors hover:bg-muted"
                           >
-                            Admin page
+                            Administrace
                           </Link>
                         )}
                         <div className="my-1 border-t border-border/50" />
@@ -202,42 +202,49 @@ export function Navbar({ initialUser }: NavbarProps) {
             )}
           </div>
 
-          {/* Mobile Right Side (Hamburger + Settings) */}
-          <div className="flex items-center gap-2 sm:hidden">
+          {/* Mobile right side — settings + hamburger (only for user menu) */}
+          <div className="flex items-center gap-1 md:hidden">
             <SettingsMenu />
-            <button 
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 -mr-2 text-foreground"
-              aria-label="Menu"
-            >
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            {user ? (
+              <button
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="w-11 h-11 flex items-center justify-center rounded-lg text-foreground hover:bg-muted transition-colors"
+                aria-label="Uživatelské menu"
+                aria-expanded={mobileMenuOpen}
+              >
                 {mobileMenuOpen ? (
-                  <>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <line x1="18" y1="6" x2="6" y2="18"></line>
                     <line x1="6" y1="6" x2="18" y2="18"></line>
-                  </>
+                  </svg>
                 ) : (
-                  <>
-                    <line x1="3" y1="12" x2="21" y2="12"></line>
-                    <line x1="3" y1="6" x2="21" y2="6"></line>
-                    <line x1="3" y1="18" x2="21" y2="18"></line>
-                  </>
+                  <div className="w-7 h-7 rounded-full accent-gradient flex items-center justify-center text-white text-xs font-bold">
+                    {initials}
+                  </div>
                 )}
-              </svg>
-            </button>
+              </button>
+            ) : (
+              <Link
+                href="/prihlaseni"
+                prefetch
+                className="px-3 py-1.5 text-sm font-semibold rounded-lg bg-foreground text-background"
+              >
+                Přihlásit
+              </Link>
+            )}
           </div>
         </nav>
       </div>
 
+      {/* Mobile scrollable nav tabs — always visible, replaces hamburger for navigation */}
       <div className="border-t border-border/40 md:hidden">
-        <div className="container mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-          <div className="flex gap-2 overflow-x-auto py-2 no-scrollbar">
+        <div className="container mx-auto max-w-6xl px-4">
+          <div className="flex gap-2 overflow-x-auto py-2 no-scrollbar relative">
             {navLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
                 prefetch={link.prefetch}
-                onClick={() => setMobileMenuOpen(false)}
                 className={`shrink-0 rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${
                   linkIsActive(link.href)
                     ? "bg-primary text-primary-foreground"
@@ -251,77 +258,43 @@ export function Navbar({ initialUser }: NavbarProps) {
         </div>
       </div>
 
-      {/* Mobile Collapse Menu */}
-      {mobileMenuOpen && (
-        <div className="sm:hidden border-t border-border/50 bg-background px-4 py-4 space-y-3 shadow-xl">
-          {navLinks.map((link) => (
+      {/* Mobile user dropdown — only shown when logged in and hamburger tapped */}
+      {mobileMenuOpen && user && (
+        <div className="md:hidden border-t border-border/50 bg-background px-4 py-4 space-y-1 shadow-xl">
+          <div className="px-4 py-2 text-sm text-foreground opacity-70 truncate">{user.email}</div>
+          <Link
+            href="/moje-aktivita"
+            prefetch
+            onClick={() => setMobileMenuOpen(false)}
+            className="block rounded-lg px-4 py-3 text-sm font-medium text-foreground transition-colors hover:bg-muted"
+          >
+            Moje aktivita
+          </Link>
+          <Link
+            href="/navrhnout"
+            prefetch
+            onClick={() => setMobileMenuOpen(false)}
+            className="block rounded-lg px-4 py-3 text-sm font-medium text-foreground transition-colors hover:bg-muted"
+          >
+            Navrhnout předmět
+          </Link>
+          {isAdmin && (
             <Link
-              key={link.href}
-              href={link.href}
-              prefetch={link.prefetch}
+              href="/admin"
+              prefetch
               onClick={() => setMobileMenuOpen(false)}
-              className={`block px-4 py-2 rounded-lg text-sm font-medium ${
-                linkIsActive(link.href) ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted"
-              }`}
+              className="block rounded-lg px-4 py-3 text-sm font-medium text-foreground transition-colors hover:bg-muted"
             >
-              {link.label}
+              Administrace
             </Link>
-          ))}
-          <div className="border-t border-border pt-3 mt-3">
-            {user ? (
-              <div className="space-y-2">
-                <div className="px-4 py-2 text-sm text-foreground opacity-70 truncate">{user.email}</div>
-                <Link
-                  href="/moje-aktivita"
-                  prefetch
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="block rounded-lg px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted"
-                >
-                  Dashboard
-                </Link>
-                <Link
-                  href="/navrhnout"
-                  prefetch
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="block rounded-lg px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted"
-                >
-                  Navrhnout předmět
-                </Link>
-                <Link
-                  href="/moje-aktivita"
-                  prefetch
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="block rounded-lg px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted"
-                >
-                  Moje aktivita
-                </Link>
-                {isAdmin && (
-                  <Link
-                    href="/admin"
-                    prefetch
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="block rounded-lg px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted"
-                  >
-                    Admin page
-                  </Link>
-                )}
-                <button
-                  onClick={handleSignOut}
-                  className="w-full rounded-lg px-4 py-2 text-left text-sm font-medium text-destructive transition-colors hover:bg-destructive/10"
-                >
-                  Odhlásit se
-                </button>
-              </div>
-            ) : (
-              <Link
-                href="/prihlaseni"
-                prefetch
-                onClick={() => setMobileMenuOpen(false)}
-                className="block text-center px-4 py-2 text-sm font-semibold rounded-lg bg-foreground text-background"
-              >
-                Přihlásit
-              </Link>
-            )}
+          )}
+          <div className="border-t border-border/50 pt-2 mt-2">
+            <button
+              onClick={handleSignOut}
+              className="w-full rounded-lg px-4 py-3 text-left text-sm font-medium text-destructive transition-colors hover:bg-destructive/10"
+            >
+              Odhlásit se
+            </button>
           </div>
         </div>
       )}

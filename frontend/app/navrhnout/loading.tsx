@@ -2,7 +2,7 @@ import { Loader2 } from "lucide-react"
 
 export default function Loading() {
   return (
-    <div className="container mx-auto max-w-2xl px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
+    <div className="container mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
       <div className="space-y-2 mb-8">
         <h1 className="text-3xl font-bold text-foreground">Navrhnout předmět</h1>
         <p className="text-muted-foreground">

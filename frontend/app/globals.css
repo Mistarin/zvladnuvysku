@@ -1,3 +1,7 @@
+/* ============================================================
+   globals.css — ZvládnuVýšku
+   ============================================================ */
+
 @import "tailwindcss";
 
 @property --brand-sync-color {
@@ -91,6 +95,9 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     line-height: 1.6;
+    /* Firefox scrollbar */
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-border) transparent;
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -99,18 +106,25 @@
     line-height: 1.2;
   }
 
-  h1 { font-size: 2.25rem; }
-  h2 { font-size: 1.875rem; }
-  h3 { font-size: 1.5rem; }
+  /* Responsive heading sizes — clamp prevents overflow on small phones */
+  h1 { font-size: clamp(1.75rem, 5vw, 2.25rem); }
+  h2 { font-size: clamp(1.5rem, 4vw, 1.875rem); }
+  h3 { font-size: clamp(1.25rem, 3.5vw, 1.5rem); }
   h4 { font-size: 1.25rem; }
 
   html {
     scroll-behavior: smooth;
-    animation: brandSyncPulse 60s linear infinite;
   }
 
-  html.dark {
-    animation-name: brandSyncPulseDark;
+  /* Brand color pulse — only when user has no motion preference */
+  @media (prefers-reduced-motion: no-preference) {
+    html {
+      animation: brandSyncPulse 60s linear infinite;
+    }
+
+    html.dark {
+      animation-name: brandSyncPulseDark;
+    }
   }
 
   :focus-visible {
@@ -118,8 +132,16 @@
     outline-offset: 2px;
   }
 
-  * {
+  /* Scoped theme transitions — only on elements that actually need it.
+     Avoids applying to every DOM node (performance on weak Android devices). */
+  .theme-transition,
+  .theme-transition * {
     transition: background-color 0.2s ease, border-color 0.2s ease, color 0.1s ease;
+  }
+
+  /* Apply theme transitions broadly but only via body, not * selector */
+  body {
+    transition: background-color 0.2s ease, color 0.1s ease;
   }
 }
 
@@ -233,7 +255,7 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    min-height: calc(100vh - 56px);
+    min-height: calc(100dvh - 56px); /* dvh accounts for mobile browser chrome */
     padding: 2rem 1.5rem 4rem;
     /* bias content above true center */
     padding-bottom: 12vh;
@@ -316,7 +338,7 @@
   }
 
   .home-hint {
-    font-size: 0.75rem;
+    font-size: 0.875rem; /* 14px — readable on mobile */
     color: var(--color-muted-foreground);
     opacity: 1;
     transition: opacity 300ms ease;
@@ -328,8 +350,15 @@
     background: var(--color-muted);
     border: 1px solid var(--color-border);
     font-family: monospace;
-    font-size: 0.7rem;
+    font-size: 0.75rem;
     color: var(--color-muted-foreground);
+  }
+
+  /* Hide keyboard shortcut hints on touch devices */
+  @media (pointer: coarse) {
+    .keyboard-shortcut-hint {
+      display: none;
+    }
   }
 
   .home-search-helper {
@@ -364,9 +393,10 @@
   /* Stats row below hero */
   .home-stats {
     display: flex;
+    flex-wrap: wrap; /* wrap on very small screens */
     align-items: center;
     justify-content: center;
-    gap: 3rem;
+    gap: 2rem;
     padding: 0 1.5rem 3rem;
   }
 
@@ -386,6 +416,7 @@
     transition: background-color 100ms ease;
   }
 
+  /* Scrollbar styling — WebKit */
   ::-webkit-scrollbar { width: 6px; height: 6px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb {
@@ -394,6 +425,14 @@
   }
   ::-webkit-scrollbar-thumb:hover {
     background: color-mix(in srgb, var(--color-muted-foreground) 50%, transparent);
+  }
+
+  /* Hide scrollbar utility (used in nav tabs strip) */
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
   }
 }
 
@@ -439,3 +478,18 @@
 .animate-slide-up { animation: slideUp 200ms ease forwards; }
 .animate-slide-down { animation: slideDown 120ms ease forwards; }
 .animate-scale-in { animation: scaleIn 150ms ease forwards; }
+
+/* Respect reduced motion preference for all animations */
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in,
+  .animate-slide-up,
+  .animate-slide-down,
+  .animate-scale-in {
+    animation: none;
+  }
+
+  * {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
