@@ -4,6 +4,7 @@ import { cookies } from 'next/headers'
 import type { EmailOtpType } from '@supabase/supabase-js'
 import type { Database } from '@/lib/types/database'
 import { buildPostAuthRedirectResponse, isAllowedSchoolEmail, resolvePostAuthRedirect } from '@/lib/auth/post-auth'
+import { getRequestOrigin } from '@/lib/server-origin'
 
 const ALLOWED_EMAIL_TYPES = new Set<EmailOtpType>([
   'signup',
@@ -23,7 +24,8 @@ function parseEmailOtpType(type: string | null): EmailOtpType | null {
 }
 
 export async function GET(request: Request) {
-  const { searchParams, origin } = new URL(request.url)
+  const { searchParams } = new URL(request.url)
+  const origin = await getRequestOrigin()
   const tokenHash = searchParams.get('token_hash')
   const type = parseEmailOtpType(searchParams.get('type'))
   const redirectPath = resolvePostAuthRedirect(searchParams.get('redirect_to'), origin)
