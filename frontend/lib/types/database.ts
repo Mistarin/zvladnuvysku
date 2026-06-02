@@ -169,17 +169,19 @@ export interface Database {
           size_bytes: number
           group_id: string | null
           page_count: number | null
+          points_override: number | null
           created_at: string
           is_approved: boolean
           moderation_status: 'pending' | 'approved' | 'rejected'
           rejection_reason: string | null
           moderated_at: string | null
         }
-        Insert: Omit<Database['public']['Tables']['subject_materials']['Row'], 'id' | 'created_at' | 'is_approved' | 'moderated_at'> & {
+        Insert: Omit<Database['public']['Tables']['subject_materials']['Row'], 'id' | 'created_at' | 'is_approved' | 'moderated_at' | 'points_override'> & {
           is_approved?: boolean
           moderation_status?: 'pending' | 'approved' | 'rejected'
           rejection_reason?: string | null
           moderated_at?: string | null
+          points_override?: number | null
         }
         Update: Partial<Database['public']['Tables']['subject_materials']['Insert']>
       }

@@ -111,6 +111,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
       .select("id, title, file_path, size_bytes, created_at, subject:subject_id(slug, short_tag, name)")
       .eq("uploader_id", userId)
       .eq("moderation_status", "approved")
+      .is("group_id", null)
       .order("created_at", { ascending: false }),
     supabase
       .from("material_groups")

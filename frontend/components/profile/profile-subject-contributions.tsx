@@ -35,6 +35,7 @@ type Props = {
 
 export function ProfileSubjectContributions({ decks, materials, groups = [] }: Props) {
   const [subjectSlug, setSubjectSlug] = useState('')
+  const [activeTab, setActiveTab] = useState<'all' | 'decks' | 'materials' | 'groups'>('all')
   const subjectOptions = getSubjectOptions(decks, materials, groups)
   const filteredDecks = subjectSlug ? decks.filter((deck) => deck.subject?.slug === subjectSlug) : decks
   const filteredMaterials = subjectSlug ? materials.filter((material) => material.subject?.slug === subjectSlug) : materials
@@ -63,8 +64,34 @@ export function ProfileSubjectContributions({ decks, materials, groups = [] }: P
         </div>
       ) : null}
 
+      <div className="flex flex-wrap gap-2 rounded-2xl border border-border bg-card p-3">
+        {[
+          { key: 'all', label: 'Vše' },
+          { key: 'decks', label: 'Kartičky' },
+          { key: 'materials', label: 'Materiály' },
+          { key: 'groups', label: 'Složky' },
+        ].map((tab) => {
+          const active = activeTab === tab.key
+          return (
+            <button
+              key={tab.key}
+              type="button"
+              onClick={() => setActiveTab(tab.key as 'all' | 'decks' | 'materials' | 'groups')}
+              className={`rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${
+                active
+                  ? 'border-primary bg-primary/10 text-primary'
+                  : 'border-border bg-background text-muted-foreground hover:bg-muted hover:text-foreground'
+              }`}
+            >
+              {tab.label}
+            </button>
+          )
+        })}
+      </div>
+
       <div className="grid gap-8 xl:grid-cols-2">
-        <ProfileContributionSection title="Veřejné balíčky kartiček" empty="Zatím žádné veřejné balíčky.">
+        {(activeTab === 'all' || activeTab === 'decks') && (
+          <ProfileContributionSection title="Veřejné balíčky kartiček" empty="Zatím žádné veřejné balíčky.">
           {filteredDecks.map((deck) => (
             <div key={deck.id} className="rounded-2xl border border-border bg-card p-4">
               <Link href={`/flashcardy/${deck.id}`} className="font-semibold text-foreground hover:text-primary">
@@ -74,9 +101,11 @@ export function ProfileSubjectContributions({ decks, materials, groups = [] }: P
               {deck.subject && <SubjectLink subject={deck.subject} />}
             </div>
           ))}
-        </ProfileContributionSection>
+          </ProfileContributionSection>
+        )}
 
-        <ProfileContributionSection title="Schválené materiály" empty="Zatím žádné schválené materiály.">
+        {(activeTab === 'all' || activeTab === 'materials') && (
+          <ProfileContributionSection title="Samostatné materiály" empty="Zatím žádné samostatné materiály.">
           {filteredMaterials.map((material) => (
             <div key={material.id} className="rounded-2xl border border-border bg-card p-4">
               {material.url ? (
@@ -95,13 +124,16 @@ export function ProfileSubjectContributions({ decks, materials, groups = [] }: P
               {material.subject && <SubjectLink subject={material.subject} />}
             </div>
           ))}
-        </ProfileContributionSection>
+          </ProfileContributionSection>
+        )}
 
-        <ProfileContributionSection title="Skupiny materiálů" empty="Zatím žádné veřejné skupiny materiálů.">
+        {(activeTab === 'all' || activeTab === 'groups') && (
+          <ProfileContributionSection title="Složky materiálů" empty="Zatím žádné veřejné složky materiálů.">
           {filteredGroups.map((group) => (
             <MaterialGroupCard key={group.id} group={group} showSubject />
           ))}
-        </ProfileContributionSection>
+          </ProfileContributionSection>
+        )}
       </div>
     </div>
   )

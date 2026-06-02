@@ -460,6 +460,75 @@ async function processTeachers(
   return { success: true }
 }
 
+export async function updateMaterialScoring(
+  materialId: string,
+  input: {
+    pageCount: number | null
+    pointsOverride: 0 | 2 | 3 | null
+  },
+): Promise<ActionResult> {
+  try {
+    const { supabase } = await getAdminClient()
+
+    const normalizedPageCount = input.pageCount === null
+      ? null
+      : Number.isInteger(input.pageCount) && input.pageCount >= 1 && input.pageCount <= 9999
+        ? input.pageCount
+        : NaN
+
+    if (Number.isNaN(normalizedPageCount)) {
+      return { success: false, error: 'Počet stran musí být celé číslo od 1 do 9999.' }
+    }
+
+    if (input.pointsOverride !== null && input.pointsOverride !== 0 && input.pointsOverride !== 2 && input.pointsOverride !== 3) {
+      return { success: false, error: 'Ruční body můžou být jen 0, 2 nebo 3.' }
+    }
+
+    const { data: material, error: loadError } = await supabase
+      .from('subject_materials')
+      .select('id, uploader_id, subject:subject_id(slug)')
+      .eq('id', materialId)
+      .maybeSingle()
+
+    const typedMaterial = material as {
+      id: string
+      uploader_id: string
+      subject: { slug: string } | null
+    } | null
+
+    if (loadError) {
+      return { success: false, error: `Nepodařilo se načíst materiál: ${loadError.message}` }
+    }
+
+    if (!typedMaterial) {
+      return { success: false, error: 'Materiál nenalezen.' }
+    }
+
+    const { error: updateError } = await supabase
+      .from('subject_materials')
+      .update({
+        page_count: normalizedPageCount,
+        points_override: input.pointsOverride,
+      } as never)
+      .eq('id', materialId)
+
+    if (updateError) {
+      return { success: false, error: `Nepodařilo se uložit bodování: ${updateError.message}` }
+    }
+
+    revalidatePath('/admin')
+    revalidatePath('/admin/materialy')
+    revalidatePath('/moje-aktivita')
+    if (typedMaterial.subject?.slug) {
+      revalidatePath(`/predmety/${typedMaterial.subject.slug}`)
+    }
+    revalidateContributionSurfaces(typedMaterial.uploader_id)
+    return { success: true }
+  } catch (err) {
+    return { success: false, error: err instanceof Error ? err.message : 'Neočekávaná chyba' }
+  }
+}
+
 export async function approveMaterial(materialId: string): Promise<ActionResult> {
   try {
     const { supabase } = await getAdminClient()

@@ -41,6 +41,9 @@ export default async function AdminSubjectsPage() {
         <Link href="/admin" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
           ← Čekající návrhy
         </Link>
+        <Link href="/admin/materialy" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+          Správa materiálů
+        </Link>
         <span className="text-sm font-semibold text-foreground">Správa předmětů</span>
       </div>
 

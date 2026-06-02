@@ -72,6 +72,9 @@ export default async function AdminPage(props: {
           <Link href="/admin/subjects" className="text-sm font-medium text-primary hover:underline">
             Správa předmětů →
           </Link>
+          <Link href="/admin/materialy" className="text-sm font-medium text-primary hover:underline">
+            Správa materiálů →
+          </Link>
           <Link href="/admin/ucitele" className="text-sm font-medium text-primary hover:underline">
             Správa vyučujících →
           </Link>
