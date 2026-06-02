@@ -4,6 +4,7 @@ export interface TeacherCacheEntry {
   id: string
   name: string
   faculty: string
+  department: string | null
   _nameLower: string
 }
 

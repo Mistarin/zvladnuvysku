@@ -20,6 +20,7 @@ interface TeacherSearchResult {
   id: string
   name: string
   faculty: string
+  department: string | null
 }
 
 export interface SubjectDetails {
@@ -178,7 +179,7 @@ export type InitialSubjectProposal = {
   subjectId: string | null
   subjectLabel: string
   form: Partial<typeof DEFAULT_FORM>
-  teachers: Array<{ id?: string; name: string; faculty?: string | null }>
+  teachers: Array<{ id?: string; name: string; faculty?: string | null; department?: string | null }>
   materialGroupTitle?: string
   originalSubject?: SubjectDetails | null
 }
@@ -202,7 +203,14 @@ function getInitialTeachers(initialProposal?: InitialSubjectProposal | null) {
     id: teacher.id,
     name: teacher.name,
     faculty: teacher.faculty ?? '',
+    department: teacher.department ?? '',
   })) ?? []
+}
+
+function normalizeDepartmentName(value: string) {
+  const trimmed = value.trim()
+  if (!trimmed) return ''
+  return trimmed.charAt(0).toLocaleUpperCase('cs-CZ') + trimmed.slice(1)
 }
 
 export function SubjectProposalForm({ hasDisplayName: initialHasDisplayName, initialProposal }: SubjectProposalFormProps) {
@@ -221,7 +229,7 @@ export function SubjectProposalForm({ hasDisplayName: initialHasDisplayName, ini
   const [hasDisplayName, setHasDisplayName] = useState(initialHasDisplayName)
   const [showDisplayNameModal, setShowDisplayNameModal] = useState(false)
 
-  const [selectedTeachers, setSelectedTeachers] = useState<{ id?: string, name: string, faculty: string }[]>(() =>
+  const [selectedTeachers, setSelectedTeachers] = useState<{ id?: string, name: string, faculty: string, department: string }[]>(() =>
     getInitialTeachers(initialProposal),
   )
   const [teacherSearch, setTeacherSearch] = useState('')
@@ -229,6 +237,8 @@ export function SubjectProposalForm({ hasDisplayName: initialHasDisplayName, ini
   const [isAddingNewTeacher, setIsAddingNewTeacher] = useState(false)
   const [newTeacherName, setNewTeacherName] = useState('')
   const [newTeacherFaculty, setNewTeacherFaculty] = useState('')
+  const [newTeacherDepartment, setNewTeacherDepartment] = useState('')
+  const [isCreatingNewDepartment, setIsCreatingNewDepartment] = useState(false)
 
   const [form, setForm] = useState(() => getInitialForm(initialProposal))
 
@@ -332,9 +342,19 @@ export function SubjectProposalForm({ hasDisplayName: initialHasDisplayName, ini
         id: teacher.id,
         name: teacher.name,
         faculty: teacher.faculty,
+        department: teacher.department,
       }))
     )
   }
+
+  const teacherDepartmentOptions = Array.from(
+    new Set(
+      teacherCache
+        .filter((teacher) => teacher.faculty === newTeacherFaculty)
+        .map((teacher) => teacher.department?.trim())
+        .filter((department): department is string => Boolean(department)),
+    ),
+  ).sort((left, right) => left.localeCompare(right, 'cs'))
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -345,6 +365,11 @@ export function SubjectProposalForm({ hasDisplayName: initialHasDisplayName, ini
     }
     if (materials.length > MAX_PROPOSAL_MATERIALS) {
       setError(`Najednou lze přiložit maximálně ${MAX_PROPOSAL_MATERIALS} PDF souborů.`)
+      return
+    }
+    const invalidDepartment = selectedTeachers.find((teacher) => !teacher.id && teacher.department && !/^[A-ZÁČĎÉĚÍŇÓŘŠŤÚŮÝŽ]/.test(teacher.department))
+    if (invalidDepartment) {
+      setError('Název katedry musí začínat velkým písmenem.')
       return
     }
     if (!hasDisplayName) {
@@ -592,6 +617,9 @@ export function SubjectProposalForm({ hasDisplayName: initialHasDisplayName, ini
                   <div key={i} className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-muted text-sm border border-border">
                     <span className="font-mono text-[10px] bg-background px-1 rounded text-muted-foreground">{t.faculty}</span>
                     <span>{t.name}</span>
+                    {t.department && (
+                      <span className="text-[10px] text-muted-foreground">· {t.department}</span>
+                    )}
                     <button type="button" onClick={() => setSelectedTeachers(prev => prev.filter((_, idx) => idx !== i))} className="text-muted-foreground hover:text-destructive ml-1">
                       ×
                     </button>
@@ -609,7 +637,7 @@ export function SubjectProposalForm({ hasDisplayName: initialHasDisplayName, ini
                       <button key={t.id} type="button" 
                         onClick={() => { 
                           if (!selectedTeachers.find(st => st.id === t.id)) {
-                            setSelectedTeachers(prev => [...prev, t])
+                            setSelectedTeachers(prev => [...prev, { ...t, department: t.department ?? '' }])
                           }
                           setTeacherSearch('')
                           setTeacherSearchResults([]) 
@@ -617,6 +645,7 @@ export function SubjectProposalForm({ hasDisplayName: initialHasDisplayName, ini
                         className="w-full text-left px-3 py-2.5 text-sm hover:bg-muted transition-colors flex items-center gap-2">
                         <span className="font-mono text-xs bg-primary/10 text-primary px-1.5 py-0.5 rounded">{t.faculty}</span>
                         <span>{t.name}</span>
+                        {t.department && <span className="text-xs text-muted-foreground">· {t.department}</span>}
                       </button>
                     ))}
                   </div>
@@ -626,6 +655,8 @@ export function SubjectProposalForm({ hasDisplayName: initialHasDisplayName, ini
                     type="button"
                     onClick={() => {
                       setNewTeacherFaculty((currentFaculty) => currentFaculty || form.faculty)
+                      setNewTeacherDepartment('')
+                      setIsCreatingNewDepartment(false)
                       setIsAddingNewTeacher(true)
                     }}
                     className="text-xs text-primary hover:underline"
@@ -650,14 +681,64 @@ export function SubjectProposalForm({ hasDisplayName: initialHasDisplayName, ini
                     </Select>
                   </div>
                 </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <FieldLabel>Katedra</FieldLabel>
+                    <Select
+                      value={isCreatingNewDepartment ? '__new__' : newTeacherDepartment}
+                      onChange={e => {
+                        if (e.target.value === '__new__') {
+                          setIsCreatingNewDepartment(true)
+                          setNewTeacherDepartment('')
+                          return
+                        }
+                        setIsCreatingNewDepartment(false)
+                        setNewTeacherDepartment(e.target.value)
+                      }}
+                    >
+                      <option value="">– vybrat –</option>
+                      {teacherDepartmentOptions.map((department) => (
+                        <option key={department} value={department}>{department}</option>
+                      ))}
+                      <option value="__new__">+ Přidat novou katedru</option>
+                    </Select>
+                  </div>
+                  <div>
+                    {isCreatingNewDepartment ? (
+                      <>
+                        <FieldLabel>Nová katedra</FieldLabel>
+                        <Input
+                          placeholder="Katedra matematiky"
+                          value={newTeacherDepartment}
+                          onChange={e => setNewTeacherDepartment(normalizeDepartmentName(e.target.value))}
+                        />
+                        <p className="mt-1 text-xs text-muted-foreground">Název katedry musí začínat velkým písmenem.</p>
+                      </>
+                    ) : (
+                      <>
+                        <FieldLabel>Náhled katedry</FieldLabel>
+                        <Input value={newTeacherDepartment} readOnly placeholder="Vyber katedru nebo přidej novou" />
+                      </>
+                    )}
+                  </div>
+                </div>
                 <div className="flex justify-end gap-2">
-                  <button type="button" onClick={() => setIsAddingNewTeacher(false)} className="px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground">Zrušit</button>
+                  <button type="button" onClick={() => {
+                    setIsAddingNewTeacher(false)
+                    setIsCreatingNewDepartment(false)
+                  }} className="px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground">Zrušit</button>
                   <button type="button" 
-                    disabled={!newTeacherName || !newTeacherFaculty}
+                    disabled={!newTeacherName || !newTeacherFaculty || !newTeacherDepartment}
                     onClick={() => {
-                      setSelectedTeachers(prev => [...prev, { name: newTeacherName.trim(), faculty: newTeacherFaculty }])
+                      setSelectedTeachers(prev => [...prev, {
+                        name: newTeacherName.trim(),
+                        faculty: newTeacherFaculty,
+                        department: normalizeDepartmentName(newTeacherDepartment),
+                      }])
                       setNewTeacherName('')
                       setNewTeacherFaculty(form.faculty)
+                      setNewTeacherDepartment('')
+                      setIsCreatingNewDepartment(false)
                       setIsAddingNewTeacher(false)
                     }} 
                     className="px-3 py-1.5 text-xs bg-primary text-primary-foreground rounded-md disabled:opacity-50">
@@ -845,7 +926,7 @@ export function SubjectProposalForm({ hasDisplayName: initialHasDisplayName, ini
         <ul className="text-muted-foreground space-y-1 list-disc list-inside text-xs">
           <li>Vyhni se AI slopu a odfláknutým materiálům. Takové vracíme ke kontrole.</li>
           <li>Radši přilož víc stran pohromadě než několik drobných PDF zvlášť.</li>
-          <li>Materiály pod 5 stran body nepřidávají.</li>
+          <li>Body se počítají podle rozsahu: do 5 stran 1 bod, do 15 stran 2, do 30 stran 3 a nad 30 stran 4.</li>
         </ul>
         <a href="/jak-to-funguje" target="_blank" className="text-xs text-primary hover:underline">Jak fungují body? →</a>
       </div>

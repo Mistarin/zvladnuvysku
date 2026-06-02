@@ -43,9 +43,9 @@ export default function JakToFunguePage() {
             </thead>
             <tbody className="divide-y divide-border">
               <tr className="hover:bg-muted/30 transition-colors">
-                <td className="px-4 py-3 text-foreground">Méně než 5 stran</td>
+                <td className="px-4 py-3 text-foreground">Do 5 stran</td>
                 <td className="px-4 py-3 text-right">
-                  <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-muted text-muted-foreground font-semibold text-sm">0</span>
+                  <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-primary/5 text-primary font-semibold text-sm">1</span>
                 </td>
               </tr>
               <tr className="hover:bg-muted/30 transition-colors">
@@ -55,9 +55,15 @@ export default function JakToFunguePage() {
                 </td>
               </tr>
               <tr className="hover:bg-muted/30 transition-colors">
-                <td className="px-4 py-3 text-foreground font-medium">16+ stran</td>
+                <td className="px-4 py-3 text-foreground">16–30 stran</td>
                 <td className="px-4 py-3 text-right">
                   <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-primary/15 text-primary font-semibold text-sm">3</span>
+                </td>
+              </tr>
+              <tr className="hover:bg-muted/30 transition-colors">
+                <td className="px-4 py-3 text-foreground font-medium">Nad 30 stran</td>
+                <td className="px-4 py-3 text-right">
+                  <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-amber-500/20 text-amber-600 dark:text-amber-400 font-bold text-sm">4</span>
                 </td>
               </tr>
             </tbody>
@@ -149,7 +155,7 @@ export default function JakToFunguePage() {
             },
             {
               icon: '📏',
-              text: 'Materiály pod 5 stran nedávají žádné body — vyplatí se je spojit s dalšími.',
+              text: 'Za materiál dostaneš 1 bod už do 5 stran, ale delší a ucelenější podklady mají vyšší hodnotu.',
             },
           ].map(({ icon, text }) => (
             <li

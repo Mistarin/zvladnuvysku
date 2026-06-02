@@ -28,7 +28,7 @@ type SubjectProposalInput = {
     year: string
     note: string
   }
-  teachers: Array<{ id?: string; name: string; faculty?: string | null }>
+  teachers: Array<{ id?: string; name: string; faculty?: string | null; department?: string | null }>
   materialGroupTitle?: string | null
   materialFiles: Array<{ name: string; size: number; pageCount: number | null }>
 }
@@ -47,7 +47,7 @@ type SubjectProposalData = {
   semester?: string
   faculty?: string
   year?: number
-  teachers?: Array<{ id?: string; name: string; faculty?: string | null }>
+  teachers?: Array<{ id?: string; name: string; faculty?: string | null; department?: string | null }>
   material_group_title?: string | null
   materials?: Array<{ title: string; file_path: string; size_bytes: number; page_count?: number | null }>
 }
@@ -84,7 +84,7 @@ type SubjectSearchItem = {
   credits: number | null
   semester: string | null
 }
-type TeacherSearchItem = { id: string; name: string; faculty: string }
+type TeacherSearchItem = { id: string; name: string; faculty: string; department: string | null }
 type SubjectDetailsResult =
   | {
       success: true
@@ -138,6 +138,16 @@ function isPdfFile(file: File) {
 
 function hasText(value: unknown) {
   return typeof value === 'string' && value.trim().length > 0
+}
+
+function normalizeDepartmentName(value: string) {
+  const trimmed = value.trim()
+  if (!trimmed) return ''
+  return trimmed.charAt(0).toLocaleUpperCase('cs-CZ') + trimmed.slice(1)
+}
+
+function startsWithUppercase(value: string) {
+  return /^[A-ZÁČĎÉĚÍŇÓŘŠŤÚŮÝŽ]/.test(value.trim())
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -235,10 +245,23 @@ function validateSubjectProposalPayload(payload: SubjectProposalInput) {
       !teacher ||
       typeof teacher !== 'object' ||
       !hasText(teacher.name) ||
-      (!hasText(teacher.id) && !hasText(teacher.faculty) && !hasText(payload.form.faculty))
+      (!hasText(teacher.id) && (
+        (!hasText(teacher.faculty) && !hasText(payload.form.faculty)) ||
+        !hasText(teacher.department)
+      ))
   )
   if (invalidTeacher) {
-    return 'Nový vyučující musí mít vyplněné jméno i fakultu.'
+    return 'Nový vyučující musí mít vyplněné jméno, fakultu i katedru.'
+  }
+
+  const invalidTeacherDepartment = payload.teachers.find(
+    (teacher) =>
+      !hasText(teacher.id) &&
+      hasText(teacher.department) &&
+      !startsWithUppercase(String(teacher.department)),
+  )
+  if (invalidTeacherDepartment) {
+    return 'Název katedry musí začínat velkým písmenem.'
   }
 
   const invalidMaterialMeta = payload.materialFiles.find(
@@ -389,6 +412,7 @@ export async function submitSubjectProposal(formData: FormData): Promise<ActionR
       ...teacher,
       name: teacher.name.trim(),
       faculty: teacher.faculty?.trim() || payload.form.faculty.trim() || undefined,
+      department: teacher.department ? normalizeDepartmentName(teacher.department) : undefined,
     }))
     const totalMaterialCount = existingMaterials.length + uploadedMaterials.length
     const normalizedMaterialGroupTitle = payload.materialGroupTitle?.trim() || getProposalMaterialGroupTitle(existingProposal?.data) || undefined
@@ -795,7 +819,7 @@ export async function searchTeachersForProposal(query: string): Promise<{ succes
     const supabase = await createClient()
     const { data, error } = await supabase
       .from('teachers')
-      .select('id, name, faculty')
+      .select('id, name, faculty, department')
       .ilike('name', `%${normalizedQuery}%`)
       .limit(6)
 
@@ -817,7 +841,7 @@ export async function getTeacherSearchCache(): Promise<{ success: true; data: Te
     const supabase = await createClient()
     const { data, error } = await supabase
       .from('teachers')
-      .select('id, name, faculty')
+      .select('id, name, faculty, department')
       .eq('is_approved', true)
       .order('name')
 

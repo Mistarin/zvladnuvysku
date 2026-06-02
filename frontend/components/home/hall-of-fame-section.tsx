@@ -11,6 +11,7 @@ import {
   BookOpen,
   FileText,
   FlipVertical,
+  UserRound,
 } from "lucide-react";
 import { upsertDisplayName } from "@/app/actions/hall-of-fame";
 import { getPublicProfilePath } from "@/lib/public-profile";
@@ -85,7 +86,7 @@ export function HallOfFameSection({
                 </h2>
                 <p className="mt-2 text-sm leading-6 text-muted-foreground sm:text-base">
                   Veřejný žebříček studentů, kteří nejvíc pomáhají ostatním sdílením
-                  kartiček, studijních materiálů a návrhů předmětů.
+                  kartiček, studijních materiálů, vyučujících a návrhů předmětů.
                 </p>
               </div>
             </div>
@@ -115,7 +116,7 @@ export function HallOfFameSection({
                 Zatím tu nejsou žádní přispěvatelé za toto období.
               </p>
               <p className="mt-2 text-sm text-muted-foreground">
-                Body se počítají z veřejných kartiček, schválených materiálů a schválených návrhů předmětů.
+                Body se počítají z veřejných kartiček, schválených materiálů, přidaných vyučujících a schválených návrhů předmětů.
               </p>
             </div>
           ) : (
@@ -163,7 +164,7 @@ export function HallOfFameSection({
                     Chceš se dostat do Hall of Fame?
                   </p>
                   <p className="mt-1 text-sm text-muted-foreground">
-                    Přihlas se a začni přispívat kartičkami, materiály nebo novými předměty.
+                    Přihlas se a začni přispívat kartičkami, materiály, novými předměty nebo vyučujícími.
                   </p>
                 </div>
                 <Link
@@ -258,6 +259,7 @@ function PodiumColumn({
       <div className="flex flex-wrap justify-center gap-1 mt-1">
         <ScorePill icon={<FlipVertical className="size-3" />} value={entry.flashcard_count} label="K" />
         <ScorePill icon={<FileText className="size-3" />} value={entry.material_count} label="M" />
+        <ScorePill icon={<UserRound className="size-3" />} value={entry.teacher_count} label="V" />
         <ScorePill icon={<BookOpen className="size-3" />} value={entry.subject_count} label="P" />
       </div>
     </Link>
@@ -280,6 +282,7 @@ function LeaderboardRow({ entry, index }: { entry: HallOfFameRow; index: number 
         <div className="flex items-center gap-3 mt-0.5">
           <ScorePillInline icon={<FlipVertical className="size-3" />} value={entry.flashcard_count} />
           <ScorePillInline icon={<FileText className="size-3" />} value={entry.material_count} />
+          <ScorePillInline icon={<UserRound className="size-3" />} value={entry.teacher_count} />
           <ScorePillInline icon={<BookOpen className="size-3" />} value={entry.subject_count} />
         </div>
       </div>

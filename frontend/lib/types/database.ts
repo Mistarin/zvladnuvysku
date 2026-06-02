@@ -301,6 +301,7 @@ export interface Database {
           flashcard_count: number
           material_count: number
           subject_count: number
+          teacher_count: number
         }[]
       }
       get_public_profile_stats: {
@@ -311,6 +312,7 @@ export interface Database {
           flashcard_count: number
           material_count: number
           subject_count: number
+          teacher_count: number
           subject_comment_count: number
           teacher_review_count: number
           approved_score: number

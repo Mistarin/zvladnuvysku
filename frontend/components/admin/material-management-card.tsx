@@ -27,9 +27,11 @@ interface MaterialManagementCardProps {
 }
 
 function getAutomaticPoints(pageCount: number | null) {
-  if (pageCount === null || pageCount < 5) return 0;
+  if (pageCount === null) return 1;
+  if (pageCount <= 5) return 1;
   if (pageCount <= 15) return 2;
-  return 3;
+  if (pageCount <= 30) return 3;
+  return 4;
 }
 
 function getEffectivePoints(pageCount: number | null, pointsOverride: number | null) {
@@ -43,9 +45,9 @@ export function MaterialManagementCard({
   author,
 }: MaterialManagementCardProps) {
   const [pageCount, setPageCount] = useState(material.page_count?.toString() ?? "");
-  const [pointsMode, setPointsMode] = useState<"auto" | "0" | "2" | "3">(
-    material.points_override === 0 || material.points_override === 2 || material.points_override === 3
-      ? String(material.points_override) as "0" | "2" | "3"
+  const [pointsMode, setPointsMode] = useState<"auto" | "1" | "2" | "3" | "4">(
+    material.points_override === 1 || material.points_override === 2 || material.points_override === 3 || material.points_override === 4
+      ? String(material.points_override) as "1" | "2" | "3" | "4"
       : "auto",
   );
   const [isSaving, setIsSaving] = useState(false);
@@ -56,7 +58,7 @@ export function MaterialManagementCard({
   const previewPageCount = parsedPageCount !== null && Number.isInteger(parsedPageCount) && parsedPageCount >= 1
     ? parsedPageCount
     : null;
-  const previewOverride = pointsMode === "auto" ? null : Number(pointsMode) as 0 | 2 | 3;
+  const previewOverride = pointsMode === "auto" ? null : Number(pointsMode) as 1 | 2 | 3 | 4;
   const previewPoints = getEffectivePoints(previewPageCount, previewOverride);
   const publicUrl = getStoragePublicUrl("study_materials", material.file_path);
 
@@ -67,7 +69,7 @@ export function MaterialManagementCard({
 
     const result = await updateMaterialScoring(material.id, {
       pageCount: pageCount.trim() ? Number(pageCount) : null,
-      pointsOverride: pointsMode === "auto" ? null : Number(pointsMode) as 0 | 2 | 3,
+      pointsOverride: pointsMode === "auto" ? null : Number(pointsMode) as 1 | 2 | 3 | 4,
     });
 
     if (result.success) {
@@ -140,16 +142,17 @@ export function MaterialManagementCard({
           <div className="flex flex-wrap gap-2">
             {[
               { value: "auto", label: "Automaticky" },
-              { value: "0", label: "0 bodů" },
+              { value: "1", label: "1 bod" },
               { value: "2", label: "2 body" },
               { value: "3", label: "3 body" },
+              { value: "4", label: "4 body" },
             ].map((option) => {
               const active = pointsMode === option.value;
               return (
                 <button
                   key={option.value}
                   type="button"
-                  onClick={() => setPointsMode(option.value as "auto" | "0" | "2" | "3")}
+                  onClick={() => setPointsMode(option.value as "auto" | "1" | "2" | "3" | "4")}
                   className={`rounded-full border px-3 py-2 text-sm transition-colors ${
                     active
                       ? "border-primary bg-primary/10 text-primary"

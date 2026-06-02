@@ -27,7 +27,7 @@ type ProposalData = {
   semester?: string
   faculty?: string
   year?: number
-  teachers?: Array<{ id?: string; name?: string; faculty?: string | null }>
+  teachers?: Array<{ id?: string; name?: string; faculty?: string | null; department?: string | null }>
   material_group_title?: string | null
   materials?: Array<{ title?: string; file_path?: string; size_bytes?: number; page_count?: number | null }>
 }
@@ -174,6 +174,7 @@ function normalizeProposalTeachers(teachers: ProposalData['teachers']) {
       id: typeof teacher.id === 'string' ? teacher.id : undefined,
       name: teacher.name.trim(),
       faculty: typeof teacher.faculty === 'string' ? teacher.faculty : null,
+      department: typeof teacher.department === 'string' ? teacher.department : null,
     }]
   })
 }

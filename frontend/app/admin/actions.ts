@@ -28,7 +28,7 @@ type TeacherInsert = Database['public']['Tables']['teachers']['Insert']
 type SubjectTeacherInsert = Database['public']['Tables']['subject_teachers']['Insert']
 type FeedbackUpdate = Database['public']['Tables']['feedback']['Update']
 
-type ProposalTeacher = { id?: string; name: string; faculty?: string | null }
+type ProposalTeacher = { id?: string; name: string; faculty?: string | null; department?: string | null }
 type ProposalMaterial = { title: string; file_path: string; size_bytes: number; page_count?: number | null }
 type ProposalPayload = SubjectInsert & {
   teachers?: ProposalTeacher[]
@@ -101,6 +101,12 @@ function normalizeProposalMaterialGroupTitle(title: string | null | undefined) {
 function buildMaterialGroupFallbackTitle(subject: Pick<Database['public']['Tables']['subjects']['Row'], 'name' | 'short_tag'>) {
   const base = subject.short_tag?.trim() || subject.name?.trim() || 'Materiály'
   return `${base} — materiály`
+}
+
+function normalizeDepartmentName(value: string | null | undefined) {
+  const trimmed = value?.trim() ?? ''
+  if (!trimmed) return null
+  return trimmed.charAt(0).toLocaleUpperCase('cs-CZ') + trimmed.slice(1)
 }
 
 async function insertSubjectWithUniqueSlug(
@@ -217,7 +223,7 @@ export async function approveProposal(
       approvedSubjectId = insertedSubject.id
 
       if (teachers && teachers.length > 0) {
-        const teacherResult = await processTeachers(supabase, insertedSubject.id, teachers)
+        const teacherResult = await processTeachers(supabase, insertedSubject.id, teachers, proposal.proposed_by)
         if (!teacherResult.success) return teacherResult
       }
 
@@ -268,7 +274,7 @@ export async function approveProposal(
       if (updateError) return { success: false, error: `Chyba při úpravě: ${updateError.message}` }
 
       if (teachers && teachers.length > 0) {
-        const teacherResult = await processTeachers(supabase, subjectId, teachers)
+        const teacherResult = await processTeachers(supabase, subjectId, teachers, proposal.proposed_by)
         if (!teacherResult.success) return teacherResult
       }
       
@@ -419,7 +425,8 @@ export async function updateSubject(subjectId: string, data: Record<string, unkn
 async function processTeachers(
   supabase: Awaited<ReturnType<typeof createClient>>,
   subjectId: string,
-  teachers: ProposalTeacher[]
+  teachers: ProposalTeacher[],
+  proposedBy: string | null,
 ): Promise<ActionResult> {
   for (const t of teachers) {
     let teacherId = t.id
@@ -428,6 +435,10 @@ async function processTeachers(
       if (!faculty) {
         return { success: false, error: `U nového vyučujícího ${t.name} chybí fakulta.` }
       }
+      const department = normalizeDepartmentName(t.department)
+      if (!department) {
+        return { success: false, error: `U nového vyučujícího ${t.name} chybí katedra.` }
+      }
 
       // Create new teacher
       const slug = t.name.toLowerCase().replace(/[^a-z0-9á-ž]+/g, '-').replace(/(^-|-$)/g, '')
@@ -435,8 +446,9 @@ async function processTeachers(
         name: t.name,
         faculty,
         slug: slug + '-' + Math.floor(Math.random() * 1000),
-        department: null,
+        department,
         is_approved: true,
+        proposed_by: proposedBy,
       }
       const { data: newTeacherData, error: teacherError } = await supabase.from('teachers').insert(teacherInsert as never).select().single()
       if (teacherError) return { success: false, error: `Nepodařilo se vytvořit vyučujícího ${t.name}: ${teacherError.message}` }
@@ -464,7 +476,7 @@ export async function updateMaterialScoring(
   materialId: string,
   input: {
     pageCount: number | null
-    pointsOverride: 0 | 2 | 3 | null
+    pointsOverride: 1 | 2 | 3 | 4 | null
   },
 ): Promise<ActionResult> {
   try {
@@ -480,8 +492,8 @@ export async function updateMaterialScoring(
       return { success: false, error: 'Počet stran musí být celé číslo od 1 do 9999.' }
     }
 
-    if (input.pointsOverride !== null && input.pointsOverride !== 0 && input.pointsOverride !== 2 && input.pointsOverride !== 3) {
-      return { success: false, error: 'Ruční body můžou být jen 0, 2 nebo 3.' }
+    if (input.pointsOverride !== null && ![1, 2, 3, 4].includes(input.pointsOverride)) {
+      return { success: false, error: 'Ruční body můžou být jen 1, 2, 3 nebo 4.' }
     }
 
     const { data: material, error: loadError } = await supabase

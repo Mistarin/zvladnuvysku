@@ -50,7 +50,7 @@ type ProposalData = {
   semester?: string;
   faculty?: string;
   year?: number;
-  teachers?: Array<{ id?: string; name?: string; faculty?: string | null }>;
+  teachers?: Array<{ id?: string; name?: string; faculty?: string | null; department?: string | null }>;
   materials?: Array<{ title?: string; file_path?: string; size_bytes?: number }>;
 };
 
@@ -458,7 +458,8 @@ function formatProposalTeachers(teachers: ProposalData["teachers"]) {
     .map((teacher) => {
       const name = teacher.name?.trim();
       if (!name) return null;
-      return teacher.faculty ? `${name} (${teacher.faculty})` : name;
+      const details = [teacher.faculty, teacher.department].filter(Boolean).join(' · ')
+      return details ? `${name} (${details})` : name;
     })
     .filter(Boolean)
     .join(", ");

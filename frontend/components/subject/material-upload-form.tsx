@@ -154,7 +154,7 @@ export function MaterialUploadForm({ subjectId, subjectName, hasDisplayName: ini
           <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
             <li>Vyhni se AI slopu a odfláknutým materiálům. Takové vracíme ke kontrole.</li>
             <li>Radši nahraj víc stran pohromadě než několik drobných PDF zvlášť.</li>
-            <li>Materiály pod 5 stran body nepřidávají.</li>
+            <li>Body se počítají podle rozsahu: do 5 stran 1 bod, do 15 stran 2, do 30 stran 3 a nad 30 stran 4.</li>
           </ul>
           <Link href="/jak-to-funguje" target="_blank" className="text-xs text-primary hover:underline inline-block mt-0.5">
             Jak fungují body? →
