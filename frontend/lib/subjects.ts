@@ -3,6 +3,7 @@ import type { Subject, SubjectWithStats } from "@/lib/types/database";
 export interface SubjectFilters {
   query?: string;
   difficulty?: number[];
+  difficultyMax?: number;
   timeIntensity?: number[];
   timeIntensityMax?: number;
   attendanceType?: string[];
@@ -97,6 +98,7 @@ export function getSubjectFiltersFromSearchParams(params: SearchParamInput): Sub
   return {
     query: getParamValue(params, "q") ?? undefined,
     difficulty: parseNumberArray(getParamValue(params, "difficulty")),
+    difficultyMax: parseNumberValue(getParamValue(params, "difficulty_max")),
     timeIntensity: parseNumberArray(getParamValue(params, "time_intensity")),
     timeIntensityMax: parseNumberValue(getParamValue(params, "time_intensity_max")),
     semester: parseStringArray(getParamValue(params, "semester")),

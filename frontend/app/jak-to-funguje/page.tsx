@@ -19,6 +19,7 @@ export default function JakToFunguePage() {
         </h1>
         <p className="text-muted-foreground text-base max-w-2xl mx-auto leading-relaxed">
           Body se připisují za schválené příspěvky a určují pořadí v žebříčku aktivních přispěvatelů.
+          XP se počítají přímo z bodů: 1 bod = 10 XP, 2 body = 20 XP, 3 body = 30 XP a tak dál.
           Každý materiál navíc prochází moderací, aby se na web dostaly opravdu použitelné podklady.
         </p>
       </div>
@@ -134,6 +135,17 @@ export default function JakToFunguePage() {
             </p>
           </div>
         </div>
+      </section>
+
+      {/* Tipy */}
+      <section className="glass-card rounded-[1.75rem] p-7 sm:p-8 space-y-4">
+        <div className="flex items-center gap-3">
+          <span className="text-2xl">⚡</span>
+          <h2 className="text-xl font-semibold text-foreground">Jak se počítají XP</h2>
+        </div>
+        <p className="text-sm text-muted-foreground">
+          XP jsou vždy jen převod schválených bodů. Za 1 bod dostaneš 10 XP, za 2 body 20 XP, za 3 body 30 XP, za 4 body 40 XP, za 5 bodů 50 XP a stejně pokračují i další hodnoty.
+        </p>
       </section>
 
       {/* Tipy */}

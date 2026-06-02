@@ -243,7 +243,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
                 href="/#hall-of-fame"
                 className="inline-flex text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
               >
-                1 schválený bod = 10 XP →
+                Body se převádějí na XP v poměru 1:10 →
               </Link>
             )}
           </div>

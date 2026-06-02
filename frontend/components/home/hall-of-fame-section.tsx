@@ -148,7 +148,7 @@ export function HallOfFameSection({
                   </p>
                   <p className="mt-1 text-sm text-muted-foreground">
                     {hasDisplayName
-                      ? "Každý schválený bod přidává 10 XP."
+                      ? "XP se počítají přímo z bodů: 1 bod = 10 XP, 2 body = 20 XP, 3 body = 30 XP."
                       : "Bez veřejného jména se do veřejného leaderboardu nezapočítáš, i když přispíváš."}
                   </p>
                 </div>
@@ -383,7 +383,7 @@ function DisplayNameDialog({
                 className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm outline-none transition-colors focus:border-primary/60 focus:ring-2 focus:ring-primary/20"
               />
               <p className="text-xs text-muted-foreground">
-                2 až 40 znaků. Každý schválený bod přidává 10 XP.
+                2 až 40 znaků. XP se počítají jednoduše: každý 1 bod znamená 10 XP.
               </p>
             </div>
 

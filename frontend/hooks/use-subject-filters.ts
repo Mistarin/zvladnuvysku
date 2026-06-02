@@ -22,8 +22,16 @@ export interface FilterConfig {
 
 export const FILTER_CONFIG: FilterConfig[] = [
   {
+    key: 'difficultyMax',
+    label: 'Obtížnost do',
+    type: 'slider',
+    min: 1,
+    max: 5,
+    step: 1,
+  },
+  {
     key: 'timeIntensityMax',
-    label: 'Náročnost do',
+    label: 'Časová náročnost do',
     type: 'slider',
     min: 1,
     max: 5,
@@ -143,6 +151,7 @@ export function useSubjectFilters(): UseSubjectFiltersReturn {
     const paramMap: Partial<Record<keyof SubjectFilters, string>> = {
       query: 'q',
       difficulty: 'difficulty',
+      difficultyMax: 'difficulty_max',
       timeIntensity: 'time_intensity',
       timeIntensityMax: 'time_intensity_max',
       semester: 'semester',
@@ -202,6 +211,7 @@ export function useSubjectFilters(): UseSubjectFiltersReturn {
   const activeFilterCount = useMemo(() => {
     let count = 0
     if (filters.difficulty?.length) count++
+    if (filters.difficultyMax !== undefined) count++
     if (filters.timeIntensity?.length) count++
     if (filters.timeIntensityMax !== undefined) count++
     if (filters.semester?.length) count++

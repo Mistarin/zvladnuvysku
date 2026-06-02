@@ -926,7 +926,7 @@ export function SubjectProposalForm({ hasDisplayName: initialHasDisplayName, ini
         <ul className="text-muted-foreground space-y-1 list-disc list-inside text-xs">
           <li>Vyhni se AI slopu a odfláknutým materiálům. Takové vracíme ke kontrole.</li>
           <li>Radši přilož víc stran pohromadě než několik drobných PDF zvlášť.</li>
-          <li>Body se počítají podle rozsahu: do 5 stran 1 bod, do 15 stran 2, do 30 stran 3 a nad 30 stran 4.</li>
+          <li>XP se počítají přímo z bodů: 1 bod = 10 XP, 2 body = 20 XP, 3 body = 30 XP a 4 body = 40 XP.</li>
         </ul>
         <a href="/jak-to-funguje" target="_blank" className="text-xs text-primary hover:underline">Jak fungují body? →</a>
       </div>

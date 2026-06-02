@@ -26,6 +26,7 @@ function normalizeSubjectRequest(
       ...filters,
       query: filters.query?.trim() || undefined,
       difficulty: filters.difficulty?.slice().sort((a, b) => a - b),
+      difficultyMax: filters.difficultyMax,
       timeIntensity: filters.timeIntensity?.slice().sort((a, b) => a - b),
       attendanceType: filters.attendanceType?.slice().sort(),
       semester: filters.semester?.slice().sort(),
@@ -56,6 +57,9 @@ const getCachedSubjectsPage = unstable_cache(
     }
     if (filters.difficulty?.length) {
       query = query.in("difficulty", filters.difficulty);
+    }
+    if (filters.difficultyMax !== undefined) {
+      query = query.lte("difficulty", filters.difficultyMax);
     }
     if (filters.timeIntensity?.length) {
       query = query.in("time_intensity", filters.timeIntensity);
