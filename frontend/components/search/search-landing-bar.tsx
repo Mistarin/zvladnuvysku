@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { SearchBar } from "@/components/search/search-bar";
 
@@ -19,21 +19,69 @@ export function SearchLandingBar({
   const searchParams = useSearchParams();
   const [query, setQuery] = useState(searchParams.get("q") ?? "");
   const [isFocused, setIsFocused] = useState(false);
+  const debounceTimeoutRef = useRef<number | null>(null);
+  const lastCommittedQueryRef = useRef((searchParams.get("q") ?? "").trim());
 
   useEffect(() => {
-    setQuery(searchParams.get("q") ?? "");
+    const currentQuery = searchParams.get("q") ?? "";
+    setQuery(currentQuery);
+    lastCommittedQueryRef.current = currentQuery.trim();
   }, [searchParams]);
 
-  const submit = () => {
-    const trimmed = query.trim();
-    router.push(trimmed ? `${basePath}?q=${encodeURIComponent(trimmed)}` : basePath);
-  };
+  const commitQuery = useCallback((nextQuery: string, pushHistory = false) => {
+    const trimmed = nextQuery.trim();
+
+    if (trimmed === lastCommittedQueryRef.current) {
+      return;
+    }
+
+    lastCommittedQueryRef.current = trimmed;
+
+    const params = new URLSearchParams(searchParams.toString());
+
+    if (trimmed) {
+      params.set("q", trimmed);
+    } else {
+      params.delete("q");
+    }
+
+    const href = params.toString() ? `${basePath}?${params.toString()}` : basePath;
+
+    if (pushHistory) {
+      router.push(href, { scroll: false });
+      return;
+    }
+
+    router.replace(href, { scroll: false });
+  }, [basePath, router, searchParams]);
+
+  useEffect(() => {
+    if (debounceTimeoutRef.current !== null) {
+      window.clearTimeout(debounceTimeoutRef.current);
+    }
+
+    debounceTimeoutRef.current = window.setTimeout(() => {
+      commitQuery(query);
+      debounceTimeoutRef.current = null;
+    }, 250);
+
+    return () => {
+      if (debounceTimeoutRef.current !== null) {
+        window.clearTimeout(debounceTimeoutRef.current);
+        debounceTimeoutRef.current = null;
+      }
+    };
+  }, [commitQuery, query]);
 
   return (
     <div className="space-y-2">
       <div onKeyDown={(e) => {
         if (e.key === "Enter") {
-          submit();
+          if (debounceTimeoutRef.current !== null) {
+            window.clearTimeout(debounceTimeoutRef.current);
+            debounceTimeoutRef.current = null;
+          }
+          commitQuery(query, true);
         }
       }}>
         <SearchBar
@@ -47,7 +95,7 @@ export function SearchLandingBar({
         />
       </div>
       <p className="text-xs text-muted-foreground">
-        {query.trim() ? "Uprav dotaz a stiskni Enter." : emptyHint}
+        {query.trim() ? "Výsledky se aktualizují průběžně." : emptyHint}
       </p>
     </div>
   );
