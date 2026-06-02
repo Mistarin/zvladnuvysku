@@ -2,7 +2,9 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { ShareLinkButton } from '@/components/share/share-link-button'
 import { MaterialGroupCard, type MaterialGroupData } from '@/components/subject/material-group-card'
+import { getSharePath } from '@/lib/share-links'
 
 type SubjectRef = {
   slug: string
@@ -13,6 +15,7 @@ type SubjectRef = {
 export type ProfileDeckContribution = {
   id: string
   title: string
+  share_slug: string
   card_count: number
   subject: SubjectRef
 }
@@ -20,6 +23,7 @@ export type ProfileDeckContribution = {
 export type ProfileMaterialContribution = {
   id: string
   title: string
+  share_slug: string
   url: string | null
   sizeLabel: string
   subject: SubjectRef
@@ -94,9 +98,15 @@ export function ProfileSubjectContributions({ decks, materials, groups = [] }: P
           <ProfileContributionSection title="Veřejné balíčky kartiček" empty="Zatím žádné veřejné balíčky.">
           {filteredDecks.map((deck) => (
             <div key={deck.id} className="rounded-2xl border border-border bg-card p-4">
-              <Link href={`/flashcardy/${deck.id}`} className="font-semibold text-foreground hover:text-primary">
-                {deck.title}
-              </Link>
+              <div className="flex items-start justify-between gap-3">
+                <Link href={`/flashcardy/${deck.id}`} className="font-semibold text-foreground hover:text-primary">
+                  {deck.title}
+                </Link>
+                <ShareLinkButton
+                  path={getSharePath('deck', deck.share_slug)}
+                  className="px-2 py-1 text-[11px] sm:text-xs"
+                />
+              </div>
               <p className="mt-1 text-sm text-muted-foreground">{deck.card_count} karet</p>
               {deck.subject && <SubjectLink subject={deck.subject} />}
             </div>
@@ -108,18 +118,24 @@ export function ProfileSubjectContributions({ decks, materials, groups = [] }: P
           <ProfileContributionSection title="Samostatné materiály" empty="Zatím žádné samostatné materiály.">
           {filteredMaterials.map((material) => (
             <div key={material.id} className="rounded-2xl border border-border bg-card p-4">
-              {material.url ? (
-                <a
-                  href={material.url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="font-semibold text-foreground hover:text-primary"
-                >
-                  {material.title}
-                </a>
-              ) : (
-                <p className="font-semibold text-foreground">{material.title}</p>
-              )}
+              <div className="flex items-start justify-between gap-3">
+                {material.url ? (
+                  <a
+                    href={material.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="font-semibold text-foreground hover:text-primary"
+                  >
+                    {material.title}
+                  </a>
+                ) : (
+                  <p className="font-semibold text-foreground">{material.title}</p>
+                )}
+                <ShareLinkButton
+                  path={getSharePath('material', material.share_slug)}
+                  className="px-2 py-1 text-[11px] sm:text-xs"
+                />
+              </div>
               <p className="mt-1 text-sm text-muted-foreground">{material.sizeLabel}</p>
               {material.subject && <SubjectLink subject={material.subject} />}
             </div>

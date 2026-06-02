@@ -8,8 +8,10 @@ import { RatingForm } from "@/components/subject/rating-form";
 import { RatingStats } from "@/components/subject/rating-stats";
 import { MaterialUploadForm } from "@/components/subject/material-upload-form";
 import { ReportIssueDialog } from "@/components/feedback/report-issue-dialog";
+import { ShareLinkButton } from "@/components/share/share-link-button";
 import { PublicUserLink } from "@/components/profile/public-user-link";
 import { getPublicUserSummaryMap } from "@/lib/public-user-summaries";
+import { getSharePath } from "@/lib/share-links";
 import type { Database, Subject, SubjectRatingStats } from "@/lib/types/database";
 import { BookOpen, Target, MessageSquare, Star, Users, Layers, FileText, CheckCircle2, XCircle, Clock, Calendar, Diamond } from "lucide-react";
 import { formatCredits } from "@/lib/utils";
@@ -58,7 +60,7 @@ type SubjectTeacherJoinRow = {
 
 type SubjectMaterialListItem = Pick<
   Database["public"]["Tables"]["subject_materials"]["Row"],
-  "id" | "title" | "file_path" | "size_bytes" | "created_at"
+  "id" | "title" | "share_slug" | "file_path" | "size_bytes" | "created_at"
 >;
 
 type SubjectComment = Pick<
@@ -342,7 +344,7 @@ async function SubjectMaterialsSection({
   const supabase = await createClient();
   const { data: materialsData, error } = await supabase
     .from("subject_materials")
-    .select("id, title, file_path, size_bytes, created_at")
+    .select("id, title, share_slug, file_path, size_bytes, created_at")
     .eq("subject_id", subject.id)
     .eq("moderation_status", "approved")
     .order("created_at", { ascending: false });
@@ -363,19 +365,26 @@ async function SubjectMaterialsSection({
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {materials.map((material) => (
             <div key={material.id} className="rounded-lg border border-border bg-card p-3 transition-all hover:border-primary/50 hover:bg-muted">
-              <a href={getStoragePublicUrl("study_materials", material.file_path) ?? ""} target="_blank" rel="noopener noreferrer" className="group flex items-center gap-3">
-                <div className="flex-shrink-0">
-                  <FileText className="h-8 w-8 text-sky-500/80 transition-colors group-hover:text-sky-500" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="truncate text-sm font-medium text-foreground transition-colors group-hover:text-primary">{material.title}</div>
-                  <div className="mt-1 flex items-center gap-2">
-                    <span className="rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-primary/80">PDF</span>
-                    <span className="truncate text-xs text-muted-foreground">{(material.size_bytes / 1024 / 1024).toFixed(1)} MB</span>
+              <div className="flex items-start gap-3">
+                <a href={getStoragePublicUrl("study_materials", material.file_path) ?? ""} target="_blank" rel="noopener noreferrer" className="group flex min-w-0 flex-1 items-center gap-3">
+                  <div className="flex-shrink-0">
+                    <FileText className="h-8 w-8 text-sky-500/80 transition-colors group-hover:text-sky-500" />
                   </div>
-                </div>
-              </a>
-              <div className="mt-2">
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-sm font-medium text-foreground transition-colors group-hover:text-primary">{material.title}</div>
+                    <div className="mt-1 flex items-center gap-2">
+                      <span className="rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-primary/80">PDF</span>
+                      <span className="truncate text-xs text-muted-foreground">{(material.size_bytes / 1024 / 1024).toFixed(1)} MB</span>
+                    </div>
+                  </div>
+                </a>
+                <ShareLinkButton
+                  path={getSharePath("material", material.share_slug)}
+                  copiedLabel="Zkopírováno"
+                  className="shrink-0 px-2 py-1.5"
+                />
+              </div>
+              <div className="mt-2 flex items-center justify-end gap-2">
                 <ReportIssueDialog sourceType="material" sourceId={material.id} sourceLabel={`Materiál ${material.title} u předmětu ${subject.name}`} compact />
               </div>
             </div>

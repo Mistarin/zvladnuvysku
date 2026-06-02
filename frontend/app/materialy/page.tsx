@@ -3,11 +3,13 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { SearchLandingBar } from "@/components/search/search-landing-bar";
 import { ReportIssueDialog } from "@/components/feedback/report-issue-dialog";
+import { ShareLinkButton } from "@/components/share/share-link-button";
 import { FileText, ExternalLink, FolderOpen } from "lucide-react";
 import { formatFileSize } from "@/lib/utils";
 import { getStoragePublicUrl } from "@/lib/storage";
 import { MaterialGroupCard } from "@/components/subject/material-group-card";
 import { getPublicMaterialDirectory, type PublicStandaloneMaterial } from "@/lib/material-directory";
+import { getSharePath } from "@/lib/share-links";
 
 interface PageProps {
   searchParams: Promise<{ q?: string; view?: string; group?: string; skupina?: string }>;
@@ -168,6 +170,7 @@ async function MaterialFilesSection({ query }: { query: string }) {
     ...groups.flatMap((group) => group.materials.map((material) => ({
       id: material.id,
       title: material.title,
+      share_slug: material.share_slug,
       file_path: material.file_path,
       size_bytes: material.size_bytes,
       page_count: material.page_count,
@@ -209,6 +212,7 @@ async function MaterialFilesSection({ query }: { query: string }) {
 function SingleMaterialRow({ material }: { material: PublicStandaloneMaterial | {
   id: string;
   title: string;
+  share_slug: string;
   file_path: string;
   size_bytes: number;
   page_count: number | null;
@@ -254,6 +258,11 @@ function SingleMaterialRow({ material }: { material: PublicStandaloneMaterial | 
             Předmět
           </Link>
         )}
+        <ShareLinkButton
+          path={getSharePath("material", material.share_slug)}
+          copiedLabel="Zkopírováno"
+          className="px-2.5 py-2"
+        />
         <a
           href={getStoragePublicUrl("study_materials", material.file_path) ?? ""}
           target="_blank"

@@ -6,6 +6,8 @@ import type { FlashcardDeck, Flashcard } from '@/lib/types/database'
 import { CardListItem } from '@/components/flashcard/card-list-item'
 import { DeleteDeckButton } from '@/components/flashcard/delete-deck-button'
 import { DeckOwnerToolbar } from '@/components/flashcard/deck-owner-toolbar'
+import { ShareLinkButton } from '@/components/share/share-link-button'
+import { getSharePath } from '@/lib/share-links'
 
 interface PageProps {
   params: Promise<{ deckId: string }>
@@ -106,6 +108,13 @@ export default async function DeckDetailPage({ params }: PageProps) {
           </span>
           {!flashcardDeck.is_public && (
             <span className="text-sm text-muted-foreground">🔒 Soukromý</span>
+          )}
+          {flashcardDeck.is_public && (
+            <ShareLinkButton
+              path={getSharePath('deck', flashcardDeck.share_slug)}
+              copiedLabel="Zkopírováno"
+              className="px-2.5 py-1.5"
+            />
           )}
           {isCreator && (
             <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium">

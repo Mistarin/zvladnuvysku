@@ -49,12 +49,15 @@ export interface Database {
           creator_id: string
           title: string
           description: string | null
+          share_slug: string
           is_public: boolean
           card_count: number
           created_at: string
           updated_at: string
         }
-        Insert: Omit<Database['public']['Tables']['flashcard_decks']['Row'], 'id' | 'card_count' | 'created_at' | 'updated_at'>
+        Insert: Omit<Database['public']['Tables']['flashcard_decks']['Row'], 'id' | 'share_slug' | 'card_count' | 'created_at' | 'updated_at'> & {
+          share_slug?: string
+        }
         Update: Partial<Database['public']['Tables']['flashcard_decks']['Insert']>
       }
       flashcards: {
@@ -165,6 +168,7 @@ export interface Database {
           subject_id: string
           uploader_id: string
           title: string
+          share_slug: string
           file_path: string
           size_bytes: number
           group_id: string | null
@@ -176,7 +180,8 @@ export interface Database {
           rejection_reason: string | null
           moderated_at: string | null
         }
-        Insert: Omit<Database['public']['Tables']['subject_materials']['Row'], 'id' | 'created_at' | 'is_approved' | 'moderated_at' | 'points_override'> & {
+        Insert: Omit<Database['public']['Tables']['subject_materials']['Row'], 'id' | 'share_slug' | 'created_at' | 'is_approved' | 'moderated_at' | 'points_override'> & {
+          share_slug?: string
           is_approved?: boolean
           moderation_status?: 'pending' | 'approved' | 'rejected'
           rejection_reason?: string | null
@@ -189,11 +194,14 @@ export interface Database {
         Row: {
           id: string
           title: string
+          share_slug: string
           subject_id: string | null
           uploader_id: string
           created_at: string
         }
-        Insert: Omit<Database['public']['Tables']['material_groups']['Row'], 'id' | 'created_at'>
+        Insert: Omit<Database['public']['Tables']['material_groups']['Row'], 'id' | 'share_slug' | 'created_at'> & {
+          share_slug?: string
+        }
         Update: Partial<Database['public']['Tables']['material_groups']['Insert']>
       }
       subject_proposals: {

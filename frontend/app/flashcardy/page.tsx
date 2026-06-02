@@ -3,9 +3,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { SearchLandingBar } from "@/components/search/search-landing-bar";
+import { ShareLinkButton } from "@/components/share/share-link-button";
 import { BookOpen, Layers } from "lucide-react";
 import { DeleteDeckButton } from "@/components/flashcard/delete-deck-button";
 import { DeckOwnerToolbar } from "@/components/flashcard/deck-owner-toolbar";
+import { getSharePath } from "@/lib/share-links";
 
 interface PageProps {
   searchParams: Promise<{
@@ -20,6 +22,7 @@ interface FlashcardDeckListItem {
   id: string;
   title: string;
   description: string | null;
+  share_slug: string;
   card_count: number;
   is_public?: boolean;
   subject: { name: string; slug: string; short_tag: string; faculty: string | null } | null;
@@ -96,7 +99,7 @@ async function PublicDeckListSection({ query }: { query: string }) {
   const supabase = await createClient();
   let decksQuery = supabase
     .from("flashcard_decks")
-    .select("id, title, description, card_count, subject:subject_id(name, slug, short_tag, faculty)")
+    .select("id, title, description, share_slug, card_count, subject:subject_id(name, slug, short_tag, faculty)")
     .eq("is_public", true)
     .order("card_count", { ascending: false })
     .order("created_at", { ascending: false })
@@ -129,13 +132,9 @@ async function PublicDeckListSection({ query }: { query: string }) {
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
       {decks.map((deck) => (
-        <Link
-          key={deck.id}
-          href={`/flashcardy/${deck.id}`}
-          className="group block rounded-xl p-5 transition-all glass-card hover-card"
-        >
+        <div key={deck.id} className="group block rounded-xl p-5 transition-all glass-card hover-card">
           <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0 space-y-1">
+            <Link href={`/flashcardy/${deck.id}`} className="min-w-0 flex-1 space-y-1">
               <h2 className="font-semibold leading-snug text-foreground transition-colors group-hover:text-[var(--accent-color)]">
                 {deck.title}
               </h2>
@@ -151,29 +150,37 @@ async function PublicDeckListSection({ query }: { query: string }) {
                   )}
                 </div>
               )}
-            </div>
-            <div className="ui-accent-soft flex h-8 w-8 shrink-0 items-center justify-center rounded-lg">
-              <BookOpen className="ui-accent-text h-4 w-4" />
+            </Link>
+            <div className="flex items-center gap-2">
+              <ShareLinkButton
+                path={getSharePath("deck", deck.share_slug)}
+                className="px-2 py-1 text-[11px] sm:text-xs"
+              />
+              <div className="ui-accent-soft flex h-8 w-8 shrink-0 items-center justify-center rounded-lg">
+                <BookOpen className="ui-accent-text h-4 w-4" />
+              </div>
             </div>
           </div>
 
-          {deck.description && (
-            <p className="mt-3 line-clamp-2 text-sm leading-relaxed text-muted-foreground">
-              {deck.description}
-            </p>
-          )}
-
-          <div className="flex items-center justify-between pt-3 text-xs text-muted-foreground">
-            <span>
-              🃏 {deck.card_count} {deck.card_count === 1 ? "karta" : deck.card_count >= 2 && deck.card_count <= 4 ? "karty" : "karet"}
-            </span>
-            {deck.subject && (
-              <span className="ui-accent-badge rounded px-1.5 py-0.5 font-mono">
-                {deck.subject.short_tag}
-              </span>
+          <Link href={`/flashcardy/${deck.id}`} className="block">
+            {deck.description && (
+              <p className="mt-3 line-clamp-2 text-sm leading-relaxed text-muted-foreground">
+                {deck.description}
+              </p>
             )}
-          </div>
-        </Link>
+
+            <div className="flex items-center justify-between pt-3 text-xs text-muted-foreground">
+              <span>
+                🃏 {deck.card_count} {deck.card_count === 1 ? "karta" : deck.card_count >= 2 && deck.card_count <= 4 ? "karty" : "karet"}
+              </span>
+              {deck.subject && (
+                <span className="ui-accent-badge rounded px-1.5 py-0.5 font-mono">
+                  {deck.subject.short_tag}
+                </span>
+              )}
+            </div>
+          </Link>
+        </div>
       ))}
     </div>
   );
@@ -195,7 +202,7 @@ async function MyDecksSection({
   const supabase = await createClient();
   let myDecksQuery = supabase
     .from("flashcard_decks")
-    .select("id, title, description, card_count, is_public, subject:subject_id(name, slug, short_tag, faculty)")
+    .select("id, title, description, share_slug, card_count, is_public, subject:subject_id(name, slug, short_tag, faculty)")
     .eq("creator_id", userId);
 
   if (mineQuery) {
@@ -269,21 +276,29 @@ async function MyDecksSection({
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           {myDecks.map((deck) => (
             <div key={deck.id} className="rounded-xl border border-border bg-background p-5 transition-all hover:border-primary/40 hover:bg-muted/30">
-              <Link href={`/flashcardy/${deck.id}`} className="block">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <h3 className="font-semibold text-foreground">{deck.title}</h3>
-                    {deck.subject && (
-                      <p className="mt-1 text-xs text-muted-foreground">
-                        {deck.subject.short_tag} · {deck.subject.name}
-                      </p>
-                    )}
-                  </div>
+              <div className="flex items-start justify-between gap-3">
+                <Link href={`/flashcardy/${deck.id}`} className="min-w-0 flex-1">
+                  <h3 className="font-semibold text-foreground">{deck.title}</h3>
+                  {deck.subject && (
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {deck.subject.short_tag} · {deck.subject.name}
+                    </p>
+                  )}
+                </Link>
+                <div className="flex items-center gap-2">
+                  {deck.is_public && (
+                    <ShareLinkButton
+                      path={getSharePath("deck", deck.share_slug)}
+                      className="px-2 py-1 text-[11px] sm:text-xs"
+                    />
+                  )}
                   <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${deck.is_public ? "bg-emerald-500/10 text-emerald-600" : "bg-muted text-muted-foreground"}`}>
                     {deck.is_public ? "Veřejný" : "Soukromý"}
                   </span>
                 </div>
-                {deck.description && <p className="mt-3 line-clamp-2 text-sm text-muted-foreground">{deck.description}</p>}
+              </div>
+              <Link href={`/flashcardy/${deck.id}`} className="mt-3 block">
+                {deck.description && <p className="line-clamp-2 text-sm text-muted-foreground">{deck.description}</p>}
                 <div className="mt-4 flex items-center justify-between text-xs text-muted-foreground">
                   <span>🃏 {deck.card_count} {deck.card_count === 1 ? "karta" : deck.card_count >= 2 && deck.card_count <= 4 ? "karty" : "karet"}</span>
                   <span>Otevřít →</span>

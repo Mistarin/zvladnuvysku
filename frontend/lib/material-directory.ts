@@ -6,6 +6,7 @@ import { createPublicServerClient } from "@/lib/supabase/public-server";
 export type PublicMaterialGroupItem = {
   id: string;
   title: string;
+  share_slug: string;
   file_path: string;
   size_bytes: number;
   page_count: number | null;
@@ -17,6 +18,7 @@ export type PublicMaterialGroupItem = {
 export type PublicMaterialGroupData = {
   id: string;
   title: string;
+  share_slug: string;
   created_at: string;
   uploader_id: string;
   uploader_display_name: string | null;
@@ -27,6 +29,7 @@ export type PublicMaterialGroupData = {
 export type PublicStandaloneMaterial = {
   id: string;
   title: string;
+  share_slug: string;
   file_path: string;
   public_url: string;
   size_bytes: number;
@@ -43,6 +46,7 @@ export type MaterialDirectorySearchResult =
       kind: "group";
       id: string;
       title: string;
+      share_slug: string;
       created_at: string;
       uploader_display_name: string | null;
       subject: { name: string; slug: string; short_tag: string } | null;
@@ -52,6 +56,7 @@ export type MaterialDirectorySearchResult =
       kind: "material";
       id: string;
       title: string;
+      share_slug: string;
       file_path: string;
       public_url: string;
       size_bytes: number;
@@ -62,12 +67,14 @@ export type MaterialDirectorySearchResult =
 type RawGroup = {
   id: string;
   title: string;
+  share_slug: string;
   uploader_id: string;
   created_at: string;
   subject: { name: string; slug: string; short_tag: string } | null;
   materials: Array<{
     id: string;
     title: string;
+    share_slug: string;
     file_path: string;
     size_bytes: number;
     page_count: number | null;
@@ -134,12 +141,12 @@ export async function getPublicMaterialDirectory(query = "", focusedGroupId?: st
   const [{ data: rawGroups }, { data: rawMaterials }] = await Promise.all([
     supabase
       .from("material_groups")
-      .select("id, title, uploader_id, created_at, subject:subject_id(name, slug, short_tag), materials:subject_materials(id, title, file_path, size_bytes, page_count, created_at, moderation_status)")
+      .select("id, title, share_slug, uploader_id, created_at, subject:subject_id(name, slug, short_tag), materials:subject_materials(id, title, share_slug, file_path, size_bytes, page_count, created_at, moderation_status)")
       .order("created_at", { ascending: false })
       .limit(80),
     supabase
       .from("subject_materials")
-      .select("id, title, file_path, size_bytes, page_count, group_id, created_at, subject:subject_id(name, slug, short_tag)")
+      .select("id, title, share_slug, file_path, size_bytes, page_count, group_id, created_at, subject:subject_id(name, slug, short_tag)")
       .eq("moderation_status", "approved")
       .is("group_id", null)
       .order("created_at", { ascending: false })
@@ -151,6 +158,7 @@ export async function getPublicMaterialDirectory(query = "", focusedGroupId?: st
     .map((group) => ({
       id: group.id,
       title: group.title,
+      share_slug: group.share_slug,
       created_at: group.created_at,
       uploader_id: group.uploader_id,
       subject: group.subject,
@@ -174,6 +182,7 @@ export async function getPublicMaterialDirectory(query = "", focusedGroupId?: st
   const standaloneMaterials: PublicStandaloneMaterial[] = ((rawMaterials ?? []) as Array<{
     id: string;
     title: string;
+    share_slug: string;
     file_path: string;
     size_bytes: number;
     page_count: number | null;
@@ -190,9 +199,9 @@ export async function getPublicMaterialDirectory(query = "", focusedGroupId?: st
     : normalizedQuery
       ? hydratedGroups
           .map((group): Ranked<PublicMaterialGroupData> | null => {
-            const candidates = [
-              { rank: 0, value: group.title },
-              { rank: 1, value: group.subject?.name ?? "" },
+          const candidates = [
+            { rank: 0, value: group.title },
+            { rank: 1, value: group.subject?.name ?? "" },
               { rank: 1, value: group.subject?.short_tag ?? "" },
               { rank: 2, value: group.uploader_display_name ?? "" },
               ...group.materials.map((material) => ({ rank: 3, value: material.title })),
@@ -270,6 +279,7 @@ export async function searchMaterialDirectory(query: string) {
     kind: "group",
     id: group.id,
     title: group.title,
+    share_slug: group.share_slug,
     created_at: group.created_at,
     uploader_display_name: group.uploader_display_name,
     subject: group.subject,
@@ -280,6 +290,7 @@ export async function searchMaterialDirectory(query: string) {
     kind: "material",
     id: material.id,
     title: material.title,
+    share_slug: material.share_slug,
     file_path: material.file_path,
     public_url: material.public_url,
     size_bytes: material.size_bytes,
@@ -297,6 +308,7 @@ export async function searchApprovedMaterials(query: string) {
     group.materials.map((material) => ({
       id: material.id,
       title: material.title,
+      share_slug: material.share_slug,
       file_path: material.file_path,
       public_url: material.public_url,
       size_bytes: material.size_bytes,

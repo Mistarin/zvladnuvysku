@@ -27,6 +27,7 @@ type PublicProfileStats = {
 type PublicDeck = {
   id: string;
   title: string;
+  share_slug: string;
   card_count: number;
   updated_at: string;
   subject: { slug: string; short_tag: string; name: string } | null;
@@ -35,6 +36,7 @@ type PublicDeck = {
 type ApprovedMaterial = {
   id: string;
   title: string;
+  share_slug: string;
   file_path: string;
   size_bytes: number;
   created_at: string;
@@ -103,20 +105,20 @@ export default async function PublicProfilePage({ params }: PageProps) {
     typedSupabase.rpc("get_public_profile_stats", { profile_user_id: userId }),
     supabase
       .from("flashcard_decks")
-      .select("id, title, card_count, updated_at, subject:subject_id(slug, short_tag, name)")
+      .select("id, title, share_slug, card_count, updated_at, subject:subject_id(slug, short_tag, name)")
       .eq("creator_id", userId)
       .eq("is_public", true)
       .order("updated_at", { ascending: false }),
     supabase
       .from("subject_materials")
-      .select("id, title, file_path, size_bytes, created_at, subject:subject_id(slug, short_tag, name)")
+      .select("id, title, share_slug, file_path, size_bytes, created_at, subject:subject_id(slug, short_tag, name)")
       .eq("uploader_id", userId)
       .eq("moderation_status", "approved")
       .is("group_id", null)
       .order("created_at", { ascending: false }),
     supabase
       .from("material_groups")
-      .select("id, title, uploader_id, created_at, subject:subject_id(slug, short_tag, name), materials:subject_materials(id, title, file_path, size_bytes, page_count, moderation_status)")
+      .select("id, title, share_slug, uploader_id, created_at, subject:subject_id(slug, short_tag, name), materials:subject_materials(id, title, share_slug, file_path, size_bytes, page_count, moderation_status)")
       .eq("uploader_id", userId)
       .order("created_at", { ascending: false }),
     supabase
@@ -154,12 +156,14 @@ export default async function PublicProfilePage({ params }: PageProps) {
   const approvedGroups = ((groupsData ?? []) as Array<{
     id: string;
     title: string;
+    share_slug: string;
     uploader_id: string;
     created_at: string;
     subject: { slug: string; short_tag: string; name: string } | null;
     materials: Array<{
       id: string;
       title: string;
+      share_slug: string;
       file_path: string;
       size_bytes: number;
       page_count: number | null;
@@ -178,12 +182,14 @@ export default async function PublicProfilePage({ params }: PageProps) {
   const profileDecks: ProfileDeckContribution[] = decks.map((deck) => ({
     id: deck.id,
     title: deck.title,
+    share_slug: deck.share_slug,
     card_count: deck.card_count,
     subject: deck.subject,
   }));
   const profileMaterials: ProfileMaterialContribution[] = materials.map((material) => ({
     id: material.id,
     title: material.title,
+    share_slug: material.share_slug,
     url: getStoragePublicUrl("study_materials", material.file_path),
     sizeLabel: `${(material.size_bytes / 1024 / 1024).toFixed(1)} MB`,
     subject: material.subject,
@@ -191,6 +197,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
   const profileGroups: ProfileMaterialGroupContribution[] = approvedGroups.map((group) => ({
     id: group.id,
     title: group.title,
+    share_slug: group.share_slug,
     created_at: group.created_at,
     uploader_id: group.uploader_id,
     uploader_display_name: displayName ?? null,

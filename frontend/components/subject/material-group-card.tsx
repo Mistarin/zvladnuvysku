@@ -4,12 +4,15 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { FolderOpen, FileText, User, ChevronDown, ChevronUp, Pencil, Trash2 } from 'lucide-react'
+import { ShareLinkButton } from '@/components/share/share-link-button'
+import { getSharePath } from '@/lib/share-links'
 import { formatFileSize } from '@/lib/utils'
 import { deleteMaterialGroup, renameMaterialGroup } from '@/app/actions/contributions'
 
 export interface MaterialGroupItem {
   id: string
   title: string
+  share_slug: string
   file_path: string
   size_bytes: number
   page_count: number | null
@@ -20,6 +23,7 @@ export interface MaterialGroupItem {
 export interface MaterialGroupData {
   id: string
   title: string
+  share_slug: string
   created_at: string
   uploader_id: string
   uploader_display_name: string | null
@@ -150,6 +154,14 @@ export function MaterialGroupCard({
           )}
 
           <div className="ml-auto flex items-center gap-2">
+            {approvedCount > 0 && (
+              <ShareLinkButton
+                path={getSharePath('group', group.share_slug)}
+                label="Sdílet složku"
+                copiedLabel="Odkaz zkopírován"
+                className="px-2 py-1 text-[11px] sm:text-xs"
+              />
+            )}
             {isOwner && !isEditing && (
               <>
                 <button
@@ -185,24 +197,26 @@ export function MaterialGroupCard({
         <ul className="divide-y divide-border/50">
           {group.materials.map(material => (
             <li key={material.id}>
-              <a
-                href={material.public_url}
-                target="_blank"
-                rel="noreferrer"
-                className={`flex items-center gap-3 ${compact ? 'px-3.5 py-2.5' : 'px-4 py-3'} hover:bg-muted/50 transition-colors group`}
-              >
-                <div className="w-7 h-7 rounded-lg bg-sky-500/10 flex items-center justify-center shrink-0">
-                  <FileText className="w-3.5 h-3.5 text-sky-600" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className={`${compact ? 'text-[13px]' : 'text-sm'} font-medium text-foreground truncate group-hover:text-primary transition-colors`}>
-                    {material.title}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {formatFileSize(material.size_bytes)}
-                    {material.page_count != null && ` · ${material.page_count} stran`}
-                  </p>
-                </div>
+              <div className={`flex items-center gap-3 ${compact ? 'px-3.5 py-2.5' : 'px-4 py-3'} hover:bg-muted/50 transition-colors group`}>
+                <a
+                  href={material.public_url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex min-w-0 flex-1 items-center gap-3"
+                >
+                  <div className="w-7 h-7 rounded-lg bg-sky-500/10 flex items-center justify-center shrink-0">
+                    <FileText className="w-3.5 h-3.5 text-sky-600" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className={`${compact ? 'text-[13px]' : 'text-sm'} font-medium text-foreground truncate group-hover:text-primary transition-colors`}>
+                      {material.title}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {formatFileSize(material.size_bytes)}
+                      {material.page_count != null && ` · ${material.page_count} stran`}
+                    </p>
+                  </div>
+                </a>
                 <span className={`text-xs px-2 py-0.5 rounded-full shrink-0 ${
                   material.moderation_status === 'approved'
                     ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400'
@@ -212,7 +226,15 @@ export function MaterialGroupCard({
                 }`}>
                   {material.moderation_status === 'approved' ? 'Schváleno' : material.moderation_status === 'rejected' ? 'Zamítnuto' : 'Čeká'}
                 </span>
-              </a>
+                {material.moderation_status === 'approved' && (
+                  <ShareLinkButton
+                    path={getSharePath('material', material.share_slug)}
+                    label="Sdílet"
+                    copiedLabel="Zkopírováno"
+                    className="shrink-0 px-2 py-1 text-[11px] sm:text-xs"
+                  />
+                )}
+              </div>
             </li>
           ))}
           {group.materials.length === 0 && (
