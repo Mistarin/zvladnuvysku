@@ -1,10 +1,11 @@
 'use client'
 
 import { useState } from 'react'
-import { CheckCircle, XCircle, User, Calendar, Tag, FileEdit, FilePlus } from 'lucide-react'
+import { CheckCircle, XCircle, User, Calendar, Tag, FileEdit, FilePlus, FileText, FolderOpen } from 'lucide-react'
 import { approveProposal, rejectProposal } from '@/app/admin/actions'
 import { PublicUserLink } from '@/components/profile/public-user-link'
 import type { PublicUserSummary } from '@/lib/public-user-summaries'
+import { getStoragePublicUrl } from '@/lib/storage'
 
 // Inline type until subject_proposals is in generated types
 export interface SubjectProposal {
@@ -57,17 +58,57 @@ interface ProposalCardProps {
   currentSubjectData?: Record<string, unknown> | null
 }
 
+type ProposalMaterial = {
+  title: string
+  file_path: string
+  size_bytes: number
+  page_count: number | null
+}
+
+function getProposalMaterials(value: unknown): ProposalMaterial[] {
+  if (!Array.isArray(value)) return []
+
+  return value.flatMap((item) => {
+    if (!item || typeof item !== 'object') return []
+    const record = item as Record<string, unknown>
+    if (
+      typeof record.title !== 'string' ||
+      typeof record.file_path !== 'string' ||
+      typeof record.size_bytes !== 'number'
+    ) {
+      return []
+    }
+
+    return [{
+      title: record.title,
+      file_path: record.file_path,
+      size_bytes: record.size_bytes,
+      page_count: typeof record.page_count === 'number' ? record.page_count : null,
+    }]
+  })
+}
+
+function getMaterialGroupTitle(value: unknown) {
+  return typeof value === 'string' ? value : ''
+}
+
 export function ProposalCard({ proposal, currentSubjectData }: ProposalCardProps) {
+  const proposalDataRecord = proposal.data as Record<string, unknown>
   const [isPending, setIsPending] = useState(false)
   const [rejectReason, setRejectReason] = useState('')
   const [showReject, setShowReject] = useState(false)
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
   const [done, setDone] = useState(false)
+  const [proposalMaterials, setProposalMaterials] = useState<ProposalMaterial[]>(() => getProposalMaterials(proposalDataRecord.materials))
+  const [materialGroupTitle, setMaterialGroupTitle] = useState(() => getMaterialGroupTitle(proposalDataRecord.material_group_title))
 
   const handleApprove = async () => {
     setIsPending(true)
     setFeedback(null)
-    const result = await approveProposal(proposal.id)
+    const result = await approveProposal(proposal.id, {
+      materials: proposalMaterials,
+      materialGroupTitle: materialGroupTitle.trim() || null,
+    })
     if (result.success) {
       setFeedback({ type: 'success', message: 'Návrh byl schválen ✓' })
       setDone(true)
@@ -99,7 +140,7 @@ export function ProposalCard({ proposal, currentSubjectData }: ProposalCardProps
     return (
       <div className="glass-card p-4 flex items-center gap-3 text-sm text-muted-foreground border border-border/50 opacity-60">
         <CheckCircle className="w-4 h-4 text-emerald-500 shrink-0" />
-        <span>{feedback.message} — <span className="font-medium">{String(proposal.data.name ?? proposal.id)}</span></span>
+        <span>{feedback.message} — <span className="font-medium">{String(proposalDataRecord.name ?? proposal.id)}</span></span>
       </div>
     )
   }
@@ -128,7 +169,8 @@ export function ProposalCard({ proposal, currentSubjectData }: ProposalCardProps
 
       {/* Data fields */}
       <div className="space-y-2">
-        {Object.entries(proposal.data).map(([key, value]) => {
+        {Object.entries(proposalDataRecord).map(([key, value]) => {
+          if (key === 'materials' || key === 'material_group_title') return null
           if (value === undefined || value === null || value === '') return null
           const label = FIELD_LABELS[key] ?? key
           const current = currentSubjectData?.[key]
@@ -151,6 +193,78 @@ export function ProposalCard({ proposal, currentSubjectData }: ProposalCardProps
           )
         })}
       </div>
+
+      {proposalMaterials.length > 0 && (
+        <div className="space-y-3 rounded-lg border border-border bg-muted/30 p-4">
+          <div className="flex items-center gap-2">
+            <FileText className="h-4 w-4 text-sky-600" />
+            <p className="text-sm font-semibold text-foreground">Navržené PDF materiály</p>
+          </div>
+
+          {proposalMaterials.length > 1 && (
+            <div className="space-y-1">
+              <label className="flex items-center gap-1 text-xs font-medium text-muted-foreground">
+                <FolderOpen className="h-3.5 w-3.5" />
+                Název skupiny po schválení
+              </label>
+              <input
+                value={materialGroupTitle}
+                onChange={(e) => setMaterialGroupTitle(e.target.value)}
+                placeholder="např. Vše ke zkoušce"
+                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-primary/40 focus:border-primary/40"
+                maxLength={120}
+              />
+            </div>
+          )}
+
+          <div className="space-y-3">
+            {proposalMaterials.map((material, index) => {
+              const publicUrl = getStoragePublicUrl('study_materials', material.file_path) ?? '#'
+
+              return (
+                <div key={`${material.file_path}-${index}`} className="rounded-lg border border-border bg-background/80 p-3">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="min-w-0">
+                      <a
+                        href={publicUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="font-medium text-foreground hover:text-primary"
+                      >
+                        {material.title}
+                      </a>
+                      <p className="mt-1 break-all text-xs text-muted-foreground">{material.file_path}</p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {(material.size_bytes / 1024 / 1024).toFixed(2)} MB
+                      </p>
+                    </div>
+
+                    <div className="sm:w-36">
+                      <label className="mb-1 block text-xs font-medium text-muted-foreground">Počet stran</label>
+                      <input
+                        type="number"
+                        min={1}
+                        max={9999}
+                        value={material.page_count ?? ''}
+                        onChange={(e) => {
+                          const nextValue = e.target.value.trim()
+                          setProposalMaterials((current) => current.map((item, currentIndex) => (
+                            currentIndex === index
+                              ? { ...item, page_count: nextValue ? Number(nextValue) : null }
+                              : item
+                          )))
+                        }}
+                        className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-primary/40 focus:border-primary/40"
+                        placeholder="např. 18"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Moderator note */}
       {proposal.note && (

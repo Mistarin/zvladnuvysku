@@ -28,6 +28,8 @@ type ProposalData = {
   faculty?: string
   year?: number
   teachers?: Array<{ id?: string; name?: string; faculty?: string | null }>
+  material_group_title?: string | null
+  materials?: Array<{ title?: string; file_path?: string; size_bytes?: number; page_count?: number | null }>
 }
 
 export default async function NavrhnoutPage({ searchParams }: PageProps) {
@@ -124,6 +126,7 @@ export default async function NavrhnoutPage({ searchParams }: PageProps) {
           note: typedProposal.note ?? '',
         },
         teachers: normalizeProposalTeachers(proposalData.teachers),
+        materialGroupTitle: proposalData.material_group_title ?? '',
         originalSubject,
       }
     }

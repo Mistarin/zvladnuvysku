@@ -178,7 +178,7 @@ export function SearchSuggestions({
             <div className="p-4 text-center">
               <p className="text-sm text-muted-foreground">
                 {materialQuery
-                  ? <>Žádné materiály pro „<span className="font-medium text-foreground">{materialQuery}</span>“</>
+                  ? <>Nic jsme nenašli pro &bdquo;<span className="font-medium text-foreground">{materialQuery}</span>&ldquo;</>
                   : "Žádné schválené materiály"}
               </p>
               <Link
@@ -186,7 +186,7 @@ export function SearchSuggestions({
                 onClick={onSelect}
                 className="mt-2 text-xs text-sky-700 hover:underline block"
               >
-                Projít všechny materiály →
+                Zobrazit všechny materiály →
               </Link>
             </div>
           ) : (
@@ -260,7 +260,7 @@ export function SearchSuggestions({
             </span>
             {groupQuery && (
               <span className="text-xs text-muted-foreground">
-                — hledám „{groupQuery}"
+                — hledám &bdquo;{groupQuery}&ldquo;
               </span>
             )}
           </div>
@@ -274,7 +274,7 @@ export function SearchSuggestions({
             <div className="p-4 text-center">
               <p className="text-sm text-muted-foreground">
                 {groupQuery
-                  ? <>Žádné skupiny pro „<span className="font-medium text-foreground">{groupQuery}</span>"</>
+                  ? <>Nic jsme nenašli pro &bdquo;<span className="font-medium text-foreground">{groupQuery}</span>&ldquo;</>
                   : "Žádné skupiny materiálů"}
               </p>
               <Link
@@ -288,47 +288,81 @@ export function SearchSuggestions({
           ) : (
             <>
               {groupResults.map((group, idx) => (
-                <Link
-                  key={group.id}
-                  href={`/materialy?skupina=${group.id}`}
-                  onClick={onSelect}
-                  role="option"
-                  aria-selected={false}
-                  className={`
-                    flex items-center justify-between px-4 py-3
-                    hover:bg-muted transition-colors duration-100 cursor-pointer
-                    ${idx !== groupResults.length - 1 ? "border-b border-border/50" : ""}
-                  `}
-                >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-7 h-7 rounded-lg bg-amber-500/10 flex items-center justify-center shrink-0">
-                      <FolderOpen className="w-3.5 h-3.5 text-amber-600" />
+                group.kind === "group" ? (
+                  <Link
+                    key={`group-${group.id}`}
+                    href={`/materialy?group=${group.id}`}
+                    onClick={onSelect}
+                    role="option"
+                    aria-selected={false}
+                    className={`
+                      flex items-center justify-between px-4 py-3
+                      hover:bg-muted transition-colors duration-100 cursor-pointer
+                      ${idx !== groupResults.length - 1 ? "border-b border-border/50" : ""}
+                    `}
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-7 h-7 rounded-lg bg-amber-500/10 flex items-center justify-center shrink-0">
+                        <FolderOpen className="w-3.5 h-3.5 text-amber-600" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-foreground truncate">{group.title}</p>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          {group.subject && (
+                            <span className="text-xs font-mono font-semibold text-amber-700 bg-amber-500/10 px-1.5 py-0.5 rounded shrink-0">
+                              {group.subject.short_tag}
+                            </span>
+                          )}
+                          {group.uploader_display_name && (
+                            <span className="text-xs text-muted-foreground truncate">
+                              {group.uploader_display_name}
+                            </span>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium text-foreground truncate">{group.title}</p>
-                      <div className="flex items-center gap-2 mt-0.5">
+                    <span className="text-xs text-muted-foreground shrink-0 ml-3">
+                      {group.material_count}{" "}
+                      {group.material_count === 1
+                        ? "materiál"
+                        : group.material_count < 5
+                          ? "materiály"
+                          : "materiálů"}
+                    </span>
+                  </Link>
+                ) : (
+                  <a
+                    key={`material-${group.id}`}
+                    href={group.public_url}
+                    target="_blank"
+                    rel="noreferrer"
+                    onClick={onSelect}
+                    role="option"
+                    aria-selected={false}
+                    className={`
+                      flex items-center justify-between px-4 py-3
+                      hover:bg-muted transition-colors duration-100 cursor-pointer
+                      ${idx !== groupResults.length - 1 ? "border-b border-border/50" : ""}
+                    `}
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-7 h-7 rounded-lg bg-sky-500/10 flex items-center justify-center shrink-0">
+                        <FileText className="w-3.5 h-3.5 text-sky-600" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-foreground truncate">{group.title}</p>
                         {group.subject && (
-                          <span className="text-xs font-mono font-semibold text-amber-700 bg-amber-500/10 px-1.5 py-0.5 rounded shrink-0">
-                            {group.subject.short_tag}
-                          </span>
-                        )}
-                        {group.uploader_display_name && (
-                          <span className="text-xs text-muted-foreground truncate">
-                            {group.uploader_display_name}
-                          </span>
+                          <p className="text-xs text-muted-foreground truncate">
+                            {group.subject.short_tag} · {group.subject.name}
+                          </p>
                         )}
                       </div>
                     </div>
-                  </div>
-                  <span className="text-xs text-muted-foreground shrink-0 ml-3">
-                    {group.material_count}{" "}
-                    {group.material_count === 1
-                      ? "materiál"
-                      : group.material_count < 5
-                        ? "materiály"
-                        : "materiálů"}
-                  </span>
-                </Link>
+                    <span className="text-xs text-muted-foreground shrink-0 ml-3">
+                      {formatFileSize(group.size_bytes)}
+                    </span>
+                  </a>
+                )
               ))}
 
               <Link

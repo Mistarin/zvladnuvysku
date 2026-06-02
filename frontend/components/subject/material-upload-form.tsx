@@ -152,12 +152,12 @@ export function MaterialUploadForm({ subjectId, subjectName, hasDisplayName: ini
         <div className="rounded-xl border border-red-500/40 bg-red-500/5 p-3.5 space-y-1.5">
           <p className="text-sm font-semibold text-red-600 dark:text-red-400">⚠️ Materiály jsou moderované</p>
           <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
-            <li>Vyhni se AI slopu a nekvalitním výpiskům — budeme je vracet ke kontrole</li>
-            <li>Posílej co nejvíce stran pohromadě, ne každé malé téma zvlášť</li>
-            <li>Materiály pod 5 stran nedávají body</li>
+            <li>Vyhni se AI slopu a odfláknutým materiálům. Takové vracíme ke kontrole.</li>
+            <li>Radši nahraj víc stran pohromadě než několik drobných PDF zvlášť.</li>
+            <li>Materiály pod 5 stran body nepřidávají.</li>
           </ul>
           <Link href="/jak-to-funguje" target="_blank" className="text-xs text-primary hover:underline inline-block mt-0.5">
-            Jak funguje bodový systém? →
+            Jak fungují body? →
           </Link>
         </div>
 

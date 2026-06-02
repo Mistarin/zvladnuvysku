@@ -85,7 +85,7 @@ export function HallOfFameSection({
                 </h2>
                 <p className="mt-2 text-sm leading-6 text-muted-foreground sm:text-base">
                   Veřejný žebříček studentů, kteří nejvíc pomáhají ostatním sdílením
-                  kartiček, studijních materiálů a návrhů nových předmětů.
+                  kartiček, studijních materiálů a návrhů předmětů.
                 </p>
               </div>
             </div>
@@ -115,7 +115,7 @@ export function HallOfFameSection({
                 Zatím tu nejsou žádní přispěvatelé za toto období.
               </p>
               <p className="mt-2 text-sm text-muted-foreground">
-                Body se počítají z veřejných kartiček, schválených materiálů a nových schválených předmětů.
+                Body se počítají z veřejných kartiček, schválených materiálů a schválených návrhů předmětů.
               </p>
             </div>
           ) : (

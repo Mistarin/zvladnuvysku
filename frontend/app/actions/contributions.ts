@@ -29,7 +29,8 @@ type SubjectProposalInput = {
     note: string
   }
   teachers: Array<{ id?: string; name: string; faculty?: string | null }>
-  materialFiles: Array<{ name: string; size: number }>
+  materialGroupTitle?: string | null
+  materialFiles: Array<{ name: string; size: number; pageCount: number | null }>
 }
 
 type SubjectProposalData = {
@@ -47,7 +48,8 @@ type SubjectProposalData = {
   faculty?: string
   year?: number
   teachers?: Array<{ id?: string; name: string; faculty?: string | null }>
-  materials?: Array<{ title: string; file_path: string; size_bytes: number }>
+  material_group_title?: string | null
+  materials?: Array<{ title: string; file_path: string; size_bytes: number; page_count?: number | null }>
 }
 
 type SubjectRatingInput = {
@@ -161,12 +163,22 @@ function getProposalMaterials(data: unknown): NonNullable<SubjectProposalData['m
       title: material.title,
       file_path: material.file_path,
       size_bytes: material.size_bytes,
+      page_count: typeof material.page_count === 'number' ? material.page_count : null,
     }]
   })
 }
 
 function getProposalMaterialPaths(data: unknown) {
   return getProposalMaterials(data).map((material) => material.file_path).filter(Boolean)
+}
+
+function getProposalMaterialGroupTitle(data: unknown) {
+  if (!isRecord(data) || typeof data.material_group_title !== 'string') {
+    return null
+  }
+
+  const title = data.material_group_title.trim()
+  return title || null
 }
 
 function isRatingValue(value: unknown) {
@@ -235,10 +247,22 @@ function validateSubjectProposalPayload(payload: SubjectProposalInput) {
       typeof material !== 'object' ||
       !hasText(material.name) ||
       typeof material.size !== 'number' ||
-      material.size < 0
+      material.size < 0 ||
+      !(
+        material.pageCount === null ||
+        (typeof material.pageCount === 'number' && Number.isInteger(material.pageCount) && material.pageCount >= 1 && material.pageCount <= 9999)
+      )
   )
   if (invalidMaterialMeta) {
     return 'Neplatná metadata přiloženého souboru.'
+  }
+
+  if (payload.materialGroupTitle !== undefined && payload.materialGroupTitle !== null && typeof payload.materialGroupTitle !== 'string') {
+    return 'Neplatný název skupiny materiálů.'
+  }
+
+  if (typeof payload.materialGroupTitle === 'string' && payload.materialGroupTitle.trim().length > 120) {
+    return 'Název skupiny může mít maximálně 120 znaků.'
   }
 
   return null
@@ -346,6 +370,7 @@ export async function submitSubjectProposal(formData: FormData): Promise<ActionR
         title: file.name.replace(/\.pdf$/i, ''),
         file_path: filePath,
         size_bytes: file.size,
+        page_count: materialMeta.pageCount,
       })
     }
 
@@ -365,6 +390,8 @@ export async function submitSubjectProposal(formData: FormData): Promise<ActionR
       name: teacher.name.trim(),
       faculty: teacher.faculty?.trim() || payload.form.faculty.trim() || undefined,
     }))
+    const totalMaterialCount = existingMaterials.length + uploadedMaterials.length
+    const normalizedMaterialGroupTitle = payload.materialGroupTitle?.trim() || getProposalMaterialGroupTitle(existingProposal?.data) || undefined
 
     const proposalData: SubjectProposalData = {
       name: payload.form.name || undefined,
@@ -381,7 +408,8 @@ export async function submitSubjectProposal(formData: FormData): Promise<ActionR
       faculty: payload.form.faculty || undefined,
       year: payload.form.year ? Number(payload.form.year) : undefined,
       teachers: normalizedTeachers.length > 0 ? normalizedTeachers : undefined,
-      materials: existingMaterials.length + uploadedMaterials.length > 0
+      material_group_title: totalMaterialCount > 1 ? normalizedMaterialGroupTitle : undefined,
+      materials: totalMaterialCount > 0
         ? [...existingMaterials, ...uploadedMaterials]
         : undefined,
     }

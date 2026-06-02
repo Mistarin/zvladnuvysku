@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ProfileSubjectContributions, type ProfileDeckContribution, type ProfileMaterialContribution } from "@/components/profile/profile-subject-contributions";
+import { ProfileSubjectContributions, type ProfileDeckContribution, type ProfileMaterialContribution, type ProfileMaterialGroupContribution } from "@/components/profile/profile-subject-contributions";
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/types/database";
 import { getStoragePublicUrl } from "@/lib/storage";
@@ -93,6 +93,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
     { data: statsData, error: statsError },
     { data: decksData },
     { data: materialsData },
+    { data: groupsData },
     { data: subjectCommentsData },
     { data: teacherReviewsData },
   ] = await Promise.all([
@@ -110,6 +111,11 @@ export default async function PublicProfilePage({ params }: PageProps) {
       .select("id, title, file_path, size_bytes, created_at, subject:subject_id(slug, short_tag, name)")
       .eq("uploader_id", userId)
       .eq("moderation_status", "approved")
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("material_groups")
+      .select("id, title, uploader_id, created_at, subject:subject_id(slug, short_tag, name), materials:subject_materials(id, title, file_path, size_bytes, page_count, moderation_status)")
+      .eq("uploader_id", userId)
       .order("created_at", { ascending: false }),
     supabase
       .from("subject_ratings")
@@ -143,6 +149,30 @@ export default async function PublicProfilePage({ params }: PageProps) {
   const stats = ((statsData ?? [])[0] ?? null) as PublicProfileStats | null;
   const decks = (decksData ?? []) as PublicDeck[];
   const materials = (materialsData ?? []) as ApprovedMaterial[];
+  const approvedGroups = ((groupsData ?? []) as Array<{
+    id: string;
+    title: string;
+    uploader_id: string;
+    created_at: string;
+    subject: { slug: string; short_tag: string; name: string } | null;
+    materials: Array<{
+      id: string;
+      title: string;
+      file_path: string;
+      size_bytes: number;
+      page_count: number | null;
+      moderation_status: "pending" | "approved" | "rejected";
+    }> | null;
+  }>).map((group) => ({
+    ...group,
+    materials: (group.materials ?? [])
+      .filter((material) => material.moderation_status === "approved")
+      .map((material) => ({
+        ...material,
+        moderation_status: "approved" as const,
+        public_url: getStoragePublicUrl("study_materials", material.file_path) ?? "",
+      })),
+  })).filter((group) => group.materials.length > 0);
   const profileDecks: ProfileDeckContribution[] = decks.map((deck) => ({
     id: deck.id,
     title: deck.title,
@@ -155,6 +185,15 @@ export default async function PublicProfilePage({ params }: PageProps) {
     url: getStoragePublicUrl("study_materials", material.file_path),
     sizeLabel: `${(material.size_bytes / 1024 / 1024).toFixed(1)} MB`,
     subject: material.subject,
+  }));
+  const profileGroups: ProfileMaterialGroupContribution[] = approvedGroups.map((group) => ({
+    id: group.id,
+    title: group.title,
+    created_at: group.created_at,
+    uploader_id: group.uploader_id,
+    uploader_display_name: displayName ?? null,
+    subject: group.subject,
+    materials: group.materials,
   }));
   const subjectComments = (subjectCommentsData ?? []) as ApprovedSubjectComment[];
   const teacherReviews = (teacherReviewsData ?? []) as ApprovedTeacherReview[];
@@ -202,7 +241,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
                 href="/#hall-of-fame"
                 className="inline-flex text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
               >
-                Každý schválený bod přidává 10 XP →
+                1 schválený bod = 10 XP →
               </Link>
             )}
           </div>
@@ -219,7 +258,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
 
       {/* Content sections */}
       <div className="grid gap-8 xl:grid-cols-2">
-        <ProfileSubjectContributions decks={profileDecks} materials={profileMaterials} />
+        <ProfileSubjectContributions decks={profileDecks} materials={profileMaterials} groups={profileGroups} />
 
         <ProfileSection title="Komentáře k předmětům" empty="Zatím žádné schválené komentáře k předmětům.">
           {subjectComments.map((comment) => (

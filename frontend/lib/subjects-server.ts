@@ -91,7 +91,15 @@ const getCachedSubjectsPage = unstable_cache(
       query = query.eq("exam_from_home", true);
     }
 
-    query = query.order(sort.column, { ascending: sort.direction === "asc" });
+    const ascending = sort.direction === "asc";
+
+    if (sort.column === "time_intensity" || sort.column === "difficulty" || sort.column === "credits" || sort.column === "year") {
+      query = query
+        .order(sort.column, { ascending, nullsFirst: false })
+        .order("name", { ascending: true });
+    } else {
+      query = query.order(sort.column, { ascending });
+    }
 
     const from = (page - 1) * SUBJECTS_PAGE_SIZE;
     query = query.range(from, from + SUBJECTS_PAGE_SIZE - 1);

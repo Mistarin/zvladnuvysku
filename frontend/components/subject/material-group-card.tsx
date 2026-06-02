@@ -2,7 +2,8 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { FolderOpen, FileText, User, ChevronDown, ChevronUp, Pencil, Trash2, BookOpen } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { FolderOpen, FileText, User, ChevronDown, ChevronUp, Pencil, Trash2 } from 'lucide-react'
 import { formatFileSize } from '@/lib/utils'
 import { deleteMaterialGroup, renameMaterialGroup } from '@/app/actions/contributions'
 
@@ -35,6 +36,7 @@ interface MaterialGroupCardProps {
 }
 
 export function MaterialGroupCard({ group, showSubject = false, isOwner = false, onDeleted }: MaterialGroupCardProps) {
+  const router = useRouter()
   const [isExpanded, setIsExpanded] = useState(true)
   const [isEditing, setIsEditing] = useState(false)
   const [editTitle, setEditTitle] = useState(group.title)
@@ -54,6 +56,7 @@ export function MaterialGroupCard({ group, showSubject = false, isOwner = false,
     if (result.success) {
       setCurrentTitle(editTitle.trim())
       setIsEditing(false)
+      router.refresh()
     } else {
       setError(result.error)
     }
@@ -61,11 +64,15 @@ export function MaterialGroupCard({ group, showSubject = false, isOwner = false,
   }
 
   const handleDelete = async () => {
-    if (!confirm('Opravdu smazat skupinu? Materiály zůstanou, jen se oddělí od skupiny.')) return
+    if (!confirm('Opravdu chceš smazat tuhle skupinu? Materiály zůstanou zachované, jen se od skupiny odpojí.')) return
     setIsPending(true)
     const result = await deleteMaterialGroup(group.id)
     if (result.success) {
-      onDeleted?.(group.id)
+      if (onDeleted) {
+        onDeleted(group.id)
+      } else {
+        router.refresh()
+      }
     } else {
       setError(result.error)
       setIsPending(false)
@@ -198,7 +205,7 @@ export function MaterialGroupCard({ group, showSubject = false, isOwner = false,
             </li>
           ))}
           {group.materials.length === 0 && (
-            <li className="px-4 py-3 text-sm text-muted-foreground italic">Žádné soubory ve skupině</li>
+            <li className="px-4 py-3 text-sm text-muted-foreground italic">Ve skupině zatím nejsou žádné soubory.</li>
           )}
         </ul>
       )}

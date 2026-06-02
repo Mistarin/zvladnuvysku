@@ -102,6 +102,12 @@ const FIELD_LABELS: Record<string, string> = {
 const SUBMIT_TIMEOUT_MS = 30000
 const MAX_PROPOSAL_MATERIALS = 8
 
+type ProposalUploadItem = {
+  id: string
+  file: File
+  pageCount: string
+}
+
 function createSubmissionToken() {
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
     return crypto.randomUUID()
@@ -173,6 +179,7 @@ export type InitialSubjectProposal = {
   subjectLabel: string
   form: Partial<typeof DEFAULT_FORM>
   teachers: Array<{ id?: string; name: string; faculty?: string | null }>
+  materialGroupTitle?: string
   originalSubject?: SubjectDetails | null
 }
 
@@ -251,7 +258,8 @@ export function SubjectProposalForm({ hasDisplayName: initialHasDisplayName, ini
     )
   }
 
-  const [materials, setMaterials] = useState<File[]>([])
+  const [materials, setMaterials] = useState<ProposalUploadItem[]>([])
+  const [materialGroupTitle, setMaterialGroupTitle] = useState(initialProposal?.materialGroupTitle ?? '')
 
   const applySubjectToForm = (subject: SubjectDetails) => {
     setOriginalSubject(subject)
@@ -352,12 +360,17 @@ export function SubjectProposalForm({ hasDisplayName: initialHasDisplayName, ini
       submissionToken,
       form,
       teachers: selectedTeachers,
-      materialFiles: materials.map((file) => ({ name: file.name, size: file.size })),
+      materialGroupTitle: materialGroupTitle.trim() || null,
+      materialFiles: materials.map((item) => ({
+        name: item.file.name,
+        size: item.file.size,
+        pageCount: item.pageCount.trim() ? Number(item.pageCount) : null,
+      })),
     }
 
     const formData = new FormData()
     formData.set('payload', JSON.stringify(payload))
-    materials.forEach((file, index) => formData.set(`material:${index}`, file))
+    materials.forEach((item, index) => formData.set(`material:${index}`, item.file))
 
     try {
       const result = await Promise.race([
@@ -418,6 +431,7 @@ export function SubjectProposalForm({ hasDisplayName: initialHasDisplayName, ini
               setTeacherSearch('')
               setTeacherSearchResults([])
               setMaterials([])
+              setMaterialGroupTitle('')
               setError(null)
               setForm(DEFAULT_FORM)
             }}
@@ -734,7 +748,16 @@ export function SubjectProposalForm({ hasDisplayName: initialHasDisplayName, ini
                 } else if (e.target.files.length > remainingSlots) {
                   setError(`Přidáno jen ${remainingSlots} souborů. Najednou lze přiložit maximálně ${MAX_PROPOSAL_MATERIALS}.`);
                 }
-                setMaterials(prev => [...prev, ...validFiles]);
+                setMaterials(prev => [
+                  ...prev,
+                  ...validFiles.map((file) => ({
+                    id: typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+                      ? crypto.randomUUID()
+                      : `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`,
+                    file,
+                    pageCount: '',
+                  })),
+                ]);
                 e.target.value = '';
               }
             }}
@@ -750,22 +773,55 @@ export function SubjectProposalForm({ hasDisplayName: initialHasDisplayName, ini
             </div>
           </label>
 
+          {(materials.length > 1 || materialGroupTitle) && (
+            <div>
+              <FieldLabel>Název složky / skupiny</FieldLabel>
+              <Input
+                value={materialGroupTitle}
+                onChange={(e) => setMaterialGroupTitle(e.target.value)}
+                placeholder="např. Vše ke zkoušce"
+                maxLength={120}
+              />
+              <p className="mt-1 text-xs text-muted-foreground">
+                Pokud přidáš více PDF, po schválení se uloží do jedné skupiny pod tímto názvem.
+              </p>
+            </div>
+          )}
+
           {materials.length > 0 && (
             <div className="space-y-2 mt-4">
-              {materials.map((file, idx) => (
-                <div key={idx} className="flex items-center justify-between p-2 rounded-lg bg-muted/30 border border-border text-sm">
-                  <div className="flex items-center gap-2 truncate">
-                    <span>📄</span>
-                    <span className="truncate">{file.name}</span>
-                    <span className="text-muted-foreground text-xs">({(file.size / 1024 / 1024).toFixed(1)} MB)</span>
+              {materials.map((item) => (
+                <div key={item.id} className="rounded-lg bg-muted/30 border border-border p-3 text-sm space-y-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2 truncate">
+                      <span>📄</span>
+                      <span className="truncate">{item.file.name}</span>
+                      <span className="text-muted-foreground text-xs">({(item.file.size / 1024 / 1024).toFixed(1)} MB)</span>
+                    </div>
+                    <button 
+                      type="button"
+                      onClick={() => setMaterials(prev => prev.filter((current) => current.id !== item.id))}
+                      className="text-muted-foreground hover:text-destructive p-1"
+                    >
+                      ✕
+                    </button>
                   </div>
-                  <button 
-                    type="button"
-                    onClick={() => setMaterials(prev => prev.filter((_, i) => i !== idx))}
-                    className="text-muted-foreground hover:text-destructive p-1"
-                  >
-                    ✕
-                  </button>
+                  <div className="sm:max-w-[180px]">
+                    <FieldLabel>Počet stran</FieldLabel>
+                    <Input
+                      type="number"
+                      min={1}
+                      max={9999}
+                      value={item.pageCount}
+                      onChange={(e) => {
+                        const nextValue = e.target.value
+                        setMaterials((prev) => prev.map((current) =>
+                          current.id === item.id ? { ...current, pageCount: nextValue } : current,
+                        ))
+                      }}
+                      placeholder="např. 18"
+                    />
+                  </div>
                 </div>
               ))}
             </div>
@@ -787,11 +843,11 @@ export function SubjectProposalForm({ hasDisplayName: initialHasDisplayName, ini
           ⚠️ Materiály jsou moderované
         </p>
         <ul className="text-muted-foreground space-y-1 list-disc list-inside text-xs">
-          <li>Vyhni se AI slopu a nekvalitním výpiskům — budeme je vracet ke kontrole</li>
-          <li>Posílej co nejvíce stran pohromadě, ne každé malé téma zvlášť</li>
-          <li>Materiály pod 5 stran nedávají body</li>
+          <li>Vyhni se AI slopu a odfláknutým materiálům. Takové vracíme ke kontrole.</li>
+          <li>Radši přilož víc stran pohromadě než několik drobných PDF zvlášť.</li>
+          <li>Materiály pod 5 stran body nepřidávají.</li>
         </ul>
-        <a href="/jak-to-funguje" target="_blank" className="text-xs text-primary hover:underline">Jak funguje bodový systém? →</a>
+        <a href="/jak-to-funguje" target="_blank" className="text-xs text-primary hover:underline">Jak fungují body? →</a>
       </div>
 
       <button type="submit" disabled={isSubmitting}

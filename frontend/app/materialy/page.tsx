@@ -1,38 +1,28 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
 import { SearchLandingBar } from "@/components/search/search-landing-bar";
 import { ReportIssueDialog } from "@/components/feedback/report-issue-dialog";
 import { FileText, ExternalLink, FolderOpen } from "lucide-react";
 import { formatFileSize } from "@/lib/utils";
 import { getStoragePublicUrl } from "@/lib/storage";
-import { MaterialGroupCard, type MaterialGroupData } from "@/components/subject/material-group-card";
+import { MaterialGroupCard } from "@/components/subject/material-group-card";
+import { getPublicMaterialDirectory, type PublicStandaloneMaterial } from "@/lib/material-directory";
 
 interface PageProps {
-  searchParams: Promise<{ q?: string; view?: string }>;
-}
-
-interface MaterialListItem {
-  id: string;
-  title: string;
-  file_path: string;
-  size_bytes: number;
-  page_count: number | null;
-  group_id: string | null;
-  created_at: string;
-  subject: { name: string; slug: string; short_tag: string } | null;
+  searchParams: Promise<{ q?: string; view?: string; group?: string; skupina?: string }>;
 }
 
 export const metadata: Metadata = {
   title: "Studijní materiály",
-  description: "Schválené studijní materiály napříč předměty.",
+  description: "Schválené studijní materiály a skupiny materiálů napříč předměty.",
 };
 
 export default async function MaterialListPage({ searchParams }: PageProps) {
-  const { q, view } = await searchParams;
+  const { q, view, group, skupina } = await searchParams;
   const query = q?.trim() ?? "";
   const showGroups = view === "groups" || !view;
+  const focusedGroupId = group ?? skupina ?? undefined;
 
   return (
     <div className="container mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-8">
@@ -51,8 +41,8 @@ export default async function MaterialListPage({ searchParams }: PageProps) {
             <h1 className="text-3xl font-bold text-foreground">Studijní materiály</h1>
             <p className="text-muted-foreground">
               {query
-                ? <>Výsledky pro „<span className="text-foreground font-medium">{query}</span>"</>
-                : "Schválené PDF materiály dostupné napříč předměty."}
+                ? <>Výsledky pro &bdquo;<span className="text-foreground font-medium">{query}</span>&ldquo;</>
+                : "Schválené materiály a přehledné skupiny napříč předměty."}
             </p>
           </div>
         </div>
@@ -60,7 +50,7 @@ export default async function MaterialListPage({ searchParams }: PageProps) {
         <SearchLandingBar
           basePath="/materialy"
           placeholder="Hledat materiál, skupinu nebo předmět..."
-          emptyHint="Napiš název materiálu nebo zkratku předmětu a stiskni Enter."
+          emptyHint="Zadej název materiálu, skupiny nebo zkratku předmětu a potvrď Enterem."
         />
 
         {/* View toggle */}
@@ -91,7 +81,7 @@ export default async function MaterialListPage({ searchParams }: PageProps) {
             href="/jak-to-funguje"
             className="ml-auto text-xs text-muted-foreground hover:text-foreground transition-colors self-center"
           >
-            Jak funguje bodový systém? →
+            Jak fungují body? →
           </Link>
         </div>
       </div>
@@ -100,7 +90,7 @@ export default async function MaterialListPage({ searchParams }: PageProps) {
         {view === "files" ? (
           <MaterialFilesSection query={query} />
         ) : (
-          <MaterialGroupsSection query={query} />
+          <MaterialGroupsSection query={query} focusedGroupId={focusedGroupId} />
         )}
       </Suspense>
     </div>
@@ -109,57 +99,8 @@ export default async function MaterialListPage({ searchParams }: PageProps) {
 
 // ── Groups section ────────────────────────────────────────────────────────────
 
-async function MaterialGroupsSection({ query }: { query: string }) {
-  const supabase = await createClient();
-
-  // Load groups with their materials and subject info
-  let groupsQuery = supabase
-    .from("material_groups" as never)
-    .select("id, title, uploader_id, created_at, subject:subject_id(name, slug, short_tag), materials:subject_materials(id, title, file_path, size_bytes, page_count, moderation_status)")
-    .order("created_at", { ascending: false })
-    .limit(40) as unknown as Promise<{ data: RawGroup[] | null; error: unknown }>;
-
-  const { data: rawGroups } = await groupsQuery;
-  let groups = (rawGroups ?? []) as RawGroup[];
-
-  // Filter by query (group title or subject name)
-  if (query) {
-    const q = query.toLowerCase();
-    groups = groups.filter(g =>
-      g.title.toLowerCase().includes(q) ||
-      (g.subject?.name ?? "").toLowerCase().includes(q) ||
-      (g.subject?.short_tag ?? "").toLowerCase().includes(q)
-    );
-  }
-
-  // Load uploader display names
-  const uploaderIds = [...new Set(groups.map(g => g.uploader_id))];
-  const uploaderMap: Record<string, string | null> = {};
-  if (uploaderIds.length > 0) {
-    const { data: profiles } = await supabase
-      .from("profiles")
-      .select("user_id, display_name")
-      .in("user_id", uploaderIds);
-    for (const p of (profiles ?? []) as { user_id: string; display_name: string | null }[]) {
-      uploaderMap[p.user_id] = p.display_name;
-    }
-  }
-
-  // Also load individual materials not in any group
-  const ungroupedQuery = supabase
-    .from("subject_materials")
-    .select("id, title, file_path, size_bytes, page_count, group_id, created_at, subject:subject_id(name, slug, short_tag)")
-    .eq("moderation_status", "approved")
-    .is("group_id", null)
-    .order("created_at", { ascending: false })
-    .limit(30);
-
-  const ungroupedFiltered = query
-    ? ungroupedQuery.or(`title.ilike.%${query}%`)
-    : ungroupedQuery;
-
-  const { data: ungroupedData } = await ungroupedFiltered;
-  const ungroupedMaterials = (ungroupedData ?? []) as MaterialListItem[];
+async function MaterialGroupsSection({ query, focusedGroupId }: { query: string; focusedGroupId?: string }) {
+  const { groups, standaloneMaterials: ungroupedMaterials } = await getPublicMaterialDirectory(query, focusedGroupId);
 
   if (groups.length === 0 && ungroupedMaterials.length === 0) {
     return (
@@ -167,7 +108,7 @@ async function MaterialGroupsSection({ query }: { query: string }) {
         <p className="text-4xl">📄</p>
         <p className="text-lg font-semibold text-foreground">Žádné materiály</p>
         <p className="text-sm text-muted-foreground">
-          {query ? "Pro zadaný dotaz jsme nic nenašli." : "Zatím tu nejsou žádné schválené materiály."}
+          {query ? "Pro tenhle dotaz jsme nic nenašli." : "Zatím tu nejsou žádné schválené materiály."}
         </p>
         {query && (
           <Link href="/materialy" className="text-sm text-sky-700 hover:underline">
@@ -188,21 +129,9 @@ async function MaterialGroupsSection({ query }: { query: string }) {
             Skupiny materiálů
             <span className="text-xs font-normal normal-case">({groups.length})</span>
           </h2>
-          {groups.map(group => {
-            const groupData: MaterialGroupData = {
-              id: group.id,
-              title: group.title,
-              created_at: group.created_at,
-              uploader_id: group.uploader_id,
-              uploader_display_name: uploaderMap[group.uploader_id] ?? null,
-              subject: group.subject ?? null,
-              materials: (group.materials ?? []).map(m => ({
-                ...m,
-                public_url: getStoragePublicUrl("study_materials", m.file_path) ?? "",
-              })),
-            };
-            return <MaterialGroupCard key={group.id} group={groupData} showSubject />;
-          })}
+          {groups.map((group) => (
+            <MaterialGroupCard key={group.id} group={group} showSubject />
+          ))}
         </section>
       )}
 
@@ -228,21 +157,20 @@ async function MaterialGroupsSection({ query }: { query: string }) {
 // ── Individual files section ──────────────────────────────────────────────────
 
 async function MaterialFilesSection({ query }: { query: string }) {
-  const supabase = await createClient();
-  let materialsQuery = supabase
-    .from("subject_materials")
-    .select("id, title, file_path, size_bytes, page_count, group_id, created_at, subject:subject_id(name, slug, short_tag)")
-    .eq("moderation_status", "approved")
-    .order("created_at", { ascending: false })
-    .limit(60);
-
-  if (query) {
-    // Search by material title OR subject short_tag match via join
-    materialsQuery = materialsQuery.ilike("title", `%${query}%`);
-  }
-
-  const { data } = await materialsQuery;
-  const materials = (data ?? []) as MaterialListItem[];
+  const { groups, standaloneMaterials } = await getPublicMaterialDirectory(query);
+  const materials = [
+    ...groups.flatMap((group) => group.materials.map((material) => ({
+      id: material.id,
+      title: material.title,
+      file_path: material.file_path,
+      size_bytes: material.size_bytes,
+      page_count: material.page_count,
+      group_id: group.id,
+      created_at: material.created_at,
+      subject: group.subject,
+    }))),
+    ...standaloneMaterials,
+  ];
 
   if (materials.length === 0) {
     return (
@@ -250,7 +178,7 @@ async function MaterialFilesSection({ query }: { query: string }) {
         <p className="text-4xl">📄</p>
         <p className="text-lg font-semibold text-foreground">Žádné materiály</p>
         <p className="text-sm text-muted-foreground">
-          {query ? "Pro zadaný dotaz jsme nic nenašli." : "Zatím tu nejsou žádné schválené materiály."}
+          {query ? "Pro tenhle dotaz jsme nic nenašli." : "Zatím tu nejsou žádné schválené materiály."}
         </p>
         {query && (
           <Link href="/materialy?view=files" className="text-sm text-sky-700 hover:underline">
@@ -272,7 +200,16 @@ async function MaterialFilesSection({ query }: { query: string }) {
 
 // ── Shared single material row ────────────────────────────────────────────────
 
-function SingleMaterialRow({ material }: { material: MaterialListItem }) {
+function SingleMaterialRow({ material }: { material: PublicStandaloneMaterial | {
+  id: string;
+  title: string;
+  file_path: string;
+  size_bytes: number;
+  page_count: number | null;
+  group_id: string | null;
+  created_at: string;
+  subject: { name: string; slug: string; short_tag: string } | null;
+} }) {
   return (
     <div className="glass-card rounded-xl p-4 sm:p-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
       <div className="min-w-0 space-y-1">
@@ -326,24 +263,6 @@ function SingleMaterialRow({ material }: { material: MaterialListItem }) {
       </div>
     </div>
   );
-}
-
-// ── Types ─────────────────────────────────────────────────────────────────────
-
-interface RawGroup {
-  id: string;
-  title: string;
-  uploader_id: string;
-  created_at: string;
-  subject: { name: string; slug: string; short_tag: string } | null;
-  materials: {
-    id: string;
-    title: string;
-    file_path: string;
-    size_bytes: number;
-    page_count: number | null;
-    moderation_status: "pending" | "approved" | "rejected";
-  }[];
 }
 
 // ── Skeleton ──────────────────────────────────────────────────────────────────

@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { MaterialGroupCard, type MaterialGroupData } from '@/components/subject/material-group-card'
 
 type SubjectRef = {
   slug: string
@@ -24,16 +25,20 @@ export type ProfileMaterialContribution = {
   subject: SubjectRef
 }
 
+export type ProfileMaterialGroupContribution = MaterialGroupData
+
 type Props = {
   decks: ProfileDeckContribution[]
   materials: ProfileMaterialContribution[]
+  groups?: ProfileMaterialGroupContribution[]
 }
 
-export function ProfileSubjectContributions({ decks, materials }: Props) {
+export function ProfileSubjectContributions({ decks, materials, groups = [] }: Props) {
   const [subjectSlug, setSubjectSlug] = useState('')
-  const subjectOptions = getSubjectOptions(decks, materials)
+  const subjectOptions = getSubjectOptions(decks, materials, groups)
   const filteredDecks = subjectSlug ? decks.filter((deck) => deck.subject?.slug === subjectSlug) : decks
   const filteredMaterials = subjectSlug ? materials.filter((material) => material.subject?.slug === subjectSlug) : materials
+  const filteredGroups = subjectSlug ? groups.filter((group) => group.subject?.slug === subjectSlug) : groups
 
   return (
     <div className="space-y-4 xl:col-span-2">
@@ -41,7 +46,7 @@ export function ProfileSubjectContributions({ decks, materials }: Props) {
         <div className="flex flex-col gap-2 rounded-2xl border border-border bg-card p-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-sm font-semibold text-foreground">Filtrovat podle předmětu</p>
-            <p className="text-xs text-muted-foreground">Kartičky a materiály z předmětů, kam uživatel přispěl.</p>
+            <p className="text-xs text-muted-foreground">Příspěvky rozdělené podle předmětů, do kterých uživatel něco přidal.</p>
           </div>
           <select
             value={subjectSlug}
@@ -91,6 +96,12 @@ export function ProfileSubjectContributions({ decks, materials }: Props) {
             </div>
           ))}
         </ProfileContributionSection>
+
+        <ProfileContributionSection title="Skupiny materiálů" empty="Zatím žádné veřejné skupiny materiálů.">
+          {filteredGroups.map((group) => (
+            <MaterialGroupCard key={group.id} group={group} showSubject />
+          ))}
+        </ProfileContributionSection>
       </div>
     </div>
   )
@@ -129,10 +140,14 @@ function ProfileContributionSection({
   )
 }
 
-function getSubjectOptions(decks: ProfileDeckContribution[], materials: ProfileMaterialContribution[]) {
+function getSubjectOptions(
+  decks: ProfileDeckContribution[],
+  materials: ProfileMaterialContribution[],
+  groups: ProfileMaterialGroupContribution[],
+) {
   const subjects = new Map<string, string>()
 
-  for (const item of [...decks, ...materials]) {
+  for (const item of [...decks, ...materials, ...groups]) {
     if (item.subject) {
       subjects.set(item.subject.slug, `${item.subject.short_tag} · ${item.subject.name}`)
     }

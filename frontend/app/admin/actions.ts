@@ -1,6 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { getPublicProfilePath } from '@/lib/public-profile'
 import { createClient } from '@/lib/supabase/server'
 import type { Database } from '@/lib/types/database'
 
@@ -20,16 +21,19 @@ interface SubjectProposal {
 }
 
 type SubjectInsert = Database['public']['Tables']['subjects']['Insert']
+type MaterialGroupInsert = Database['public']['Tables']['material_groups']['Insert']
+type SubjectMaterialRow = Database['public']['Tables']['subject_materials']['Row']
 type SubjectMaterialInsert = Database['public']['Tables']['subject_materials']['Insert']
 type TeacherInsert = Database['public']['Tables']['teachers']['Insert']
 type SubjectTeacherInsert = Database['public']['Tables']['subject_teachers']['Insert']
 type FeedbackUpdate = Database['public']['Tables']['feedback']['Update']
 
 type ProposalTeacher = { id?: string; name: string; faculty?: string | null }
-type ProposalMaterial = { title: string; file_path: string; size_bytes: number }
+type ProposalMaterial = { title: string; file_path: string; size_bytes: number; page_count?: number | null }
 type ProposalPayload = SubjectInsert & {
   teachers?: ProposalTeacher[]
   materials?: ProposalMaterial[]
+  material_group_title?: string | null
 }
 
 type ActionResult = { success: true } | { success: false; error: string }
@@ -46,6 +50,16 @@ export interface BrokenMaterialAuditItem {
   error_message: string | null
 }
 
+function revalidateContributionSurfaces(userId?: string | null) {
+  revalidatePath('/')
+  revalidatePath('/jak-to-funguje')
+  revalidatePath('/materialy')
+
+  if (userId) {
+    revalidatePath(getPublicProfilePath(userId))
+  }
+}
+
 function generateSlug(value: string) {
   return value
     .toLowerCase()
@@ -58,6 +72,35 @@ function generateSlug(value: string) {
 function withSlugSuffix(baseSlug: string, attempt: number) {
   if (attempt === 0) return baseSlug
   return `${baseSlug}-${attempt + 1}`
+}
+
+function normalizeProposalMaterials(materials: ProposalMaterial[] | undefined) {
+  return (materials ?? []).flatMap((material) => {
+    if (!material || !material.file_path || !material.title || typeof material.size_bytes !== 'number') {
+      return []
+    }
+
+    const pageCount = typeof material.page_count === 'number' && Number.isInteger(material.page_count) && material.page_count >= 1
+      ? material.page_count
+      : null
+
+    return [{
+      title: material.title.trim(),
+      file_path: material.file_path,
+      size_bytes: material.size_bytes,
+      page_count: pageCount,
+    }]
+  })
+}
+
+function normalizeProposalMaterialGroupTitle(title: string | null | undefined) {
+  const normalized = title?.trim()
+  return normalized ? normalized.slice(0, 120) : null
+}
+
+function buildMaterialGroupFallbackTitle(subject: Pick<Database['public']['Tables']['subjects']['Row'], 'name' | 'short_tag'>) {
+  const base = subject.short_tag?.trim() || subject.name?.trim() || 'Materiály'
+  return `${base} — materiály`
 }
 
 async function insertSubjectWithUniqueSlug(
@@ -101,7 +144,38 @@ async function getAdminClient() {
   return { supabase, userId: user.id }
 }
 
-export async function approveProposal(proposalId: string): Promise<ActionResult> {
+async function createProposalMaterialGroup(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  subject: Pick<Database['public']['Tables']['subjects']['Row'], 'id' | 'name' | 'short_tag'>,
+  uploaderId: string,
+  title: string | null,
+) {
+  const groupInsert: MaterialGroupInsert = {
+    title: title ?? buildMaterialGroupFallbackTitle(subject),
+    subject_id: subject.id,
+    uploader_id: uploaderId,
+  }
+
+  const { data, error } = await supabase
+    .from('material_groups')
+    .insert(groupInsert as never)
+    .select('id')
+    .single()
+
+  if (error || !data) {
+    return { data: null, error: error ?? { message: 'Skupinu materiálů se nepodařilo vytvořit.' } }
+  }
+
+  return { data: data as { id: string }, error: null }
+}
+
+export async function approveProposal(
+  proposalId: string,
+  reviewInput?: {
+    materials?: ProposalMaterial[]
+    materialGroupTitle?: string | null
+  },
+): Promise<ActionResult> {
   try {
     const { supabase, userId } = await getAdminClient()
     const reviewedAt = new Date().toISOString()
@@ -130,8 +204,12 @@ export async function approveProposal(proposalId: string): Promise<ActionResult>
       const teachers = insertData.teachers
       delete insertData.teachers
 
-      const materials = insertData.materials
+      const materials = normalizeProposalMaterials(reviewInput?.materials ?? insertData.materials)
       delete insertData.materials
+      const materialGroupTitle = normalizeProposalMaterialGroupTitle(
+        reviewInput?.materialGroupTitle ?? insertData.material_group_title,
+      )
+      delete insertData.material_group_title
 
       const { data: insertedSubjectData, error: insertError } = await insertSubjectWithUniqueSlug(supabase, insertData)
       if (insertError || !insertedSubjectData) return { success: false, error: `Chyba při vkládání: ${insertError?.message ?? 'Předmět se nepodařilo vytvořit.'}` }
@@ -144,6 +222,20 @@ export async function approveProposal(proposalId: string): Promise<ActionResult>
       }
 
       if (materials && materials.length > 0) {
+        let groupId: string | null = null
+        if (materials.length > 1) {
+          const { data: groupData, error: groupError } = await createProposalMaterialGroup(
+            supabase,
+            insertedSubject,
+            proposal.proposed_by,
+            materialGroupTitle,
+          )
+          if (groupError || !groupData) {
+            return { success: false, error: `Předmět byl vytvořen, ale skupinu materiálů se nepodařilo založit: ${groupError?.message ?? 'neznámá chyba'}` }
+          }
+          groupId = groupData.id
+        }
+
         const materialsToInsert: SubjectMaterialInsert[] = materials.map((m) => ({
           subject_id: insertedSubject.id,
           uploader_id: proposal.proposed_by,
@@ -153,8 +245,8 @@ export async function approveProposal(proposalId: string): Promise<ActionResult>
           is_approved: true,
           moderation_status: 'approved',
           rejection_reason: null,
-          group_id: null,
-          page_count: null,
+          group_id: groupId,
+          page_count: m.page_count ?? null,
         }))
         const { error: materialsError } = await supabase.from('subject_materials').insert(materialsToInsert as never)
         if (materialsError) return { success: false, error: `Předmět byl vytvořen, ale materiály se nepodařilo připojit: ${materialsError.message}` }
@@ -165,8 +257,12 @@ export async function approveProposal(proposalId: string): Promise<ActionResult>
       const teachers = updateData.teachers
       delete updateData.teachers
 
-      const materials = updateData.materials
+      const materials = normalizeProposalMaterials(reviewInput?.materials ?? updateData.materials)
       delete updateData.materials
+      const materialGroupTitle = normalizeProposalMaterialGroupTitle(
+        reviewInput?.materialGroupTitle ?? updateData.material_group_title,
+      )
+      delete updateData.material_group_title
 
       const { error: updateError } = await supabase.from('subjects').update(updateData as never).eq('id', subjectId)
       if (updateError) return { success: false, error: `Chyba při úpravě: ${updateError.message}` }
@@ -177,6 +273,24 @@ export async function approveProposal(proposalId: string): Promise<ActionResult>
       }
       
       if (materials && materials.length > 0) {
+        let groupId: string | null = null
+        if (materials.length > 1) {
+          const { data: groupData, error: groupError } = await createProposalMaterialGroup(
+            supabase,
+            {
+              id: subjectId,
+              name: typeof updateData.name === 'string' && updateData.name.trim() ? updateData.name : 'Předmět',
+              short_tag: typeof updateData.short_tag === 'string' && updateData.short_tag.trim() ? updateData.short_tag : '',
+            },
+            proposal.proposed_by,
+            materialGroupTitle,
+          )
+          if (groupError || !groupData) {
+            return { success: false, error: `Změny byly uloženy, ale skupinu materiálů se nepodařilo založit: ${groupError?.message ?? 'neznámá chyba'}` }
+          }
+          groupId = groupData.id
+        }
+
         const materialsToInsert: SubjectMaterialInsert[] = materials.map((m) => ({
           subject_id: subjectId,
           uploader_id: proposal.proposed_by,
@@ -186,8 +300,8 @@ export async function approveProposal(proposalId: string): Promise<ActionResult>
           is_approved: true,
           moderation_status: 'approved',
           rejection_reason: null,
-          group_id: null,
-          page_count: null,
+          group_id: groupId,
+          page_count: m.page_count ?? null,
         }))
         const { error: materialsError } = await supabase.from('subject_materials').insert(materialsToInsert as never)
         if (materialsError) return { success: false, error: `Změny byly uloženy, ale materiály se nepodařilo připojit: ${materialsError.message}` }
@@ -210,6 +324,7 @@ export async function approveProposal(proposalId: string): Promise<ActionResult>
 
     revalidatePath('/admin')
     revalidatePath('/moje-aktivita')
+    revalidateContributionSurfaces(proposal.proposed_by)
     return { success: true }
   } catch (err) {
     return { success: false, error: err instanceof Error ? err.message : 'Neznámá chyba' }
@@ -348,6 +463,21 @@ async function processTeachers(
 export async function approveMaterial(materialId: string): Promise<ActionResult> {
   try {
     const { supabase } = await getAdminClient()
+    const { data: material, error: loadError } = await supabase
+      .from('subject_materials')
+      .select('id, uploader_id')
+      .eq('id', materialId)
+      .maybeSingle()
+    const typedMaterial = material as Pick<SubjectMaterialRow, 'id' | 'uploader_id'> | null
+
+    if (loadError) {
+      return { success: false, error: `Nepodařilo se načíst materiál: ${loadError.message}` }
+    }
+
+    if (!typedMaterial) {
+      return { success: false, error: 'Materiál nenalezen.' }
+    }
+
     const { error } = await supabase
       .from('subject_materials')
       .update({
@@ -362,6 +492,7 @@ export async function approveMaterial(materialId: string): Promise<ActionResult>
     revalidatePath('/admin')
     revalidatePath('/predmety/[slug]', 'page')
     revalidatePath('/moje-aktivita')
+    revalidateContributionSurfaces(typedMaterial.uploader_id)
     return { success: true }
   } catch (err) {
     return { success: false, error: err instanceof Error ? err.message : 'Neočekávaná chyba' }

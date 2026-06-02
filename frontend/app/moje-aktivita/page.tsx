@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { MyActivityDashboard, type ActivityAttention, type ActivityCardData, type ActivitySectionData, type StatusTone } from "@/components/activity/my-activity-dashboard";
+import { MaterialGroupCard, type MaterialGroupData } from "@/components/subject/material-group-card";
 import { getPublicProfilePath } from "@/lib/public-profile";
 import { createClient } from "@/lib/supabase/server";
 import { getStoragePublicUrl } from "@/lib/storage";
@@ -14,6 +15,22 @@ type DeckWithSubject = FlashcardDeck & {
 
 type MaterialWithSubject = SubjectMaterial & {
   subject: { name: string; slug: string; short_tag: string } | null;
+};
+
+type MaterialGroupWithSubject = {
+  id: string;
+  title: string;
+  uploader_id: string;
+  created_at: string;
+  subject: { name: string; slug: string; short_tag: string } | null;
+  materials: Array<{
+    id: string;
+    title: string;
+    file_path: string;
+    size_bytes: number;
+    page_count: number | null;
+    moderation_status: "pending" | "approved" | "rejected";
+  }> | null;
 };
 
 type SubjectSummary = Pick<Subject, "id" | "slug" | "name" | "short_tag" | "updated_at">;
@@ -70,7 +87,7 @@ export default async function MyActivityPage() {
         <div>
           <h1 className="text-3xl font-bold text-foreground">Moje aktivita</h1>
           <p className="mt-2 text-muted-foreground">
-            Přehled tvých balíčků, návrhů, materiálů, feedbacku a změn po schválení.
+            Všechny tvoje balíčky, návrhy, materiály i feedback na jednom místě.
           </p>
         </div>
         <Link
@@ -94,6 +111,7 @@ async function MyActivitySections({ userId }: { userId: string }) {
     { data: profile },
     { data: decks },
     { data: materials },
+    { data: groups },
     { data: proposals },
     { data: feedback },
     { data: acknowledgements },
@@ -101,6 +119,11 @@ async function MyActivitySections({ userId }: { userId: string }) {
     supabase.from("profiles").select("*").eq("user_id", userId).maybeSingle(),
     supabase.from("flashcard_decks").select("*, subject:subject_id(name, slug, short_tag)").eq("creator_id", userId).order("updated_at", { ascending: false }),
     supabase.from("subject_materials").select("*, subject:subject_id(name, slug, short_tag)").eq("uploader_id", userId).order("created_at", { ascending: false }),
+    supabase
+      .from("material_groups")
+      .select("id, title, uploader_id, created_at, subject:subject_id(name, slug, short_tag), materials:subject_materials(id, title, file_path, size_bytes, page_count, moderation_status)")
+      .eq("uploader_id", userId)
+      .order("created_at", { ascending: false }),
     (supabase as unknown as {
       from: (table: "subject_proposals") => {
         select: (columns: string) => {
@@ -117,6 +140,18 @@ async function MyActivitySections({ userId }: { userId: string }) {
   const typedProfile = profile as Profile | null;
   const myDecks = (decks ?? []) as DeckWithSubject[];
   const myMaterials = (materials ?? []) as MaterialWithSubject[];
+  const myGroups = ((groups ?? []) as MaterialGroupWithSubject[]).map((group) => ({
+    id: group.id,
+    title: group.title,
+    uploader_id: group.uploader_id,
+    created_at: group.created_at,
+    uploader_display_name: typedProfile?.display_name ?? null,
+    subject: group.subject,
+    materials: (group.materials ?? []).map((material) => ({
+      ...material,
+      public_url: getStoragePublicUrl("study_materials", material.file_path) ?? "",
+    })),
+  })) satisfies MaterialGroupData[];
   const myProposals = (proposals ?? []) as SubjectProposalRecord[];
   const myFeedback = (feedback ?? []) as Feedback[];
   const myAcknowledgements = (acknowledgements ?? []) as ActivityAcknowledgementRow[];
@@ -172,7 +207,7 @@ async function MyActivitySections({ userId }: { userId: string }) {
     {
       id: "proposals",
       title: "Návrhy předmětů",
-      description: "Přepni si mezi čekajícími, schválenými a zamítnutými návrhy. U schválených uvidíš i pozdější úpravy nebo smazání předmětu.",
+      description: "Přehled čekajících, schválených i vrácených návrhů. U schválených uvidíš i pozdější změny na předmětu.",
       actionHref: "/navrhnout",
       actionLabel: "Poslat nový návrh",
       tabs: [
@@ -205,7 +240,7 @@ async function MyActivitySections({ userId }: { userId: string }) {
     {
       id: "materials",
       title: "Nahrané materiály",
-      description: "Přehled podle moderace. Poslední tři položky jsou hned vidět, starší si můžeš rozbalit.",
+      description: "Materiály rozdělené podle stavu moderace.",
       tabs: [
         {
           id: "pending",
@@ -236,7 +271,7 @@ async function MyActivitySections({ userId }: { userId: string }) {
     {
       id: "feedback",
       title: "Feedback a nahlášené problémy",
-      description: "Tři přehledné stavy pro to, jestli se problém řeší, čeká nebo už je uzavřený.",
+      description: "Uvidíš, co je nové, co se řeší a co už je uzavřené.",
       tabs: [
         {
           id: "new",
@@ -267,7 +302,7 @@ async function MyActivitySections({ userId }: { userId: string }) {
     {
       id: "decks",
       title: "Moje balíčky kartiček",
-      description: "Rychlé rozdělení na veřejné a soukromé balíčky.",
+      description: "Přehled veřejných i soukromých balíčků.",
       actionHref: "/flashcardy",
       actionLabel: "Otevřít dashboard kartiček",
       tabs: [
@@ -291,7 +326,32 @@ async function MyActivitySections({ userId }: { userId: string }) {
     },
   ];
 
-  return <MyActivityDashboard displayName={typedProfile?.display_name ?? null} sections={sections} />;
+  return (
+    <div className="space-y-8">
+      <MyActivityDashboard displayName={typedProfile?.display_name ?? null} sections={sections} />
+
+      <section className="space-y-4">
+        <div className="space-y-1">
+          <h2 className="text-xl font-bold text-foreground">Skupiny materiálů</h2>
+          <p className="text-sm text-muted-foreground">
+            Svoje skupiny tady můžeš přejmenovat nebo zrušit. Stav jednotlivých PDF uvidíš přímo uvnitř.
+          </p>
+        </div>
+
+        {myGroups.length > 0 ? (
+          <div className="space-y-3">
+            {myGroups.map((group) => (
+              <MaterialGroupCard key={group.id} group={group} showSubject isOwner />
+            ))}
+          </div>
+        ) : (
+          <div className="rounded-2xl border border-dashed border-border bg-background/40 px-4 py-8 text-center text-sm text-muted-foreground">
+            Zatím nemáš žádné skupiny materiálů.
+          </div>
+        )}
+      </section>
+    </div>
+  );
 }
 
 function buildProposalCard(item: ProposalWithSubjectState, acknowledgementSet: Set<string>): ActivityCardData {
