@@ -130,7 +130,13 @@ async function MaterialGroupsSection({ query, focusedGroupId }: { query: string;
             <span className="text-xs font-normal normal-case">({groups.length})</span>
           </h2>
           {groups.map((group) => (
-            <MaterialGroupCard key={group.id} group={group} showSubject />
+            <MaterialGroupCard
+              key={group.id}
+              group={group}
+              showSubject
+              compact
+              defaultExpanded={focusedGroupId === group.id}
+            />
           ))}
         </section>
       )}
@@ -211,24 +217,27 @@ function SingleMaterialRow({ material }: { material: PublicStandaloneMaterial | 
   subject: { name: string; slug: string; short_tag: string } | null;
 } }) {
   return (
-    <div className="glass-card rounded-xl p-4 sm:p-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <div className="glass-card rounded-lg p-3 sm:p-3.5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div className="min-w-0 space-y-1">
-        <div className="flex items-center gap-2 min-w-0">
-          <FileText className="w-4 h-4 text-sky-700 shrink-0" />
-          <h2 className="truncate font-semibold text-foreground">{material.title}</h2>
-        </div>
-        <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-          {material.subject && (
-            <>
+        <div className="flex items-start gap-2 min-w-0">
+          <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-sky-500/10">
+            <FileText className="w-3.5 h-3.5 text-sky-700" />
+          </div>
+          <div className="min-w-0">
+            <p className="line-clamp-2 text-sm font-semibold leading-snug text-foreground sm:line-clamp-1">
+              {material.title}
+            </p>
+            {material.subject && (
               <Link
                 href={`/predmety/${material.subject.slug}`}
-                className="transition-colors hover:text-foreground"
+                className="mt-0.5 block text-xs font-medium text-sky-700 transition-colors hover:text-sky-800 dark:text-sky-400 dark:hover:text-sky-300"
               >
                 {material.subject.short_tag} · {material.subject.name}
               </Link>
-              <span>•</span>
-            </>
-          )}
+            )}
+          </div>
+        </div>
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-muted-foreground sm:text-xs">
           <span>{formatFileSize(material.size_bytes)}</span>
           {material.page_count != null && <><span>•</span><span>{material.page_count} stran</span></>}
           <span>•</span>
@@ -236,23 +245,23 @@ function SingleMaterialRow({ material }: { material: PublicStandaloneMaterial | 
         </div>
       </div>
 
-      <div className="flex items-center gap-2 shrink-0">
+      <div className="flex items-center gap-2 shrink-0 sm:self-start">
         {material.subject && (
           <Link
             href={`/predmety/${material.subject.slug}`}
-            className="rounded-lg border border-border bg-card px-3 py-2 text-sm transition-colors hover:bg-muted"
+            className="rounded-lg border border-border bg-card px-2.5 py-2 text-xs font-medium transition-colors hover:bg-muted sm:text-sm"
           >
-            Detail předmětu
+            Předmět
           </Link>
         )}
         <a
           href={getStoragePublicUrl("study_materials", material.file_path) ?? ""}
           target="_blank"
           rel="noreferrer"
-          className="inline-flex items-center gap-2 rounded-lg bg-sky-600 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-sky-700"
+          className="inline-flex items-center gap-1.5 rounded-lg bg-sky-600 px-2.5 py-2 text-xs font-medium text-white transition-colors hover:bg-sky-700 sm:px-3 sm:text-sm"
         >
-          Otevřít PDF
-          <ExternalLink className="w-4 h-4" />
+          PDF
+          <ExternalLink className="w-3.5 h-3.5" />
         </a>
         <ReportIssueDialog
           sourceType="material"

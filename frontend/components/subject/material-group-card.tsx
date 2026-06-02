@@ -32,12 +32,21 @@ interface MaterialGroupCardProps {
   showSubject?: boolean
   /** If provided, shows manage controls (rename/delete) */
   isOwner?: boolean
+  compact?: boolean
+  defaultExpanded?: boolean
   onDeleted?: (groupId: string) => void
 }
 
-export function MaterialGroupCard({ group, showSubject = false, isOwner = false, onDeleted }: MaterialGroupCardProps) {
+export function MaterialGroupCard({
+  group,
+  showSubject = false,
+  isOwner = false,
+  compact = false,
+  defaultExpanded = true,
+  onDeleted,
+}: MaterialGroupCardProps) {
   const router = useRouter()
-  const [isExpanded, setIsExpanded] = useState(true)
+  const [isExpanded, setIsExpanded] = useState(defaultExpanded)
   const [isEditing, setIsEditing] = useState(false)
   const [editTitle, setEditTitle] = useState(group.title)
   const [currentTitle, setCurrentTitle] = useState(group.title)
@@ -82,9 +91,9 @@ export function MaterialGroupCard({ group, showSubject = false, isOwner = false,
   return (
     <div className="glass-card overflow-hidden">
       {/* Header */}
-      <div className="p-4 border-b border-border/50">
+      <div className={`${compact ? 'p-3.5' : 'p-4'} ${isExpanded ? 'border-b border-border/50' : ''}`}>
         {/* Uploader line */}
-        <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-2">
+        <div className={`flex items-center gap-1.5 text-xs text-muted-foreground ${compact ? 'mb-1.5' : 'mb-2'}`}>
           <User className="w-3 h-3" />
           <span>{group.uploader_display_name ?? 'Anonymní'}</span>
           {showSubject && group.subject && (
@@ -103,7 +112,7 @@ export function MaterialGroupCard({ group, showSubject = false, isOwner = false,
 
         {/* Title row */}
         <div className="flex items-start gap-2">
-          <FolderOpen className="w-5 h-5 text-amber-500 mt-0.5 shrink-0" />
+          <FolderOpen className={`${compact ? 'w-4 h-4' : 'w-5 h-5'} text-amber-500 mt-0.5 shrink-0`} />
           {isEditing ? (
             <div className="flex-1 flex gap-2">
               <input
@@ -120,13 +129,15 @@ export function MaterialGroupCard({ group, showSubject = false, isOwner = false,
             </div>
           ) : (
             <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-foreground leading-tight break-words">{currentTitle}</h3>
+              <h3 className={`${compact ? 'text-sm' : 'text-base'} font-semibold text-foreground leading-tight break-words`}>
+                {currentTitle}
+              </h3>
             </div>
           )}
         </div>
 
         {/* Stats + controls */}
-        <div className="flex items-center gap-3 mt-2 flex-wrap">
+        <div className={`flex items-center gap-3 ${compact ? 'mt-1.5' : 'mt-2'} flex-wrap`}>
           <span className="text-xs text-muted-foreground">
             {group.materials.length} {group.materials.length === 1 ? 'soubor' : group.materials.length < 5 ? 'soubory' : 'souborů'}
             {totalPages > 0 && ` · ${totalPages} stran`}
@@ -178,13 +189,13 @@ export function MaterialGroupCard({ group, showSubject = false, isOwner = false,
                 href={material.public_url}
                 target="_blank"
                 rel="noreferrer"
-                className="flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors group"
+                className={`flex items-center gap-3 ${compact ? 'px-3.5 py-2.5' : 'px-4 py-3'} hover:bg-muted/50 transition-colors group`}
               >
                 <div className="w-7 h-7 rounded-lg bg-sky-500/10 flex items-center justify-center shrink-0">
                   <FileText className="w-3.5 h-3.5 text-sky-600" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium text-foreground truncate group-hover:text-primary transition-colors">
+                  <p className={`${compact ? 'text-[13px]' : 'text-sm'} font-medium text-foreground truncate group-hover:text-primary transition-colors`}>
                     {material.title}
                   </p>
                   <p className="text-xs text-muted-foreground">
