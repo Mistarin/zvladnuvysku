@@ -1,4 +1,4 @@
-export type SearchMode = "subjects" | "flashcards" | "materials";
+export type SearchMode = "subjects" | "flashcards" | "materials" | "groups";
 
 export interface ParsedSearchMode {
   mode: SearchMode;
@@ -8,6 +8,7 @@ export interface ParsedSearchMode {
 const MODE_PREFIXES: Record<string, SearchMode> = {
   f: "flashcards",
   m: "materials",
+  s: "groups",
 };
 
 export function parseSearchMode(query: string): ParsedSearchMode {

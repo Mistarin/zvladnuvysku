@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import type { Database, SubjectRating, TeacherRating } from '@/lib/types/database'
+import { containsProfanity } from '@/lib/profanity'
 
 type ActionResult = { success: true } | { success: false; error: string }
 
@@ -348,6 +349,17 @@ export async function submitSubjectProposal(formData: FormData): Promise<ActionR
       })
     }
 
+    const textToCheck = [
+      payload.form.name,
+      payload.form.description,
+      payload.form.note,
+      payload.form.target_audience,
+      payload.form.real_requirements,
+    ].filter(Boolean).join(' ')
+    if (containsProfanity(textToCheck)) {
+      return { success: false, error: 'Návrh obsahuje nevhodný jazyk. Přepiš ho prosím konstruktivně — chceme pomáhat studentům, ne je urážet.' }
+    }
+
     const normalizedTeachers = payload.teachers.map((teacher) => ({
       ...teacher,
       name: teacher.name.trim(),
@@ -526,6 +538,11 @@ export async function uploadSubjectMaterial(formData: FormData): Promise<ActionR
       return { success: false, error: `Chyba při nahrávání souboru: ${uploadError?.message ?? 'Soubor se nepodařilo uložit.'}` }
     }
 
+    const rawGroupId = formData.get('groupId')
+    const groupId = typeof rawGroupId === 'string' && rawGroupId ? rawGroupId : null
+    const rawPageCount = formData.get('pageCount')
+    const pageCount = typeof rawPageCount === 'string' && rawPageCount ? parseInt(rawPageCount, 10) || null : null
+
     const materialInsert: Database['public']['Tables']['subject_materials']['Insert'] = {
       subject_id: subjectId,
       uploader_id: user.id,
@@ -534,6 +551,8 @@ export async function uploadSubjectMaterial(formData: FormData): Promise<ActionR
       size_bytes: file.size,
       moderation_status: 'pending',
       rejection_reason: null,
+      group_id: groupId,
+      page_count: pageCount,
     }
 
     const { error: dbError } = await supabase.from('subject_materials').insert(materialInsert as never)
@@ -806,5 +825,87 @@ export async function getSubjectDetailsForProposal(subjectId: string): Promise<S
       success: false,
       error: error instanceof Error ? error.message : 'Nepodařilo se načíst data vybraného předmětu.',
     }
+  }
+}
+
+export async function createMaterialGroup(input: {
+  title: string
+  subjectId: string
+}): Promise<{ success: true; groupId: string } | { success: false; error: string }> {
+  try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return { success: false, error: 'Pro vytvoření skupiny musíte být přihlášeni.' }
+
+    const title = input.title.trim()
+    if (!title) return { success: false, error: 'Zadejte název skupiny.' }
+    if (title.length > 120) return { success: false, error: 'Název skupiny může mít maximálně 120 znaků.' }
+
+    const { data, error } = await (supabase as unknown as ReturnType<typeof supabase.from>)
+      .from('material_groups')
+      .insert({ title, subject_id: input.subjectId, uploader_id: user.id } as never)
+      .select('id')
+      .single() as unknown as { data: { id: string } | null; error: { message: string } | null }
+
+    if (error || !data) return { success: false, error: `Nepodařilo se vytvořit skupinu: ${error?.message ?? 'neznámá chyba'}` }
+
+    return { success: true, groupId: (data as unknown as { id: string }).id }
+  } catch (error) {
+    return { success: false, error: error instanceof Error ? error.message : 'Nepodařilo se vytvořit skupinu.' }
+  }
+}
+
+export async function deleteMaterialGroup(groupId: string): Promise<ActionResult> {
+  try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return { success: false, error: 'Musíte být přihlášeni.' }
+
+    // Only owner or admin can delete
+    const { data: group } = await (supabase as unknown as ReturnType<typeof supabase.from>)
+      .from('material_groups')
+      .select('uploader_id')
+      .eq('id', groupId)
+      .single() as unknown as { data: { uploader_id: string } | null; error: unknown }
+
+    if (!group) return { success: false, error: 'Skupina nenalezena.' }
+    if ((group as unknown as { uploader_id: string }).uploader_id !== user.id) return { success: false, error: 'Nemáte oprávnění smazat tuto skupinu.' }
+
+    await supabase.from('subject_materials').update({ group_id: null } as never).eq('group_id', groupId)
+
+    const { error } = await (supabase as unknown as ReturnType<typeof supabase.from>)
+      .from('material_groups').delete().eq('id', groupId) as unknown as { error: { message: string } | null }
+    if (error) return { success: false, error: `Nepodařilo se smazat skupinu: ${error.message}` }
+
+    try { revalidatePath('/moje-aktivita') } catch { /* ignore */ }
+    return { success: true }
+  } catch (error) {
+    return { success: false, error: error instanceof Error ? error.message : 'Nepodařilo se smazat skupinu.' }
+  }
+}
+
+export async function renameMaterialGroup(groupId: string, newTitle: string): Promise<ActionResult> {
+  try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return { success: false, error: 'Musíte být přihlášeni.' }
+
+    const title = newTitle.trim()
+    if (!title) return { success: false, error: 'Zadejte název skupiny.' }
+    if (title.length > 120) return { success: false, error: 'Název skupiny může mít maximálně 120 znaků.' }
+
+    const { error } = await (supabase as unknown as ReturnType<typeof supabase.from>)
+      .from('material_groups')
+      .update({ title } as never)
+      .eq('id', groupId)
+      .eq('uploader_id', user.id) as unknown as { error: { message: string } | null }
+
+    if (error) return { success: false, error: `Nepodařilo se přejmenovat skupinu: ${error.message}` }
+
+    try { revalidatePath('/moje-aktivita') } catch { /* ignore */ }
+    try { revalidatePath('/profil/[userId]', 'page') } catch { /* ignore */ }
+    return { success: true }
+  } catch (error) {
+    return { success: false, error: error instanceof Error ? error.message : 'Nepodařilo se přejmenovat skupinu.' }
   }
 }

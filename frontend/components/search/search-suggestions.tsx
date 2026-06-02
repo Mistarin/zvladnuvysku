@@ -5,8 +5,9 @@ import { DifficultyBadge } from "@/components/subject/difficulty-badge";
 import type { SearchResult } from "@/hooks/use-search";
 import type { FlashcardDeckResult } from "@/hooks/use-flashcard-search";
 import type { MaterialSearchResult } from "@/hooks/use-material-search";
+import type { GroupSearchResult } from "@/hooks/use-group-search";
 import type { SearchMode } from "@/lib/search-mode";
-import { Layers, BookOpen, FileText } from "lucide-react";
+import { Layers, BookOpen, FileText, FolderOpen } from "lucide-react";
 import { formatFileSize } from "@/lib/utils";
 
 interface SearchSuggestionsProps {
@@ -21,6 +22,9 @@ interface SearchSuggestionsProps {
   materialQuery?: string;
   materialResults?: MaterialSearchResult[];
   isMaterialLoading?: boolean;
+  groupQuery?: string;
+  groupResults?: GroupSearchResult[];
+  isGroupLoading?: boolean;
 }
 
 export function SearchSuggestions({
@@ -35,6 +39,9 @@ export function SearchSuggestions({
   materialQuery = "",
   materialResults = [],
   isMaterialLoading = false,
+  groupQuery = "",
+  groupResults = [],
+  isGroupLoading = false,
 }: SearchSuggestionsProps) {
   if (!query || query.trim().length < 1) return null;
 
@@ -228,6 +235,108 @@ export function SearchSuggestions({
                 className="flex items-center justify-center px-4 py-2.5 text-xs text-sky-700 hover:bg-sky-500/5 transition-colors border-t border-border/50"
               >
                 Všechny materiály →
+              </Link>
+            </>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // ── GROUPS MODE ──────────────────────────────────────────────────────────
+  if (mode === "groups") {
+    return (
+      <div
+        data-search-suggestions
+        className="absolute top-full left-0 right-0 mt-1 z-50 animate-slide-down"
+        role="listbox"
+        aria-label="Výsledky vyhledávání skupin materiálů"
+      >
+        <div className="bg-popover border border-border rounded-xl shadow-xl overflow-hidden">
+          <div className="px-4 py-2 border-b border-border/50 flex items-center gap-2 bg-amber-500/10">
+            <FolderOpen className="w-3.5 h-3.5 text-amber-600" />
+            <span className="text-xs font-semibold text-amber-700 tracking-wide">
+              Skupiny materiálů
+            </span>
+            {groupQuery && (
+              <span className="text-xs text-muted-foreground">
+                — hledám „{groupQuery}"
+              </span>
+            )}
+          </div>
+
+          {isGroupLoading ? (
+            <div className="p-4 flex items-center gap-3">
+              <div className="w-4 h-4 border-2 border-amber-600/30 border-t-amber-600 rounded-full animate-spin" />
+              <span className="text-sm text-muted-foreground">Hledám skupiny...</span>
+            </div>
+          ) : groupResults.length === 0 ? (
+            <div className="p-4 text-center">
+              <p className="text-sm text-muted-foreground">
+                {groupQuery
+                  ? <>Žádné skupiny pro „<span className="font-medium text-foreground">{groupQuery}</span>"</>
+                  : "Žádné skupiny materiálů"}
+              </p>
+              <Link
+                href="/materialy?view=groups"
+                className="mt-2 text-xs text-amber-700 hover:underline block"
+                onClick={onSelect}
+              >
+                Procházet všechny skupiny →
+              </Link>
+            </div>
+          ) : (
+            <>
+              {groupResults.map((group, idx) => (
+                <Link
+                  key={group.id}
+                  href={`/materialy?skupina=${group.id}`}
+                  onClick={onSelect}
+                  role="option"
+                  aria-selected={false}
+                  className={`
+                    flex items-center justify-between px-4 py-3
+                    hover:bg-muted transition-colors duration-100 cursor-pointer
+                    ${idx !== groupResults.length - 1 ? "border-b border-border/50" : ""}
+                  `}
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-7 h-7 rounded-lg bg-amber-500/10 flex items-center justify-center shrink-0">
+                      <FolderOpen className="w-3.5 h-3.5 text-amber-600" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-foreground truncate">{group.title}</p>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        {group.subject && (
+                          <span className="text-xs font-mono font-semibold text-amber-700 bg-amber-500/10 px-1.5 py-0.5 rounded shrink-0">
+                            {group.subject.short_tag}
+                          </span>
+                        )}
+                        {group.uploader_display_name && (
+                          <span className="text-xs text-muted-foreground truncate">
+                            {group.uploader_display_name}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <span className="text-xs text-muted-foreground shrink-0 ml-3">
+                    {group.material_count}{" "}
+                    {group.material_count === 1
+                      ? "materiál"
+                      : group.material_count < 5
+                        ? "materiály"
+                        : "materiálů"}
+                  </span>
+                </Link>
+              ))}
+
+              <Link
+                href="/materialy?view=groups"
+                onClick={onSelect}
+                className="flex items-center justify-center px-4 py-2.5 text-xs text-amber-700 hover:bg-amber-500/5 transition-colors border-t border-border/50"
+              >
+                Všechny skupiny →
               </Link>
             </>
           )}

@@ -2,23 +2,29 @@
 
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { uploadSubjectMaterial } from "@/app/actions/contributions";
+import { uploadSubjectMaterial, createMaterialGroup } from "@/app/actions/contributions";
 import { WelcomeDisplayNameModal } from "@/components/layout/welcome-display-name-modal";
+import { FolderPlus, Info } from "lucide-react";
+import Link from "next/link";
 
 interface MaterialUploadFormProps {
   subjectId: string;
+  subjectName?: string;
   hasDisplayName: boolean;
 }
 
 const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2 MB
 
-export function MaterialUploadForm({ subjectId, hasDisplayName: initialHasDisplayName }: MaterialUploadFormProps) {
+export function MaterialUploadForm({ subjectId, subjectName, hasDisplayName: initialHasDisplayName }: MaterialUploadFormProps) {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
+
   const [isOpen, setIsOpen] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [title, setTitle] = useState("");
+  const [pageCount, setPageCount] = useState<string>("");
+  const [isGroup, setIsGroup] = useState(false);
+  const [groupTitle, setGroupTitle] = useState("");
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -30,15 +36,13 @@ export function MaterialUploadForm({ subjectId, hasDisplayName: initialHasDispla
     if (!selectedFile) return;
 
     if (selectedFile.type !== "application/pdf") {
-      setError("Povolene jsou pouze PDF soubory.");
-      setSuccessMessage(null);
+      setError("Povoleny jsou pouze PDF soubory.");
       setFile(null);
       return;
     }
 
     if (selectedFile.size > MAX_FILE_SIZE) {
       setError(`Soubor je příliš velký (${(selectedFile.size / 1024 / 1024).toFixed(2)} MB). Maximální povolená velikost je 2 MB.`);
-      setSuccessMessage(null);
       setFile(null);
       return;
     }
@@ -46,7 +50,6 @@ export function MaterialUploadForm({ subjectId, hasDisplayName: initialHasDispla
     setError(null);
     setSuccessMessage(null);
     setFile(selectedFile);
-    // Autofill title if empty
     if (!title) {
       setTitle(selectedFile.name.replace(/\.pdf$/i, "").replace(/[-_]/g, " "));
     }
@@ -60,28 +63,52 @@ export function MaterialUploadForm({ subjectId, hasDisplayName: initialHasDispla
       return;
     }
 
+    if (isGroup && !groupTitle.trim()) {
+      setError("Zadej název skupiny.");
+      return;
+    }
+
     setIsUploading(true);
     setError(null);
     setSuccessMessage(null);
 
     try {
+      let groupId: string | null = null;
+
+      // Create group first if needed
+      if (isGroup) {
+        const groupResult = await createMaterialGroup({
+          title: groupTitle.trim(),
+          subjectId,
+        });
+        if (!groupResult.success) {
+          setError(groupResult.error);
+          setIsUploading(false);
+          return;
+        }
+        groupId = groupResult.groupId;
+      }
+
       const formData = new FormData();
-      formData.set('subjectId', subjectId);
-      formData.set('title', title.trim());
-      formData.set('file', file);
+      formData.set("subjectId", subjectId);
+      formData.set("title", title.trim());
+      formData.set("file", file);
+      if (groupId) formData.set("groupId", groupId);
+      if (pageCount) formData.set("pageCount", pageCount);
 
       const result = await uploadSubjectMaterial(formData);
       if (!result.success) {
         throw new Error(result.error);
       }
 
-      // Success
       setIsOpen(false);
       setFile(null);
       setTitle("");
-      setSuccessMessage("Materiál byl nahrán a teď čeká na schválení moderátorem. Stav uvidíš v Mojí aktivitě.");
+      setPageCount("");
+      setIsGroup(false);
+      setGroupTitle("");
+      setSuccessMessage("Materiál byl nahrán a čeká na schválení moderátorem. Stav uvidíš v Mojí aktivitě.");
       router.refresh();
-      
     } catch (err) {
       setError(err instanceof Error ? err.message : "Nastala neočekávaná chyba.");
     } finally {
@@ -92,7 +119,7 @@ export function MaterialUploadForm({ subjectId, hasDisplayName: initialHasDispla
   if (!isOpen) {
     return (
       <div className="space-y-3">
-        <button 
+        <button
           onClick={() => setIsOpen(true)}
           className="w-full py-3 px-4 rounded-xl border-2 border-dashed border-border text-muted-foreground hover:border-primary/50 hover:text-foreground hover:bg-muted/30 transition-all flex flex-col items-center justify-center gap-2"
         >
@@ -100,7 +127,7 @@ export function MaterialUploadForm({ subjectId, hasDisplayName: initialHasDispla
           <span className="text-sm font-medium">Nahrát studijní materiál (PDF)</span>
         </button>
         {successMessage && (
-          <p className="rounded-lg bg-emerald-500/10 px-3 py-2 text-sm text-emerald-700">
+          <p className="rounded-lg bg-emerald-500/10 px-3 py-2 text-sm text-emerald-700 dark:text-emerald-400">
             {successMessage}
           </p>
         )}
@@ -113,7 +140,7 @@ export function MaterialUploadForm({ subjectId, hasDisplayName: initialHasDispla
       <div className="p-5 rounded-xl border border-border bg-card shadow-sm space-y-4">
         <div className="flex justify-between items-center border-b border-border pb-3">
           <h3 className="font-semibold">Nahrát nový materiál</h3>
-          <button 
+          <button
             onClick={() => setIsOpen(false)}
             className="text-muted-foreground hover:text-foreground text-xl leading-none"
           >
@@ -121,7 +148,21 @@ export function MaterialUploadForm({ subjectId, hasDisplayName: initialHasDispla
           </button>
         </div>
 
+        {/* Red disclaimer */}
+        <div className="rounded-xl border border-red-500/40 bg-red-500/5 p-3.5 space-y-1.5">
+          <p className="text-sm font-semibold text-red-600 dark:text-red-400">⚠️ Materiály jsou moderované</p>
+          <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
+            <li>Vyhni se AI slopu a nekvalitním výpiskům — budeme je vracet ke kontrole</li>
+            <li>Posílej co nejvíce stran pohromadě, ne každé malé téma zvlášť</li>
+            <li>Materiály pod 5 stran nedávají body</li>
+          </ul>
+          <Link href="/jak-to-funguje" target="_blank" className="text-xs text-primary hover:underline inline-block mt-0.5">
+            Jak funguje bodový systém? →
+          </Link>
+        </div>
+
         <form onSubmit={handleUpload} className="space-y-4">
+          {/* Title */}
           <div>
             <label className="block text-sm font-medium text-foreground mb-1.5">
               Název materiálu
@@ -130,15 +171,33 @@ export function MaterialUploadForm({ subjectId, hasDisplayName: initialHasDispla
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="např. Výpisky ke zkoušce (1. část)"
+              placeholder="např. Výpisky ke zkoušce"
               required
               className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-primary/50"
             />
           </div>
 
+          {/* Page count */}
+          <div>
+            <label className="block text-sm font-medium text-foreground mb-1.5 flex items-center gap-1.5">
+              Počet stránek dokumentu
+              <span className="text-xs text-muted-foreground font-normal">(ovlivňuje přidělené body)</span>
+            </label>
+            <input
+              type="number"
+              min="1"
+              max="9999"
+              value={pageCount}
+              onChange={(e) => setPageCount(e.target.value)}
+              placeholder="např. 42"
+              className="w-32 rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-primary/50"
+            />
+          </div>
+
+          {/* File */}
           <div>
             <label className="block text-sm font-medium text-foreground mb-1.5">
-              PDF Soubor (max 2 MB)
+              PDF Soubor <span className="text-xs text-muted-foreground font-normal">(max 2 MB)</span>
             </label>
             <input
               type="file"
@@ -156,13 +215,45 @@ export function MaterialUploadForm({ subjectId, hasDisplayName: initialHasDispla
             />
           </div>
 
+          {/* Group toggle */}
+          <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-3">
+            <label className="flex items-center gap-2.5 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={isGroup}
+                onChange={(e) => setIsGroup(e.target.checked)}
+                className="w-4 h-4 rounded accent-amber-500"
+              />
+              <FolderPlus className="w-4 h-4 text-amber-500" />
+              <span className="text-sm font-medium">Přidat jako skupinu materiálů</span>
+            </label>
+            {isGroup && (
+              <div>
+                <label className="block text-xs text-muted-foreground mb-1">Název skupiny</label>
+                <input
+                  type="text"
+                  value={groupTitle}
+                  onChange={(e) => setGroupTitle(e.target.value)}
+                  placeholder={`např. ${subjectName ? subjectName + " — vše ke zkoušce" : "Statistika — vše ke státnicím"}`}
+                  maxLength={120}
+                  className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-amber-500/50"
+                  autoFocus
+                />
+                <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+                  <Info className="w-3 h-3" />
+                  Další soubory do skupiny přidáš postupně přes &quot;Nahrát další do skupiny&quot;
+                </p>
+              </div>
+            )}
+          </div>
+
           {error && (
             <p className="text-sm text-destructive font-medium bg-destructive/10 p-2 rounded">
               {error}
             </p>
           )}
 
-          <div className="flex justify-end gap-2 pt-2">
+          <div className="flex justify-end gap-2 pt-1">
             <button
               type="button"
               onClick={() => setIsOpen(false)}
@@ -175,7 +266,7 @@ export function MaterialUploadForm({ subjectId, hasDisplayName: initialHasDispla
               disabled={!file || !title || isUploading}
               className="px-4 py-2 rounded-lg text-sm font-medium bg-primary text-primary-foreground disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:opacity-90 flex items-center gap-2"
             >
-              {isUploading ? "Nahrávám..." : "Nahrát soubor"}
+              {isUploading ? "Nahrávám..." : isGroup ? "Nahrát a vytvořit skupinu" : "Nahrát soubor"}
             </button>
           </div>
         </form>

@@ -153,6 +153,8 @@ export async function approveProposal(proposalId: string): Promise<ActionResult>
           is_approved: true,
           moderation_status: 'approved',
           rejection_reason: null,
+          group_id: null,
+          page_count: null,
         }))
         const { error: materialsError } = await supabase.from('subject_materials').insert(materialsToInsert as never)
         if (materialsError) return { success: false, error: `Předmět byl vytvořen, ale materiály se nepodařilo připojit: ${materialsError.message}` }
@@ -184,6 +186,8 @@ export async function approveProposal(proposalId: string): Promise<ActionResult>
           is_approved: true,
           moderation_status: 'approved',
           rejection_reason: null,
+          group_id: null,
+          page_count: null,
         }))
         const { error: materialsError } = await supabase.from('subject_materials').insert(materialsToInsert as never)
         if (materialsError) return { success: false, error: `Změny byly uloženy, ale materiály se nepodařilo připojit: ${materialsError.message}` }

@@ -80,3 +80,63 @@ export async function searchMaterials(query: string): Promise<MaterialQuickSearc
   const normalizedQuery = query.trim()
   return getCachedMaterialSearch(normalizedQuery)
 }
+
+export interface MaterialGroupSearchResult {
+  id: string
+  title: string
+  created_at: string
+  uploader_display_name: string | null
+  subject: { name: string; slug: string; short_tag: string } | null
+  material_count: number
+}
+
+export async function searchMaterialGroups(query: string): Promise<MaterialGroupSearchResult[]> {
+  const supabase = createPublicServerClient()
+  const normalizedQuery = query.trim()
+
+  let request = supabase
+    .from('material_groups')
+    .select('id, title, created_at, uploader_id, subject:subject_id(name, slug, short_tag), materials:subject_materials(id)')
+    .order('created_at', { ascending: false })
+    .limit(8)
+
+  if (normalizedQuery.length >= 1) {
+    request = request.ilike('title', `%${normalizedQuery}%`)
+  }
+
+  const { data } = await request
+  const groups = (data as Array<{
+    id: string
+    title: string
+    created_at: string
+    uploader_id: string | null
+    subject: { name: string; slug: string; short_tag: string } | null
+    materials: { id: string }[] | null
+  }> | null) ?? []
+
+  // Fetch uploader display names
+  const uploaderIds = [...new Set(groups.map((g) => g.uploader_id).filter(Boolean))] as string[]
+  let profileMap: Record<string, string> = {}
+
+  if (uploaderIds.length > 0) {
+    const { data: profiles } = await supabase
+      .from('profiles')
+      .select('user_id, display_name')
+      .in('user_id', uploaderIds)
+
+    if (profiles) {
+      profileMap = Object.fromEntries(
+        profiles.map((p: { user_id: string; display_name: string | null }) => [p.user_id, p.display_name ?? ''])
+      )
+    }
+  }
+
+  return groups.map((g) => ({
+    id: g.id,
+    title: g.title,
+    created_at: g.created_at,
+    uploader_display_name: g.uploader_id ? (profileMap[g.uploader_id] ?? null) : null,
+    subject: g.subject,
+    material_count: g.materials?.length ?? 0,
+  }))
+}

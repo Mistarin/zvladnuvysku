@@ -9,6 +9,7 @@ import { SearchSuggestions } from "@/components/search/search-suggestions";
 import { useSearch } from "@/hooks/use-search";
 import { useFlashcardSearch } from "@/hooks/use-flashcard-search";
 import { useMaterialSearch } from "@/hooks/use-material-search";
+import { useGroupSearch } from "@/hooks/use-group-search";
 import { parseSearchMode } from "@/lib/search-mode";
 
 interface SiteStats {
@@ -51,6 +52,8 @@ export function HomePageClient({ siteStats }: HomePageClientProps) {
     useFlashcardSearch(deferredQuery);
   const { isMaterialMode, materialQuery, materialResults, isMaterialLoading } =
     useMaterialSearch(deferredQuery);
+  const { isGroupMode, groupQuery, groupResults, isGroupLoading } =
+    useGroupSearch(deferredQuery);
   const containerRef = useRef<HTMLDivElement>(null);
   const searchMode = parseSearchMode(query).mode;
 
@@ -79,6 +82,8 @@ export function HomePageClient({ siteStats }: HomePageClientProps) {
               ? `/materialy?q=${encodeURIComponent(materialQuery)}`
               : "/materialy"
           );
+        } else if (isGroupMode) {
+          router.push("/materialy?view=groups");
         } else {
           router.push(`/predmety?q=${encodeURIComponent(query.trim())}`);
         }
@@ -90,7 +95,7 @@ export function HomePageClient({ siteStats }: HomePageClientProps) {
         clearSearch();
       }
     },
-    [query, flashcardQuery, materialQuery, isFlashcardMode, isMaterialMode, router, clearSearch]
+    [query, flashcardQuery, materialQuery, isFlashcardMode, isMaterialMode, isGroupMode, router, clearSearch]
   );
 
   const placeholder =
@@ -98,7 +103,9 @@ export function HomePageClient({ siteStats }: HomePageClientProps) {
       ? "Název balíčku…"
       : searchMode === "materials"
         ? "Název materiálu…"
-        : "Předmět, zkratka, katedra…";
+        : searchMode === "groups"
+          ? "Název skupiny…"
+          : "Předmět, zkratka, katedra…";
 
   const stats = [
     { value: siteStats.subjectCount.toString(), label: "předmětů" },
@@ -125,7 +132,9 @@ export function HomePageClient({ siteStats }: HomePageClientProps) {
                   ? "balíček"
                   : searchMode === "materials"
                     ? "materiál"
-                    : "předmět"}
+                    : searchMode === "groups"
+                      ? "materiály"
+                      : "předmět"}
               </span>
             </h1>
           </div>
@@ -143,7 +152,9 @@ export function HomePageClient({ siteStats }: HomePageClientProps) {
                 ? "Hledáš balíček kartiček? Zkus zadat název nebo předmět."
                 : searchMode === "materials"
                   ? "Hledáš materiál? Zkus název souboru nebo předmětu."
-                  : `\u201eProtože reálné zkušenosti studentů jsou víc než jen sylabus.\u201c`}
+                  : searchMode === "groups"
+                    ? "Hledáš skupinu materiálů? Zkus název skupiny nebo předmětu."
+                    : `\u201eProtože reálné zkušenosti studentů jsou víc než jen sylabus.\u201c`}
             </p>
           </div>
         </div>
@@ -191,6 +202,9 @@ export function HomePageClient({ siteStats }: HomePageClientProps) {
                 materialQuery={materialQuery}
                 materialResults={materialResults}
                 isMaterialLoading={isMaterialLoading}
+                groupQuery={groupQuery}
+                groupResults={groupResults}
+                isGroupLoading={isGroupLoading}
               />
             )}
           </div>
@@ -201,7 +215,9 @@ export function HomePageClient({ siteStats }: HomePageClientProps) {
                 ? <><span className="font-mono text-primary">.F</span> režim — hledáš balíčky kartiček</>
                 : searchMode === "materials"
                   ? <><span className="font-mono text-sky-700">.M</span> režim — hledáš studijní materiály</>
-                  : "Jednotný studentský hub. Proč generovat stokrát to, co už dávno existuje?"}
+                  : searchMode === "groups"
+                    ? <><span className="font-mono text-amber-600">.S</span> režim — hledáš skupiny materiálů</>
+                    : "Jednotný studentský hub. Proč generovat stokrát to, co už dávno existuje?"}
             </p>
 
             <div className={`home-search-modes ${searchMode === "subjects" ? "" : "home-search-modes--hidden"}`}>
@@ -211,6 +227,9 @@ export function HomePageClient({ siteStats }: HomePageClientProps) {
               </span>
               <span className="rounded-full border border-border bg-card px-2.5 py-1 keyboard-shortcut-hint">
                 <span className="font-mono text-sky-700">.m</span> materiály
+              </span>
+              <span className="rounded-full border border-border bg-card px-2.5 py-1 keyboard-shortcut-hint">
+                <span className="font-mono text-amber-600">.s</span> skupiny
               </span>
             </div>
           </div>

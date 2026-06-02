@@ -167,6 +167,8 @@ export interface Database {
           title: string
           file_path: string
           size_bytes: number
+          group_id: string | null
+          page_count: number | null
           created_at: string
           is_approved: boolean
           moderation_status: 'pending' | 'approved' | 'rejected'
@@ -180,6 +182,17 @@ export interface Database {
           moderated_at?: string | null
         }
         Update: Partial<Database['public']['Tables']['subject_materials']['Insert']>
+      }
+      material_groups: {
+        Row: {
+          id: string
+          title: string
+          subject_id: string | null
+          uploader_id: string
+          created_at: string
+        }
+        Insert: Omit<Database['public']['Tables']['material_groups']['Row'], 'id' | 'created_at'>
+        Update: Partial<Database['public']['Tables']['material_groups']['Insert']>
       }
       subject_proposals: {
         Row: {
@@ -349,6 +362,7 @@ export type TeacherInsert = Database['public']['Tables']['teachers']['Insert']
 export type TeacherRating = Database['public']['Tables']['teacher_ratings']['Row']
 export type SubjectTeacher = Database['public']['Tables']['subject_teachers']['Row']
 export type SubjectMaterial = Database['public']['Tables']['subject_materials']['Row']
+export type MaterialGroup = Database['public']['Tables']['material_groups']['Row']
 export type SubjectProposalRecord = Database['public']['Tables']['subject_proposals']['Row']
 export type Profile = Database['public']['Tables']['profiles']['Row']
 export type Feedback = Database['public']['Tables']['feedback']['Row']
