@@ -209,18 +209,8 @@ export function HomePageClient({ siteStats }: HomePageClientProps) {
             )}
           </div>
 
-          <div className={`home-search-helper ${isFocused ? "home-search-helper--hidden" : ""}`}>
-            <p className="home-hint">
-              {searchMode === "flashcards"
-                ? <><span className="font-mono text-primary">.F</span> režim — hledáš balíčky kartiček</>
-                : searchMode === "materials"
-                  ? <><span className="font-mono text-sky-700">.M</span> režim — hledáš studijní materiály</>
-                  : searchMode === "groups"
-                    ? <><span className="font-mono text-amber-600">.S</span> režim — hledáš skupiny materiálů</>
-                    : "Jednotný studentský hub. Proč generovat stokrát to, co už dávno existuje?"}
-            </p>
-
-            <div className={`home-search-modes ${searchMode === "subjects" ? "" : "home-search-modes--hidden"}`}>
+          <div className="home-search-helper">
+            <div className="home-search-modes">
               <span className="keyboard-shortcut-hint">Zkratky hledání:</span>
               <span className="rounded-full border border-border bg-card px-2.5 py-1 keyboard-shortcut-hint">
                 <span className="font-mono text-primary">.f</span> kartičky
@@ -232,6 +222,16 @@ export function HomePageClient({ siteStats }: HomePageClientProps) {
                 <span className="font-mono text-amber-600">.s</span> skupiny
               </span>
             </div>
+
+            <p className="home-hint">
+              {searchMode === "flashcards"
+                ? <><span className="font-mono text-primary">.F</span> režim — hledáš balíčky kartiček</>
+                : searchMode === "materials"
+                  ? <><span className="font-mono text-sky-700">.M</span> režim — hledáš studijní materiály</>
+                  : searchMode === "groups"
+                    ? <><span className="font-mono text-amber-600">.S</span> režim — hledáš skupiny materiálů</>
+                    : "Jednotný studentský hub. Proč generovat stokrát to, co už dávno existuje?"}
+            </p>
           </div>
         </div>
       </section>
