@@ -1,6 +1,6 @@
 'use client'
 
-import { type ReactNode, useMemo, useState, useTransition } from 'react'
+import { type Dispatch, type ReactNode, type SetStateAction, useMemo, useState, useTransition } from 'react'
 import Link from 'next/link'
 import { AlertCircle, BookOpen, CheckCircle2, ChevronDown, ChevronUp, Clock3, Loader2, UserCircle2 } from 'lucide-react'
 import { markActivityItemRead, markActivityItemUnread } from '@/app/actions/activity'
@@ -106,6 +106,7 @@ type SummaryCardData = {
 export function MyActivityDashboard({ publicIdentity, sections: initialSections }: MyActivityDashboardProps) {
   const [sections, setSections] = useState(initialSections)
   const [expandedTabs, setExpandedTabs] = useState<Record<string, boolean>>({})
+  const [activeSectionId, setActiveSectionId] = useState<ActivitySectionData['id']>(() => initialSections[0]?.id ?? 'proposals')
   const [activeTabs, setActiveTabs] = useState<Record<string, string>>(() =>
     Object.fromEntries(initialSections.map((section) => [section.id, getInitialTabId(section)])),
   )
@@ -115,6 +116,7 @@ export function MyActivityDashboard({ publicIdentity, sections: initialSections 
   const [isPending, startTransition] = useTransition()
 
   const summaryCards = useMemo(() => buildSummaryCards(publicIdentity, sections), [publicIdentity, sections])
+  const activeSection = sections.find((section) => section.id === activeSectionId) ?? sections[0] ?? null
 
   const handleAttentionToggle = (attention: ActivityAttention) => {
     const itemKey = getAttentionKey(attention)
@@ -178,147 +180,217 @@ export function MyActivityDashboard({ publicIdentity, sections: initialSections 
         </div>
       ) : null}
 
-      {sections.map((section) => {
-        const activeTabId = activeTabs[section.id] ?? section.tabs[0]?.id ?? ''
-        const activeTab = section.tabs.find((tab) => tab.id === activeTabId) ?? section.tabs[0]
-
-        if (!activeTab) {
-          return null
-        }
-
-        const subjectOptions = getSectionSubjectOptions(section)
-        const selectedSubject = subjectFilters[section.id] ?? ''
-        const filteredActiveItems = selectedSubject
-          ? activeTab.items.filter((item) => item.subjectFilter?.key === selectedSubject)
-          : activeTab.items
-        const visibleItems = filteredActiveItems.slice(0, 3)
-        const olderItems = filteredActiveItems.slice(3)
-        const expandKey = `${section.id}:${activeTab.id}`
-        const isExpanded = expandedTabs[expandKey] ?? false
-
-        return (
-          <section key={section.id} className="space-y-4">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-              <div>
-                <h2 className="text-xl font-bold text-foreground">{section.title}</h2>
-                <p className="mt-1 text-sm text-muted-foreground">{section.description}</p>
-              </div>
-              {section.actionHref && section.actionLabel ? (
-                <Link href={section.actionHref} className="text-sm font-medium text-primary hover:underline">
-                  {section.actionLabel}
-                </Link>
-              ) : null}
+      {activeSection ? (
+        <section className="space-y-4">
+          <div className="overflow-x-auto pb-1">
+            <div className="inline-flex min-w-full gap-2 rounded-2xl border border-border bg-card p-2 sm:min-w-0">
+              {sections.map((section) => {
+                const isActive = section.id === activeSection.id
+                return (
+                  <button
+                    key={section.id}
+                    type="button"
+                    onClick={() => setActiveSectionId(section.id)}
+                    className={cn(
+                      'flex min-w-[10rem] flex-1 items-center justify-between gap-3 rounded-xl border px-3 py-3 text-left transition-colors',
+                      isActive
+                        ? 'border-primary/20 bg-primary/10 text-foreground'
+                        : 'border-border bg-background text-muted-foreground hover:bg-muted hover:text-foreground',
+                    )}
+                  >
+                    <span className="truncate text-sm font-semibold">{section.title}</span>
+                    <span className="rounded-full bg-background/80 px-2 py-0.5 text-xs font-semibold text-foreground">
+                      {getSectionItemCount(section)}
+                    </span>
+                  </button>
+                )
+              })}
             </div>
+          </div>
 
-            <div className="rounded-2xl border border-border bg-card p-4">
-              <div
-                className="grid gap-2"
-                style={{ gridTemplateColumns: `repeat(${section.tabs.length}, minmax(0, 1fr))` }}
+          {renderSectionContent({
+            section: activeSection,
+            activeTabs,
+            subjectFilters,
+            expandedTabs,
+            isPending,
+            pendingKey,
+            setActiveTabs,
+            setSubjectFilters,
+            setExpandedTabs,
+            handleAttentionToggle,
+            handleDeletePendingProposal,
+          })}
+        </section>
+      ) : null}
+    </div>
+  )
+}
+
+type RenderSectionContentArgs = {
+  section: ActivitySectionData
+  activeTabs: Record<string, string>
+  subjectFilters: Record<string, string>
+  expandedTabs: Record<string, boolean>
+  isPending: boolean
+  pendingKey: string | null
+  setActiveTabs: Dispatch<SetStateAction<Record<string, string>>>
+  setSubjectFilters: Dispatch<SetStateAction<Record<string, string>>>
+  setExpandedTabs: Dispatch<SetStateAction<Record<string, boolean>>>
+  handleAttentionToggle: (attention: ActivityAttention) => void
+  handleDeletePendingProposal: (proposalId: string) => void
+}
+
+function renderSectionContent({
+  section,
+  activeTabs,
+  subjectFilters,
+  expandedTabs,
+  isPending,
+  pendingKey,
+  setActiveTabs,
+  setSubjectFilters,
+  setExpandedTabs,
+  handleAttentionToggle,
+  handleDeletePendingProposal,
+}: RenderSectionContentArgs) {
+  const activeTabId = activeTabs[section.id] ?? section.tabs[0]?.id ?? ''
+  const activeTab = section.tabs.find((tab) => tab.id === activeTabId) ?? section.tabs[0]
+
+  if (!activeTab) {
+    return null
+  }
+
+  const subjectOptions = getSectionSubjectOptions(section)
+  const selectedSubject = subjectFilters[section.id] ?? ''
+  const filteredActiveItems = selectedSubject
+    ? activeTab.items.filter((item) => item.subjectFilter?.key === selectedSubject)
+    : activeTab.items
+  const visibleItems = filteredActiveItems.slice(0, 3)
+  const olderItems = filteredActiveItems.slice(3)
+  const expandKey = `${section.id}:${activeTab.id}`
+  const isExpanded = expandedTabs[expandKey] ?? false
+
+  return (
+    <>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h2 className="text-xl font-bold text-foreground">{section.title}</h2>
+          <p className="mt-1 text-sm text-muted-foreground">{section.description}</p>
+        </div>
+        {section.actionHref && section.actionLabel ? (
+          <Link href={section.actionHref} className="text-sm font-medium text-primary hover:underline">
+            {section.actionLabel}
+          </Link>
+        ) : null}
+      </div>
+
+      <div className="rounded-2xl border border-border bg-card p-4">
+        <div
+          className="grid gap-2"
+          style={{ gridTemplateColumns: `repeat(${section.tabs.length}, minmax(0, 1fr))` }}
+        >
+          {section.tabs.map((tab) => {
+            const isActive = activeTab.id === tab.id
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setActiveTabs((current) => ({ ...current, [section.id]: tab.id }))}
+                className={cn(
+                  'rounded-xl border px-3 py-3 text-left transition-colors',
+                  isActive
+                    ? cn(getToneSurfaceClass(tab.tone), 'border-current/20')
+                    : 'border-border bg-background text-muted-foreground hover:bg-muted hover:text-foreground',
+                )}
               >
-                {section.tabs.map((tab) => {
-                  const isActive = activeTab.id === tab.id
-                  return (
-                    <button
-                      key={tab.id}
-                      type="button"
-                      onClick={() => setActiveTabs((current) => ({ ...current, [section.id]: tab.id }))}
-                      className={cn(
-                        'rounded-xl border px-3 py-3 text-left transition-colors',
-                        isActive
-                          ? cn(getToneSurfaceClass(tab.tone), 'border-current/20')
-                          : 'border-border bg-background text-muted-foreground hover:bg-muted hover:text-foreground',
-                      )}
-                    >
-                      <div className="flex items-center justify-between gap-3">
-                        <span className="truncate text-sm font-semibold">{tab.label}</span>
-                        <span className="rounded-full bg-background/80 px-2 py-0.5 text-xs font-semibold text-foreground">
-                          {tab.items.length}
-                        </span>
-                      </div>
-                    </button>
-                  )
-                })}
-              </div>
+                <div className="flex items-center justify-between gap-3">
+                  <span className="truncate text-sm font-semibold">{tab.label}</span>
+                  <span className="rounded-full bg-background/80 px-2 py-0.5 text-xs font-semibold text-foreground">
+                    {tab.items.length}
+                  </span>
+                </div>
+              </button>
+            )
+          })}
+        </div>
 
-              <div className="mt-4 border-t border-border/70 pt-4">
-                <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <p className="text-sm text-muted-foreground">{activeTab.description}</p>
-                  {subjectOptions.length > 1 ? (
-                    <select
-                      value={selectedSubject}
-                      onChange={(event) =>
-                        setSubjectFilters((current) => ({
-                          ...current,
-                          [section.id]: event.target.value,
-                        }))
-                      }
-                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary/40 focus:ring-1 focus:ring-primary/40 sm:w-64"
-                    >
-                      <option value="">Všechny předměty</option>
-                      {subjectOptions.map((subject) => (
-                        <option key={subject.key} value={subject.key}>
-                          {subject.label}
-                        </option>
+        <div className="mt-4 border-t border-border/70 pt-4">
+          <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-sm text-muted-foreground">{activeTab.description}</p>
+            {subjectOptions.length > 1 ? (
+              <select
+                value={selectedSubject}
+                onChange={(event) =>
+                  setSubjectFilters((current) => ({
+                    ...current,
+                    [section.id]: event.target.value,
+                  }))
+                }
+                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary/40 focus:ring-1 focus:ring-primary/40 sm:w-64"
+              >
+                <option value="">Všechny předměty</option>
+                {subjectOptions.map((subject) => (
+                  <option key={subject.key} value={subject.key}>
+                    {subject.label}
+                  </option>
+                ))}
+              </select>
+            ) : null}
+          </div>
+
+          {visibleItems.length > 0 ? (
+            <div className="space-y-3">
+              {visibleItems.map((item) => (
+                <ActivityCard
+                  key={item.id}
+                  item={item}
+                  pendingKey={isPending ? pendingKey : null}
+                  onAttentionToggle={handleAttentionToggle}
+                  onDeletePendingProposal={handleDeletePendingProposal}
+                />
+              ))}
+
+              {olderItems.length > 0 ? (
+                <div className="rounded-2xl border border-dashed border-border bg-background/60 p-3">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setExpandedTabs((current) => ({
+                        ...current,
+                        [expandKey]: !isExpanded,
+                      }))
+                    }
+                    className="flex w-full items-center justify-between gap-3 text-left text-sm font-medium text-foreground"
+                  >
+                    <span>{isExpanded ? 'Skrýt starší položky' : `Zobrazit starší položky (${olderItems.length})`}</span>
+                    {isExpanded ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
+                  </button>
+
+                  {isExpanded ? (
+                    <div className="mt-3 space-y-3">
+                      {olderItems.map((item) => (
+                        <ActivityCard
+                          key={item.id}
+                          item={item}
+                          pendingKey={isPending ? pendingKey : null}
+                          onAttentionToggle={handleAttentionToggle}
+                          onDeletePendingProposal={handleDeletePendingProposal}
+                        />
                       ))}
-                    </select>
+                    </div>
                   ) : null}
                 </div>
-
-                {visibleItems.length > 0 ? (
-                  <div className="space-y-3">
-                    {visibleItems.map((item) => (
-                      <ActivityCard
-                        key={item.id}
-                        item={item}
-                        pendingKey={isPending ? pendingKey : null}
-                        onAttentionToggle={handleAttentionToggle}
-                        onDeletePendingProposal={handleDeletePendingProposal}
-                      />
-                    ))}
-
-                    {olderItems.length > 0 ? (
-                      <div className="rounded-2xl border border-dashed border-border bg-background/60 p-3">
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setExpandedTabs((current) => ({
-                              ...current,
-                              [expandKey]: !isExpanded,
-                            }))
-                          }
-                          className="flex w-full items-center justify-between gap-3 text-left text-sm font-medium text-foreground"
-                        >
-                          <span>{isExpanded ? 'Skrýt starší položky' : `Zobrazit starší položky (${olderItems.length})`}</span>
-                          {isExpanded ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
-                        </button>
-
-                        {isExpanded ? (
-                          <div className="mt-3 space-y-3">
-                            {olderItems.map((item) => (
-                              <ActivityCard
-                                key={item.id}
-                                item={item}
-                                pendingKey={isPending ? pendingKey : null}
-                                onAttentionToggle={handleAttentionToggle}
-                                onDeletePendingProposal={handleDeletePendingProposal}
-                              />
-                            ))}
-                          </div>
-                        ) : null}
-                      </div>
-                    ) : null}
-                  </div>
-                ) : (
-                  <div className="rounded-2xl border border-dashed border-border bg-background/40 px-4 py-8 text-center text-sm text-muted-foreground">
-                    {selectedSubject ? 'Pro vybraný předmět tu nic není.' : activeTab.empty}
-                  </div>
-                )}
-              </div>
+              ) : null}
             </div>
-          </section>
-        )
-      })}
-    </div>
+          ) : (
+            <div className="rounded-2xl border border-dashed border-border bg-background/40 px-4 py-8 text-center text-sm text-muted-foreground">
+              {selectedSubject ? 'Pro vybraný předmět tu nic není.' : activeTab.empty}
+            </div>
+          )}
+        </div>
+      </div>
+    </>
   )
 }
 
@@ -336,6 +408,10 @@ function getSectionSubjectOptions(section: ActivitySectionData) {
   return Array.from(subjects, ([key, label]) => ({ key, label })).sort((left, right) =>
     left.label.localeCompare(right.label, 'cs'),
   )
+}
+
+function getSectionItemCount(section: ActivitySectionData) {
+  return section.tabs.reduce((total, tab) => total + tab.items.length, 0)
 }
 
 function SummaryCard({ card }: { card: SummaryCardData }) {
