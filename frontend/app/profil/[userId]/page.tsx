@@ -162,16 +162,17 @@ export default async function PublicProfilePage({ params }: PageProps) {
     uploader_id: string;
     created_at: string;
     subject: { slug: string; short_tag: string; name: string } | null;
-    materials: Array<{
-      id: string;
-      title: string;
-      share_slug: string;
-      file_path: string;
-      size_bytes: number;
-      page_count: number | null;
-      moderation_status: "pending" | "approved" | "rejected";
-    }> | null;
-  }>).map((group) => ({
+	    materials: Array<{
+	      id: string;
+	      title: string;
+	      share_slug: string;
+	      file_path: string;
+	      size_bytes: number;
+	      page_count: number | null;
+	      created_at: string;
+	      moderation_status: "pending" | "approved" | "rejected";
+	    }> | null;
+	  }>).map((group) => ({
     ...group,
     materials: (group.materials ?? [])
       .filter((material) => material.moderation_status === "approved")

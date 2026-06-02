@@ -32,6 +32,7 @@ type MaterialGroupWithSubject = {
     file_path: string;
     size_bytes: number;
     page_count: number | null;
+    created_at: string;
     moderation_status: "pending" | "approved" | "rejected";
   }> | null;
 };
@@ -154,6 +155,7 @@ async function MyActivitySections({ userId }: { userId: string }) {
     subject: group.subject,
     materials: (group.materials ?? []).map((material) => ({
       ...material,
+      created_at: material.created_at,
       public_url: getStoragePublicUrl("study_materials", material.file_path) ?? "",
     })),
   })) satisfies MaterialGroupData[];

@@ -1,6 +1,12 @@
 import "server-only";
 
+import { unstable_cache } from "next/cache";
 import { getStoragePublicUrl } from "@/lib/storage";
+import {
+  filterMaterialDirectoryGroups,
+  filterMaterialDirectoryStandaloneMaterials,
+  normalizeMaterialDirectorySearch,
+} from "@/lib/material-directory-search";
 import { createPublicServerClient } from "@/lib/supabase/public-server";
 
 export type PublicMaterialGroupItem = {
@@ -91,16 +97,8 @@ type Ranked<T> = {
   createdAt: number;
 };
 
-function normalizeSearchText(value: string) {
-  return value
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .trim();
-}
-
 function getMatchDetails(candidate: string, normalizedQuery: string) {
-  const normalizedCandidate = normalizeSearchText(candidate);
+  const normalizedCandidate = normalizeMaterialDirectorySearch(candidate);
   const index = normalizedCandidate.indexOf(normalizedQuery);
   if (index === -1) return null;
 
@@ -134,9 +132,8 @@ async function loadUploaderMap(uploaderIds: string[]) {
   );
 }
 
-export async function getPublicMaterialDirectory(query = "", focusedGroupId?: string) {
+async function loadPublicMaterialDirectorySnapshot() {
   const supabase = createPublicServerClient();
-  const normalizedQuery = normalizeSearchText(query);
 
   const [{ data: rawGroups }, { data: rawMaterials }] = await Promise.all([
     supabase
@@ -194,81 +191,28 @@ export async function getPublicMaterialDirectory(query = "", focusedGroupId?: st
     public_url: getStoragePublicUrl("study_materials", material.file_path) ?? "",
   }));
 
-  const filteredGroups = focusedGroupId
-    ? hydratedGroups.filter((group) => group.id === focusedGroupId)
-    : normalizedQuery
-      ? hydratedGroups
-          .map((group): Ranked<PublicMaterialGroupData> | null => {
-          const candidates = [
-            { rank: 0, value: group.title },
-            { rank: 1, value: group.subject?.name ?? "" },
-              { rank: 1, value: group.subject?.short_tag ?? "" },
-              { rank: 2, value: group.uploader_display_name ?? "" },
-              ...group.materials.map((material) => ({ rank: 3, value: material.title })),
-            ];
+  return {
+    groups: hydratedGroups,
+    standaloneMaterials,
+  };
+}
 
-            const matches = candidates
-              .map((candidate) => {
-                const details = getMatchDetails(candidate.value, normalizedQuery);
-                return details ? { ...details, rank: candidate.rank } : null;
-              })
-              .filter((candidate): candidate is { rank: number; startsWith: boolean; index: number } => Boolean(candidate))
-              .sort((left, right) => {
-                if (left.rank !== right.rank) return left.rank - right.rank;
-                if (left.startsWith !== right.startsWith) return left.startsWith ? -1 : 1;
-                return left.index - right.index;
-              });
+const getCachedPublicMaterialDirectorySnapshot = unstable_cache(
+  async () => loadPublicMaterialDirectorySnapshot(),
+  ["public-material-directory"],
+  { revalidate: 300 }
+);
 
-            if (matches.length === 0) return null;
+export async function getPublicMaterialDirectorySnapshot() {
+  return getCachedPublicMaterialDirectorySnapshot();
+}
 
-            return {
-              item: group,
-              rank: matches[0].rank,
-              startsWith: matches[0].startsWith,
-              index: matches[0].index,
-              createdAt: new Date(group.created_at).getTime(),
-            };
-          })
-          .filter((item): item is Ranked<PublicMaterialGroupData> => Boolean(item))
-          .sort(compareRanked)
-          .map((item) => item.item)
-      : hydratedGroups;
-
-  const filteredStandaloneMaterials = normalizedQuery
-    ? standaloneMaterials
-        .map((material): Ranked<PublicStandaloneMaterial> | null => {
-          const candidates = [
-            material.title,
-            material.subject?.name ?? "",
-            material.subject?.short_tag ?? "",
-          ];
-
-          const matches = candidates
-            .map((candidate) => getMatchDetails(candidate, normalizedQuery))
-            .filter((candidate): candidate is { startsWith: boolean; index: number } => Boolean(candidate))
-            .sort((left, right) => {
-              if (left.startsWith !== right.startsWith) return left.startsWith ? -1 : 1;
-              return left.index - right.index;
-            });
-
-          if (matches.length === 0) return null;
-
-          return {
-            item: material,
-            rank: 4,
-            startsWith: matches[0].startsWith,
-            index: matches[0].index,
-            createdAt: new Date(material.created_at).getTime(),
-          };
-        })
-        .filter((item): item is Ranked<PublicStandaloneMaterial> => Boolean(item))
-        .sort(compareRanked)
-        .map((item) => item.item)
-    : standaloneMaterials;
+export async function getPublicMaterialDirectory(query = "", focusedGroupId?: string) {
+  const { groups, standaloneMaterials } = await getCachedPublicMaterialDirectorySnapshot();
 
   return {
-    groups: filteredGroups,
-    standaloneMaterials: filteredStandaloneMaterials,
+    groups: filterMaterialDirectoryGroups(groups, query, focusedGroupId),
+    standaloneMaterials: filterMaterialDirectoryStandaloneMaterials(standaloneMaterials, query),
   };
 }
 
@@ -320,7 +264,7 @@ export async function searchApprovedMaterials(query: string) {
   );
 
   const allMaterials = [...groupedMaterials, ...standaloneMaterials];
-  const normalizedQuery = normalizeSearchText(query);
+  const normalizedQuery = normalizeMaterialDirectorySearch(query);
 
   if (!normalizedQuery) {
     return allMaterials

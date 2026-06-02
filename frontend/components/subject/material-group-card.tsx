@@ -16,6 +16,7 @@ export interface MaterialGroupItem {
   file_path: string
   size_bytes: number
   page_count: number | null
+  created_at: string
   moderation_status: 'pending' | 'approved' | 'rejected'
   public_url: string
 }
