@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ProfileSubjectContributions, type ProfileDeckContribution, type ProfileMaterialContribution, type ProfileMaterialGroupContribution } from "@/components/profile/profile-subject-contributions";
+import { getFacultyColor } from "@/lib/faculties";
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/types/database";
 import { getStoragePublicUrl } from "@/lib/storage";
@@ -64,11 +65,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const supabase = await createClient();
   const { data: profile } = await supabase
     .from("profiles")
-    .select("display_name")
+    .select("display_name, faculty")
     .eq("user_id", userId)
     .maybeSingle();
 
-  const typedProfile = profile as { display_name?: string | null } | null;
+  const typedProfile = profile as { display_name?: string | null; faculty?: string | null } | null;
   const displayName = typedProfile?.display_name?.trim();
   return {
     title: displayName ? `${displayName} | Profil` : "Profil uživatele",
@@ -101,7 +102,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
     { data: teacherReviewsData },
   ] = await Promise.all([
     supabase.auth.getUser(),
-    supabase.from("profiles").select("user_id, display_name").eq("user_id", userId).maybeSingle(),
+    supabase.from("profiles").select("user_id, display_name, faculty").eq("user_id", userId).maybeSingle(),
     typedSupabase.rpc("get_public_profile_stats", { profile_user_id: userId }),
     supabase
       .from("flashcard_decks")
@@ -139,8 +140,9 @@ export default async function PublicProfilePage({ params }: PageProps) {
       .limit(12),
   ]);
 
-  const typedProfile = profile as { user_id: string; display_name: string | null } | null;
+  const typedProfile = profile as { user_id: string; display_name: string | null; faculty: string | null } | null;
   const displayName = typedProfile?.display_name?.trim();
+  const faculty = typedProfile?.faculty?.trim() || null;
   const viewerRole = viewer?.app_metadata?.role as string | undefined;
   const canViewWithoutPublicName = viewer?.id === userId || viewerRole === "admin" || viewerRole === "moderator";
   const visibleName = displayName || (canViewWithoutPublicName ? `Uživatel ${userId.slice(0, 8)}…` : null);
@@ -230,9 +232,20 @@ export default async function PublicProfilePage({ params }: PageProps) {
             </span>
             <div>
               <h1 className="text-3xl font-bold text-foreground sm:text-4xl">{visibleName}</h1>
-              <p className="mt-2 text-sm text-muted-foreground sm:text-base">
-                Level {stats.level} · {stats.total_xp} XP
-              </p>
+              <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-muted-foreground sm:text-base">
+                {faculty ? (
+                  <span
+                    className="rounded-full px-2.5 py-1 text-xs font-semibold"
+                    style={{
+                      backgroundColor: `${getFacultyColor(faculty) ?? "var(--foreground)"}20`,
+                      color: getFacultyColor(faculty) ?? "var(--foreground)",
+                    }}
+                  >
+                    {faculty}
+                  </span>
+                ) : null}
+                <span>Level {stats.level} · {stats.total_xp} XP</span>
+              </div>
             </div>
           </div>
 

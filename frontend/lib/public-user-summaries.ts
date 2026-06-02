@@ -1,9 +1,12 @@
 import { createClient } from "@/lib/supabase/server";
+import { normalizeFaculty } from "@/lib/public-profile-identity";
 import type { Database } from "@/lib/types/database";
+import type { FacultyCode } from "@/lib/faculties";
 
 export interface PublicUserSummary {
   userId: string;
   displayName: string | null;
+  faculty: FacultyCode | null;
   totalXp: number;
   level: number;
 }
@@ -43,6 +46,7 @@ export async function getPublicUserSummaryMap(
       {
         userId: summary.user_id,
         displayName: summary.display_name,
+        faculty: normalizeFaculty(summary.faculty) || null,
         totalXp: summary.total_xp,
         level: summary.level,
       } satisfies PublicUserSummary,

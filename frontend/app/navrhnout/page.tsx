@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
+import { hasPublicProfileIdentity } from '@/lib/public-profile-identity'
 import { createClient } from '@/lib/supabase/server'
 import { SubjectProposalForm, type InitialSubjectProposal, type SubjectDetails } from '@/components/subject/subject-proposal-form'
 import type { SubjectProposalRecord } from '@/lib/types/database'
@@ -33,7 +34,11 @@ type ProposalData = {
 }
 
 export default async function NavrhnoutPage({ searchParams }: PageProps) {
-  let hasDisplayName = false
+  let hasPublicIdentity = false
+  let publicProfile: { display_name?: string | null; faculty?: string | null } = {
+    display_name: '',
+    faculty: null,
+  }
   let initialProposal: InitialSubjectProposal | null = null
 
   try {
@@ -54,7 +59,7 @@ export default async function NavrhnoutPage({ searchParams }: PageProps) {
 
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('display_name')
+      .select('display_name, faculty')
       .eq('user_id', user.id)
       .maybeSingle()
 
@@ -62,7 +67,8 @@ export default async function NavrhnoutPage({ searchParams }: PageProps) {
       console.error('[navrhnout] Failed to load profile:', profileError.message)
     }
 
-    hasDisplayName = Boolean((profile as { display_name?: string | null } | null)?.display_name?.trim())
+    publicProfile = (profile as { display_name?: string | null; faculty?: string | null } | null) ?? publicProfile
+    hasPublicIdentity = hasPublicProfileIdentity(profile)
 
     if (proposalId) {
       const { data: proposal, error: proposalError } = await supabase
@@ -147,7 +153,12 @@ export default async function NavrhnoutPage({ searchParams }: PageProps) {
           Chybí ti tady nějaký předmět, nebo máš lepší informace? Pošli nám návrh a moderátor ho brzy zkontroluje.
         </p>
       </div>
-      <SubjectProposalForm hasDisplayName={hasDisplayName} initialProposal={initialProposal} />
+      <SubjectProposalForm
+        hasPublicProfileIdentity={hasPublicIdentity}
+        initialDisplayName={publicProfile.display_name ?? ''}
+        initialFaculty={publicProfile.faculty ?? null}
+        initialProposal={initialProposal}
+      />
     </div>
   )
 }

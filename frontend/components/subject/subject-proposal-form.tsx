@@ -7,6 +7,7 @@ import {
   submitSubjectProposal,
 } from '@/app/actions/contributions'
 import { WelcomeDisplayNameModal } from '@/components/layout/welcome-display-name-modal'
+import { FACULTIES } from '@/lib/faculties'
 import { getSubjectCache, searchInCache, type SubjectCacheEntry } from '@/lib/subject-cache'
 import { getTeacherCache, searchTeachersInCache, type TeacherCacheEntry } from '@/lib/teacher-cache'
 
@@ -45,16 +46,6 @@ const SEMESTER_OPTIONS = [
   { value: 'zimní', label: '❄️ Zimní' },
   { value: 'letní', label: '☀️ Letní' },
   { value: 'oba', label: '🔄 Oba semestry' },
-]
-
-// Ostravská univerzita faculties
-const FACULTY_OPTIONS = [
-  { value: 'PřF', label: 'PřF — Přírodovědecká fakulta' },
-  { value: 'FF', label: 'FF — Filozofická fakulta' },
-  { value: 'PdF', label: 'PdF — Pedagogická fakulta' },
-  { value: 'LF', label: 'LF — Lékařská fakulta' },
-  { value: 'FSS', label: 'FSS — Fakulta sociálních studií' },
-  { value: 'FU', label: 'FU — Fakulta umění' },
 ]
 
 const ATTENDANCE_OPTIONS = [
@@ -169,7 +160,9 @@ function formatDiffValue(value: string | number | boolean | null | undefined) {
 }
 
 interface SubjectProposalFormProps {
-  hasDisplayName: boolean
+  hasPublicProfileIdentity: boolean
+  initialDisplayName: string
+  initialFaculty: string | null
   initialProposal?: InitialSubjectProposal | null
 }
 
@@ -213,7 +206,12 @@ function normalizeDepartmentName(value: string) {
   return trimmed.charAt(0).toLocaleUpperCase('cs-CZ') + trimmed.slice(1)
 }
 
-export function SubjectProposalForm({ hasDisplayName: initialHasDisplayName, initialProposal }: SubjectProposalFormProps) {
+export function SubjectProposalForm({
+  hasPublicProfileIdentity: initialHasPublicProfileIdentity,
+  initialDisplayName,
+  initialFaculty,
+  initialProposal,
+}: SubjectProposalFormProps) {
   const [type, setType] = useState<'new' | 'edit'>(initialProposal?.type ?? 'new')
   const [subjectSearch, setSubjectSearch] = useState(initialProposal?.subjectLabel ?? '')
   const [subjectId, setSubjectId] = useState<string | null>(initialProposal?.subjectId ?? null)
@@ -226,7 +224,7 @@ export function SubjectProposalForm({ hasDisplayName: initialHasDisplayName, ini
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [submissionToken, setSubmissionToken] = useState(createSubmissionToken)
-  const [hasDisplayName, setHasDisplayName] = useState(initialHasDisplayName)
+  const [hasPublicProfileIdentity, setHasPublicProfileIdentity] = useState(initialHasPublicProfileIdentity)
   const [showDisplayNameModal, setShowDisplayNameModal] = useState(false)
 
   const [selectedTeachers, setSelectedTeachers] = useState<{ id?: string, name: string, faculty: string, department: string }[]>(() =>
@@ -372,7 +370,7 @@ export function SubjectProposalForm({ hasDisplayName: initialHasDisplayName, ini
       setError('Název katedry musí začínat velkým písmenem.')
       return
     }
-    if (!hasDisplayName) {
+    if (!hasPublicProfileIdentity) {
       setShowDisplayNameModal(true)
       return
     }
@@ -577,7 +575,7 @@ export function SubjectProposalForm({ hasDisplayName: initialHasDisplayName, ini
             <FieldLabel>Fakulta</FieldLabel>
             <Select value={form.faculty} onChange={(e) => set('faculty', e.target.value)}>
               <option value="">– vybrat –</option>
-              {FACULTY_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+              {FACULTIES.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
             </Select>
           </div>
           <div className="lg:col-span-2 2xl:col-span-1">
@@ -677,7 +675,7 @@ export function SubjectProposalForm({ hasDisplayName: initialHasDisplayName, ini
                     <FieldLabel>Fakulta</FieldLabel>
                     <Select value={newTeacherFaculty} onChange={e => setNewTeacherFaculty(e.target.value)}>
                       <option value="">– vybrat –</option>
-                      {FACULTY_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                      {FACULTIES.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                     </Select>
                   </div>
                 </div>
@@ -939,9 +937,10 @@ export function SubjectProposalForm({ hasDisplayName: initialHasDisplayName, ini
     <WelcomeDisplayNameModal
       open={showDisplayNameModal}
       onOpenChange={setShowDisplayNameModal}
-      initialDisplayName=""
-      onCompleted={(displayName) => {
-        setHasDisplayName(Boolean(displayName))
+      initialDisplayName={initialDisplayName}
+      initialFaculty={initialFaculty}
+      onCompleted={() => {
+        setHasPublicProfileIdentity(true)
       }}
     />
     </>

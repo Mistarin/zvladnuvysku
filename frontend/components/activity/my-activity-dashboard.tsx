@@ -6,6 +6,7 @@ import { AlertCircle, BookOpen, CheckCircle2, ChevronDown, ChevronUp, Clock3, Lo
 import { markActivityItemRead, markActivityItemUnread } from '@/app/actions/activity'
 import { deletePendingSubjectProposal } from '@/app/actions/contributions'
 import { Button } from '@/components/ui/button'
+import type { PublicProfileIdentityDraft } from '@/lib/public-profile-identity'
 import { cn } from '@/lib/utils'
 
 export type StatusTone = 'success' | 'warning' | 'danger' | 'muted' | 'info'
@@ -54,6 +55,7 @@ export type ActivityAction =
 export type ActivityCardData = {
   id: string
   title: string
+  customContent?: ReactNode
   subtitle?: string
   supportingText?: string
   subjectFilter?: {
@@ -79,7 +81,7 @@ export type ActivityTabData = {
 }
 
 export type ActivitySectionData = {
-  id: 'proposals' | 'materials' | 'feedback' | 'decks'
+  id: 'proposals' | 'materials' | 'feedback' | 'decks' | 'groups'
   title: string
   description: string
   actionHref?: string
@@ -88,7 +90,7 @@ export type ActivitySectionData = {
 }
 
 type MyActivityDashboardProps = {
-  displayName: string | null
+  publicIdentity: PublicProfileIdentityDraft
   sections: ActivitySectionData[]
 }
 
@@ -101,7 +103,7 @@ type SummaryCardData = {
   icon: ReactNode
 }
 
-export function MyActivityDashboard({ displayName, sections: initialSections }: MyActivityDashboardProps) {
+export function MyActivityDashboard({ publicIdentity, sections: initialSections }: MyActivityDashboardProps) {
   const [sections, setSections] = useState(initialSections)
   const [expandedTabs, setExpandedTabs] = useState<Record<string, boolean>>({})
   const [activeTabs, setActiveTabs] = useState<Record<string, string>>(() =>
@@ -112,7 +114,7 @@ export function MyActivityDashboard({ displayName, sections: initialSections }: 
   const [pendingKey, setPendingKey] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
 
-  const summaryCards = useMemo(() => buildSummaryCards(displayName, sections), [displayName, sections])
+  const summaryCards = useMemo(() => buildSummaryCards(publicIdentity, sections), [publicIdentity, sections])
 
   const handleAttentionToggle = (attention: ActivityAttention) => {
     const itemKey = getAttentionKey(attention)
@@ -364,6 +366,10 @@ function ActivityCard({
 }) {
   const attentionPending = Boolean(item.attention && pendingKey === getAttentionKey(item.attention))
 
+  if (item.customContent) {
+    return <>{item.customContent}</>
+  }
+
   return (
     <div className={cn('rounded-2xl border border-border bg-background/70 p-4', item.attention?.acknowledged ? 'opacity-75' : null)}>
       <div className="flex flex-col gap-3">
@@ -505,10 +511,11 @@ function StatusBadge({ tone, children }: { tone: StatusTone; children: ReactNode
   return <span className={cn('inline-flex rounded-full px-2.5 py-1 text-xs font-semibold', getToneSurfaceClass(tone))}>{children}</span>
 }
 
-function buildSummaryCards(displayName: string | null, sections: ActivitySectionData[]): SummaryCardData[] {
+function buildSummaryCards(publicIdentity: PublicProfileIdentityDraft, sections: ActivitySectionData[]): SummaryCardData[] {
   const proposals = sections.find((section) => section.id === 'proposals')
   const materials = sections.find((section) => section.id === 'materials')
   const decks = sections.find((section) => section.id === 'decks')
+  const groups = sections.find((section) => section.id === 'groups')
 
   const pendingProposals = getTabItemCount(proposals, 'pending')
   const approvedProposals = getTabItemCount(proposals, 'approved')
@@ -516,22 +523,24 @@ function buildSummaryCards(displayName: string | null, sections: ActivitySection
   const approvedMaterials = getTabItemCount(materials, 'approved')
   const publicDecks = getTabItemCount(decks, 'public')
   const privateDecks = getTabItemCount(decks, 'private')
+  const materialGroups = getTabItemCount(groups, 'all')
 
   const attentionItems = sections.flatMap((section) =>
     section.tabs.flatMap((tab) => tab.items.filter((item) => item.attention && !item.attention.acknowledged)),
   )
   const attentionContributions = attentionItems.filter((item) => item.attention?.itemType !== 'feedback').length
   const attentionFeedback = attentionItems.filter((item) => item.attention?.itemType === 'feedback').length
+  const hasIdentity = Boolean(publicIdentity.displayName.trim() && publicIdentity.faculty)
 
   return [
     {
-      id: 'display-name',
-      label: 'Veřejné jméno',
-      value: displayName?.trim() || 'Chybí',
-      meta: displayName?.trim()
+      id: 'public-profile',
+      label: 'Veřejný profil',
+      value: hasIdentity ? publicIdentity.displayName : 'Chybí',
+      meta: hasIdentity
         ? (
             <>
-              Zobrazuje se u profilu a recenzí.{' '}
+              {publicIdentity.faculty} · Zobrazuje se u profilu, recenzí a v Hall of Fame.{' '}
               <Link href="/#hall-of-fame" className="text-primary hover:underline">
                 Upravit
               </Link>
@@ -539,9 +548,9 @@ function buildSummaryCards(displayName: string | null, sections: ActivitySection
           )
         : (
             <>
-              Chybí —{' '}
+              Doplň jméno i fakultu.{' '}
               <Link href="/#hall-of-fame" className="text-primary hover:underline">
-                Nastavit jméno
+                Nastavit profil
               </Link>
             </>
           ),
@@ -552,7 +561,7 @@ function buildSummaryCards(displayName: string | null, sections: ActivitySection
       id: 'decks',
       label: 'Balíčky',
       value: String(publicDecks + privateDecks),
-      meta: `${publicDecks} veřejné · ${privateDecks} soukromé`,
+      meta: `${publicDecks} veřejné · ${privateDecks} soukromé · ${materialGroups} skupin`,
       tone: 'muted',
       icon: <BookOpen className="h-4 w-4" />,
     },

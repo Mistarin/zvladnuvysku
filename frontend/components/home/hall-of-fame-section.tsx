@@ -1,21 +1,19 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useTransition } from "react";
-import * as Dialog from "@radix-ui/react-dialog";
+import { useState } from "react";
 import {
-  Loader2,
-  PencilLine,
   Trophy,
-  X,
   BookOpen,
   FileText,
   FlipVertical,
   UserRound,
 } from "lucide-react";
-import { upsertDisplayName } from "@/app/actions/hall-of-fame";
 import { getPublicProfilePath } from "@/lib/public-profile";
+import { getFacultyColor } from "@/lib/faculties";
+import { getPublicProfileIdentity, hasPublicProfileIdentity } from "@/lib/public-profile-identity";
 import { Button } from "@/components/ui/button";
+import { WelcomeDisplayNameModal } from "@/components/layout/welcome-display-name-modal";
 import { cn } from "@/lib/utils";
 import type {
   HallOfFamePeriod,
@@ -43,8 +41,10 @@ export function HallOfFameSection({
   profile,
 }: HallOfFameSectionProps) {
   const [period, setPeriod] = useState<HallOfFamePeriod>("week");
+  const [showIdentityModal, setShowIdentityModal] = useState(false);
   const entries = leaderboard[period] ?? [];
-  const hasDisplayName = Boolean(profile?.display_name?.trim());
+  const hasPublicIdentity = hasPublicProfileIdentity(profile);
+  const publicIdentity = getPublicProfileIdentity(profile);
 
   const top3 = entries.slice(0, 3);
   const rest = entries.slice(3);
@@ -142,20 +142,19 @@ export function HallOfFameSection({
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <p className="text-sm font-semibold text-foreground">
-                    {hasDisplayName
-                      ? "Tvoje veřejné jméno je připravené pro Hall of Fame."
-                      : "Chceš se dostat do žebříčku? Doplň si veřejné jméno."}
+                    {hasPublicIdentity
+                      ? "Tvůj veřejný profil je připravený pro Hall of Fame."
+                      : "Chceš se dostat do žebříčku? Doplň si veřejnou identitu."}
                   </p>
                   <p className="mt-1 text-sm text-muted-foreground">
-                    {hasDisplayName
+                    {hasPublicIdentity
                       ? "XP se počítají přímo z bodů: 1 bod = 10 XP, 2 body = 20 XP, 3 body = 30 XP."
-                      : "Bez veřejného jména se do veřejného leaderboardu nezapočítáš, i když přispíváš."}
+                      : "Bez veřejného jména a fakulty se do veřejného leaderboardu nezapočítáš, i když přispíváš."}
                   </p>
                 </div>
-                <DisplayNameDialog
-                  initialValue={profile?.display_name ?? ""}
-                  triggerLabel={hasDisplayName ? "Upravit veřejné jméno" : "Nastavit veřejné jméno"}
-                />
+                <Button variant={hasPublicIdentity ? "outline" : "default"} onClick={() => setShowIdentityModal(true)}>
+                  {hasPublicIdentity ? "Upravit veřejný profil" : "Nastavit veřejný profil"}
+                </Button>
               </div>
             ) : (
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -178,6 +177,12 @@ export function HallOfFameSection({
           </div>
         </div>
       </div>
+      <WelcomeDisplayNameModal
+        open={showIdentityModal}
+        onOpenChange={setShowIdentityModal}
+        initialDisplayName={publicIdentity.displayName}
+        initialFaculty={publicIdentity.faculty}
+      />
     </section>
   );
 }
@@ -243,6 +248,7 @@ function PodiumColumn({
       <p className={`text-xs sm:text-sm font-semibold text-foreground text-center truncate w-full group-hover:text-primary transition-colors ${isFirst ? "font-bold" : ""}`}>
         {entry.display_name}
       </p>
+      {entry.faculty ? <FacultyPill faculty={entry.faculty} /> : null}
       {/* Score */}
       <p className={`${sizeClass} font-bold text-foreground`}>{entry.total_score}</p>
       {/* Podium block */}
@@ -279,7 +285,8 @@ function LeaderboardRow({ entry, index }: { entry: HallOfFameRow; index: number 
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-sm font-semibold text-foreground truncate">{entry.display_name}</p>
-        <div className="flex items-center gap-3 mt-0.5">
+        <div className="mt-0.5 flex flex-wrap items-center gap-3">
+          {entry.faculty ? <FacultyPill faculty={entry.faculty} compact /> : null}
           <ScorePillInline icon={<FlipVertical className="size-3" />} value={entry.flashcard_count} />
           <ScorePillInline icon={<FileText className="size-3" />} value={entry.material_count} />
           <ScorePillInline icon={<UserRound className="size-3" />} value={entry.teacher_count} />
@@ -310,108 +317,21 @@ function ScorePillInline({ icon, value }: { icon: React.ReactNode; value: number
   );
 }
 
-// ---- Display name dialog ----
-
-function DisplayNameDialog({
-  initialValue,
-  triggerLabel,
-}: {
-  initialValue: string;
-  triggerLabel: string;
-}) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [value, setValue] = useState(initialValue);
-  const [error, setError] = useState<string | null>(null);
-  const [isPending, startTransition] = useTransition();
-
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setError(null);
-
-    startTransition(async () => {
-      const result = await upsertDisplayName(value);
-
-      if (!result.success) {
-        setError(result.error);
-        return;
-      }
-
-      setIsOpen(false);
-    });
-  };
+function FacultyPill({ faculty, compact = false }: { faculty: string; compact?: boolean }) {
+  const color = getFacultyColor(faculty) ?? "var(--foreground)";
 
   return (
-    <Dialog.Root
-      open={isOpen}
-      onOpenChange={(open) => {
-        setIsOpen(open);
-        if (open) {
-          setValue(initialValue);
-          setError(null);
-        }
+    <span
+      className={cn(
+        "inline-flex items-center rounded-full font-semibold",
+        compact ? "px-1.5 py-0.5 text-[10px]" : "px-2 py-0.5 text-[11px]",
+      )}
+      style={{
+        backgroundColor: `${color}20`,
+        color,
       }}
     >
-      <Dialog.Trigger asChild>
-        <Button variant={initialValue ? "outline" : "default"}>
-          <PencilLine className="size-4" />
-          {triggerLabel}
-        </Button>
-      </Dialog.Trigger>
-      <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm animate-in fade-in" />
-        <Dialog.Content className="fixed left-[50%] top-[50%] z-50 w-[calc(100vw-2rem)] max-w-md translate-x-[-50%] translate-y-[-50%] rounded-2xl border bg-card p-6 shadow-xl animate-in fade-in zoom-in-95">
-          <div className="space-y-1.5">
-            <Dialog.Title className="text-lg font-semibold text-foreground">
-              Veřejné jméno do Hall of Fame
-            </Dialog.Title>
-            <Dialog.Description className="text-sm text-muted-foreground">
-              Toto jméno uvidí ostatní studenti v žebříčku. Nemusí být unikátní.
-            </Dialog.Description>
-          </div>
-
-          <form onSubmit={handleSubmit} className="mt-5 space-y-4">
-            <div className="space-y-2">
-              <label htmlFor="display-name" className="text-sm font-medium text-foreground">
-                Veřejné jméno
-              </label>
-              <input
-                id="display-name"
-                value={value}
-                onChange={(event) => setValue(event.target.value)}
-                maxLength={40}
-                placeholder="Např. Martin z PřF"
-                className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm outline-none transition-colors focus:border-primary/60 focus:ring-2 focus:ring-primary/20"
-              />
-              <p className="text-xs text-muted-foreground">
-                2 až 40 znaků. XP se počítají jednoduše: každý 1 bod znamená 10 XP.
-              </p>
-            </div>
-
-            {error && (
-              <div className="rounded-xl border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
-                {error}
-              </div>
-            )}
-
-            <div className="flex justify-end gap-3 border-t border-border/60 pt-4">
-              <Dialog.Close asChild>
-                <Button variant="outline" disabled={isPending}>
-                  Zrušit
-                </Button>
-              </Dialog.Close>
-              <Button type="submit" disabled={isPending}>
-                {isPending && <Loader2 className="size-4 animate-spin" />}
-                Uložit jméno
-              </Button>
-            </div>
-          </form>
-
-          <Dialog.Close className="absolute right-4 top-4 rounded-sm opacity-70 transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">
-            <X className="size-4" />
-            <span className="sr-only">Zavřít</span>
-          </Dialog.Close>
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog.Root>
+      {faculty}
+    </span>
   );
 }

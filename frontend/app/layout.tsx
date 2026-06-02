@@ -6,6 +6,7 @@ import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { FeedbackButton } from "@/components/layout/feedback-button";
 import { WelcomeDisplayNameModal } from "@/components/layout/welcome-display-name-modal";
+import { getPublicProfileIdentity, hasPublicProfileIdentity } from "@/lib/public-profile-identity";
 import { createClient } from "@/lib/supabase/server";
 import { cookies } from "next/headers";
 
@@ -47,12 +48,12 @@ export default async function RootLayout({
     ? (
         await supabase
           .from("profiles")
-          .select("display_name")
+          .select("display_name, faculty")
           .eq("user_id", user.id)
           .maybeSingle()
       ).data ?? null
     : null;
-  const displayName = (profile as { display_name?: string | null } | null)?.display_name?.trim() ?? "";
+  const publicIdentity = getPublicProfileIdentity(profile);
 
   return (
     <html lang="cs" suppressHydrationWarning>
@@ -69,8 +70,9 @@ export default async function RootLayout({
             <Footer />
             <FeedbackButton />
             <WelcomeDisplayNameModal
-              initialOpen={Boolean(user) && shouldPromptDisplayName && !displayName}
-              initialDisplayName={displayName}
+              initialOpen={Boolean(user) && shouldPromptDisplayName && !hasPublicProfileIdentity(profile)}
+              initialDisplayName={publicIdentity.displayName}
+              initialFaculty={publicIdentity.faculty}
               clearCookieOnClose
             />
           </SoundProvider>

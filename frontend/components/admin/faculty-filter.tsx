@@ -2,15 +2,7 @@
 
 import Link from "next/link"
 import { useSearchParams, usePathname } from "next/navigation"
-
-const FACULTIES = [
-  { id: "FSS", label: "Sociální věda", color: "#FBB900", textDark: true },
-  { id: "FU", label: "Umělecká", color: "#D2091D", textDark: false },
-  { id: "FF", label: "Filozofická", color: "#74348B", textDark: false },
-  { id: "LF", label: "Lékařská", color: "#007CBB", textDark: false },
-  { id: "PdF", label: "Pedagogická", color: "#EE7202", textDark: false },
-  { id: "PřF", label: "Přírodní vědy", color: "#7A9B21", textDark: false },
-]
+import { FACULTIES } from "@/lib/faculties"
 
 export function FacultyFilter() {
   const searchParams = useSearchParams()
@@ -36,16 +28,16 @@ export function FacultyFilter() {
       </Link>
       
       {FACULTIES.map((fac) => {
-        const isActive = currentFaculty === fac.id
+        const isActive = currentFaculty === fac.value
         
         // Preserve other searchParams
         const params = new URLSearchParams(searchParams.toString())
-        params.set("faculty", fac.id)
+        params.set("faculty", fac.value)
         params.delete("page") // reset page when filtering
 
         return (
           <Link
-            key={fac.id}
+            key={fac.value}
             href={`${pathname}?${params.toString()}`}
             style={{ 
               backgroundColor: isActive ? fac.color : undefined,
@@ -58,7 +50,7 @@ export function FacultyFilter() {
                 : "bg-transparent text-muted-foreground hover:opacity-80"
             }`}
           >
-            {fac.label} ({fac.id})
+            {fac.adminLabel} ({fac.value})
           </Link>
         )
       })}

@@ -232,11 +232,13 @@ export interface Database {
         Row: {
           user_id: string
           display_name: string | null
+          faculty: string | null
           created_at: string
           updated_at: string
         }
         Insert: Omit<Database['public']['Tables']['profiles']['Row'], 'created_at' | 'updated_at'> & {
           display_name?: string | null
+          faculty?: string | null
         }
         Update: Partial<Database['public']['Tables']['profiles']['Insert']>
       }
@@ -305,6 +307,7 @@ export interface Database {
         Returns: {
           user_id: string
           display_name: string
+          faculty: string | null
           total_score: number
           flashcard_count: number
           material_count: number
@@ -317,6 +320,7 @@ export interface Database {
           profile_user_id: string
         }
         Returns: {
+          faculty: string | null
           flashcard_count: number
           material_count: number
           subject_count: number
@@ -337,6 +341,7 @@ export interface Database {
         Returns: {
           user_id: string
           display_name: string | null
+          faculty: string | null
           total_xp: number
           level: number
         }[]

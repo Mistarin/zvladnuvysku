@@ -10,12 +10,20 @@ import Link from "next/link";
 interface MaterialUploadFormProps {
   subjectId: string;
   subjectName?: string;
-  hasDisplayName: boolean;
+  hasPublicProfileIdentity: boolean;
+  initialDisplayName: string;
+  initialFaculty: string | null;
 }
 
 const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2 MB
 
-export function MaterialUploadForm({ subjectId, subjectName, hasDisplayName: initialHasDisplayName }: MaterialUploadFormProps) {
+export function MaterialUploadForm({
+  subjectId,
+  subjectName,
+  hasPublicProfileIdentity: initialHasPublicProfileIdentity,
+  initialDisplayName,
+  initialFaculty,
+}: MaterialUploadFormProps) {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -28,7 +36,7 @@ export function MaterialUploadForm({ subjectId, subjectName, hasDisplayName: ini
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const [hasDisplayName, setHasDisplayName] = useState(initialHasDisplayName);
+  const [hasPublicProfileIdentity, setHasPublicProfileIdentity] = useState(initialHasPublicProfileIdentity);
   const [showDisplayNameModal, setShowDisplayNameModal] = useState(false);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -58,7 +66,7 @@ export function MaterialUploadForm({ subjectId, subjectName, hasDisplayName: ini
   const handleUpload = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!file || !title.trim()) return;
-    if (!hasDisplayName) {
+    if (!hasPublicProfileIdentity) {
       setShowDisplayNameModal(true);
       return;
     }
@@ -275,9 +283,10 @@ export function MaterialUploadForm({ subjectId, subjectName, hasDisplayName: ini
       <WelcomeDisplayNameModal
         open={showDisplayNameModal}
         onOpenChange={setShowDisplayNameModal}
-        initialDisplayName=""
-        onCompleted={(displayName) => {
-          setHasDisplayName(Boolean(displayName));
+        initialDisplayName={initialDisplayName}
+        initialFaculty={initialFaculty}
+        onCompleted={() => {
+          setHasPublicProfileIdentity(true);
         }}
       />
     </>

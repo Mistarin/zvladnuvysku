@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { isFacultyCode } from "@/lib/faculties";
 import { createClient } from "@/lib/supabase/server";
 import type { TeacherInsert } from "@/lib/types/database";
 
@@ -25,6 +26,10 @@ export async function proposeTeacher(data: {
   department?: string;
 }) {
   try {
+    if (!isFacultyCode(data.faculty)) {
+      return { error: "Vyber platnou fakultu." };
+    }
+
     const supabase = await createClient();
     const {
       data: { user },

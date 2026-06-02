@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { createTeacher, updateTeacher } from "@/app/admin/ucitele/actions";
+import { FACULTIES } from "@/lib/faculties";
 import type { Teacher } from "@/lib/types/database";
 import * as Dialog from "@radix-ui/react-dialog";
 import { X, Loader2, ChevronDown } from "lucide-react";
@@ -15,8 +16,6 @@ interface TeacherFormDialogProps {
   /** Existing department names for autocomplete */
   departmentSuggestions?: string[];
 }
-
-const FACULTIES = ["FSS", "FU", "FF", "LF", "PdF", "PřF"];
 
 // Funkce na automatické generování slugu z názvu
 function generateSlug(text: string) {
@@ -55,7 +54,7 @@ export function TeacherFormDialog({
   const [formData, setFormData] = useState({
     name: teacher?.name || "",
     slug: teacher?.slug || "",
-    faculty: teacher?.faculty || "FSS",
+    faculty: teacher?.faculty || FACULTIES[0].value,
     department: teacher?.department || "",
   });
 
@@ -171,7 +170,7 @@ export function TeacherFormDialog({
                   className="w-full px-3 py-2 bg-background border border-border rounded-md text-sm outline-none focus:ring-1 focus:ring-primary/50 focus:border-primary/50"
                 >
                   {FACULTIES.map((fac) => (
-                    <option key={fac} value={fac}>{fac}</option>
+                    <option key={fac.value} value={fac.value}>{fac.label}</option>
                   ))}
                 </select>
               </div>

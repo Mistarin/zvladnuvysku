@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { DifficultyBadge } from "./difficulty-badge";
+import { getFacultyColor } from "@/lib/faculties";
 import type { SortConfig } from "@/lib/subjects";
 import type { SubjectWithStats } from "@/lib/types/database";
 import { formatCredits } from "@/lib/utils";
@@ -32,15 +33,6 @@ const SEMESTER_LABELS: Record<string, string> = {
   zimní: "Zimní",
   letní: "Letní",
   oba: "Oba",
-};
-
-const FACULTY_COLORS: Record<string, string> = {
-  FSS: "#FBB900",
-  FU: "#D2091D",
-  FF: "#74348B",
-  LF: "#007CBB",
-  PdF: "#EE7202",
-  PřF: "#7A9B21",
 };
 
 const ATTENDANCE_STYLES: Record<string, { text: string; bg: string }> = {
@@ -125,6 +117,7 @@ export function SubjectTable({
           ) : (
             subjects.map((subject, idx) => {
               const attendance = getAttendanceData(subject.attendance_type);
+              const facultyColor = getFacultyColor(subject.faculty) ?? "var(--foreground)";
               return (
                 <tr
                   key={subject.id}
@@ -145,8 +138,8 @@ export function SubjectTable({
                         <span 
                           className="inline-block px-1.5 py-0.5 text-[10px] font-semibold rounded uppercase tracking-wider"
                           style={{ 
-                            backgroundColor: `${FACULTY_COLORS[subject.faculty] || "var(--foreground)"}20`,
-                            color: FACULTY_COLORS[subject.faculty] || "var(--foreground)",
+                            backgroundColor: `${facultyColor}20`,
+                            color: facultyColor,
                           }}
                         >
                           {subject.faculty}

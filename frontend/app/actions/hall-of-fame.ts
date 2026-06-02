@@ -1,15 +1,25 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { isFacultyCode } from '@/lib/faculties'
+import { getPublicProfilePath } from '@/lib/public-profile'
 import { createClient } from '@/lib/supabase/server'
+import type { PublicProfileIdentity } from '@/lib/public-profile-identity'
 
 type ActionResult = { success: true } | { success: false; error: string }
 
-export async function upsertDisplayName(displayName: string): Promise<ActionResult> {
-  const trimmed = displayName.trim()
+export async function upsertPublicProfileIdentity({
+  displayName,
+  faculty,
+}: PublicProfileIdentity): Promise<ActionResult> {
+  const trimmedDisplayName = displayName.trim()
 
-  if (trimmed.length < 2 || trimmed.length > 40) {
+  if (trimmedDisplayName.length < 2 || trimmedDisplayName.length > 40) {
     return { success: false, error: 'Veřejné jméno musí mít 2 až 40 znaků.' }
+  }
+
+  if (!isFacultyCode(faculty)) {
+    return { success: false, error: 'Vyber jednu z podporovaných fakult.' }
   }
 
   try {
@@ -27,7 +37,8 @@ export async function upsertDisplayName(displayName: string): Promise<ActionResu
       .upsert(
         {
           user_id: user.id,
-          display_name: trimmed,
+          display_name: trimmedDisplayName,
+          faculty,
         } as never,
         {
           onConflict: 'user_id',
@@ -35,15 +46,17 @@ export async function upsertDisplayName(displayName: string): Promise<ActionResu
       )
 
     if (error) {
-      return { success: false, error: `Nepodařilo se uložit jméno: ${error.message}` }
+      return { success: false, error: `Nepodařilo se uložit veřejný profil: ${error.message}` }
     }
 
     revalidatePath('/')
+    revalidatePath('/moje-aktivita')
+    revalidatePath(getPublicProfilePath(user.id))
     return { success: true }
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Neznámá chyba při ukládání jména.',
+      error: error instanceof Error ? error.message : 'Neznámá chyba při ukládání veřejného profilu.',
     }
   }
 }

@@ -9,7 +9,9 @@ import { WelcomeDisplayNameModal } from '@/components/layout/welcome-display-nam
 interface RatingFormProps {
   subjectId: string
   isLoggedIn: boolean
-  hasDisplayName: boolean
+  hasPublicProfileIdentity: boolean
+  initialDisplayName: string
+  initialFaculty: string | null
 }
 
 function StarPicker({
@@ -48,7 +50,13 @@ function StarPicker({
   )
 }
 
-export function RatingForm({ subjectId, isLoggedIn, hasDisplayName: initialHasDisplayName }: RatingFormProps) {
+export function RatingForm({
+  subjectId,
+  isLoggedIn,
+  hasPublicProfileIdentity: initialHasPublicProfileIdentity,
+  initialDisplayName,
+  initialFaculty,
+}: RatingFormProps) {
   const { submit, isSubmitting, error, success } = useRating()
 
   const [overall, setOverall] = useState(0)
@@ -56,7 +64,7 @@ export function RatingForm({ subjectId, isLoggedIn, hasDisplayName: initialHasDi
   const [usefulness, setUsefulness] = useState(0)
   const [workload, setWorkload] = useState(0)
   const [comment, setComment] = useState('')
-  const [hasDisplayName, setHasDisplayName] = useState(initialHasDisplayName)
+  const [hasPublicProfileIdentity, setHasPublicProfileIdentity] = useState(initialHasPublicProfileIdentity)
   const [showDisplayNameModal, setShowDisplayNameModal] = useState(false)
 
   useEffect(() => {
@@ -110,7 +118,7 @@ export function RatingForm({ subjectId, isLoggedIn, hasDisplayName: initialHasDi
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (overall === 0) return
-    if (!hasDisplayName) {
+    if (!hasPublicProfileIdentity) {
       setShowDisplayNameModal(true)
       return
     }
@@ -181,9 +189,10 @@ export function RatingForm({ subjectId, isLoggedIn, hasDisplayName: initialHasDi
       <WelcomeDisplayNameModal
         open={showDisplayNameModal}
         onOpenChange={setShowDisplayNameModal}
-        initialDisplayName=""
-        onCompleted={(displayName) => {
-          setHasDisplayName(Boolean(displayName))
+        initialDisplayName={initialDisplayName}
+        initialFaculty={initialFaculty}
+        onCompleted={() => {
+          setHasPublicProfileIdentity(true)
         }}
       />
     </>

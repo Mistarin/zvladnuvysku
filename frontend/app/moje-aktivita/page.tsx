@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { MyActivityDashboard, type ActivityAttention, type ActivityCardData, type ActivitySectionData, type StatusTone } from "@/components/activity/my-activity-dashboard";
 import { MaterialGroupCard, type MaterialGroupData } from "@/components/subject/material-group-card";
 import { getPublicProfilePath } from "@/lib/public-profile";
+import { getPublicProfileIdentity, hasPublicProfileIdentity } from "@/lib/public-profile-identity";
 import { createClient } from "@/lib/supabase/server";
 import { getStoragePublicUrl } from "@/lib/storage";
 import type { ActivityAcknowledgement, Feedback, FlashcardDeck, Profile, Subject, SubjectMaterial, SubjectProposalRecord } from "@/lib/types/database";
@@ -77,11 +78,11 @@ export default async function MyActivityPage() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("display_name")
+    .select("display_name, faculty")
     .eq("user_id", user.id)
     .maybeSingle();
-  const typedProfile = profile as Pick<Profile, "display_name"> | null;
-  const hasDisplayName = Boolean(typedProfile?.display_name?.trim());
+  const typedProfile = profile as Pick<Profile, "display_name" | "faculty"> | null;
+  const hasPublicIdentity = hasPublicProfileIdentity(typedProfile);
 
   return (
     <div className="container mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
@@ -93,10 +94,10 @@ export default async function MyActivityPage() {
           </p>
         </div>
         <Link
-          href={hasDisplayName ? getPublicProfilePath(user.id) : "/#hall-of-fame?action=set-display-name"}
+          href={hasPublicIdentity ? getPublicProfilePath(user.id) : "/#hall-of-fame"}
           className="inline-flex items-center justify-center rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted"
         >
-          {hasDisplayName ? "Otevřít veřejný profil" : "Nastavit jméno v žebříčku"}
+          {hasPublicIdentity ? "Otevřít veřejný profil" : "Doplnit veřejný profil"}
         </Link>
       </div>
 
@@ -140,6 +141,7 @@ async function MyActivitySections({ userId }: { userId: string }) {
   ]);
 
   const typedProfile = profile as Profile | null;
+  const publicIdentity = getPublicProfileIdentity(typedProfile);
   const myDecks = (decks ?? []) as DeckWithSubject[];
   const myMaterials = (materials ?? []) as MaterialWithSubject[];
   const myGroups = ((groups ?? []) as MaterialGroupWithSubject[]).map((group) => ({
@@ -272,6 +274,21 @@ async function MyActivitySections({ userId }: { userId: string }) {
       ],
     },
     {
+      id: "groups",
+      title: "Skupiny materiálů",
+      description: "Složky materiálů můžeš filtrovat podle předmětu a rovnou je přejmenovat nebo spravovat.",
+      tabs: [
+        {
+          id: "all",
+          label: "Všechny",
+          description: "Každá skupina zobrazuje svoje soubory i rychlou správu názvu.",
+          empty: "Zatím nemáš žádné skupiny materiálů.",
+          tone: "muted",
+          items: myGroups.map((group) => buildMaterialGroupCard(group)),
+        },
+      ],
+    },
+    {
       id: "feedback",
       title: "Feedback a nahlášené problémy",
       description: "Uvidíš, co je nové, co se řeší a co už je uzavřené.",
@@ -331,28 +348,7 @@ async function MyActivitySections({ userId }: { userId: string }) {
 
   return (
     <div className="space-y-8">
-      <MyActivityDashboard displayName={typedProfile?.display_name ?? null} sections={sections} />
-
-      <section className="space-y-4">
-        <div className="space-y-1">
-          <h2 className="text-xl font-bold text-foreground">Skupiny materiálů</h2>
-          <p className="text-sm text-muted-foreground">
-            Svoje skupiny tady můžeš přejmenovat nebo zrušit. Stav jednotlivých PDF uvidíš přímo uvnitř.
-          </p>
-        </div>
-
-        {myGroups.length > 0 ? (
-          <div className="space-y-3">
-            {myGroups.map((group) => (
-              <MaterialGroupCard key={group.id} group={group} showSubject isOwner />
-            ))}
-          </div>
-        ) : (
-          <div className="rounded-2xl border border-dashed border-border bg-background/40 px-4 py-8 text-center text-sm text-muted-foreground">
-            Zatím nemáš žádné skupiny materiálů.
-          </div>
-        )}
-      </section>
+      <MyActivityDashboard publicIdentity={publicIdentity} sections={sections} />
     </div>
   );
 }
@@ -526,6 +522,32 @@ function buildMaterialCard(material: MaterialWithSubject, acknowledgementSet: Se
     ],
     panels,
     attention,
+  };
+}
+
+function buildMaterialGroupCard(group: MaterialGroupData): ActivityCardData {
+  const subjectLabel = group.subject ? `${group.subject.short_tag} · ${group.subject.name}` : "Bez předmětu";
+
+  return {
+    id: `group-${group.id}`,
+    title: group.title,
+    subjectFilter: group.subject
+      ? {
+          key: group.subject.slug,
+          label: subjectLabel,
+        }
+      : undefined,
+    badges: [],
+    meta: [],
+    customContent: (
+      <MaterialGroupCard
+        group={group}
+        showSubject
+        isOwner
+        compact
+        defaultExpanded={false}
+      />
+    ),
   };
 }
 

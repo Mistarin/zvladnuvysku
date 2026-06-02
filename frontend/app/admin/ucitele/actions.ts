@@ -1,5 +1,6 @@
 "use server";
 
+import { isFacultyCode } from "@/lib/faculties";
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import type { TeacherInsert } from "@/lib/types/database";
@@ -19,6 +20,10 @@ async function checkAdmin() {
 
 export async function createTeacher(data: TeacherInsert) {
   try {
+    if (!isFacultyCode(data.faculty)) {
+      return { error: "Vyber platnou fakultu." };
+    }
+
     const supabase = await checkAdmin();
 
     const { error } = await supabase
@@ -44,6 +49,10 @@ export async function createTeacher(data: TeacherInsert) {
 
 export async function updateTeacher(id: string, data: Partial<TeacherInsert>) {
   try {
+    if (data.faculty !== undefined && !isFacultyCode(data.faculty)) {
+      return { error: "Vyber platnou fakultu." };
+    }
+
     const supabase = await checkAdmin();
 
     const { error } = await supabase

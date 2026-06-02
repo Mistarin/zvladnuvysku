@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Pencil, Trash2, Check, X } from 'lucide-react'
 import { deleteSubject, updateSubject } from '@/app/admin/actions'
+import { FACULTIES } from '@/lib/faculties'
 
 interface SubjectRow {
   id: string
@@ -64,12 +65,11 @@ function EditRow({ subject, onDone }: { subject: SubjectRow; onDone: () => void 
       <td className="px-4 py-3 hidden md:table-cell">
         <select value={form.faculty} onChange={e => setForm(f => ({ ...f, faculty: e.target.value }))} className={inputCls}>
           <option value="">—</option>
-          <option value="FSS">FSS (Sociální věda)</option>
-          <option value="FU">FU (Umělecká)</option>
-          <option value="FF">FF (Filozofická)</option>
-          <option value="LF">LF (Lékařská)</option>
-          <option value="PdF">PdF (Pedagogická)</option>
-          <option value="PřF">PřF (Přírodní vědy)</option>
+          {FACULTIES.map((faculty) => (
+            <option key={faculty.value} value={faculty.value}>
+              {faculty.label}
+            </option>
+          ))}
         </select>
       </td>
       <td className="px-4 py-3 hidden md:table-cell">

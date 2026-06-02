@@ -1,6 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { isFacultyCode } from '@/lib/faculties'
 import { createClient } from '@/lib/supabase/server'
 import type { Database, SubjectRating, TeacherRating } from '@/lib/types/database'
 import { containsProfanity } from '@/lib/profanity'
@@ -232,6 +233,10 @@ function validateSubjectProposalPayload(payload: SubjectProposalInput) {
     return 'Ročník musí být celé číslo v rozsahu 1 až 5.'
   }
 
+  if (hasText(payload.form.faculty) && !isFacultyCode(payload.form.faculty.trim())) {
+    return 'Vyber platnou fakultu.'
+  }
+
   if (!Array.isArray(payload.teachers) || !Array.isArray(payload.materialFiles)) {
     return 'Neplatná data návrhu.'
   }
@@ -262,6 +267,13 @@ function validateSubjectProposalPayload(payload: SubjectProposalInput) {
   )
   if (invalidTeacherDepartment) {
     return 'Název katedry musí začínat velkým písmenem.'
+  }
+
+  const invalidTeacherFaculty = payload.teachers.find(
+    (teacher) => hasText(teacher.faculty) && !isFacultyCode(String(teacher.faculty).trim()),
+  )
+  if (invalidTeacherFaculty) {
+    return 'Vyber platnou fakultu u vyučujícího.'
   }
 
   const invalidMaterialMeta = payload.materialFiles.find(

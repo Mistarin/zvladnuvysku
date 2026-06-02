@@ -5,25 +5,31 @@ import { proposeTeacher } from "@/app/ucitele/actions";
 import * as Dialog from "@radix-ui/react-dialog";
 import { X, Loader2 } from "lucide-react";
 import { WelcomeDisplayNameModal } from "@/components/layout/welcome-display-name-modal";
+import { FACULTIES } from "@/lib/faculties";
 
 interface TeacherProposalDialogProps {
   trigger?: React.ReactNode;
-  hasDisplayName: boolean;
+  hasPublicProfileIdentity: boolean;
+  initialDisplayName: string;
+  initialFaculty: string | null;
 }
 
-const FACULTIES = ["FSS", "FU", "FF", "LF", "PdF", "PřF"];
-
-export function TeacherProposalDialog({ trigger, hasDisplayName: initialHasDisplayName }: TeacherProposalDialogProps) {
+export function TeacherProposalDialog({
+  trigger,
+  hasPublicProfileIdentity: initialHasPublicProfileIdentity,
+  initialDisplayName,
+  initialFaculty,
+}: TeacherProposalDialogProps) {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [success, setSuccess] = useState(false);
-  const [hasDisplayName, setHasDisplayName] = useState(initialHasDisplayName);
+  const [hasPublicProfileIdentity, setHasPublicProfileIdentity] = useState(initialHasPublicProfileIdentity);
   const [showDisplayNameModal, setShowDisplayNameModal] = useState(false);
 
   const [formData, setFormData] = useState({
     name: "",
-    faculty: "FSS",
+    faculty: initialFaculty || FACULTIES[0].value,
     department: "",
   });
 
@@ -40,7 +46,7 @@ export function TeacherProposalDialog({ trigger, hasDisplayName: initialHasDispl
       setError("Jméno je povinné");
       return;
     }
-    if (!hasDisplayName) {
+    if (!hasPublicProfileIdentity) {
       setShowDisplayNameModal(true);
       return;
     }
@@ -55,7 +61,7 @@ export function TeacherProposalDialog({ trigger, hasDisplayName: initialHasDispl
         setTimeout(() => {
           setIsOpen(false);
           setSuccess(false);
-          setFormData({ name: "", faculty: "FSS", department: "" });
+          setFormData({ name: "", faculty: initialFaculty || FACULTIES[0].value, department: "" });
         }, 2000);
       }
     });
@@ -115,8 +121,8 @@ export function TeacherProposalDialog({ trigger, hasDisplayName: initialHasDispl
                     onChange={(e) => setFormData(prev => ({ ...prev, faculty: e.target.value }))}
                     className="w-full px-3 py-2 bg-background border border-border rounded-md text-sm outline-none focus:ring-1 focus:ring-primary/50 focus:border-primary/50"
                   >
-                    {FACULTIES.map(fac => (
-                      <option key={fac} value={fac}>{fac}</option>
+                    {FACULTIES.map((fac) => (
+                      <option key={fac.value} value={fac.value}>{fac.label}</option>
                     ))}
                   </select>
                 </div>
@@ -163,9 +169,10 @@ export function TeacherProposalDialog({ trigger, hasDisplayName: initialHasDispl
       <WelcomeDisplayNameModal
         open={showDisplayNameModal}
         onOpenChange={setShowDisplayNameModal}
-        initialDisplayName=""
-        onCompleted={(displayName) => {
-          setHasDisplayName(Boolean(displayName));
+        initialDisplayName={initialDisplayName}
+        initialFaculty={initialFaculty}
+        onCompleted={() => {
+          setHasPublicProfileIdentity(true);
         }}
       />
     </Dialog.Root>

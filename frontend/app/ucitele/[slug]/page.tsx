@@ -3,16 +3,9 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { TeacherRatingForm } from "@/components/teacher/teacher-rating-form";
 import { TeacherReviews } from "@/components/teacher/teacher-reviews";
+import { getFacultyColor } from "@/lib/faculties";
+import { getPublicProfileIdentity, hasPublicProfileIdentity } from "@/lib/public-profile-identity";
 import type { Database } from "@/lib/types/database";
-
-const FACULTY_COLORS: Record<string, string> = {
-  FSS: "#FBB900",
-  FU: "#D2091D",
-  FF: "#74348B",
-  LF: "#007CBB",
-  PdF: "#EE7202",
-  PřF: "#7A9B21",
-};
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -73,14 +66,15 @@ export default async function TeacherDetailPage({ params }: PageProps) {
     ? (
         await supabase
           .from("profiles")
-          .select("display_name")
+          .select("display_name, faculty")
           .eq("user_id", user.id)
           .maybeSingle()
       ).data ?? null
     : null;
-  const hasDisplayName = Boolean((profile as { display_name?: string | null } | null)?.display_name?.trim());
+  const hasPublicIdentity = hasPublicProfileIdentity(profile);
+  const publicIdentity = getPublicProfileIdentity(profile);
 
-  const facColor = FACULTY_COLORS[t.faculty] || "var(--foreground)";
+  const facColor = getFacultyColor(t.faculty) || "var(--foreground)";
 
   return (
     <div className="container mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-8">
@@ -161,7 +155,13 @@ export default async function TeacherDetailPage({ params }: PageProps) {
         <div className="md:col-span-2 space-y-8">
           <div className="glass-card p-6">
             <h3 className="font-semibold text-xl mb-4">Ohodnoťte vyučujícího</h3>
-            <TeacherRatingForm teacherId={t.id} isLoggedIn={isLoggedIn} hasDisplayName={hasDisplayName} />
+            <TeacherRatingForm
+              teacherId={t.id}
+              isLoggedIn={isLoggedIn}
+              hasPublicProfileIdentity={hasPublicIdentity}
+              initialDisplayName={publicIdentity.displayName}
+              initialFaculty={publicIdentity.faculty}
+            />
           </div>
 
           <div className="space-y-4">

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getPublicProfilePath } from "@/lib/public-profile";
 import type { PublicUserSummary } from "@/lib/public-user-summaries";
+import { getFacultyColor } from "@/lib/faculties";
 
 interface PublicUserLinkProps {
   userId: string;
@@ -33,6 +34,17 @@ export function PublicUserLink({
           {label}
         </span>
       )}
+      {summary?.faculty ? (
+        <span
+          className="shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold"
+          style={{
+            backgroundColor: `${getFacultyColor(summary.faculty) ?? "var(--foreground)"}20`,
+            color: getFacultyColor(summary.faculty) ?? "var(--foreground)",
+          }}
+        >
+          {summary.faculty}
+        </span>
+      ) : null}
       {summary ? (
         <span className="shrink-0 rounded-full border border-primary/15 bg-primary/8 px-2 py-0.5 text-[11px] font-semibold text-primary">
           Lv. {summary.level}

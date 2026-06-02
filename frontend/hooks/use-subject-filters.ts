@@ -9,6 +9,7 @@ import {
   type SubjectFilters,
   type SortConfig,
 } from '@/lib/subjects'
+import { FACULTIES } from '@/lib/faculties'
 
 export interface FilterConfig {
   key: keyof SubjectFilters | 'freeCredits'
@@ -98,14 +99,10 @@ export const FILTER_CONFIG: FilterConfig[] = [
     key: 'faculty',
     label: 'Fakulta',
     type: 'select',
-    options: [
-      { value: 'FSS', label: 'FSS 🟨' },
-      { value: 'FU', label: 'FU 🟥' },
-      { value: 'FF', label: 'FF 🟪' },
-      { value: 'LF', label: 'LF 🟦' },
-      { value: 'PdF', label: 'PdF 🟧' },
-      { value: 'PřF', label: 'PřF 🟩' },
-    ],
+    options: FACULTIES.map((faculty) => ({
+      value: faculty.value,
+      label: `${faculty.shortLabel} · ${faculty.adminLabel}`,
+    })),
   },
   {
     key: 'examFromHome',
