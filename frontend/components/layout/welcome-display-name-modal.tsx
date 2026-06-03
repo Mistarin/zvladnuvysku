@@ -3,7 +3,7 @@
 import { useEffect, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import * as Dialog from '@radix-ui/react-dialog'
-import { ArrowLeft, CheckCircle2, Loader2, Sparkles } from 'lucide-react'
+import { AlertTriangle, ArrowLeft, CheckCircle2, Loader2, Sparkles } from 'lucide-react'
 import { upsertPublicProfileIdentity } from '@/app/actions/hall-of-fame'
 import { FACULTIES } from '@/lib/faculties'
 import {
@@ -187,6 +187,12 @@ export function WelcomeDisplayNameModal({
                   <p className="text-xs text-muted-foreground">
                     2 až 40 znaků. Nemusí být unikátní.
                   </p>
+                  <div className="flex items-start gap-2 rounded-xl border border-amber-500/20 bg-amber-500/10 px-3 py-2 text-xs leading-5 text-amber-700 dark:text-amber-300">
+                    <AlertTriangle className="mt-0.5 size-4 shrink-0" />
+                    <p>
+                      Kvůli soukromí nedoporučujeme používat celé pravé jméno. Můžeš, ale veřejně se bude zobrazovat u recenzí, profilu a v Hall of Fame.
+                    </p>
+                  </div>
                 </div>
               ) : (
                 <div className="space-y-3">

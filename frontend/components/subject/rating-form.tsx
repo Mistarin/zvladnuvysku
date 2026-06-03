@@ -7,7 +7,7 @@ import { deleteOwnSubjectRating, getMySubjectRating } from '@/app/actions/contri
 import { ReviewVisibilityField } from '@/components/review/review-visibility-field'
 import { useRating } from '@/hooks/use-rating'
 import { WelcomeDisplayNameModal } from '@/components/layout/welcome-display-name-modal'
-import { Loader2 } from 'lucide-react'
+import { Clock3, Loader2 } from 'lucide-react'
 
 interface RatingFormProps {
   subjectId: string
@@ -75,6 +75,7 @@ export function RatingForm({
   const [statusMessage, setStatusMessage] = useState<string | null>(null)
   const [statusTone, setStatusTone] = useState<'success' | 'error'>('success')
   const [isDeleting, setIsDeleting] = useState(false)
+  const [isCommentPending, setIsCommentPending] = useState(false)
 
   useEffect(() => {
     if (!isLoggedIn) return
@@ -94,6 +95,7 @@ export function RatingForm({
         setComment(existingRating.comment || '')
         setIsAnonymous(existingRating.is_anonymous)
         setHasExistingRating(true)
+        setIsCommentPending(Boolean(existingRating.comment?.trim()) && existingRating.comment_is_approved === false)
         return
       }
 
@@ -104,6 +106,7 @@ export function RatingForm({
       setComment('')
       setIsAnonymous(false)
       setHasExistingRating(false)
+      setIsCommentPending(false)
     }
 
     fetchExisting()
@@ -134,7 +137,7 @@ export function RatingForm({
     }
     setStatusMessage(null)
     setStatusTone('success')
-    const saved = await submit({
+    const result = await submit({
       subjectId,
       overall,
       difficulty: difficulty || undefined,
@@ -143,10 +146,15 @@ export function RatingForm({
       comment,
       isAnonymous,
     })
-    if (!saved) return
+    if (!result.success) return
 
     setHasExistingRating(true)
-    setStatusMessage('Hodnocení bylo uloženo.')
+    setIsCommentPending(result.moderationPending)
+    setStatusMessage(
+      result.moderationPending
+        ? 'Hodnocení bylo uloženo. Slovní recenze teď čeká na schválení moderátorem.'
+        : 'Hodnocení bylo uloženo.',
+    )
     router.refresh()
   }
 
@@ -174,6 +182,7 @@ export function RatingForm({
     setComment('')
     setIsAnonymous(false)
     setHasExistingRating(false)
+    setIsCommentPending(false)
     setStatusMessage('Hodnocení bylo smazáno.')
     router.refresh()
   }
@@ -201,6 +210,13 @@ export function RatingForm({
         </div>
 
         <ReviewVisibilityField isAnonymous={isAnonymous} onChange={setIsAnonymous} />
+
+        {hasExistingRating && isCommentPending ? (
+          <div className="flex items-start gap-2 rounded-xl border border-amber-500/20 bg-amber-500/10 px-3 py-2 text-sm text-amber-700 dark:text-amber-300">
+            <Clock3 className="mt-0.5 size-4 shrink-0" />
+            <p>Tvoje slovní recenze čeká na schválení moderátorem.</p>
+          </div>
+        ) : null}
 
         {/* Komentář */}
         <div className="space-y-1">

@@ -9,6 +9,7 @@ import type { Database, SubjectRating, TeacherRating } from '@/lib/types/databas
 import { containsProfanity } from '@/lib/profanity'
 
 type ActionResult = { success: true } | { success: false; error: string }
+type ReviewSaveResult = { success: true; moderationPending: boolean } | { success: false; error: string }
 
 type SubjectProposalInput = {
   proposalId?: string | null
@@ -693,7 +694,7 @@ export async function getMySubjectRating(subjectId: string): Promise<ExistingSub
   }
 }
 
-export async function saveSubjectRating(input: SubjectRatingInput): Promise<ActionResult> {
+export async function saveSubjectRating(input: SubjectRatingInput): Promise<ReviewSaveResult> {
   try {
     const supabase = await createClient()
     const {
@@ -723,6 +724,17 @@ export async function saveSubjectRating(input: SubjectRatingInput): Promise<Acti
       return { success: false, error: `Nepodařilo se uložit hodnocení: ${error.message}` }
     }
 
+    const { data: moderationState, error: moderationError } = await supabase
+      .from('subject_ratings')
+      .select('comment_is_approved')
+      .eq('subject_id', input.subjectId)
+      .eq('user_id', user.id)
+      .single()
+
+    if (moderationError) {
+      return { success: false, error: `Nepodařilo se ověřit stav recenze: ${moderationError.message}` }
+    }
+
     const { data: subjectData } = await supabase
       .from('subjects')
       .select('slug')
@@ -731,7 +743,11 @@ export async function saveSubjectRating(input: SubjectRatingInput): Promise<Acti
     const typedSubject = subjectData as { slug: string } | null
     const path = typedSubject?.slug ? `/predmety/${typedSubject.slug}` : '/predmety'
     revalidateReviewSurfaces(user.id, path)
-    return { success: true }
+    const moderationStateRow = moderationState as { comment_is_approved: boolean | null } | null
+    return {
+      success: true,
+      moderationPending: Boolean(payload.comment && moderationStateRow?.comment_is_approved === false),
+    }
   } catch (error) {
     return {
       success: false,
@@ -771,7 +787,7 @@ export async function getMyTeacherRating(teacherId: string): Promise<ExistingTea
   }
 }
 
-export async function saveTeacherRating(input: TeacherRatingInput): Promise<ActionResult> {
+export async function saveTeacherRating(input: TeacherRatingInput): Promise<ReviewSaveResult> {
   try {
     const supabase = await createClient()
     const {
@@ -798,6 +814,17 @@ export async function saveTeacherRating(input: TeacherRatingInput): Promise<Acti
       return { success: false, error: `Chyba při ukládání: ${error.message}` }
     }
 
+    const { data: moderationState, error: moderationError } = await supabase
+      .from('teacher_ratings')
+      .select('comment_is_approved')
+      .eq('teacher_id', input.teacherId)
+      .eq('user_id', user.id)
+      .single()
+
+    if (moderationError) {
+      return { success: false, error: `Nepodařilo se ověřit stav recenze: ${moderationError.message}` }
+    }
+
     const { data: teacherData } = await supabase
       .from('teachers')
       .select('slug')
@@ -806,7 +833,11 @@ export async function saveTeacherRating(input: TeacherRatingInput): Promise<Acti
     const typedTeacher = teacherData as { slug: string } | null
     const path = typedTeacher?.slug ? `/ucitele/${typedTeacher.slug}` : '/ucitele'
     revalidateReviewSurfaces(user.id, path)
-    return { success: true }
+    const moderationStateRow = moderationState as { comment_is_approved: boolean | null } | null
+    return {
+      success: true,
+      moderationPending: Boolean(payload.review && moderationStateRow?.comment_is_approved === false),
+    }
   } catch (error) {
     return {
       success: false,

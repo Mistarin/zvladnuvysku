@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { AlertTriangle, ChevronDown, FileText, ListChecks, SlidersHorizontal, UserPlus, Users, X } from 'lucide-react'
 import {
   getSubjectDetailsForProposal,
@@ -178,6 +179,7 @@ export type InitialSubjectProposal = {
   id: string
   type: 'new' | 'edit'
   subjectId: string | null
+  subjectSlug?: string | null
   subjectLabel: string
   form: Partial<typeof DEFAULT_FORM>
   teachers: Array<{ id?: string; name: string; faculty?: string | null; department?: string | null }>
@@ -229,6 +231,7 @@ export function SubjectProposalForm({
   initialFaculty,
   initialProposal,
 }: SubjectProposalFormProps) {
+  const router = useRouter()
   const [type, setType] = useState<'new' | 'edit'>(initialProposal?.type ?? 'new')
   const [subjectSearch, setSubjectSearch] = useState(initialProposal?.subjectLabel ?? '')
   const [subjectId, setSubjectId] = useState<string | null>(initialProposal?.subjectId ?? null)
@@ -238,7 +241,6 @@ export function SubjectProposalForm({
   const [subjectCache, setSubjectCache] = useState<SubjectCacheEntry[]>([])
   const [teacherCache, setTeacherCache] = useState<TeacherCacheEntry[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [success, setSuccess] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [submissionToken, setSubmissionToken] = useState(createSubmissionToken)
   const [hasPublicProfileIdentity, setHasPublicProfileIdentity] = useState(initialHasPublicProfileIdentity)
@@ -453,8 +455,14 @@ export function SubjectProposalForm({
       ])
 
       if (!result.success) { setError(result.error); return }
-      setSuccess(true)
       setSubmissionToken(createSubmissionToken())
+      const successParams = new URLSearchParams({
+        submitted: initialProposal ? 'edit' : 'new',
+      })
+      if (initialProposal?.subjectSlug) {
+        successParams.set('subject', initialProposal.subjectSlug)
+      }
+      router.replace(`/navrhnout?${successParams.toString()}`)
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : 'Nepodařilo se odeslat návrh.')
     } finally {
@@ -462,37 +470,24 @@ export function SubjectProposalForm({
     }
   }
 
-  if (success) {
-    return (
-      <div className="glass-card p-8 text-center space-y-3">
-        <h2 className="text-xl font-semibold text-foreground">
-          {initialProposal ? 'Návrh upraven!' : 'Návrh odeslán!'}
-        </h2>
-        <p className="text-muted-foreground text-sm">Moderátor ho brzy zkontroluje.</p>
-      </div>
-    )
-  }
-
   return (
     <>
     {/* WIZARD PROGRESS */}
-    {!success && (
-      <div className="flex items-center justify-center mb-8 mt-2">
-        <div className="flex w-full max-w-lg items-center px-4 relative">
-          <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 font-bold transition-all shadow-sm ${step >= 1 ? 'border-primary bg-primary text-primary-foreground shadow-primary/20' : 'border-white/10 bg-background text-muted-foreground'}`}>1</div>
-          <div className={`h-1.5 w-full transition-all rounded-full mx-2 ${step >= 2 ? 'bg-primary shadow-sm shadow-primary/20' : 'bg-muted'}`} />
-          <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 font-bold transition-all shadow-sm ${step >= 2 ? 'border-primary bg-primary text-primary-foreground shadow-primary/20' : 'border-white/10 bg-background text-muted-foreground'}`}>2</div>
-          <div className={`h-1.5 w-full transition-all rounded-full mx-2 ${step >= 3 ? 'bg-primary shadow-sm shadow-primary/20' : 'bg-muted'}`} />
-          <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 font-bold transition-all shadow-sm ${step >= 3 ? 'border-primary bg-primary text-primary-foreground shadow-primary/20' : 'border-white/10 bg-background text-muted-foreground'}`}>3</div>
-          
-          <div className="absolute -bottom-6 w-full left-0 px-2 flex justify-between text-xs font-semibold text-muted-foreground">
-            <span className={`w-14 text-center ${step >= 1 ? 'text-primary' : ''}`}>Základ</span>
-            <span className={`w-14 text-center ${step >= 2 ? 'text-primary' : ''}`}>Detaily</span>
-            <span className={`w-14 text-center ${step >= 3 ? 'text-primary' : ''}`}>Materiály</span>
-          </div>
+    <div className="flex items-center justify-center mb-8 mt-2">
+      <div className="flex w-full max-w-lg items-center px-4 relative">
+        <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 font-bold transition-all shadow-sm ${step >= 1 ? 'border-primary bg-primary text-primary-foreground shadow-primary/20' : 'border-white/10 bg-background text-muted-foreground'}`}>1</div>
+        <div className={`h-1.5 w-full transition-all rounded-full mx-2 ${step >= 2 ? 'bg-primary shadow-sm shadow-primary/20' : 'bg-muted'}`} />
+        <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 font-bold transition-all shadow-sm ${step >= 2 ? 'border-primary bg-primary text-primary-foreground shadow-primary/20' : 'border-white/10 bg-background text-muted-foreground'}`}>2</div>
+        <div className={`h-1.5 w-full transition-all rounded-full mx-2 ${step >= 3 ? 'bg-primary shadow-sm shadow-primary/20' : 'bg-muted'}`} />
+        <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 font-bold transition-all shadow-sm ${step >= 3 ? 'border-primary bg-primary text-primary-foreground shadow-primary/20' : 'border-white/10 bg-background text-muted-foreground'}`}>3</div>
+        
+        <div className="absolute -bottom-6 w-full left-0 px-2 flex justify-between text-xs font-semibold text-muted-foreground">
+          <span className={`w-14 text-center ${step >= 1 ? 'text-primary' : ''}`}>Základ</span>
+          <span className={`w-14 text-center ${step >= 2 ? 'text-primary' : ''}`}>Detaily</span>
+          <span className={`w-14 text-center ${step >= 3 ? 'text-primary' : ''}`}>Materiály</span>
         </div>
       </div>
-    )}
+    </div>
 
     <form onSubmit={handleSubmit} className="space-y-8">
       {/* STEP 1 */}

@@ -1,5 +1,7 @@
 import type { Metadata } from 'next'
+import Link from 'next/link'
 import { redirect } from 'next/navigation'
+import { CheckCircle2, ClipboardList, Eye } from 'lucide-react'
 import { normalizeDepartmentName } from '@/lib/department-name'
 import { hasPublicProfileIdentity } from '@/lib/public-profile-identity'
 import { createClient } from '@/lib/supabase/server'
@@ -12,7 +14,11 @@ export const metadata: Metadata = {
 }
 
 type PageProps = {
-  searchParams?: Promise<{ proposal?: string | string[] }>
+  searchParams?: Promise<{
+    proposal?: string | string[]
+    submitted?: string | string[]
+    subject?: string | string[]
+  }>
 }
 
 type ProposalData = {
@@ -41,11 +47,13 @@ export default async function NavrhnoutPage({ searchParams }: PageProps) {
     faculty: null,
   }
   let initialProposal: InitialSubjectProposal | null = null
+  let submittedState: { kind: 'new' | 'edit'; subjectSlug?: string | null } | null = null
 
   try {
     const resolvedSearchParams = await searchParams
-    const rawProposalId = resolvedSearchParams?.proposal
-    const proposalId = Array.isArray(rawProposalId) ? rawProposalId[0] : rawProposalId
+    const proposalId = getSingleSearchParam(resolvedSearchParams?.proposal)
+    const submitted = normalizeSubmittedKind(getSingleSearchParam(resolvedSearchParams?.submitted))
+    const submittedSubjectSlug = getSingleSearchParam(resolvedSearchParams?.subject)
     const supabase = await createClient()
     const {
       data: { user },
@@ -96,7 +104,7 @@ export default async function NavrhnoutPage({ searchParams }: PageProps) {
       if (typedProposal.subject_id) {
         const { data: subject, error: subjectError } = await supabase
           .from('subjects')
-          .select('name, short_tag, description, target_audience, real_requirements, difficulty, time_intensity, attendance_type, exam_from_home, credits, semester, faculty, year')
+          .select('slug, name, short_tag, description, target_audience, real_requirements, difficulty, time_intensity, attendance_type, exam_from_home, credits, semester, faculty, year')
           .eq('id', typedProposal.subject_id)
           .maybeSingle()
 
@@ -105,7 +113,7 @@ export default async function NavrhnoutPage({ searchParams }: PageProps) {
         }
 
         if (subject) {
-          const typedSubject = subject as SubjectDetails
+          const typedSubject = subject as SubjectDetails & { slug?: string | null }
           subjectLabel = `${typedSubject.short_tag ?? ''} · ${typedSubject.name ?? ''}`.replace(/^ · | · $/g, '')
           originalSubject = typedSubject
         }
@@ -115,6 +123,7 @@ export default async function NavrhnoutPage({ searchParams }: PageProps) {
         id: typedProposal.id,
         type: typedProposal.type,
         subjectId: typedProposal.subject_id,
+        subjectSlug: originalSubject && 'slug' in originalSubject ? (originalSubject as SubjectDetails & { slug?: string | null }).slug ?? null : null,
         subjectLabel,
         form: {
           name: proposalData.name ?? '',
@@ -137,6 +146,13 @@ export default async function NavrhnoutPage({ searchParams }: PageProps) {
         originalSubject,
       }
     }
+
+    if (submitted) {
+      submittedState = {
+        kind: submitted,
+        subjectSlug: submittedSubjectSlug,
+      }
+    }
   } catch (error) {
     if (isNextFrameworkControlFlowError(error)) {
       throw error
@@ -144,6 +160,14 @@ export default async function NavrhnoutPage({ searchParams }: PageProps) {
 
     console.error('[navrhnout] Server render failed:', error)
     return <NavrhnoutRenderFallback />
+  }
+
+  if (submittedState) {
+    return (
+      <div className="container mx-auto max-w-3xl px-4 py-12 sm:px-6 lg:px-8">
+        <ProposalSubmitSuccess submitted={submittedState.kind} subjectSlug={submittedState.subjectSlug} />
+      </div>
+    )
   }
 
   return (
@@ -162,6 +186,18 @@ export default async function NavrhnoutPage({ searchParams }: PageProps) {
       />
     </div>
   )
+}
+
+function getSingleSearchParam(value?: string | string[]) {
+  return Array.isArray(value) ? value[0] : value
+}
+
+function normalizeSubmittedKind(value?: string) {
+  if (value === 'new' || value === 'edit') {
+    return value
+  }
+
+  return null
 }
 
 function normalizeProposalData(data: unknown): ProposalData {
@@ -216,12 +252,77 @@ function NavrhnoutRenderFallback() {
         <p className="mt-3 text-sm leading-6 text-muted-foreground">
           Nepodařilo se bezpečně ověřit přihlášení nebo profil. Zkus stránku obnovit, případně se znovu přihlásit.
         </p>
-        <a
+        <Link
           href="/prihlaseni?redirect_to=/navrhnout"
           className="mt-6 inline-flex rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90"
         >
           Přihlásit znovu
-        </a>
+        </Link>
+      </div>
+    </div>
+  )
+}
+
+function ProposalSubmitSuccess({
+  submitted,
+  subjectSlug,
+}: {
+  submitted: 'new' | 'edit'
+  subjectSlug?: string | null
+}) {
+  return (
+    <div className="rounded-[2rem] border border-white/10 bg-card/70 p-8 shadow-sm backdrop-blur-xl sm:p-10">
+      <div className="flex justify-center">
+        <div className="inline-flex size-14 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+          <CheckCircle2 className="size-7" />
+        </div>
+      </div>
+
+      <div className="mt-6 space-y-3 text-center">
+        <h1 className="text-3xl font-bold text-foreground">
+          Úspěch! {submitted === 'edit' ? 'Návrh jsme upravili.' : 'Návrh jsme přijali.'}
+        </h1>
+        <p className="text-sm leading-6 text-muted-foreground">
+          Moderátor ho teď zkontroluje. Aktuální stav uvidíš v Mojí aktivitě.
+        </p>
+      </div>
+
+      <div className="mt-8 grid gap-4 sm:grid-cols-2">
+        <div className="rounded-2xl border border-white/10 bg-background/60 p-4 text-left">
+          <div className="inline-flex size-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
+            <ClipboardList className="size-4" />
+          </div>
+          <h2 className="mt-3 text-sm font-semibold text-foreground">Sledovat stav návrhu</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            V Mojí aktivitě uvidíš, jestli návrh čeká, byl schválený nebo vrácený.
+          </p>
+          <Link
+            href="/moje-aktivita"
+            className="mt-4 inline-flex w-full items-center justify-center rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
+          >
+            Otevřít Moji aktivitu
+          </Link>
+        </div>
+
+        <div className="rounded-2xl border border-white/10 bg-background/60 p-4 text-left">
+          <div className="inline-flex size-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
+            <Eye className="size-4" />
+          </div>
+          <h2 className="mt-3 text-sm font-semibold text-foreground">
+            {subjectSlug ? 'Vrátit se na předmět' : 'Poslat další návrh'}
+          </h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {subjectSlug
+              ? 'Můžeš se hned vrátit na detail předmětu a pokračovat v procházení.'
+              : 'Když chceš přidat další předmět nebo další opravu, můžeš rovnou pokračovat.'}
+          </p>
+          <Link
+            href={subjectSlug ? `/predmety/${subjectSlug}` : '/navrhnout'}
+            className="mt-4 inline-flex w-full items-center justify-center rounded-xl border border-white/10 px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-muted/50"
+          >
+            {subjectSlug ? 'Zobrazit předmět' : 'Nový návrh'}
+          </Link>
+        </div>
       </div>
     </div>
   )

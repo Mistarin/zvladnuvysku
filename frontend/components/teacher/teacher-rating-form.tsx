@@ -6,6 +6,7 @@ import Link from "next/link";
 import { deleteOwnTeacherRating, getMyTeacherRating, saveTeacherRating } from "@/app/actions/contributions";
 import { WelcomeDisplayNameModal } from "@/components/layout/welcome-display-name-modal";
 import { ReviewVisibilityField } from "@/components/review/review-visibility-field";
+import { Clock3 } from "lucide-react";
 
 interface TeacherRatingFormProps {
   teacherId: string;
@@ -34,6 +35,7 @@ export function TeacherRatingForm({
   const [hasPublicProfileIdentity, setHasPublicProfileIdentity] = useState(initialHasPublicProfileIdentity);
   const [showDisplayNameModal, setShowDisplayNameModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isReviewPending, setIsReviewPending] = useState(false);
 
   useEffect(() => {
     if (!isLoggedIn) return;
@@ -50,6 +52,7 @@ export function TeacherRatingForm({
         setReview(existingRating.review || '');
         setIsAnonymous(existingRating.is_anonymous);
         setHasExistingRating(true);
+        setIsReviewPending(Boolean(existingRating.review?.trim()) && existingRating.comment_is_approved === false);
         return;
       }
 
@@ -57,6 +60,7 @@ export function TeacherRatingForm({
       setReview("");
       setIsAnonymous(false);
       setHasExistingRating(false);
+      setIsReviewPending(false);
     }
 
     fetchExisting();
@@ -92,7 +96,12 @@ export function TeacherRatingForm({
     }
 
     setHasExistingRating(true);
-    setSuccessMessage("Hodnocení bylo uloženo.");
+    setIsReviewPending(result.moderationPending);
+    setSuccessMessage(
+      result.moderationPending
+        ? "Hodnocení bylo uloženo. Slovní recenze teď čeká na schválení moderátorem."
+        : "Hodnocení bylo uloženo.",
+    );
     router.refresh();
   };
 
@@ -116,6 +125,7 @@ export function TeacherRatingForm({
     setReview("");
     setIsAnonymous(false);
     setHasExistingRating(false);
+    setIsReviewPending(false);
     setSuccessMessage("Hodnocení bylo smazáno.");
     router.refresh();
   };
@@ -177,6 +187,13 @@ export function TeacherRatingForm({
         </div>
 
         <ReviewVisibilityField isAnonymous={isAnonymous} onChange={setIsAnonymous} />
+
+        {hasExistingRating && isReviewPending ? (
+          <div className="flex items-start gap-2 rounded-xl border border-amber-500/20 bg-amber-500/10 px-3 py-2 text-sm text-amber-700 dark:text-amber-300">
+            <Clock3 className="mt-0.5 size-4 shrink-0" />
+            <p>Tvoje slovní recenze čeká na schválení moderátorem.</p>
+          </div>
+        ) : null}
 
         {successMessage && (
           <p className="text-sm text-emerald-600 dark:text-emerald-400">{successMessage}</p>

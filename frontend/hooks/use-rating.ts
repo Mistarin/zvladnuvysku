@@ -13,8 +13,13 @@ interface RatingInput {
   isAnonymous?: boolean
 }
 
+interface RatingSubmitResult {
+  success: boolean
+  moderationPending: boolean
+}
+
 interface UseRatingReturn {
-  submit: (input: RatingInput) => Promise<boolean>
+  submit: (input: RatingInput) => Promise<RatingSubmitResult>
   isSubmitting: boolean
   error: string | null
   success: boolean
@@ -34,14 +39,14 @@ export function useRating(): UseRatingReturn {
       const result = await saveSubjectRating(input)
       if (!result.success) {
         setError(result.error)
-        return false
+        return { success: false, moderationPending: false }
       }
       setSuccess(true)
-      return true
+      return { success: true, moderationPending: result.moderationPending }
     } catch (err) {
       console.error('Chyba při hodnocení:', err)
       setError('Nepodařilo se uložit hodnocení. Zkus to znovu.')
-      return false
+      return { success: false, moderationPending: false }
     } finally {
       setIsSubmitting(false)
     }
