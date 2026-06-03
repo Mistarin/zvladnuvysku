@@ -16,6 +16,19 @@ export interface SubjectsPageResult {
   totalPages: number;
 }
 
+type TeacherPreviewJoinRow = {
+  subject_id: string;
+  teacher: {
+    id: string;
+    slug: string;
+    name: string;
+    teacher_rating_stats:
+      | { avg_rating: number | null; total_ratings: number | null }
+      | Array<{ avg_rating: number | null; total_ratings: number | null }>
+      | null;
+  } | null;
+};
+
 function normalizeSubjectRequest(
   filters: SubjectFilters,
   sort: SortConfig,
@@ -113,10 +126,47 @@ const getCachedSubjectsPage = unstable_cache(
       throw error;
     }
 
+    const subjects = (data ?? []) as SubjectWithStats[];
+    const subjectIds = subjects.map((subject) => subject.id);
+    const teacherPreviewMap = new Map<string, NonNullable<SubjectWithStats["teacher_rating_preview"]>>();
+
+    if (subjectIds.length > 0) {
+      const { data: teacherPreviewRows, error: teacherPreviewError } = await supabase
+        .from("subject_teachers")
+        .select("subject_id, teacher:teacher_id(id, slug, name, teacher_rating_stats(avg_rating, total_ratings))")
+        .in("subject_id", subjectIds);
+
+      if (teacherPreviewError) {
+        throw teacherPreviewError;
+      }
+
+      for (const row of (teacherPreviewRows ?? []) as TeacherPreviewJoinRow[]) {
+        if (!row.teacher) continue;
+        const stats = Array.isArray(row.teacher.teacher_rating_stats)
+          ? row.teacher.teacher_rating_stats[0] ?? null
+          : row.teacher.teacher_rating_stats;
+
+        const current = teacherPreviewMap.get(row.subject_id) ?? [];
+        current.push({
+          id: row.teacher.id,
+          slug: row.teacher.slug,
+          name: row.teacher.name,
+          avg_rating: stats?.avg_rating ?? null,
+          total_ratings: stats?.total_ratings ?? 0,
+        });
+        teacherPreviewMap.set(row.subject_id, current);
+      }
+    }
+
     const totalCount = count ?? 0;
 
     return {
-      subjects: (data ?? []) as SubjectWithStats[],
+      subjects: subjects.map((subject) => ({
+        ...subject,
+        teacher_rating_preview: (teacherPreviewMap.get(subject.id) ?? []).sort((left, right) =>
+          left.name.localeCompare(right.name, "cs")
+        ),
+      })),
       totalCount,
       page,
       totalPages: Math.max(1, Math.ceil(totalCount / SUBJECTS_PAGE_SIZE)),

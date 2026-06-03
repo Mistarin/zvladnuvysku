@@ -1,8 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import { Star } from "lucide-react";
 import { DifficultyBadge } from "./difficulty-badge";
 import { getFacultyColor } from "@/lib/faculties";
+import { getTeacherPath } from "@/lib/teacher-slug";
 import type { SortConfig } from "@/lib/subjects";
 import type { SubjectWithStats } from "@/lib/types/database";
 import { formatCredits } from "@/lib/utils";
@@ -45,6 +47,63 @@ const ATTENDANCE_STYLES: Record<string, { text: string; bg: string }> = {
 function getAttendanceData(type: string | null | undefined) {
   if (!type) return { text: "—", bg: "bg-muted text-muted-foreground" };
   return ATTENDANCE_STYLES[type] || { text: type, bg: "bg-muted text-muted-foreground" };
+}
+
+function TeacherRatingCell({ subject }: { subject: SubjectWithStats }) {
+  const teachers = subject.teacher_rating_preview ?? [];
+  const ratedTeachers = teachers.filter((teacher) => teacher.total_ratings > 0 && teacher.avg_rating !== null);
+
+  if (teachers.length === 0) {
+    return <span className="text-sm text-muted-foreground">—</span>;
+  }
+
+  const hasMultipleTeachers = teachers.length > 1;
+  const average = subject.avg_teacher_rating > 0 ? subject.avg_teacher_rating : null;
+
+  return (
+    <div className="group relative inline-flex items-center justify-center">
+      <div className="inline-flex items-center gap-1.5 rounded-full border border-white/5 bg-background/60 px-2.5 py-1 text-sm shadow-inner">
+        {average !== null ? (
+          <>
+            <span className="font-bold text-amber-500">{average.toFixed(1)}</span>
+            <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-500" />
+          </>
+        ) : (
+          <span className="text-muted-foreground">—</span>
+        )}
+        {hasMultipleTeachers && (
+          <span className="text-xs text-muted-foreground">
+            · {teachers.length}
+          </span>
+        )}
+      </div>
+
+      {hasMultipleTeachers && (
+        <div className="pointer-events-none absolute right-0 top-full z-20 mt-2 hidden min-w-[18rem] rounded-2xl border border-white/10 bg-popover/95 p-3 text-left shadow-2xl backdrop-blur-md group-hover:block group-focus-within:block">
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            Vyučující
+          </p>
+          <div className="space-y-1.5">
+            {teachers.map((teacher) => (
+              <Link
+                key={teacher.id}
+                href={getTeacherPath(teacher.slug)}
+                className="pointer-events-auto flex items-center justify-between gap-3 rounded-xl px-3 py-2 transition-colors hover:bg-muted/60"
+              >
+                <span className="line-clamp-2 text-sm text-foreground">{teacher.name}</span>
+                <span className="shrink-0 text-sm font-medium text-amber-500">
+                  {teacher.total_ratings > 0 && teacher.avg_rating !== null ? `${teacher.avg_rating.toFixed(1)} ★` : "—"}
+                </span>
+              </Link>
+            ))}
+          </div>
+          {ratedTeachers.length === 0 && (
+            <p className="mt-2 text-xs text-muted-foreground">Zatím bez hodnocení.</p>
+          )}
+        </div>
+      )}
+    </div>
+  );
 }
 
 export function SubjectTable({
@@ -192,14 +251,7 @@ export function SubjectTable({
                   </td>
 
                   <td className="px-4 py-3 text-center hidden xl:table-cell">
-                    {subject.avg_teacher_rating ? (
-                      <div className="flex items-center justify-center gap-1">
-                        <span className="font-bold text-amber-500">{subject.avg_teacher_rating.toFixed(1)}</span>
-                        <span className="text-amber-500 text-xs">★</span>
-                      </div>
-                    ) : (
-                      <span className="text-muted-foreground text-sm">—</span>
-                    )}
+                    <TeacherRatingCell subject={subject} />
                   </td>
 
                   <td className="px-4 py-3 hidden md:table-cell">

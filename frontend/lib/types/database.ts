@@ -431,4 +431,11 @@ export type SubjectWithStats = SubjectSearchView & {
   rating_stats?: SubjectRatingStats | null
   tags?: SubjectTag[]
   teachers?: Teacher[]
+  teacher_rating_preview?: Array<{
+    id: string
+    slug: string
+    name: string
+    avg_rating: number | null
+    total_ratings: number
+  }>
 }
