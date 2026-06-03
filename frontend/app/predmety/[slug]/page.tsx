@@ -3,7 +3,6 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { DifficultyBadge } from "@/components/subject/difficulty-badge";
 import { RatingForm } from "@/components/subject/rating-form";
 import { RatingStats } from "@/components/subject/rating-stats";
 import { MaterialUploadForm } from "@/components/subject/material-upload-form";
@@ -16,7 +15,7 @@ import { getTeacherPath } from "@/lib/teacher-slug";
 import { getPublicUserSummaryMap } from "@/lib/public-user-summaries";
 import { getSharePath } from "@/lib/share-links";
 import type { Database, Subject, SubjectRatingStats } from "@/lib/types/database";
-import { BookOpen, Target, MessageSquare, Star, Users, Layers, FileText, CheckCircle2, XCircle, Clock, Calendar, Diamond } from "lucide-react";
+import { BookOpen, Target, MessageSquare, Star, Users, Layers, FileText, CheckCircle2, XCircle, Calendar, Diamond } from "lucide-react";
 import { formatCredits } from "@/lib/utils";
 import { getStoragePublicUrl } from "@/lib/storage";
 import { TeacherRateToggle } from "@/components/teacher/teacher-rate-toggle";
@@ -526,18 +525,10 @@ function SubjectMeta({
       <span className="rounded-lg bg-primary/10 px-2 py-1 font-mono text-sm font-bold text-primary/80">{subject.short_tag}</span>
       {(subject.faculty || subject.department) && <span className="rounded-lg bg-muted/50 px-2 py-1 text-sm text-muted-foreground">{[subject.faculty, subject.department].filter(Boolean).join(" · ")}</span>}
       {subject.credits && <span className="flex items-center gap-1.5 rounded-lg bg-blue-500/10 px-2.5 py-1 text-sm font-medium text-blue-600 dark:text-blue-400"><Diamond className="h-3.5 w-3.5" /> {formatCredits(subject.credits)}</span>}
-      {(averageDifficulty || subject.time_intensity) && (
-        <div className="inline-flex flex-wrap overflow-hidden rounded-lg border border-white/5 shadow-inner bg-card/70">
-          {averageDifficulty && (
-            <div className="flex items-center gap-2 px-2.5 py-1 text-sm">
-              <DifficultyBadge difficulty={averageDifficulty} size="lg" showLabel />
-            </div>
-          )}
-          {subject.time_intensity && (
-            <div className={`flex items-center gap-1.5 bg-purple-500/5 px-2.5 py-1 text-sm font-medium text-purple-600 dark:text-purple-400 whitespace-nowrap ${averageDifficulty ? "border-l border-white/5" : ""}`}>
-              <Clock className="h-3.5 w-3.5" /> Časová náročnost: {subject.time_intensity}/5
-            </div>
-          )}
+      {averageDifficulty && (
+        <div className="inline-flex items-center gap-1 rounded-lg border border-white/5 bg-card/70 px-2.5 py-1 text-sm shadow-inner">
+          <span className="font-medium text-muted-foreground">Obtížnost</span>
+          <span className="font-bold text-foreground">{averageDifficulty.toFixed(1)}</span>
         </div>
       )}
       {renderAttendance(subject.attendance_type)}

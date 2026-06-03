@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { Star } from "lucide-react";
-import { DifficultyBadge } from "./difficulty-badge";
 import { getFacultyColor } from "@/lib/faculties";
 import { getTeacherPath } from "@/lib/teacher-slug";
 import type { SortConfig } from "@/lib/subjects";
@@ -24,7 +23,7 @@ const COLUMNS: {
   { key: "name", label: "Název", sortable: true },
   { key: "short_tag", label: "Zkratka", sortable: true, className: "hidden sm:table-cell text-center" },
   { key: "credits", label: "Kredity", sortable: true, className: "hidden md:table-cell text-center" },
-  { key: "time_intensity", label: "Časová náročnost", sortable: true, className: "text-center" },
+  { key: "difficulty", label: "Obtížnost", sortable: true, className: "text-center" },
   { key: "avg_subject_rating", label: "Předmět", sortable: true, className: "hidden lg:table-cell text-center" },
   { key: "avg_teacher_rating", label: "Učitel", sortable: true, className: "hidden xl:table-cell text-center" },
   { key: "semester", label: "Semestr", sortable: true, className: "hidden md:table-cell text-center" },
@@ -230,10 +229,10 @@ export function SubjectTable({
                   </td>
 
                   <td className="px-4 py-3 text-center">
-                    {subject.time_intensity ? (
-                      <span className="inline-flex whitespace-nowrap">
-                        <DifficultyBadge difficulty={subject.time_intensity} />
-                      </span>
+                    {subject.difficulty ? (
+                      <div className="flex items-center justify-center gap-1">
+                        <span className="font-bold text-foreground">{Number(subject.difficulty).toFixed(1)}</span>
+                      </div>
                     ) : (
                       <span className="text-muted-foreground text-sm">—</span>
                     )}
