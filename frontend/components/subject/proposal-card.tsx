@@ -138,7 +138,7 @@ export function ProposalCard({ proposal, currentSubjectData }: ProposalCardProps
 
   if (done && feedback?.type === 'success') {
     return (
-      <div className="glass-card p-4 flex items-center gap-3 text-sm text-muted-foreground border border-border/50 opacity-60">
+      <div className="glass-card p-4 flex items-center gap-3 text-sm text-muted-foreground opacity-60">
         <CheckCircle className="w-4 h-4 text-emerald-500 shrink-0" />
         <span>{feedback.message} — <span className="font-medium">{String(proposalDataRecord.name ?? proposal.id)}</span></span>
       </div>
@@ -195,7 +195,7 @@ export function ProposalCard({ proposal, currentSubjectData }: ProposalCardProps
       </div>
 
       {proposalMaterials.length > 0 && (
-        <div className="space-y-3 rounded-lg border border-border bg-muted/30 p-4">
+        <div className="space-y-4 rounded-[1.5rem] border border-white/5 bg-background/50 p-5 shadow-sm">
           <div className="flex items-center gap-2">
             <FileText className="h-4 w-4 text-sky-600" />
             <p className="text-sm font-semibold text-foreground">Navržené PDF materiály</p>
@@ -211,7 +211,7 @@ export function ProposalCard({ proposal, currentSubjectData }: ProposalCardProps
                 value={materialGroupTitle}
                 onChange={(e) => setMaterialGroupTitle(e.target.value)}
                 placeholder="např. Vše ke zkoušce"
-                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-primary/40 focus:border-primary/40"
+                className="w-full rounded-xl border border-white/5 bg-background shadow-inner px-4 py-3 text-sm outline-none focus:ring-1 focus:ring-primary/40 focus:bg-background"
                 maxLength={120}
               />
             </div>
@@ -222,7 +222,7 @@ export function ProposalCard({ proposal, currentSubjectData }: ProposalCardProps
               const publicUrl = getStoragePublicUrl('study_materials', material.file_path) ?? '#'
 
               return (
-                <div key={`${material.file_path}-${index}`} className="rounded-lg border border-border bg-background/80 p-3">
+                <div key={`${material.file_path}-${index}`} className="rounded-xl border border-white/5 bg-card/40 p-4 shadow-sm">
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                     <div className="min-w-0">
                       <a
@@ -254,7 +254,7 @@ export function ProposalCard({ proposal, currentSubjectData }: ProposalCardProps
                               : item
                           )))
                         }}
-                        className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-primary/40 focus:border-primary/40"
+                        className="w-full rounded-xl border border-white/5 bg-muted/30 shadow-inner px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-primary/40 focus:bg-background transition-all"
                         placeholder="např. 18"
                       />
                     </div>
@@ -268,7 +268,7 @@ export function ProposalCard({ proposal, currentSubjectData }: ProposalCardProps
 
       {/* Moderator note */}
       {proposal.note && (
-        <div className="rounded-lg border border-border bg-muted/30 px-3 py-2.5 text-sm">
+        <div className="rounded-xl border border-white/5 bg-background/50 px-4 py-3 text-sm shadow-sm">
           <p className="text-xs text-muted-foreground mb-1 font-medium">Poznámka od studenta:</p>
           <p className="text-foreground">{proposal.note}</p>
         </div>
@@ -286,7 +286,7 @@ export function ProposalCard({ proposal, currentSubjectData }: ProposalCardProps
       )}
 
       {/* Actions */}
-      <div className="flex flex-wrap gap-3 pt-2 border-t border-border">
+      <div className="flex flex-wrap gap-3 pt-4 mt-2 border-t border-white/5">
         <button onClick={handleApprove} disabled={isPending}
           className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium accent-gradient text-white hover:opacity-90 transition-all disabled:opacity-50">
           <CheckCircle className="w-4 h-4" /> {isPending ? 'Zpracovávám…' : 'Schválit'}
@@ -298,7 +298,7 @@ export function ProposalCard({ proposal, currentSubjectData }: ProposalCardProps
               placeholder="Důvod zamítnutí (volitelné)"
               value={rejectReason}
               onChange={(e) => setRejectReason(e.target.value)}
-              className="flex-1 rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-destructive/40 focus:border-destructive/40"
+              className="flex-1 rounded-xl border border-destructive/20 bg-destructive/5 px-4 py-3 shadow-inner text-sm outline-none focus:ring-1 focus:ring-destructive/40 focus:bg-background transition-all"
             />
             <button onClick={handleReject} disabled={isPending}
               className="px-4 py-2 rounded-xl text-sm font-medium bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-all disabled:opacity-50">

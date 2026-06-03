@@ -19,6 +19,10 @@ type PublicProfileStats = {
   teacher_count: number;
   subject_comment_count: number;
   teacher_review_count: number;
+  public_subject_comment_count: number;
+  anon_subject_comment_count: number;
+  public_teacher_review_count: number;
+  anon_teacher_review_count: number;
   approved_score: number;
   total_xp: number;
   level: number;
@@ -50,6 +54,7 @@ type ApprovedSubjectComment = {
   overall: number;
   comment: string;
   created_at: string;
+  is_anonymous: boolean;
   subject: { slug: string; short_tag: string; name: string } | null;
 };
 
@@ -58,6 +63,7 @@ type ApprovedTeacherReview = {
   rating: number | null;
   review: string;
   created_at: string;
+  is_anonymous: boolean;
   teacher: { slug: string; name: string } | null;
 };
 
@@ -125,16 +131,16 @@ export default async function PublicProfilePage({ params }: PageProps) {
       .order("created_at", { ascending: false }),
     supabase
       .from("public_subject_reviews")
-      .select("id, overall, comment, created_at, subject:subject_id(slug, short_tag, name)")
+      .select("id, overall, comment, created_at, is_anonymous, subject:subject_id(slug, short_tag, name)")
       .eq("author_user_id", userId)
       .order("created_at", { ascending: false })
-      .limit(12),
+      .limit(20),
     supabase
       .from("public_teacher_reviews")
-      .select("id, rating, review, created_at, teacher:teacher_id(slug, name)")
+      .select("id, rating, review, created_at, is_anonymous, teacher:teacher_id(slug, name)")
       .eq("author_user_id", userId)
       .order("created_at", { ascending: false })
-      .limit(12),
+      .limit(20),
   ]);
 
   const typedProfile = profile as { user_id: string; display_name: string | null; faculty: string | null } | null;
@@ -204,8 +210,12 @@ export default async function PublicProfilePage({ params }: PageProps) {
     subject: group.subject,
     materials: group.materials,
   }));
-  const subjectComments = (subjectCommentsData ?? []) as ApprovedSubjectComment[];
-  const teacherReviews = (teacherReviewsData ?? []) as ApprovedTeacherReview[];
+  const subjectComments = ((subjectCommentsData ?? []) as ApprovedSubjectComment[])
+    .filter(c => isOwnProfile || !c.is_anonymous)
+    .slice(0, 12);
+  const teacherReviews = ((teacherReviewsData ?? []) as ApprovedTeacherReview[])
+    .filter(r => isOwnProfile || !r.is_anonymous)
+    .slice(0, 12);
 
   if (!stats) {
     notFound();
@@ -222,10 +232,10 @@ export default async function PublicProfilePage({ params }: PageProps) {
       </nav>
 
       {/* Profile header */}
-      <div className="mb-8 rounded-[2rem] border border-border/70 bg-card p-6 shadow-sm sm:p-8">
+      <div className="mb-8 glass-card rounded-[2rem] p-6 sm:p-8">
         <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
           <div className="space-y-3">
-            <span className="inline-flex rounded-full border border-primary/20 bg-primary/8 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-primary">
+            <span className="inline-flex rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-primary">
               Veřejný profil
             </span>
             <div>
@@ -242,24 +252,27 @@ export default async function PublicProfilePage({ params }: PageProps) {
                     {faculty}
                   </span>
                 ) : null}
-                <span>Level {stats.level} · {stats.total_xp} XP</span>
+                <span className="text-sm">Level {stats.level} · {stats.total_xp} XP</span>
               </div>
             </div>
           </div>
 
-          {/* XP progress — no link to /prispevky */}
-          <div className="w-full max-w-md rounded-3xl border border-border bg-background/70 p-5 space-y-3">
+          {/* XP progress */}
+          <div className="w-full max-w-md rounded-[1.5rem] border border-white/5 bg-background/60 backdrop-blur-md p-5 space-y-3 shadow-inner">
             <div className="flex items-center justify-between text-sm">
               <span className="font-medium text-foreground">Progress do dalšího levelu</span>
-              <span className="text-muted-foreground">{stats.level_progress_xp}/{stats.next_level_xp} XP</span>
+              <span className="font-mono text-xs text-muted-foreground">{stats.level_progress_xp}<span className="text-muted-foreground/50">/{stats.next_level_xp}</span> XP</span>
             </div>
-            <div className="h-3 overflow-hidden rounded-full bg-muted">
-              <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${progressPercent}%` }} />
+            <div className="h-2 overflow-hidden rounded-full bg-muted/70">
+              <div
+                className="h-full rounded-full bg-primary shadow-[0_0_12px_rgba(var(--primary-rgb,99,102,241),0.6)] transition-all duration-700"
+                style={{ width: `${progressPercent}%` }}
+              />
             </div>
             {isOwnProfile && (
               <Link
                 href="/#hall-of-fame"
-                className="inline-flex text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+                className="inline-flex text-xs font-medium text-muted-foreground hover:text-primary transition-colors"
               >
                 Body se převádějí na XP v poměru 1:10 →
               </Link>
@@ -268,61 +281,84 @@ export default async function PublicProfilePage({ params }: PageProps) {
         </div>
       </div>
 
-      {/* Stats grid — no duplicate Level */}
+      {/* Stats grid */}
       <div className="mb-8 grid gap-4 sm:grid-cols-2 md:grid-cols-4">
-        <SummaryCard label="XP" value={String(stats.total_xp)} />
-        <SummaryCard label="Kartičky" value={String(stats.flashcard_count)} />
-        <SummaryCard label="Materiály" value={String(stats.material_count)} />
-        <SummaryCard label="Komentáře" value={String(stats.subject_comment_count + stats.teacher_review_count)} />
+        <SummaryCard icon="⚡" label="XP" value={String(stats.total_xp)} accent="primary" />
+        <SummaryCard icon="🃏" label="Kartičky" value={String(stats.flashcard_count)} />
+        <SummaryCard icon="📄" label="Materiály" value={String(stats.material_count)} />
+        <SummaryCard
+          icon="💬"
+          label="Komentáře"
+          value={String(stats.subject_comment_count + stats.teacher_review_count)}
+          subLabel={`${stats.public_subject_comment_count + stats.public_teacher_review_count} veřejných · ${stats.anon_subject_comment_count + stats.anon_teacher_review_count} anonymních`}
+        />
       </div>
 
       {/* Content sections */}
-      <div className="grid gap-8 xl:grid-cols-2">
+      <div className="space-y-8">
         <ProfileSubjectContributions decks={profileDecks} materials={profileMaterials} groups={profileGroups} />
 
-        <ProfileSection title="Komentáře k předmětům" empty="Zatím žádné schválené komentáře k předmětům.">
-          {subjectComments.map((comment) => (
-            <div key={comment.id} className="rounded-2xl border border-border bg-card p-4">
-              <div className="flex items-center justify-between gap-3">
-                <div className="font-semibold text-foreground">{comment.subject?.name ?? "Předmět"}</div>
-                <span className="text-sm font-bold text-amber-500">{comment.overall}/5 ★</span>
+        <div className="grid gap-8 lg:grid-cols-2">
+          <ProfileSection title="💬 Komentáře k předmětům" empty="Zatím žádné schválené komentáře k předmětům.">
+            {subjectComments.map((comment) => (
+              <div key={comment.id} className="glass-card p-4 space-y-2">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="font-semibold text-foreground text-sm">{comment.subject?.name ?? "Předmět"}</div>
+                  <div className="flex items-center gap-2">
+                    {comment.is_anonymous && isOwnProfile && (
+                      <span className="text-[10px] font-medium bg-muted px-1.5 py-0.5 rounded text-muted-foreground">anon</span>
+                    )}
+                    <span className="text-sm font-bold text-amber-500">{comment.overall}/5 ★</span>
+                  </div>
+                </div>
+                {comment.subject && (
+                  <Link href={`/predmety/${comment.subject.slug}`} className="block text-xs text-primary/70 hover:text-primary transition-colors font-mono">
+                    {comment.subject.short_tag} →
+                  </Link>
+                )}
+                <p className="whitespace-pre-wrap text-sm text-foreground/80 italic leading-relaxed">&ldquo;{comment.comment}&rdquo;</p>
               </div>
-              {comment.subject && (
-                <Link href={`/predmety/${comment.subject.slug}`} className="mt-1 block text-xs text-muted-foreground hover:text-foreground">
-                  {comment.subject.short_tag}
-                </Link>
-              )}
-              <p className="mt-3 whitespace-pre-wrap text-sm text-foreground/90">{comment.comment}</p>
-            </div>
-          ))}
-        </ProfileSection>
+            ))}
+          </ProfileSection>
 
-        <ProfileSection title="Hodnocení učitelů" empty="Zatím žádná schválená hodnocení učitelů.">
-          {teacherReviews.map((review) => (
-            <div key={review.id} className="rounded-2xl border border-border bg-card p-4">
-              <div className="flex items-center justify-between gap-3">
-                <div className="font-semibold text-foreground">{review.teacher?.name ?? "Vyučující"}</div>
-                {review.rating ? <span className="text-sm font-bold text-amber-500">{review.rating}/5 ★</span> : null}
+          <ProfileSection title="⭐ Hodnocení učitelů" empty="Zatím žádná schválená hodnocení učitelů.">
+            {teacherReviews.map((review) => (
+              <div key={review.id} className="glass-card p-4 space-y-2">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="font-semibold text-foreground text-sm">{review.teacher?.name ?? "Vyučující"}</div>
+                  <div className="flex items-center gap-2">
+                    {review.is_anonymous && isOwnProfile && (
+                      <span className="text-[10px] font-medium bg-muted px-1.5 py-0.5 rounded text-muted-foreground">anon</span>
+                    )}
+                    {review.rating ? <span className="text-sm font-bold text-amber-500">{review.rating}/5 ★</span> : null}
+                  </div>
+                </div>
+                {review.teacher && (
+                  <Link href={getTeacherPath(review.teacher.slug)} className="block text-xs text-primary/70 hover:text-primary transition-colors">
+                    Detail vyučujícího →
+                  </Link>
+                )}
+                {review.review && <p className="whitespace-pre-wrap text-sm text-foreground/80 italic leading-relaxed">&ldquo;{review.review}&rdquo;</p>}
               </div>
-              {review.teacher && (
-                <Link href={getTeacherPath(review.teacher.slug)} className="mt-1 block text-xs text-muted-foreground hover:text-foreground">
-                  Detail vyučujícího
-                </Link>
-              )}
-              <p className="mt-3 whitespace-pre-wrap text-sm text-foreground/90">{review.review}</p>
-            </div>
-          ))}
-        </ProfileSection>
+            ))}
+          </ProfileSection>
+        </div>
       </div>
     </div>
   );
 }
 
-function SummaryCard({ label, value }: { label: string; value: string }) {
+function SummaryCard({ icon, label, value, subLabel, accent }: { icon?: string; label: string; value: string; subLabel?: string; accent?: string }) {
   return (
-    <div className="rounded-2xl border border-border bg-card p-4">
-      <p className="text-sm text-muted-foreground">{label}</p>
-      <p className="mt-2 text-2xl font-semibold text-foreground">{value}</p>
+    <div className="glass-card p-4 space-y-2 hover:-translate-y-0.5 transition-transform">
+      <div className="flex items-center gap-2">
+        {icon && <span className="text-lg">{icon}</span>}
+        <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{label}</p>
+      </div>
+      <div className="flex flex-col">
+        <span className={`text-2xl font-bold ${accent === 'primary' ? 'text-primary' : 'text-foreground'}`}>{value}</span>
+        {subLabel && <span className="text-[11px] text-muted-foreground/70 mt-1 leading-tight">{subLabel}</span>}
+      </div>
     </div>
   );
 }
@@ -340,11 +376,11 @@ function ProfileSection({
 
   return (
     <section className="space-y-4">
-      <h2 className="text-xl font-bold text-foreground">{title}</h2>
+      <h2 className="text-lg font-bold text-foreground">{title}</h2>
       {items.length > 0 ? (
         <div className="space-y-3">{items}</div>
       ) : (
-        <div className="rounded-2xl border border-dashed border-border bg-background/40 px-4 py-8 text-center text-sm text-muted-foreground">
+        <div className="rounded-[1.5rem] border-2 border-dashed border-white/10 bg-background/30 px-4 py-8 text-center text-sm text-muted-foreground">
           {empty}
         </div>
       )}

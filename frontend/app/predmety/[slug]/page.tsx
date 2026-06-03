@@ -10,6 +10,7 @@ import { MaterialUploadForm } from "@/components/subject/material-upload-form";
 import { ReportIssueDialog } from "@/components/feedback/report-issue-dialog";
 import { ShareLinkButton } from "@/components/share/share-link-button";
 import { PublicUserLink } from "@/components/profile/public-user-link";
+import { SubjectTabs, type Tab as SubjectTab } from "@/components/subject/subject-tabs";
 import { getPublicProfileIdentity, hasPublicProfileIdentity } from "@/lib/public-profile-identity";
 import { getTeacherPath } from "@/lib/teacher-slug";
 import { getPublicUserSummaryMap } from "@/lib/public-user-summaries";
@@ -18,9 +19,11 @@ import type { Database, Subject, SubjectRatingStats } from "@/lib/types/database
 import { BookOpen, Target, MessageSquare, Star, Users, Layers, FileText, CheckCircle2, XCircle, Clock, Calendar, Diamond } from "lucide-react";
 import { formatCredits } from "@/lib/utils";
 import { getStoragePublicUrl } from "@/lib/storage";
+import { TeacherRateToggle } from "@/components/teacher/teacher-rate-toggle";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
+  searchParams?: Promise<{ tab?: string }>;
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -72,8 +75,9 @@ type SubjectComment = Pick<
   overall: number;
 };
 
-export default async function PredmetDetailPage({ params }: PageProps) {
+export default async function PredmetDetailPage({ params, searchParams }: PageProps) {
   const { slug } = await params;
+  const resolvedSearchParams = searchParams ? await searchParams : {};
   const supabase = await createClient();
 
   const [
@@ -110,9 +114,31 @@ export default async function PredmetDetailPage({ params }: PageProps) {
     : null;
   const hasPublicIdentity = hasPublicProfileIdentity(profile);
   const publicIdentity = getPublicProfileIdentity(profile);
+  const activeTab: SubjectTab =
+    resolvedSearchParams.tab === "recenze" || resolvedSearchParams.tab === "materialy"
+      ? resolvedSearchParams.tab
+      : "prehled";
+
+  // Fetch counts for tab badges
+  const [{ count: reviewCount }, { count: materialCount }, { count: deckCount }] = await Promise.all([
+    supabase
+      .from('public_subject_reviews')
+      .select('*', { count: 'exact', head: true })
+      .eq('subject_id', subject.id),
+    supabase
+      .from('subject_materials')
+      .select('*', { count: 'exact', head: true })
+      .eq('subject_id', subject.id)
+      .eq('moderation_status', 'approved'),
+    supabase
+      .from('flashcard_decks')
+      .select('*', { count: 'exact', head: true })
+      .eq('subject_id', subject.id)
+      .eq('is_public', true),
+  ]);
 
   return (
-    <div className="container mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
+    <div className="container mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
       <nav className="mb-6 flex items-center gap-2 text-sm text-muted-foreground" aria-label="Drobečková navigace">
         <Link href="/" className="transition-colors hover:text-foreground">Domů</Link>
         <span>/</span>
@@ -121,7 +147,7 @@ export default async function PredmetDetailPage({ params }: PageProps) {
         <span className="truncate font-medium text-foreground">{subject.name}</span>
       </nav>
 
-      <div className="mb-8 space-y-4">
+      <div className="mb-6 space-y-4">
         <h1 className="text-3xl font-bold text-foreground sm:text-4xl">{subject.name}</h1>
         <SubjectMeta
           subject={subject}
@@ -129,31 +155,57 @@ export default async function PredmetDetailPage({ params }: PageProps) {
         />
       </div>
 
-      <div className="mb-8 grid grid-cols-1 gap-8 lg:grid-cols-3">
-        <div className="space-y-6 lg:col-span-2">
-          {subject.description && (
-            <TextSection title="O předmětu" icon={<BookOpen className="h-5 w-5 text-blue-500" />}>
-              {subject.description}
-            </TextSection>
-          )}
+      <SubjectTabs
+        basePath={`/predmety/${slug}`}
+        activeTab={activeTab}
+        reviewCount={reviewCount ?? 0}
+        materialCount={materialCount ?? 0}
+        deckCount={deckCount ?? 0}
+      />
 
-          {subject.target_audience && (
-            <TextSection title="Pro koho je předmět" icon={<Target className="h-5 w-5 text-emerald-500" />}>
-              {subject.target_audience}
-            </TextSection>
-          )}
-
-          {subject.real_requirements && (
-            <div className="mt-4 space-y-2 rounded-xl border border-primary/20 bg-primary/5 p-4">
-              <h2 className="flex items-center gap-2 border-b border-primary/10 pb-2 text-sm font-bold uppercase tracking-wide text-primary">
-                <MessageSquare className="h-4 w-4" /> Reálné požadavky od studentů
-              </h2>
-              <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground/90">{subject.real_requirements}</p>
+      <div
+        role="tabpanel"
+        id={`panel-${activeTab}`}
+        aria-labelledby={`tab-${activeTab}`}
+        className="animate-fade-in"
+      >
+        {activeTab === "prehled" ? (
+          <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+            <div className="space-y-6 lg:col-span-2">
+              {subject.description && (
+                <TextSection title="O předmětu" icon={<BookOpen className="h-5 w-5 text-blue-500" />}>
+                  {subject.description}
+                </TextSection>
+              )}
+              {subject.target_audience && (
+                <TextSection title="Pro koho je předmět" icon={<Target className="h-5 w-5 text-emerald-500" />}>
+                  {subject.target_audience}
+                </TextSection>
+              )}
+              {subject.real_requirements && (
+                <div className="space-y-2 rounded-xl border border-primary/20 bg-primary/5 p-4">
+                  <h2 className="flex items-center gap-2 border-b border-primary/10 pb-2 text-sm font-bold uppercase tracking-wide text-primary">
+                    <MessageSquare className="h-4 w-4" /> Reálné požadavky od studentů
+                  </h2>
+                  <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground/90">{subject.real_requirements}</p>
+                </div>
+              )}
+              {!subject.description && !subject.target_audience && !subject.real_requirements && (
+                <p className="text-sm italic text-muted-foreground">Zatím žádný popis. Pomoz ho doplnit!</p>
+              )}
             </div>
-          )}
-
-          <hr className="my-6 border-border" />
-
+            <Suspense fallback={<SidebarSkeleton />}>
+              <SubjectSidebarSection
+                subjectId={subject.id}
+                slug={slug}
+                isLoggedIn={isLoggedIn}
+                hasPublicProfileIdentity={hasPublicIdentity}
+                initialDisplayName={publicIdentity.displayName}
+                initialFaculty={publicIdentity.faculty}
+              />
+            </Suspense>
+          </div>
+        ) : activeTab === "recenze" ? (
           <Suspense fallback={<RatingsSectionSkeleton />}>
             <SubjectRatingsSection
               subject={subject}
@@ -163,26 +215,20 @@ export default async function PredmetDetailPage({ params }: PageProps) {
               initialFaculty={publicIdentity.faculty}
             />
           </Suspense>
-        </div>
-
-        <Suspense fallback={<SidebarSkeleton />}>
-          <SubjectSidebarSection subjectId={subject.id} slug={slug} isLoggedIn={isLoggedIn} />
-        </Suspense>
+        ) : (
+          <Suspense fallback={<MaterialsSectionSkeleton isLoggedIn={isLoggedIn} />}>
+            <SubjectMaterialsSection
+              subject={subject}
+              isLoggedIn={isLoggedIn}
+              hasPublicProfileIdentity={hasPublicIdentity}
+              initialDisplayName={publicIdentity.displayName}
+              initialFaculty={publicIdentity.faculty}
+            />
+          </Suspense>
+        )}
       </div>
 
-      <hr className="my-8 border-border" />
-
-      <Suspense fallback={<MaterialsSectionSkeleton isLoggedIn={isLoggedIn} />}>
-        <SubjectMaterialsSection
-          subject={subject}
-          isLoggedIn={isLoggedIn}
-          hasPublicProfileIdentity={hasPublicIdentity}
-          initialDisplayName={publicIdentity.displayName}
-          initialFaculty={publicIdentity.faculty}
-        />
-      </Suspense>
-
-      <div className="mt-8 border-t border-border pt-6">
+      <div className="mt-8 border-t border-white/5 pt-6">
         <Link href="/predmety" className="inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground">
           ← Zpět na předměty
         </Link>
@@ -229,8 +275,9 @@ async function SubjectRatingsSection({
           <Star className="h-6 w-6 text-amber-500" /> Hodnocení předmětu
         </h2>
         <RatingStats stats={ratingStats} totalRatings={totalRatings} />
-        <div className="rounded-xl border border-border bg-card p-4 shadow-sm sm:p-6">
+        <div className="rounded-[2rem] border border-white/5 bg-card/40 backdrop-blur-md p-5 shadow-sm sm:p-8">
           <RatingForm
+            key={subject.id}
             subjectId={subject.id}
             isLoggedIn={isLoggedIn}
             hasPublicProfileIdentity={hasPublicProfileIdentity}
@@ -242,7 +289,7 @@ async function SubjectRatingsSection({
 
       {ratingsWithComments.length > 0 && (
         <div className="space-y-4 pt-4">
-          <h3 className="flex items-center gap-2 border-b border-border pb-2 text-lg font-bold text-foreground">
+          <h3 className="flex items-center gap-2 border-b border-white/5 pb-2 text-lg font-bold text-foreground">
             <MessageSquare className="h-5 w-5 text-indigo-500" /> Zkušenosti studentů
           </h3>
           <div className="space-y-4">
@@ -281,10 +328,16 @@ async function SubjectSidebarSection({
   subjectId,
   slug,
   isLoggedIn,
+  hasPublicProfileIdentity,
+  initialDisplayName,
+  initialFaculty,
 }: {
   subjectId: string;
   slug: string;
   isLoggedIn: boolean;
+  hasPublicProfileIdentity: boolean;
+  initialDisplayName: string;
+  initialFaculty: string | null;
 }) {
   const supabase = await createClient();
   const [{ data: stData }, { count: deckCount }] = await Promise.all([
@@ -311,7 +364,7 @@ async function SubjectSidebarSection({
               const avgRating = stats?.avg_rating;
               const ratingCount = stats?.total_ratings ?? 0;
               return (
-                <div key={teacher.id} className="flex flex-col gap-2 rounded-xl border border-border bg-card p-4 shadow-sm">
+                <div key={teacher.id} className="flex flex-col gap-2 glass-card p-5 hover:shadow-md transition-shadow group/card">
                   <Link href={getTeacherPath(teacher.slug)} className="group flex flex-col">
                     <span className="font-medium text-foreground transition-colors group-hover:text-primary">{teacher.name}</span>
                     <div className="mt-1 flex items-center justify-between">
@@ -326,9 +379,13 @@ async function SubjectSidebarSection({
                       )}
                     </div>
                   </Link>
-                  <Link href={`${getTeacherPath(teacher.slug)}#ohodnotit`} className="mt-1 inline-block text-xs font-medium text-primary/80 transition-colors hover:text-primary">
-                    Přidat hodnocení učitele →
-                  </Link>
+                  <TeacherRateToggle
+                    teacherId={teacher.id}
+                    isLoggedIn={isLoggedIn}
+                    hasPublicProfileIdentity={hasPublicProfileIdentity}
+                    initialDisplayName={initialDisplayName}
+                    initialFaculty={initialFaculty}
+                  />
                 </div>
               );
             })}
@@ -340,7 +397,7 @@ async function SubjectSidebarSection({
         <h2 className="flex items-center gap-2 text-lg font-bold text-foreground">
           <Layers className="h-5 w-5 text-rose-500" /> Kartičky
         </h2>
-        <div className="space-y-4 rounded-xl border border-border bg-card p-4 shadow-sm">
+        <div className="space-y-4 glass-card p-5">
           {isLoggedIn ? (
             <>
               <p className="text-sm text-muted-foreground">
@@ -350,7 +407,7 @@ async function SubjectSidebarSection({
                 <Link href={`/predmety/${slug}/flashcardy`} className="w-full rounded-lg accent-gradient py-2 text-center text-sm font-medium text-white transition-all hover:opacity-90">
                   Procházet kartičky
                 </Link>
-                <Link href={`/flashcardy/novy?subject=${slug}`} className="w-full rounded-lg border border-border bg-background py-2 text-center text-sm font-medium text-muted-foreground transition-all hover:bg-muted hover:text-foreground">
+                <Link href={`/flashcardy/novy?subject=${slug}`} className="w-full rounded-xl border border-white/5 bg-background/50 shadow-inner py-2.5 text-center text-sm font-medium text-muted-foreground transition-all hover:bg-muted/50 hover:text-foreground">
                   + Vytvořit balíček
                 </Link>
               </div>
@@ -398,14 +455,14 @@ async function SubjectMaterialsSection({
 
   return (
     <div className="space-y-4">
-      <h2 className="mb-4 flex items-center gap-2 border-b border-border pb-3 text-xl font-bold text-foreground">
+      <h2 className="mb-4 flex items-center gap-2 border-b border-white/5 pb-3 text-xl font-bold text-foreground">
         <FileText className="h-6 w-6 text-sky-500" /> Studijní materiály (PDF)
       </h2>
 
       {materials.length > 0 ? (
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {materials.map((material) => (
-            <div key={material.id} className="rounded-lg border border-border bg-card p-3 transition-all hover:border-primary/50 hover:bg-muted">
+            <div key={material.id} className="glass-card p-4 transition-all hover:-translate-y-1 hover:shadow-md hover:border-primary/40">
               <div className="flex items-start gap-3">
                 <a href={getStoragePublicUrl("study_materials", material.file_path) ?? ""} target="_blank" rel="noopener noreferrer" className="group flex min-w-0 flex-1 items-center gap-3">
                   <div className="flex-shrink-0">
@@ -438,13 +495,14 @@ async function SubjectMaterialsSection({
       <div className="max-w-xl pt-4">
         {isLoggedIn ? (
           <MaterialUploadForm
+            key={subject.id}
             subjectId={subject.id}
             hasPublicProfileIdentity={hasPublicProfileIdentity}
             initialDisplayName={initialDisplayName}
             initialFaculty={initialFaculty}
           />
         ) : (
-          <div className="rounded-xl border border-dashed border-border bg-background/40 p-5 text-center">
+          <div className="rounded-[1.5rem] border-2 border-dashed border-white/10 bg-background/40 p-6 text-center">
             <p className="text-sm text-muted-foreground">Pro nahrání materiálu se musíš přihlásit.</p>
             <Link href="/prihlaseni" className="mt-3 inline-flex rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90">
               Přihlásit se
@@ -469,14 +527,14 @@ function SubjectMeta({
       {(subject.faculty || subject.department) && <span className="rounded-lg bg-muted/50 px-2 py-1 text-sm text-muted-foreground">{[subject.faculty, subject.department].filter(Boolean).join(" · ")}</span>}
       {subject.credits && <span className="flex items-center gap-1.5 rounded-lg bg-blue-500/10 px-2.5 py-1 text-sm font-medium text-blue-600 dark:text-blue-400"><Diamond className="h-3.5 w-3.5" /> {formatCredits(subject.credits)}</span>}
       {(averageDifficulty || subject.time_intensity) && (
-        <div className="inline-flex flex-wrap overflow-hidden rounded-lg border border-border bg-card/70">
+        <div className="inline-flex flex-wrap overflow-hidden rounded-lg border border-white/5 shadow-inner bg-card/70">
           {averageDifficulty && (
             <div className="flex items-center gap-2 px-2.5 py-1 text-sm">
               <DifficultyBadge difficulty={averageDifficulty} size="lg" showLabel />
             </div>
           )}
           {subject.time_intensity && (
-            <div className={`flex items-center gap-1.5 bg-purple-500/5 px-2.5 py-1 text-sm font-medium text-purple-600 dark:text-purple-400 whitespace-nowrap ${averageDifficulty ? "border-l border-border" : ""}`}>
+            <div className={`flex items-center gap-1.5 bg-purple-500/5 px-2.5 py-1 text-sm font-medium text-purple-600 dark:text-purple-400 whitespace-nowrap ${averageDifficulty ? "border-l border-white/5" : ""}`}>
               <Clock className="h-3.5 w-3.5" /> Časová náročnost: {subject.time_intensity}/5
             </div>
           )}
@@ -493,7 +551,7 @@ function SubjectMeta({
 function TextSection({ title, icon, children }: { title: string; icon: React.ReactNode; children: React.ReactNode }) {
   return (
     <div className="space-y-2">
-      <h2 className="flex items-center gap-2 border-b border-border pb-2 text-lg font-bold text-foreground">
+      <h2 className="flex items-center gap-2 border-b border-white/5 pb-2 text-lg font-bold text-foreground">
         {icon} {title}
       </h2>
       <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground/90">{children}</p>
@@ -520,12 +578,12 @@ function RatingsSectionSkeleton() {
   return (
     <div className="space-y-6">
       <div className="h-7 w-56 animate-pulse rounded bg-muted" />
-      <div className="rounded-xl border border-border bg-card p-6">
+      <div className="glass-card p-6">
         <div className="grid gap-4 sm:grid-cols-3">
           {Array.from({ length: 3 }).map((_, index) => <div key={index} className="h-20 animate-pulse rounded bg-muted" />)}
         </div>
       </div>
-      <div className="rounded-xl border border-border bg-card p-6">
+      <div className="glass-card p-6">
         <div className="h-32 animate-pulse rounded bg-muted" />
       </div>
     </div>
@@ -538,7 +596,7 @@ function SidebarSkeleton() {
       {Array.from({ length: 2 }).map((_, index) => (
         <div key={index} className="space-y-3">
           <div className="h-6 w-28 animate-pulse rounded bg-muted" />
-          <div className="rounded-xl border border-border bg-card p-4">
+          <div className="glass-card p-5">
             <div className="h-20 animate-pulse rounded bg-muted" />
           </div>
         </div>
@@ -553,13 +611,13 @@ function MaterialsSectionSkeleton({ isLoggedIn }: { isLoggedIn: boolean }) {
       <div className="h-8 w-72 animate-pulse rounded bg-muted" />
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {Array.from({ length: 3 }).map((_, index) => (
-          <div key={index} className="rounded-lg border border-border bg-card p-3">
+          <div key={index} className="glass-card p-4">
             <div className="h-16 animate-pulse rounded bg-muted" />
           </div>
         ))}
       </div>
       <div className="max-w-xl pt-4">
-        <div className={`rounded-xl ${isLoggedIn ? "border border-border bg-card" : "border border-dashed border-border bg-background/40"} p-5`}>
+        <div className={isLoggedIn ? "glass-card p-5" : "rounded-[1.5rem] border-2 border-dashed border-white/10 bg-background/40 p-5"}>
           <div className="h-20 animate-pulse rounded bg-muted" />
         </div>
       </div>

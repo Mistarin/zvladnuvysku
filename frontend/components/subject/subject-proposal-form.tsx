@@ -124,7 +124,7 @@ function Input({ ...props }: React.InputHTMLAttributes<HTMLInputElement>) {
   return (
     <input
       {...props}
-      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-1 focus:ring-primary/40 focus:border-primary/40 transition-all"
+      className="w-full rounded-xl border border-white/5 shadow-inner bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-1 focus:ring-primary/40 focus:border-primary/40 transition-all"
     />
   )
 }
@@ -133,7 +133,7 @@ function Select({ ...props }: React.SelectHTMLAttributes<HTMLSelectElement>) {
   return (
     <select
       {...props}
-      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:ring-1 focus:ring-primary/40 focus:border-primary/40 transition-all"
+      className="w-full rounded-xl border border-white/5 shadow-inner bg-background px-3 py-2 text-sm text-foreground outline-none focus:ring-1 focus:ring-primary/40 focus:border-primary/40 transition-all"
     />
   )
 }
@@ -143,7 +143,7 @@ function Textarea({ hint, ...props }: React.TextareaHTMLAttributes<HTMLTextAreaE
     <div>
       <textarea
         {...props}
-        className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground resize-none outline-none focus:ring-1 focus:ring-primary/40 focus:border-primary/40 transition-all font-mono"
+        className="w-full rounded-xl border border-white/5 shadow-inner bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground resize-none outline-none focus:ring-1 focus:ring-primary/40 focus:border-primary/40 transition-all font-mono"
       />
       {hint && <p className="text-xs text-muted-foreground mt-1">{hint}</p>}
     </div>
@@ -239,6 +239,10 @@ export function SubjectProposalForm({
   const [submissionToken, setSubmissionToken] = useState(createSubmissionToken)
   const [hasPublicProfileIdentity, setHasPublicProfileIdentity] = useState(initialHasPublicProfileIdentity)
   const [showDisplayNameModal, setShowDisplayNameModal] = useState(false)
+  const [step, setStep] = useState<1 | 2 | 3>(1)
+  const [openSections, setOpenSections] = useState({ obsah: true, parametry: true, ucitele: true })
+  const toggleSection = (key: keyof typeof openSections) =>
+    setOpenSections((prev) => ({ ...prev, [key]: !prev[key] }))
 
   const [selectedTeachers, setSelectedTeachers] = useState<{ id?: string, name: string, faculty: string, department: string }[]>(() =>
     getInitialTeachers(initialProposal),
@@ -248,6 +252,7 @@ export function SubjectProposalForm({
   const [isAddingNewTeacher, setIsAddingNewTeacher] = useState(false)
   const [newTeacherFaculty, setNewTeacherFaculty] = useState(initialProposal?.form.faculty ?? initialFaculty ?? '')
   const [newTeacherDepartment, setNewTeacherDepartment] = useState('')
+  const [showDeptDropdown, setShowDeptDropdown] = useState(false)
 
   const [form, setForm] = useState(() => getInitialForm(initialProposal))
 
@@ -262,6 +267,12 @@ export function SubjectProposalForm({
       console.error('Nepodařilo se načíst cache vyučujících:', cacheError)
     })
   }, [])
+
+  // Reset department field when faculty changes so stale suggestions don't show
+  useEffect(() => {
+    setNewTeacherDepartment('')
+    setShowDeptDropdown(false)
+  }, [newTeacherFaculty])
 
   const searchSubjects = async (q: string) => {
     setSubjectSearch(q)
@@ -460,7 +471,28 @@ export function SubjectProposalForm({
 
   return (
     <>
+    {/* WIZARD PROGRESS */}
+    {!success && (
+      <div className="flex items-center justify-center mb-8 mt-2">
+        <div className="flex w-full max-w-lg items-center px-4 relative">
+          <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 font-bold transition-all shadow-sm ${step >= 1 ? 'border-primary bg-primary text-primary-foreground shadow-primary/20' : 'border-white/10 bg-background text-muted-foreground'}`}>1</div>
+          <div className={`h-1.5 w-full transition-all rounded-full mx-2 ${step >= 2 ? 'bg-primary shadow-sm shadow-primary/20' : 'bg-muted'}`} />
+          <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 font-bold transition-all shadow-sm ${step >= 2 ? 'border-primary bg-primary text-primary-foreground shadow-primary/20' : 'border-white/10 bg-background text-muted-foreground'}`}>2</div>
+          <div className={`h-1.5 w-full transition-all rounded-full mx-2 ${step >= 3 ? 'bg-primary shadow-sm shadow-primary/20' : 'bg-muted'}`} />
+          <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 font-bold transition-all shadow-sm ${step >= 3 ? 'border-primary bg-primary text-primary-foreground shadow-primary/20' : 'border-white/10 bg-background text-muted-foreground'}`}>3</div>
+          
+          <div className="absolute -bottom-6 w-full left-0 px-2 flex justify-between text-xs font-semibold text-muted-foreground">
+            <span className={`w-14 text-center ${step >= 1 ? 'text-primary' : ''}`}>Základ</span>
+            <span className={`w-14 text-center ${step >= 2 ? 'text-primary' : ''}`}>Detaily</span>
+            <span className={`w-14 text-center ${step >= 3 ? 'text-primary' : ''}`}>Materiály</span>
+          </div>
+        </div>
+      </div>
+    )}
+
     <form onSubmit={handleSubmit} className="space-y-8">
+      {/* STEP 1 */}
+      <div className={step === 1 ? 'space-y-8 animate-fade-in' : 'hidden'}>
       {/* Typ návrhu */}
       <div className="glass-card rounded-[1.75rem] p-7 sm:p-8 space-y-5">
         <div>
@@ -490,7 +522,7 @@ export function SubjectProposalForm({
               setError(null)
               setForm(DEFAULT_FORM)
             }}
-              className={`flex-1 py-2.5 rounded-xl text-sm font-medium border transition-all ${type === v ? 'accent-gradient text-white border-transparent' : 'border-border text-muted-foreground hover:text-foreground hover:bg-muted'}`}>
+              className={`flex-1 py-2.5 rounded-xl text-sm font-medium border transition-all ${type === v ? 'accent-gradient text-white border-transparent' : 'border-white/5 text-muted-foreground hover:text-foreground hover:bg-muted'}`}>
               {label}
             </button>
           ))}
@@ -502,7 +534,7 @@ export function SubjectProposalForm({
             <Input placeholder="Hledej podle názvu nebo zkratky..." value={subjectId ? searchResults.find(s => s.id === subjectId)?.name ?? subjectSearch : subjectSearch}
               onChange={(e) => { setSubjectId(null); searchSubjects(e.target.value) }} />
             {searchResults.length > 0 && !subjectId && (
-              <div className="absolute z-10 w-full mt-1 rounded-xl border border-border bg-popover shadow-xl overflow-hidden">
+              <div className="absolute z-10 w-full mt-1 rounded-xl border border-white/5 bg-popover shadow-xl overflow-hidden">
                 {searchResults.map((s) => (
                   <button key={s.id} type="button" onClick={async () => {
                     setSubjectId(s.id)
@@ -541,261 +573,409 @@ export function SubjectProposalForm({
             <Input placeholder="Algoritmizace I" value={form.name} onChange={(e) => set('name', e.target.value)} />
           </div>
           <div>
-            <FieldLabel required={type === 'new'}>Zkratka (short_tag)</FieldLabel>
+            <FieldLabel required={type === 'new'}>Zkratka předmětu (např. ALG1)</FieldLabel>
             <Input placeholder="ALG1" value={form.short_tag} onChange={(e) => set('short_tag', e.target.value)} />
           </div>
         </div>
 
-        <div>
-          <FieldLabel>Popis předmětu</FieldLabel>
-          <Textarea
-            rows={4}
-            value={form.description}
-            onChange={(e) => set('description', e.target.value)}
-            hint="Každý řádek začíná pomlčkou (-). Dodržuj formát šablony výše."
-          />
+        <div className="flex justify-end pt-4">
+          <button type="button" onClick={() => {
+            if (type === 'new' && (!form.name.trim() || !form.short_tag.trim())) {
+              setError('U nového předmětu vyplň název i zkratku.')
+              return
+            }
+            if (type === 'edit' && !subjectId) {
+              setError('Vyber předmět, který chceš upravit.')
+              return
+            }
+            setError(null)
+            setStep(2)
+            window.scrollTo({ top: 0, behavior: 'smooth' })
+          }} className="px-6 py-2.5 rounded-xl text-sm font-medium bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover:opacity-90 hover:-translate-y-0.5 transition-all">Pokračovat</button>
         </div>
+      </div>
+      </div>
 
-        <div>
-          <FieldLabel>Pro koho je předmět</FieldLabel>
-          <Textarea
-            rows={3}
-            value={form.target_audience}
-            onChange={(e) => set('target_audience', e.target.value)}
-            hint="Popiš, kdo z předmětu nejvíce získá a kdo ho naopak nemusí chodit."
-          />
-        </div>
+      {/* STEP 2 */}
+      <div className={step === 2 ? 'space-y-4 animate-fade-in' : 'hidden'}>
 
-        <div>
-          <FieldLabel>Reálné požadavky (zkušenosti studentů)</FieldLabel>
-          <Textarea
-            rows={3}
-            value={form.real_requirements}
-            onChange={(e) => set('real_requirements', e.target.value)}
-            hint="Co ve skutečnosti potřebuješ — ne co píše syllabus."
-          />
-        </div>
 
-        <div className="grid grid-cols-1 gap-4 2xl:grid-cols-4">
-          <div className="space-y-2 sm:col-span-2 2xl:col-span-2">
+        {/* --- SEKCE: Obsah --- */}
+        <div className="glass-card rounded-[1.75rem] overflow-hidden">
+          <button
+            type="button"
+            onClick={() => toggleSection('obsah')}
+            className="flex w-full items-center justify-between px-7 py-5 text-left hover:bg-muted/20 transition-colors"
+          >
             <div>
-              <FieldLabel>Náročnost předmětu</FieldLabel>
-              <p className="text-xs text-muted-foreground">
-                Vyplň obě hodnoty společně: jak těžká je látka a kolik času typicky bere.
-              </p>
+              <h2 className="font-semibold text-foreground flex items-center gap-2">📝 Obsah předmětu</h2>
+              <p className="text-xs text-muted-foreground mt-0.5">Popis, cílová skupina, reálné požadavky</p>
             </div>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div>
-                <FieldLabel>Obtížnost (1–5)</FieldLabel>
-                <Input type="number" min={1} max={5} value={form.difficulty} onChange={(e) => set('difficulty', Number(e.target.value))} />
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={2}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className={`h-5 w-5 text-muted-foreground transition-transform duration-200 shrink-0 ${openSections.obsah ? 'rotate-180' : ''}`}
+            >
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+          </button>
+          {openSections.obsah && (
+            <div className="px-7 pb-7 space-y-5 border-t border-white/5">
+              <div className="pt-5">
+                <FieldLabel>Popis předmětu</FieldLabel>
+                <Textarea
+                  rows={4}
+                  value={form.description}
+                  onChange={(e) => set('description', e.target.value)}
+                  hint="Každý řádek začíná pomlčkou (-). Dodržuj formát šablony výše."
+                />
               </div>
               <div>
-                <FieldLabel>Časová náročnost (1–5)</FieldLabel>
-                <Input type="number" min={1} max={5} value={form.time_intensity} onChange={(e) => set('time_intensity', Number(e.target.value))} />
+                <FieldLabel>Pro koho je předmět</FieldLabel>
+                <Textarea
+                  rows={3}
+                  value={form.target_audience}
+                  onChange={(e) => set('target_audience', e.target.value)}
+                  hint="Popiš, kdo z předmětu nejvíce získá a kdo ho naopak nemusí chodit."
+                />
+              </div>
+              <div>
+                <FieldLabel>Reálné požadavky (zkušenosti studentů)</FieldLabel>
+                <Textarea
+                  rows={3}
+                  value={form.real_requirements}
+                  onChange={(e) => set('real_requirements', e.target.value)}
+                  hint="Co ve skutečnosti potřebuješ — ne co píše syllabus."
+                />
               </div>
             </div>
-          </div>
-          <div>
-            <FieldLabel>Kredity</FieldLabel>
-            <Input type="number" min={1} max={30} placeholder="5" value={form.credits} onChange={(e) => set('credits', e.target.value)} />
-          </div>
-          <div>
-            <FieldLabel>Ročník</FieldLabel>
-            <Input type="number" min={1} max={5} placeholder="1" value={form.year} onChange={(e) => set('year', e.target.value)} />
-          </div>
+          )}
         </div>
 
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 2xl:grid-cols-3">
-          <div>
-            <FieldLabel>Semestr</FieldLabel>
-            <Select value={form.semester} onChange={(e) => set('semester', e.target.value)}>
-              <option value="">– vybrat –</option>
-              {SEMESTER_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-            </Select>
-          </div>
-          <div>
-            <FieldLabel>Fakulta</FieldLabel>
-            <Select value={form.faculty} onChange={(e) => set('faculty', e.target.value)}>
-              <option value="">– vybrat –</option>
-              {FACULTIES.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-            </Select>
-          </div>
-          <div className="lg:col-span-2 2xl:col-span-1">
-            <FieldLabel>Docházka</FieldLabel>
-            <div className="space-y-4">
-              <Select value={form.attendance_type} onChange={(e) => set('attendance_type', e.target.value)}>
-                <option value="">– vybrat –</option>
-                {ATTENDANCE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-              </Select>
-              <div className="flex justify-start">
-                <label className="flex w-full max-w-md cursor-pointer items-center justify-start gap-3">
-                  <input
-                    type="checkbox"
-                    checked={form.exam_from_home}
-                    onChange={(e) => set('exam_from_home', e.target.checked)}
-                    className="peer sr-only"
-                  />
-                  <span className="flex w-full items-center justify-start gap-3 rounded-2xl border-2 border-border bg-background px-5 py-3 text-left transition-all peer-checked:border-emerald-500/30 peer-checked:bg-emerald-500/10">
-                    <span className="flex h-7 w-7 items-center justify-center rounded-full border-2 border-border bg-background text-sm text-transparent transition-all peer-checked:border-emerald-500 peer-checked:bg-emerald-500 peer-checked:text-white">
-                      <Check className="h-4 w-4" strokeWidth={3} />
-                    </span>
-                    <span className="whitespace-nowrap text-base font-semibold text-foreground">Zkouška z domova</span>
-                  </span>
-                </label>
-              </div>
+        {/* --- SEKCE: Parametry --- */}
+        <div className="glass-card rounded-[1.75rem] overflow-hidden">
+          <button
+            type="button"
+            onClick={() => toggleSection('parametry')}
+            className="flex w-full items-center justify-between px-7 py-5 text-left hover:bg-muted/20 transition-colors"
+          >
+            <div>
+              <h2 className="font-semibold text-foreground flex items-center gap-2">📊 Parametry</h2>
+              <p className="text-xs text-muted-foreground mt-0.5">Obtížnost, kredity, semestr, docházka</p>
             </div>
-          </div>
-        </div>
-
-        {/* Učitelé */}
-        <div className="border-t border-border pt-4 mt-2">
-          <FieldLabel>Vyučující předmětu</FieldLabel>
-          <div className="space-y-3">
-            {selectedTeachers.length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                {selectedTeachers.map((t, i) => (
-                  <div key={i} className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-muted text-sm border border-border">
-                    <span className="font-mono text-[10px] bg-background px-1 rounded text-muted-foreground">{t.faculty}</span>
-                    <span>{t.name}</span>
-                    {t.department && (
-                      <span className="text-[10px] text-muted-foreground">· {t.department}</span>
-                    )}
-                    <button type="button" onClick={() => setSelectedTeachers(prev => prev.filter((_, idx) => idx !== i))} className="text-muted-foreground hover:text-destructive ml-1">
-                      ×
-                    </button>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={2}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className={`h-5 w-5 text-muted-foreground transition-transform duration-200 shrink-0 ${openSections.parametry ? 'rotate-180' : ''}`}
+            >
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+          </button>
+          {openSections.parametry && (
+            <div className="px-7 pb-7 space-y-5 border-t border-white/5 pt-5">
+              <div className="grid grid-cols-1 gap-4 2xl:grid-cols-4">
+                <div className="space-y-2 sm:col-span-2 2xl:col-span-2">
+                  <div>
+                    <FieldLabel>Náročnost předmětu</FieldLabel>
+                    <p className="text-xs text-muted-foreground">
+                      Vyplně obě hodnoty společně: jak těžká je látka a kolik času typicky bere.
+                    </p>
                   </div>
-                ))}
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div>
+                      <FieldLabel>Obtížnost (1–5)</FieldLabel>
+                      <Input type="number" min={1} max={5} value={form.difficulty} onChange={(e) => set('difficulty', Number(e.target.value))} />
+                    </div>
+                    <div>
+                      <FieldLabel>Časová náročnost (1–5)</FieldLabel>
+                      <Input type="number" min={1} max={5} value={form.time_intensity} onChange={(e) => set('time_intensity', Number(e.target.value))} />
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <FieldLabel>Kredity</FieldLabel>
+                  <Input type="number" min={1} max={30} placeholder="5" value={form.credits} onChange={(e) => set('credits', e.target.value)} />
+                </div>
+                <div>
+                  <FieldLabel>Ročník</FieldLabel>
+                  <Input type="number" min={1} max={5} placeholder="1" value={form.year} onChange={(e) => set('year', e.target.value)} />
+                </div>
               </div>
-            )}
 
-            <div className="relative space-y-2">
-              <Input
-                placeholder="Hledat učitele nebo napsat nové jméno..."
-                value={teacherSearch}
-                onChange={(e) => searchTeachers(e.target.value)}
-              />
-              {teacherSearchResults.length > 0 && !isAddingNewTeacher && (
-                <div className="absolute z-10 w-full mt-1 rounded-xl border border-border bg-popover shadow-xl overflow-hidden">
-                  {teacherSearchResults.map((t) => (
-                    <button
-                      key={t.id}
-                      type="button"
-                      onClick={() => {
-                        addTeacherSelection({
-                          ...t,
-                          department: t.department ?? '',
-                        })
-                        setTeacherSearch('')
-                        setTeacherSearchResults([])
-                      }}
-                      className="w-full text-left px-3 py-2.5 text-sm hover:bg-muted transition-colors flex items-center gap-2"
-                    >
-                      <span className="font-mono text-xs bg-primary/10 text-primary px-1.5 py-0.5 rounded">{t.faculty}</span>
+              <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 2xl:grid-cols-3">
+                <div>
+                  <FieldLabel>Semestr</FieldLabel>
+                  <Select value={form.semester} onChange={(e) => set('semester', e.target.value)}>
+                    <option value="">– vybrat –</option>
+                    {SEMESTER_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                  </Select>
+                </div>
+                <div>
+                  <FieldLabel>Fakulta</FieldLabel>
+                  <Select value={form.faculty} onChange={(e) => set('faculty', e.target.value)}>
+                    <option value="">– vybrat –</option>
+                    {FACULTIES.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                  </Select>
+                </div>
+                <div className="lg:col-span-2 2xl:col-span-1">
+                  <FieldLabel>Docházka</FieldLabel>
+                  <div className="space-y-3">
+                    <Select value={form.attendance_type} onChange={(e) => set('attendance_type', e.target.value)}>
+                      <option value="">– vybrat –</option>
+                      {ATTENDANCE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                    </Select>
+                    <label className="flex w-full cursor-pointer items-center gap-3">
+                      <input
+                        type="checkbox"
+                        checked={form.exam_from_home}
+                        onChange={(e) => set('exam_from_home', e.target.checked)}
+                        className="peer sr-only"
+                      />
+                      <span className="flex w-full items-center justify-start gap-3 rounded-[1.5rem] border-2 border-white/5 bg-background/50 backdrop-blur-md px-5 py-3 text-left transition-all hover:bg-muted/50 peer-checked:border-emerald-500/50 peer-checked:bg-emerald-500/10 peer-checked:shadow-[0_0_30px_-5px_rgba(16,185,129,0.4)]">
+                        <span className="flex h-7 w-7 items-center justify-center rounded-full border-2 border-white/10 bg-background text-sm text-transparent transition-all peer-checked:border-emerald-500 peer-checked:bg-emerald-500 peer-checked:text-white peer-checked:shadow-[0_0_15px_rgba(16,185,129,0.8)]">
+                          <Check className="h-4 w-4" strokeWidth={3} />
+                        </span>
+                        <span className="whitespace-nowrap text-base font-semibold text-foreground">Zkouška z domova</span>
+                      </span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* --- SEKCE: Vyučující --- */}
+        <div className="glass-card rounded-[1.75rem] overflow-hidden">
+          <button
+            type="button"
+            onClick={() => toggleSection('ucitele')}
+            className="flex w-full items-center justify-between px-7 py-5 text-left hover:bg-muted/20 transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <div>
+                <h2 className="font-semibold text-foreground flex items-center gap-2">
+                  👥 Vyučující
+                  {selectedTeachers.length > 0 && (
+                    <span className="ml-1 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-primary/15 px-1.5 text-[11px] font-bold text-primary">
+                      {selectedTeachers.length}
+                    </span>
+                  )}
+                </h2>
+                <p className="text-xs text-muted-foreground mt-0.5">Vyučující předmětu</p>
+              </div>
+            </div>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={2}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className={`h-5 w-5 text-muted-foreground transition-transform duration-200 shrink-0 ${openSections.ucitele ? 'rotate-180' : ''}`}
+            >
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+          </button>
+          {openSections.ucitele && (
+            <div className="px-7 pb-7 space-y-3 border-t border-white/5 pt-5">
+              {selectedTeachers.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {selectedTeachers.map((t, i) => (
+                    <div key={i} className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-muted text-sm border border-white/5">
+                      <span className="font-mono text-[10px] bg-background px-1 rounded text-muted-foreground">{t.faculty}</span>
                       <span>{t.name}</span>
-                      {t.department && <span className="text-xs text-muted-foreground">· {t.department}</span>}
-                    </button>
+                      {t.department && (
+                        <span className="text-[10px] text-muted-foreground">· {t.department}</span>
+                      )}
+                      <button type="button" onClick={() => setSelectedTeachers(prev => prev.filter((_, idx) => idx !== i))} className="text-muted-foreground hover:text-destructive ml-1">
+                        ×
+                      </button>
+                    </div>
                   ))}
                 </div>
               )}
 
-              {shouldShowTeacherEmptyState && (
-                <p className="text-xs text-muted-foreground">Nenalezen žádný schválený vyučující pro tento dotaz.</p>
-              )}
-
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <p className="text-xs text-muted-foreground">
-                  Když vyučující neexistuje, můžeš ho rovnou založit bez ztráty rozepsaného návrhu.
-                </p>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setNewTeacherFaculty((currentFaculty) => currentFaculty || form.faculty || initialFaculty || '')
-                    setIsAddingNewTeacher(true)
-                  }}
-                  className="inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline"
-                >
-                  <UserPlus className="h-3.5 w-3.5" />
-                  Nevidíš vyučujícího? Přidat nového
-                </button>
-              </div>
-            </div>
-
-            {isAddingNewTeacher && (
-              <div className="rounded-lg border border-border bg-muted/50 p-3 space-y-3">
-                <div className="space-y-1">
-                  <h4 className="text-sm font-medium">Nový vyučující</h4>
-                  <p className="text-xs text-muted-foreground">
-                    Jméno se bere z pole výše. Tady už jen doplň fakultu a katedru.
-                  </p>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <FieldLabel>Jméno a příjmení (s tituly)</FieldLabel>
-                    <Input value={teacherSearch} readOnly placeholder="Napiš jméno do pole výše" />
-                  </div>
-                  <div>
-                    <FieldLabel>Fakulta</FieldLabel>
-                    <Select value={newTeacherFaculty} onChange={e => setNewTeacherFaculty(e.target.value)}>
-                      <option value="">– vybrat –</option>
-                      {FACULTIES.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-                    </Select>
-                  </div>
-                </div>
-                <div>
-                  <FieldLabel>Katedra</FieldLabel>
-                  <Input
-                    list="teacher-department-options"
-                    placeholder="Např. Katedra pedagogiky a andragogiky"
-                    value={newTeacherDepartment}
-                    onChange={e => setNewTeacherDepartment(e.target.value)}
-                    onBlur={e => setNewTeacherDepartment(normalizeDepartmentName(e.target.value) ?? '')}
-                  />
-                  <datalist id="teacher-department-options">
-                    {teacherDepartmentOptions.map((department) => (
-                      <option key={department} value={department} />
+              <div className="relative space-y-2">
+                <Input
+                  placeholder="Hledat učitele nebo napsat nové jméno..."
+                  value={teacherSearch}
+                  onChange={(e) => searchTeachers(e.target.value)}
+                />
+                {teacherSearchResults.length > 0 && !isAddingNewTeacher && (
+                  <div className="absolute z-10 w-full mt-1 rounded-xl border border-white/5 bg-popover shadow-xl overflow-hidden">
+                    {teacherSearchResults.map((t) => (
+                      <button
+                        key={t.id}
+                        type="button"
+                        onClick={() => {
+                          addTeacherSelection({
+                            ...t,
+                            department: t.department ?? '',
+                          })
+                          setTeacherSearch('')
+                          setTeacherSearchResults([])
+                        }}
+                        className="w-full text-left px-3 py-2.5 text-sm hover:bg-muted transition-colors flex items-center gap-2"
+                      >
+                        <span className="font-mono text-xs bg-primary/10 text-primary px-1.5 py-0.5 rounded">{t.faculty}</span>
+                        <span>{t.name}</span>
+                        {t.department && <span className="text-xs text-muted-foreground">· {t.department}</span>}
+                      </button>
                     ))}
-                  </datalist>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    Pole přijímá existující i novou katedru. Víceslovné názvy jsou podporované.
-                  </p>
-                </div>
-                <div className="flex justify-end gap-2">
-                  <button
-                    type="button"
-                    onClick={resetTeacherComposer}
-                    className="px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground"
-                  >
-                    Zpět k vyhledávání
-                  </button>
-                  <button
-                    type="button"
-                    disabled={!canAddNewTeacher}
-                    onClick={() => {
-                      if (!canAddNewTeacher) {
-                        return
-                      }
+                  </div>
+                )}
 
-                      addTeacherSelection({
-                        name: teacherSearch.trim(),
-                        faculty: newTeacherFaculty,
-                        department: normalizedNewTeacherDepartment,
-                      })
-                      setTeacherSearch('')
-                      setTeacherSearchResults([])
-                      resetTeacherComposer()
+                {shouldShowTeacherEmptyState && (
+                  <p className="text-xs text-muted-foreground">Nenalezen žádný schválený vyučující pro tento dotaz.</p>
+                )}
+
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <p className="text-xs text-muted-foreground">
+                    Když vyučující neexistuje, můžeš ho rovnou založit bez ztráty rozepsaného návrhu.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setNewTeacherFaculty((currentFaculty) => currentFaculty || form.faculty || initialFaculty || '')
+                      setIsAddingNewTeacher(true)
                     }}
-                    className="px-3 py-1.5 text-xs bg-primary text-primary-foreground rounded-md disabled:opacity-50"
+                    className="inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline"
                   >
-                    Přidat učitele
+                    <UserPlus className="h-3.5 w-3.5" />
+                    Nevidíš vyučujícího? Přidat nového
                   </button>
                 </div>
               </div>
-            )}
-          </div>
+
+              {isAddingNewTeacher && (
+                <div className="rounded-xl border border-white/5 bg-muted/50 p-3 space-y-3">
+                  <div className="space-y-1">
+                    <h4 className="text-sm font-medium">Nový vyučující</h4>
+                    <p className="text-xs text-muted-foreground">
+                      Jméno se bere z pole výše. Tady už jen doplň fakultu a katedru.
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <FieldLabel>Jméno a příjmení (s tituly)</FieldLabel>
+                      <Input value={teacherSearch} readOnly placeholder="Napiš jméno do pole výše" />
+                    </div>
+                    <div>
+                      <FieldLabel>Fakulta</FieldLabel>
+                      <Select value={newTeacherFaculty} onChange={e => setNewTeacherFaculty(e.target.value)}>
+                        <option value="">– vybrat –</option>
+                        {FACULTIES.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                      </Select>
+                    </div>
+                  </div>
+                  <div>
+                    <FieldLabel>Katedra</FieldLabel>
+                    <div className="relative">
+                      <Input
+                        placeholder="Např. Katedra pedagogiky a andragogiky"
+                        value={newTeacherDepartment}
+                        onChange={e => {
+                          setNewTeacherDepartment(e.target.value)
+                          setShowDeptDropdown(true)
+                        }}
+                        onFocus={() => setShowDeptDropdown(true)}
+                        onBlur={e => {
+                          const normalized = normalizeDepartmentName(e.target.value) ?? ''
+                          setNewTeacherDepartment(normalized)
+                          setTimeout(() => setShowDeptDropdown(false), 150)
+                        }}
+                        autoCapitalize="sentences"
+                      />
+                      {/* Custom dropdown instead of native datalist (datalist + React = unreliable) */}
+                      {showDeptDropdown && teacherDepartmentOptions.length > 0 && (
+                        <div className="absolute left-0 right-0 top-full mt-1 z-20 rounded-xl border border-white/5 bg-popover shadow-xl max-h-44 overflow-y-auto">
+                          {teacherDepartmentOptions
+                            .filter((d) => !newTeacherDepartment || d.toLowerCase().includes(newTeacherDepartment.toLowerCase()))
+                            .map((dept) => (
+                              <button
+                                key={dept}
+                                type="button"
+                                onMouseDown={() => {
+                                  setNewTeacherDepartment(dept)
+                                  setShowDeptDropdown(false)
+                                }}
+                                className="w-full text-left px-3 py-2 text-sm hover:bg-muted transition-colors"
+                              >
+                                {dept}
+                              </button>
+                            ))}
+                          {newTeacherDepartment && !teacherDepartmentOptions.includes(newTeacherDepartment) && (
+                            <div className="px-3 py-2 text-xs text-muted-foreground border-t border-white/5">
+                              + Nová katedra: <span className="font-semibold text-foreground">{newTeacherDepartment}</span>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Pole přijímá existující i novou katedru. Víceslovné názvy jsou podporované.
+                    </p>
+                  </div>
+                  <div className="flex justify-end gap-2">
+                    <button
+                      type="button"
+                      onClick={resetTeacherComposer}
+                      className="px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground"
+                    >
+                      Zpět k vyhledávání
+                    </button>
+                    <button
+                      type="button"
+                      disabled={!canAddNewTeacher}
+                      onClick={() => {
+                        if (!canAddNewTeacher) return
+                        addTeacherSelection({
+                          name: teacherSearch.trim(),
+                          faculty: newTeacherFaculty,
+                          department: normalizedNewTeacherDepartment,
+                        })
+                        setTeacherSearch('')
+                        setTeacherSearchResults([])
+                        resetTeacherComposer()
+                      }}
+                      className="px-3 py-1.5 text-xs bg-primary text-primary-foreground rounded-md disabled:opacity-50"
+                    >
+                      Přidat učitele
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        <div className="flex justify-between pt-2">
+          <button type="button" onClick={() => {
+            setStep(1)
+            window.scrollTo({ top: 0, behavior: 'smooth' })
+          }} className="px-6 py-2.5 rounded-xl text-sm font-medium border border-white/5 shadow-inner text-foreground hover:bg-muted/50 transition-all">Zpět</button>
+          <button type="button" onClick={() => {
+            setStep(3)
+            window.scrollTo({ top: 0, behavior: 'smooth' })
+          }} className="px-6 py-2.5 rounded-xl text-sm font-medium bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover:opacity-90 hover:-translate-y-0.5 transition-all">Pokračovat</button>
         </div>
       </div>
+      {/* STEP 3 */}
 
-      {/* Materiály */}
+      <div className={step === 3 ? 'space-y-8 animate-fade-in' : 'hidden'}>
+      {/* Materiály a Odeslání */}
       {type === 'edit' && subjectId && (
         <div className="glass-card p-6 space-y-4">
           <div>
@@ -889,7 +1069,7 @@ export function SubjectProposalForm({
           />
           <label 
             htmlFor="proposal-materials-upload"
-            className="inline-flex items-center justify-center w-full px-4 py-6 border-2 border-dashed border-border rounded-xl cursor-pointer hover:bg-muted/50 transition-colors"
+            className="inline-flex items-center justify-center w-full px-4 py-6 border-2 border-dashed border-white/10 rounded-[1.5rem] bg-card/30 cursor-pointer hover:bg-muted/50 hover:border-primary/50 transition-colors"
           >
             <div className="text-center">
               <span className="text-2xl opacity-80">📄</span>
@@ -916,7 +1096,7 @@ export function SubjectProposalForm({
           {materials.length > 0 && (
             <div className="space-y-2 mt-4">
               {materials.map((item) => (
-                <div key={item.id} className="rounded-lg bg-muted/30 border border-border p-3 text-sm space-y-3">
+                <div key={item.id} className="rounded-xl bg-card/60 backdrop-blur-md border border-white/5 p-4 text-sm space-y-3 shadow-sm">
                   <div className="flex items-center justify-between gap-3">
                     <div className="flex items-center gap-2 truncate">
                       <span>📄</span>
@@ -975,10 +1155,18 @@ export function SubjectProposalForm({
         <a href="/jak-to-funguje" target="_blank" className="text-xs text-primary hover:underline">Jak fungují body? →</a>
       </div>
 
-      <button type="submit" disabled={isSubmitting}
-        className="w-full py-3 rounded-xl font-medium text-sm accent-gradient text-white hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
-        {isSubmitting ? 'Odesílám...' : 'Odeslat návrh'}
-      </button>
+      <div className="flex justify-between pt-4 gap-4">
+        <button type="button" onClick={() => {
+          setStep(2)
+          window.scrollTo({ top: 0, behavior: 'smooth' })
+        }} className="px-6 py-2.5 rounded-xl text-sm font-medium border border-white/5 shadow-inner text-foreground hover:bg-muted/50 transition-all">Zpět</button>
+        
+        <button type="submit" disabled={isSubmitting}
+          className="flex-1 py-3 rounded-xl font-bold text-sm accent-gradient text-white shadow-lg shadow-primary/20 hover:opacity-90 hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+          {isSubmitting ? 'Odesílám...' : 'Odeslat návrh'}
+        </button>
+      </div>
+      </div>
     </form>
     <WelcomeDisplayNameModal
       open={showDisplayNameModal}

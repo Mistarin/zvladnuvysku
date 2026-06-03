@@ -9,14 +9,12 @@ import { WelcomeDisplayNameModal } from "@/components/layout/welcome-display-nam
 import { FACULTIES } from "@/lib/faculties";
 
 interface TeacherProposalDialogProps {
-  trigger?: React.ReactNode;
   hasPublicProfileIdentity: boolean;
   initialDisplayName: string;
   initialFaculty: string | null;
 }
 
 export function TeacherProposalDialog({
-  trigger,
   hasPublicProfileIdentity: initialHasPublicProfileIdentity,
   initialDisplayName,
   initialFaculty,
@@ -70,7 +68,11 @@ export function TeacherProposalDialog({
 
   return (
     <Dialog.Root open={isOpen} onOpenChange={setIsOpen}>
-      {trigger && <Dialog.Trigger asChild>{trigger}</Dialog.Trigger>}
+      <Dialog.Trigger asChild>
+        <button className="flex items-center gap-1.5 px-4 py-2 bg-primary text-primary-foreground rounded-xl font-medium text-sm hover:opacity-90 shadow-lg shadow-primary/20 hover:-translate-y-0.5 transition-all">
+          <span>+</span> Přidat vyučujícího
+        </button>
+      </Dialog.Trigger>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 animate-in fade-in" />
         <Dialog.Content className="fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-card p-6 shadow-lg sm:rounded-xl animate-in fade-in zoom-in-95">

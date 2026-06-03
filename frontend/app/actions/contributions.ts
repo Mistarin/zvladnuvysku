@@ -114,10 +114,10 @@ type SubjectDetailsResult =
 const MAX_PDF_FILE_SIZE = 2 * 1024 * 1024
 const MAX_PROPOSAL_MATERIALS = 8
 
-function revalidateReviewSurfaces(userId: string, type: 'subject' | 'teacher') {
+function revalidateReviewSurfaces(userId: string, path: string) {
   revalidatePath('/')
   revalidatePath(getPublicProfilePath(userId))
-  revalidatePath(type === 'subject' ? '/predmety/[slug]' : '/ucitele/[slug]', 'page')
+  revalidatePath(path)
 }
 
 function sanitizeProposalFilename(filename: string, fallbackExtension = 'pdf') {
@@ -629,8 +629,16 @@ export async function uploadSubjectMaterial(formData: FormData): Promise<ActionR
       return { success: false, error: `Chyba při ukládání záznamu: ${dbError.message}` }
     }
 
+    const { data: subjectData } = await supabase
+      .from('subjects')
+      .select('slug')
+      .eq('id', subjectId)
+      .single()
+    const typedSubject = subjectData as { slug: string } | null
+    if (typedSubject?.slug) {
+      revalidatePath(`/predmety/${typedSubject.slug}`)
+    }
     revalidatePath('/moje-aktivita')
-    revalidatePath('/predmety/[slug]', 'page')
     return { success: true }
   } catch (error) {
     return {
@@ -701,7 +709,14 @@ export async function saveSubjectRating(input: SubjectRatingInput): Promise<Acti
       return { success: false, error: `Nepodařilo se uložit hodnocení: ${error.message}` }
     }
 
-    revalidateReviewSurfaces(user.id, 'subject')
+    const { data: subjectData } = await supabase
+      .from('subjects')
+      .select('slug')
+      .eq('id', input.subjectId)
+      .single()
+    const typedSubject = subjectData as { slug: string } | null
+    const path = typedSubject?.slug ? `/predmety/${typedSubject.slug}` : '/predmety'
+    revalidateReviewSurfaces(user.id, path)
     return { success: true }
   } catch (error) {
     return {
@@ -769,7 +784,14 @@ export async function saveTeacherRating(input: TeacherRatingInput): Promise<Acti
       return { success: false, error: `Chyba při ukládání: ${error.message}` }
     }
 
-    revalidateReviewSurfaces(user.id, 'teacher')
+    const { data: teacherData } = await supabase
+      .from('teachers')
+      .select('slug')
+      .eq('id', input.teacherId)
+      .single()
+    const typedTeacher = teacherData as { slug: string } | null
+    const path = typedTeacher?.slug ? `/ucitele/${typedTeacher.slug}` : '/ucitele'
+    revalidateReviewSurfaces(user.id, path)
     return { success: true }
   } catch (error) {
     return {
@@ -800,7 +822,14 @@ export async function deleteOwnSubjectRating(subjectId: string): Promise<ActionR
       return { success: false, error: `Nepodařilo se smazat hodnocení: ${error.message}` }
     }
 
-    revalidateReviewSurfaces(user.id, 'subject')
+    const { data: subjectData } = await supabase
+      .from('subjects')
+      .select('slug')
+      .eq('id', subjectId)
+      .single()
+    const typedSubject = subjectData as { slug: string } | null
+    const path = typedSubject?.slug ? `/predmety/${typedSubject.slug}` : '/predmety'
+    revalidateReviewSurfaces(user.id, path)
     return { success: true }
   } catch (error) {
     return {
@@ -831,7 +860,14 @@ export async function deleteOwnTeacherRating(teacherId: string): Promise<ActionR
       return { success: false, error: `Nepodařilo se smazat hodnocení: ${error.message}` }
     }
 
-    revalidateReviewSurfaces(user.id, 'teacher')
+    const { data: teacherData } = await supabase
+      .from('teachers')
+      .select('slug')
+      .eq('id', teacherId)
+      .single()
+    const typedTeacher = teacherData as { slug: string } | null
+    const path = typedTeacher?.slug ? `/ucitele/${typedTeacher.slug}` : '/ucitele'
+    revalidateReviewSurfaces(user.id, path)
     return { success: true }
   } catch (error) {
     return {

@@ -54,7 +54,7 @@ export function HallOfFameSection({
       id="hall-of-fame"
       className="container mx-auto max-w-6xl scroll-mt-24 px-4 sm:px-6 lg:px-8 pb-16"
     >
-      <div className="relative overflow-hidden rounded-[2rem] border border-border/60 bg-card/80 p-6 shadow-[0_30px_80px_-45px_rgba(15,23,42,0.45)] backdrop-blur sm:p-8">
+      <div className="relative overflow-hidden rounded-[2.5rem] border border-white/5 bg-card/60 p-6 shadow-[0_30px_80px_-45px_rgba(15,23,42,0.45)] backdrop-blur-xl sm:p-8">
         {/* Header glow — matches brand-sync-color */}
         <div
           className="pointer-events-none absolute inset-x-0 top-0 h-52 sm:h-60"
@@ -91,7 +91,7 @@ export function HallOfFameSection({
               </div>
             </div>
 
-            <div className="inline-flex w-full max-w-sm rounded-2xl border border-border bg-background/80 p-1">
+            <div className="inline-flex w-full max-w-sm rounded-[1.5rem] border border-white/5 bg-background/50 p-1 shadow-inner">
               {(["week", "month", "all"] as HallOfFamePeriod[]).map((key) => (
                 <button
                   key={key}
@@ -111,7 +111,7 @@ export function HallOfFameSection({
           </div>
 
           {entries.length === 0 ? (
-            <div className="rounded-3xl border border-dashed border-border bg-background/50 px-6 py-12 text-center">
+            <div className="rounded-[2rem] border-2 border-dashed border-white/10 bg-background/30 px-6 py-12 text-center">
               <p className="text-lg font-semibold text-foreground">
                 Zatím tu nejsou žádní přispěvatelé za toto období.
               </p>
@@ -137,7 +137,7 @@ export function HallOfFameSection({
             </div>
           )}
 
-          <div className="rounded-3xl border border-border/60 bg-background/60 p-5 sm:p-6">
+          <div className="rounded-[2rem] border border-white/5 bg-background/40 p-5 sm:p-6 shadow-sm">
             {isLoggedIn ? (
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
@@ -278,7 +278,7 @@ function LeaderboardRow({ entry, index }: { entry: HallOfFameRow; index: number 
   return (
     <Link
       href={getPublicProfilePath(entry.user_id)}
-      className="flex items-center gap-4 rounded-2xl border border-border/60 bg-background/75 px-4 py-3 shadow-sm transition-colors hover:border-primary/40 hover:bg-background"
+      className="flex items-center gap-4 rounded-2xl border border-white/5 bg-background/50 px-4 py-3 shadow-sm transition-all hover:border-primary/40 hover:-translate-y-1 hover:shadow-md hover:bg-background/80"
     >
       <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-muted text-sm font-semibold text-muted-foreground">
         #{index + 1}
@@ -300,7 +300,7 @@ function LeaderboardRow({ entry, index }: { entry: HallOfFameRow; index: number 
 
 function ScorePill({ icon, value, label }: { icon: React.ReactNode; value: number; label: string }) {
   return (
-    <span className="inline-flex items-center gap-1 rounded-full border border-border bg-card px-2 py-0.5 text-xs text-muted-foreground">
+    <span className="inline-flex items-center gap-1 rounded-full border border-white/5 bg-card px-2 py-0.5 text-xs text-muted-foreground shadow-sm">
       {icon}
       <span className="font-medium text-foreground">{value}</span>
       <span>{label}</span>

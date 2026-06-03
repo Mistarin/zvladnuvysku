@@ -96,7 +96,7 @@ export function MaterialGroupCard({
   return (
     <div className="glass-card overflow-hidden">
       {/* Header */}
-      <div className={`${compact ? 'p-3.5' : 'p-4'} ${isExpanded ? 'border-b border-border/50' : ''}`}>
+      <div className={`${compact ? 'p-3.5' : 'p-4'} ${isExpanded ? 'border-b border-white/5' : ''}`}>
         {/* Uploader line */}
         <div className={`flex items-center gap-1.5 text-xs text-muted-foreground ${compact ? 'mb-1.5' : 'mb-2'}`}>
           <User className="w-3 h-3" />
@@ -124,7 +124,7 @@ export function MaterialGroupCard({
                 value={editTitle}
                 onChange={e => setEditTitle(e.target.value)}
                 onKeyDown={e => { if (e.key === 'Enter') handleRename(); if (e.key === 'Escape') setIsEditing(false) }}
-                className="flex-1 rounded-lg border border-border bg-background px-2 py-1 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                className="flex-1 rounded-lg border border-white/5 bg-background shadow-inner px-2 py-1 text-sm outline-none focus:ring-2 focus:ring-primary/20"
                 autoFocus
                 disabled={isPending}
                 maxLength={120}
@@ -195,7 +195,7 @@ export function MaterialGroupCard({
 
       {/* Materials list */}
       {isExpanded && (
-        <ul className="divide-y divide-border/50">
+        <ul className="divide-y divide-white/5">
           {group.materials.map(material => (
             <li key={material.id}>
               <div className={`flex items-center gap-3 ${compact ? 'px-3.5 py-2.5' : 'px-4 py-3'} hover:bg-muted/50 transition-colors group`}>

@@ -32,13 +32,18 @@ export default async function TeachersPage() {
   const publicIdentity = getPublicProfileIdentity(profile);
 
   return (
-    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 max-w-6xl">
+    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 max-w-5xl">
+      <nav className="mb-6 flex items-center gap-2 text-sm text-muted-foreground">
+        <Link href="/" className="transition-colors hover:text-foreground">Domů</Link>
+        <span>/</span>
+        <span className="font-medium text-foreground">Vyučující</span>
+      </nav>
       <div className="flex justify-between items-end mb-8">
         <div>
           <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">
             Vyučující
           </h1>
-          <p className="mt-2 text-lg text-muted-foreground max-w-2xl">
+          <p className="mt-2 text-base text-muted-foreground max-w-2xl">
             Prohlížej si profily vyučujících, hodnoť jejich přístup a objev, jaké předměty učí.
           </p>
         </div>
@@ -46,11 +51,6 @@ export default async function TeachersPage() {
           hasPublicProfileIdentity={hasPublicIdentity}
           initialDisplayName={publicIdentity.displayName}
           initialFaculty={publicIdentity.faculty}
-          trigger={
-            <button className="px-4 py-2 bg-primary text-primary-foreground rounded-lg font-medium text-sm hover:opacity-90 transition-opacity">
-              + Přidat vyučujícího
-            </button>
-          }
         />
       </div>
       <Suspense fallback={<TeachersListSkeleton />}>
@@ -65,7 +65,7 @@ async function TeachersListSection() {
 
   const { data: teachers, error } = await supabase
     .from("teachers")
-    .select("id, slug, name, faculty, department")
+    .select("id, slug, name, faculty, department, teacher_rating_stats(avg_rating, total_ratings)")
     .eq("is_approved", true)
     .order("faculty", { ascending: true })
     .order("name", { ascending: true });
@@ -79,7 +79,9 @@ async function TeachersListSection() {
     );
   }
 
-  const groupedTeachers = ((teachers ?? []) as Teacher[]).reduce<Record<string, Teacher[]>>((acc, t) => {
+  type TeacherWithStats = Teacher & { teacher_rating_stats?: { avg_rating: number; total_ratings: number } };
+
+  const groupedTeachers = ((teachers ?? []) as unknown as TeacherWithStats[]).reduce<Record<string, TeacherWithStats[]>>((acc, t) => {
     if (!acc[t.faculty]) acc[t.faculty] = [];
     acc[t.faculty].push(t);
     return acc;
@@ -103,14 +105,15 @@ async function TeachersListSection() {
 
         return (
           <div key={faculty} className="space-y-4">
-          <div className="flex items-center gap-3 border-b border-border pb-2">
+          <div className="flex items-center gap-3 border-b border-white/5 pb-3">
             <div
-              className="w-4 h-4 rounded-full"
+              className="w-3 h-3 rounded-full"
               style={{ backgroundColor: facultyColor }}
             />
-            <h2 className="text-2xl font-semibold text-foreground">
+            <h2 className="text-xl font-semibold text-foreground">
               {faculty}
             </h2>
+            <span className="text-xs text-muted-foreground ml-auto">{teachersForFaculty.length} vyučujících</span>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {teachersForFaculty.map((teacher) => {
@@ -122,11 +125,19 @@ async function TeachersListSection() {
                   href={getTeacherPath(teacher.slug)}
                   className="glass-card p-5 group hover:border-primary/50 transition-all hover:-translate-y-1 block"
                 >
-                  <div className="flex flex-col gap-2">
-                    <h3 className="font-semibold text-lg text-foreground group-hover:text-primary transition-colors line-clamp-1">
-                      {teacher.name}
-                    </h3>
-                    <div className="flex flex-wrap items-center gap-2">
+                  <div className="flex flex-col gap-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <h3 className="font-semibold text-lg text-foreground group-hover:text-primary transition-colors line-clamp-2">
+                        {teacher.name}
+                      </h3>
+                      {teacher.teacher_rating_stats?.total_ratings ? (
+                        <div className="flex items-center gap-1 shrink-0 bg-primary/10 px-2 py-1 rounded-md" title={`${teacher.teacher_rating_stats.total_ratings} hodnocení`}>
+                          <span className="text-primary font-bold text-sm">{Number(teacher.teacher_rating_stats.avg_rating).toFixed(1)}</span>
+                          <span className="text-xs text-primary/70">/ 5</span>
+                        </div>
+                      ) : null}
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2 mt-auto">
                       <span
                         className="px-2 py-0.5 text-xs font-medium rounded-md shadow-sm"
                         style={{
@@ -160,15 +171,15 @@ function TeachersListSkeleton() {
     <div className="space-y-12">
       {Array.from({ length: 2 }).map((_, sectionIndex) => (
         <div key={sectionIndex} className="space-y-4">
-          <div className="flex items-center gap-3 border-b border-border pb-2">
-            <div className="h-4 w-4 animate-pulse rounded-full bg-muted" />
-            <div className="h-8 w-24 animate-pulse rounded bg-muted" />
+          <div className="flex items-center gap-3 border-b border-white/5 pb-3">
+            <div className="h-3 w-3 animate-pulse rounded-full bg-muted" />
+            <div className="h-6 w-24 animate-pulse rounded bg-muted" />
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {Array.from({ length: 6 }).map((__, index) => (
               <div key={index} className="glass-card p-5">
                 <div className="space-y-3">
-                  <div className="h-6 w-2/3 animate-pulse rounded bg-muted" />
+                  <div className="h-5 w-2/3 animate-pulse rounded bg-muted" />
                   <div className="h-4 w-1/2 animate-pulse rounded bg-muted" />
                 </div>
               </div>

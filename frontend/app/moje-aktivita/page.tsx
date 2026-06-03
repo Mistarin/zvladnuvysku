@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { MyActivityDashboard, type ActivityAttention, type ActivityCardData, type ActivitySectionData, type StatusTone } from "@/components/activity/my-activity-dashboard";
-import { MaterialGroupCard, type MaterialGroupData } from "@/components/subject/material-group-card";
+import type { MaterialGroupData } from "@/components/subject/material-group-card";
 import { getPublicProfilePath } from "@/lib/public-profile";
 import { getPublicProfileIdentity, hasPublicProfileIdentity } from "@/lib/public-profile-identity";
 import { createClient } from "@/lib/supabase/server";
@@ -97,7 +97,7 @@ export default async function MyActivityPage() {
         </div>
         <Link
           href={hasPublicIdentity ? getPublicProfilePath(user.id) : "/#hall-of-fame"}
-          className="inline-flex items-center justify-center rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted"
+          className="inline-flex items-center justify-center rounded-xl border border-white/5 bg-card/60 shadow-inner px-5 py-2.5 text-sm font-medium text-foreground transition-all hover:bg-muted/50 hover:shadow-md"
         >
           {hasPublicIdentity ? "Otevřít veřejný profil" : "Doplnit veřejný profil"}
         </Link>
@@ -542,15 +542,7 @@ function buildMaterialGroupCard(group: MaterialGroupData): ActivityCardData {
       : undefined,
     badges: [],
     meta: [],
-    customContent: (
-      <MaterialGroupCard
-        group={group}
-        showSubject
-        isOwner
-        compact
-        defaultExpanded={false}
-      />
-    ),
+    materialGroup: group,
   };
 }
 
@@ -657,7 +649,7 @@ function MyActivitySkeleton() {
     <div className="space-y-8">
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
         {Array.from({ length: 5 }).map((_, index) => (
-          <div key={index} className="rounded-2xl border border-border bg-card p-4">
+          <div key={index} className="rounded-[1.5rem] border border-white/5 bg-card/40 backdrop-blur-md p-5 shadow-sm">
             <div className="h-4 w-24 animate-pulse rounded bg-muted" />
             <div className="mt-3 h-8 w-20 animate-pulse rounded bg-muted" />
             <div className="mt-2 h-4 w-full animate-pulse rounded bg-muted" />
@@ -668,7 +660,7 @@ function MyActivitySkeleton() {
       {Array.from({ length: 4 }).map((_, index) => (
         <section key={index} className="space-y-4">
           <div className="h-6 w-48 animate-pulse rounded bg-muted" />
-          <div className="rounded-2xl border border-border bg-card p-4">
+          <div className="rounded-[1.5rem] border border-white/5 bg-card/40 backdrop-blur-md p-5 shadow-sm">
             <div className="grid grid-cols-3 gap-2">
               {Array.from({ length: 3 }).map((__, buttonIndex) => (
                 <div key={buttonIndex} className="h-12 animate-pulse rounded-xl bg-muted" />
@@ -676,7 +668,7 @@ function MyActivitySkeleton() {
             </div>
             <div className="mt-4 space-y-3">
               {Array.from({ length: 3 }).map((__, itemIndex) => (
-                <div key={itemIndex} className="rounded-2xl border border-border bg-background/70 p-4">
+                <div key={itemIndex} className="rounded-[1.5rem] border border-white/5 bg-background/50 p-5 shadow-sm">
                   <div className="h-4 w-2/3 animate-pulse rounded bg-muted" />
                   <div className="mt-2 h-4 w-1/2 animate-pulse rounded bg-muted" />
                 </div>

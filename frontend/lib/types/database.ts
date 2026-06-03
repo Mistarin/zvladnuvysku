@@ -364,6 +364,10 @@ export interface Database {
           level: number
           level_progress_xp: number
           next_level_xp: number
+          public_subject_comment_count: number
+          anon_subject_comment_count: number
+          public_teacher_review_count: number
+          anon_teacher_review_count: number
         }[]
       }
       get_public_profile_summaries: {

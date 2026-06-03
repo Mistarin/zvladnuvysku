@@ -35,7 +35,7 @@ export function ReviewVisibilityField({ isAnonymous, onChange }: ReviewVisibilit
         >
           <div className="font-medium text-foreground">Anonymní recenze</div>
           <div className="mt-1 text-xs text-muted-foreground">
-            Autor se veřejně nezobrazuje a recenze nepřidává XP ani body.
+            Jméno je bezpečně skryté. Získáš XP do žebříčku, ale text recenze se na tvém veřejném profilu neukáže.
           </div>
         </button>
       </div>

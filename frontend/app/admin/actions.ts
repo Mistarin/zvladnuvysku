@@ -541,10 +541,10 @@ export async function approveMaterial(materialId: string): Promise<ActionResult>
     const { supabase } = await getAdminClient()
     const { data: material, error: loadError } = await supabase
       .from('subject_materials')
-      .select('id, uploader_id')
+      .select('id, uploader_id, subject:subject_id(slug)')
       .eq('id', materialId)
       .maybeSingle()
-    const typedMaterial = material as Pick<SubjectMaterialRow, 'id' | 'uploader_id'> | null
+    const typedMaterial = material as { id: string; uploader_id: string; subject: { slug: string } | null } | null
 
     if (loadError) {
       return { success: false, error: `Nepodařilo se načíst materiál: ${loadError.message}` }
@@ -566,7 +566,9 @@ export async function approveMaterial(materialId: string): Promise<ActionResult>
 
     if (error) return { success: false, error: `Chyba při schvalování materiálu: ${error.message}` }
     revalidatePath('/admin')
-    revalidatePath('/predmety/[slug]', 'page')
+    if (typedMaterial.subject?.slug) {
+      revalidatePath(`/predmety/${typedMaterial.subject.slug}`)
+    }
     revalidatePath('/moje-aktivita')
     revalidateContributionSurfaces(typedMaterial.uploader_id)
     return { success: true }
@@ -578,6 +580,13 @@ export async function approveMaterial(materialId: string): Promise<ActionResult>
 export async function rejectMaterial(materialId: string, reason?: string): Promise<ActionResult> {
   try {
     const { supabase } = await getAdminClient()
+
+    const { data: material } = await supabase
+      .from('subject_materials')
+      .select('subject:subject_id(slug)')
+      .eq('id', materialId)
+      .maybeSingle()
+    const typedMaterial = material as { subject: { slug: string } | null } | null
 
     const { error: dbError } = await supabase
       .from('subject_materials')
@@ -594,7 +603,9 @@ export async function rejectMaterial(materialId: string, reason?: string): Promi
     }
     
     revalidatePath('/admin')
-    revalidatePath('/predmety/[slug]', 'page')
+    if (typedMaterial?.subject?.slug) {
+      revalidatePath(`/predmety/${typedMaterial.subject.slug}`)
+    }
     revalidatePath('/moje-aktivita')
     return { success: true }
   } catch (err) {
@@ -608,10 +619,14 @@ export async function approveRatingComment(ratingId: string, type: "subject" | "
     const table = type === "subject" ? "subject_ratings" : "teacher_ratings"
     const { data: existingRowData } = await supabase
       .from(table)
-      .select('user_id')
+      .select(`user_id, ${type === 'subject' ? 'subject:subject_id(slug)' : 'teacher:teacher_id(slug)'}`)
       .eq('id', ratingId)
       .maybeSingle()
-    const existingRow = existingRowData as { user_id: string } | null
+    const existingRow = existingRowData as {
+      user_id: string
+      subject?: { slug: string } | null
+      teacher?: { slug: string } | null
+    } | null
     
     const { error } = await supabase
       .from(table)
@@ -625,7 +640,12 @@ export async function approveRatingComment(ratingId: string, type: "subject" | "
     if (existingRow?.user_id) {
       revalidatePath(getPublicProfilePath(existingRow.user_id))
     }
-    revalidatePath(`/${type === 'subject' ? 'predmety' : 'ucitele'}/[slug]`, 'page')
+    if (existingRow) {
+      const slug = type === 'subject' ? existingRow.subject?.slug : existingRow.teacher?.slug
+      if (slug) {
+        revalidatePath(`/${type === 'subject' ? 'predmety' : 'ucitele'}/${slug}`)
+      }
+    }
     
     return { success: true }
   } catch (err) {
@@ -639,10 +659,14 @@ export async function rejectRatingComment(ratingId: string, type: "subject" | "t
     const table = type === "subject" ? "subject_ratings" : "teacher_ratings"
     const { data: existingRowData } = await supabase
       .from(table)
-      .select('user_id')
+      .select(`user_id, ${type === 'subject' ? 'subject:subject_id(slug)' : 'teacher:teacher_id(slug)'}`)
       .eq('id', ratingId)
       .maybeSingle()
-    const existingRow = existingRowData as { user_id: string } | null
+    const existingRow = existingRowData as {
+      user_id: string
+      subject?: { slug: string } | null
+      teacher?: { slug: string } | null
+    } | null
     
     // We only set comment/review to NULL. We don't delete the row, so the star rating remains.
     const { error } = await supabase
@@ -657,7 +681,12 @@ export async function rejectRatingComment(ratingId: string, type: "subject" | "t
     if (existingRow?.user_id) {
       revalidatePath(getPublicProfilePath(existingRow.user_id))
     }
-    revalidatePath(`/${type === 'subject' ? 'predmety' : 'ucitele'}/[slug]`, 'page')
+    if (existingRow) {
+      const slug = type === 'subject' ? existingRow.subject?.slug : existingRow.teacher?.slug
+      if (slug) {
+        revalidatePath(`/${type === 'subject' ? 'predmety' : 'ucitele'}/${slug}`)
+      }
+    }
     
     return { success: true }
   } catch (err) {
@@ -783,6 +812,13 @@ export async function auditApprovedMaterials(): Promise<AuditActionResult<Broken
 export async function removeBrokenMaterialRecord(materialId: string): Promise<ActionResult> {
   try {
     const { supabase } = await getAdminClient()
+    const { data: material } = await supabase
+      .from('subject_materials')
+      .select('subject:subject_id(slug)')
+      .eq('id', materialId)
+      .maybeSingle()
+    const typedMaterial = material as { subject: { slug: string } | null } | null
+
     const { error } = await supabase
       .from('subject_materials')
       .delete()
@@ -793,7 +829,9 @@ export async function removeBrokenMaterialRecord(materialId: string): Promise<Ac
     }
 
     revalidatePath('/admin')
-    revalidatePath('/predmety/[slug]', 'page')
+    if (typedMaterial?.subject?.slug) {
+      revalidatePath(`/predmety/${typedMaterial.subject.slug}`)
+    }
     revalidatePath('/moje-aktivita')
     return { success: true }
   } catch (error) {

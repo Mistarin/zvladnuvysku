@@ -13,6 +13,9 @@
 
 /* Tailwind v4 theme definice */
 @theme {
+  --font-sans: var(--font-inter), "Inter", sans-serif;
+  --font-display: var(--font-outfit), "Outfit", sans-serif;
+  
   --color-background: hsl(0 0% 98%);
   --color-foreground: hsl(0 0% 9%);
   --color-card: hsl(0 0% 100%);
@@ -29,7 +32,7 @@
   --color-accent-foreground: hsl(0 0% 100%);
   --color-destructive: hsl(0 72% 51%);
   --color-destructive-foreground: hsl(0 0% 100%);
-  --color-border: hsl(60 5% 90%);
+  --color-border: hsl(60 5% 94%);
   --color-input: hsl(60 5% 90%);
   --color-ring: hsl(187 98% 42%);
 
@@ -68,7 +71,7 @@
     --color-accent-foreground: hsl(0 0% 7%);
     --color-destructive: hsl(0 62% 58%);
     --color-destructive-foreground: hsl(0 0% 100%);
-    --color-border: hsl(0 0% 18%);
+    --color-border: hsl(0 0% 12%);
     --color-input: hsl(0 0% 18%);
     --color-ring: hsl(187 98% 48%);
 
@@ -90,7 +93,7 @@
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
-    font-family: Aptos, 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-family: var(--font-sans), 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
     font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -101,6 +104,7 @@
   }
 
   h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display), "Outfit", sans-serif;
     font-weight: 600;
     letter-spacing: -0.02em;
     line-height: 1.2;
@@ -147,11 +151,12 @@
 
 @layer components {
   .glass-card {
-    background-color: color-mix(in srgb, var(--color-card) 90%, transparent);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius);
+    background-color: color-mix(in srgb, var(--color-card) 60%, transparent);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid color-mix(in srgb, var(--color-foreground) 6%, transparent);
+    border-radius: 1.25rem;
+    box-shadow: 0 4px 24px -8px color-mix(in srgb, var(--color-foreground) 8%, transparent);
   }
 
   .accent-gradient {

@@ -86,7 +86,7 @@ export default async function AdminPage(props: {
         <FacultyFilter />
       </div>
 
-      <div className="space-y-3 rounded-2xl border border-border bg-card p-4">
+      <div className="space-y-4 rounded-2xl border border-white/5 bg-card/40 backdrop-blur-md p-5 shadow-sm">
         <div className="flex flex-wrap gap-2">
           {([
             { key: "all", label: "Vše" },
@@ -109,7 +109,7 @@ export default async function AdminPage(props: {
                 className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${
                   isActive
                     ? "border-primary bg-primary/10 text-primary"
-                    : "border-border bg-background text-muted-foreground hover:bg-muted hover:text-foreground"
+                    : "border-white/5 bg-background shadow-inner text-muted-foreground hover:bg-muted/50 hover:text-foreground"
                 }`}
               >
                 <span>{queue.label}</span>
@@ -124,13 +124,13 @@ export default async function AdminPage(props: {
             name="q"
             defaultValue={query}
             placeholder="Hledat v moderaci podle názvu, komentáře nebo zprávy..."
-            className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+            className="w-full rounded-xl border border-white/5 bg-background shadow-inner px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20"
           />
           {facultyFilter && <input type="hidden" name="faculty" value={facultyFilter} />}
           {queueFilter !== "all" && <input type="hidden" name="queue" value={queueFilter} />}
           <button
             type="submit"
-            className="rounded-lg border border-border bg-background px-4 py-2 text-sm font-medium text-foreground hover:bg-muted"
+            className="rounded-xl border border-white/5 bg-card/60 shadow-inner px-5 py-3 text-sm font-medium text-foreground hover:bg-muted/50"
           >
             Filtrovat frontu
           </button>
@@ -400,7 +400,7 @@ async function AdminQueuesSection({
 
 function CountCard({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded-xl border border-border bg-card px-4 py-3">
+    <div className="rounded-2xl border border-white/5 bg-card/40 backdrop-blur-md px-5 py-4 shadow-sm">
       <p className="text-xs uppercase tracking-wide text-muted-foreground">{label}</p>
       <p className="mt-1 text-2xl font-bold text-foreground">{value}</p>
     </div>
@@ -420,7 +420,7 @@ function QueueSection({
 }) {
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between border-b border-border/50 pb-2">
+      <div className="flex items-center justify-between border-b border-white/5 pb-3">
         <h2 className="flex items-center gap-2 text-xl font-bold">
           <span>{icon}</span> {title}
         </h2>
@@ -440,17 +440,17 @@ function AdminQueuesSkeleton() {
     <div className="space-y-8">
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
         {Array.from({ length: 5 }).map((_, index) => (
-          <div key={index} className="rounded-xl border border-border bg-card px-4 py-3">
+          <div key={index} className="rounded-2xl border border-white/5 bg-card/40 px-5 py-4">
             <div className="h-4 w-20 animate-pulse rounded bg-muted" />
             <div className="mt-2 h-8 w-10 animate-pulse rounded bg-muted" />
           </div>
         ))}
       </div>
-      <div className="rounded-2xl border border-border bg-card p-6">
+      <div className="rounded-[2rem] border border-white/5 bg-card/40 p-6">
         <div className="h-6 w-48 animate-pulse rounded bg-muted" />
         <div className="mt-4 space-y-3">
           {Array.from({ length: 4 }).map((_, index) => (
-            <div key={index} className="rounded-xl border border-border p-4">
+            <div key={index} className="rounded-2xl border border-white/5 bg-background/50 p-5 shadow-sm">
               <div className="h-4 w-2/3 animate-pulse rounded bg-muted" />
               <div className="mt-2 h-4 w-1/2 animate-pulse rounded bg-muted" />
             </div>

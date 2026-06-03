@@ -84,7 +84,7 @@ export default async function AdminMaterialsPage(props: {
 
   return (
     <div className="container mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8 space-y-6">
-      <div className="flex items-center gap-4 border-b border-border pb-4">
+      <div className="flex items-center gap-4 border-b border-white/5 pb-4">
         <Link href="/admin" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
           ← Zpět do adminu
         </Link>
@@ -99,15 +99,15 @@ export default async function AdminMaterialsPage(props: {
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">
-        <div className="rounded-2xl border border-border bg-card p-4">
+        <div className="rounded-2xl border border-white/5 bg-card/40 backdrop-blur-md p-5 shadow-sm">
           <p className="text-sm text-muted-foreground">Zobrazené materiály</p>
           <p className="mt-2 text-2xl font-semibold text-foreground">{materials.length}</p>
         </div>
-        <div className="rounded-2xl border border-border bg-card p-4">
-          <p className="text-sm text-muted-foreground">Bez nastaveného bodování</p>
+        <div className="rounded-2xl border border-white/5 bg-card/40 backdrop-blur-md p-5 shadow-sm">
+          <p className="text-sm text-muted-foreground">Bez bodů</p>
           <p className="mt-2 text-2xl font-semibold text-foreground">{materialsWithMissingScoring}</p>
         </div>
-        <div className="rounded-2xl border border-border bg-card p-4">
+        <div className="rounded-2xl border border-white/5 bg-card/40 backdrop-blur-md p-5 shadow-sm">
           <p className="text-sm text-muted-foreground">Aktivní filtr</p>
           <p className="mt-2 text-lg font-semibold text-foreground">
             {STATUS_FILTERS.find((item) => item.key === status)?.label ?? "Schválené"}
@@ -115,7 +115,7 @@ export default async function AdminMaterialsPage(props: {
         </div>
       </div>
 
-      <div className="space-y-3 rounded-2xl border border-border bg-card p-4">
+      <div className="space-y-4 rounded-[2rem] border border-white/5 bg-card/40 backdrop-blur-md p-6 shadow-sm">
         <div className="flex flex-wrap gap-2">
           {STATUS_FILTERS.map((item) => {
             const params = new URLSearchParams();
@@ -131,7 +131,7 @@ export default async function AdminMaterialsPage(props: {
                 className={`inline-flex items-center rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${
                   active
                     ? "border-primary bg-primary/10 text-primary"
-                    : "border-border bg-background text-muted-foreground hover:bg-muted hover:text-foreground"
+                    : "border-white/5 bg-background shadow-inner text-muted-foreground hover:bg-muted/50 hover:text-foreground"
                 }`}
               >
                 {item.label}
@@ -146,12 +146,12 @@ export default async function AdminMaterialsPage(props: {
             name="q"
             defaultValue={query}
             placeholder="Hledat podle názvu materiálu, předmětu nebo uživatele..."
-            className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+            className="w-full rounded-xl border border-white/5 bg-background shadow-inner px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20"
           />
           {status !== "approved" && <input type="hidden" name="status" value={status} />}
           <button
             type="submit"
-            className="rounded-lg border border-border bg-background px-4 py-2 text-sm font-medium text-foreground hover:bg-muted"
+            className="rounded-xl border border-white/5 bg-card/60 shadow-inner px-5 py-3 text-sm font-medium text-foreground hover:bg-muted/50 transition-all"
           >
             Filtrovat
           </button>
@@ -171,7 +171,7 @@ export default async function AdminMaterialsPage(props: {
           ))}
         </div>
       ) : (
-        <div className="rounded-2xl border border-dashed border-border bg-background/40 px-4 py-10 text-center text-sm text-muted-foreground">
+        <div className="rounded-[1.5rem] border-2 border-dashed border-white/10 bg-background/40 px-4 py-10 text-center text-sm text-muted-foreground">
           Pro tenhle filtr jsme nenašli žádné materiály.
         </div>
       )}

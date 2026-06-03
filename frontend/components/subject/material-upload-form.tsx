@@ -4,7 +4,7 @@ import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { uploadSubjectMaterial, createMaterialGroup } from "@/app/actions/contributions";
 import { WelcomeDisplayNameModal } from "@/components/layout/welcome-display-name-modal";
-import { FolderPlus, Info } from "lucide-react";
+import { FolderPlus, Info, Loader2 } from "lucide-react";
 import Link from "next/link";
 
 interface MaterialUploadFormProps {
@@ -129,7 +129,7 @@ export function MaterialUploadForm({
       <div className="space-y-3">
         <button
           onClick={() => setIsOpen(true)}
-          className="w-full py-3 px-4 rounded-xl border-2 border-dashed border-border text-muted-foreground hover:border-primary/50 hover:text-foreground hover:bg-muted/30 transition-all flex flex-col items-center justify-center gap-2"
+          className="w-full py-4 px-4 rounded-[1.5rem] border-2 border-dashed border-white/10 text-muted-foreground hover:border-primary/40 hover:text-foreground hover:bg-muted/30 transition-all flex flex-col items-center justify-center gap-2"
         >
           <span className="text-xl">📄</span>
           <span className="text-sm font-medium">Nahrát studijní materiál (PDF)</span>
@@ -145,8 +145,8 @@ export function MaterialUploadForm({
 
   return (
     <>
-      <div className="p-5 rounded-xl border border-border bg-card shadow-sm space-y-4">
-        <div className="flex justify-between items-center border-b border-border pb-3">
+      <div className="p-6 rounded-[2rem] border border-white/5 bg-card/40 backdrop-blur-md shadow-sm space-y-5">
+        <div className="flex justify-between items-center border-b border-white/5 pb-4">
           <h3 className="font-semibold">Nahrát nový materiál</h3>
           <button
             onClick={() => setIsOpen(false)}
@@ -181,7 +181,7 @@ export function MaterialUploadForm({
               onChange={(e) => setTitle(e.target.value)}
               placeholder="např. Výpisky ke zkoušce"
               required
-              className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-primary/50"
+              className="w-full rounded-xl border border-white/5 bg-muted/30 shadow-inner px-4 py-3 text-sm outline-none focus:ring-1 focus:ring-primary/50 focus:bg-background transition-all"
             />
           </div>
 
@@ -198,7 +198,7 @@ export function MaterialUploadForm({
               value={pageCount}
               onChange={(e) => setPageCount(e.target.value)}
               placeholder="např. 42"
-              className="w-32 rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-primary/50"
+              className="w-32 rounded-xl border border-white/5 bg-muted/30 shadow-inner px-4 py-3 text-sm outline-none focus:ring-1 focus:ring-primary/50 focus:bg-background transition-all"
             />
           </div>
 
@@ -219,12 +219,12 @@ export function MaterialUploadForm({
                 file:text-sm file:font-semibold
                 file:bg-primary/10 file:text-primary
                 hover:file:bg-primary/20 file:cursor-pointer file:transition-colors
-                cursor-pointer border border-border rounded-lg bg-background"
+                cursor-pointer border border-white/5 rounded-xl shadow-inner bg-muted/30 p-2"
             />
           </div>
 
           {/* Group toggle */}
-          <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-3">
+          <div className="rounded-2xl border border-white/5 bg-background/50 shadow-sm p-4 space-y-3">
             <label className="flex items-center gap-2.5 cursor-pointer select-none">
               <input
                 type="checkbox"
@@ -244,7 +244,7 @@ export function MaterialUploadForm({
                   onChange={(e) => setGroupTitle(e.target.value)}
                   placeholder={`např. ${subjectName ? subjectName + " — vše ke zkoušce" : "Statistika — vše ke státnicím"}`}
                   maxLength={120}
-                  className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-amber-500/50"
+                  className="w-full rounded-xl border border-white/5 bg-muted/30 shadow-inner px-4 py-3 text-sm outline-none focus:ring-1 focus:ring-amber-500/50 focus:bg-background transition-all"
                   autoFocus
                 />
                 <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
@@ -274,6 +274,7 @@ export function MaterialUploadForm({
               disabled={!file || !title || isUploading}
               className="px-4 py-2 rounded-lg text-sm font-medium bg-primary text-primary-foreground disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:opacity-90 flex items-center gap-2"
             >
+              {isUploading && <Loader2 className="h-4 w-4 animate-spin" />}
               {isUploading ? "Nahrávám..." : isGroup ? "Nahrát a vytvořit skupinu" : "Nahrát soubor"}
             </button>
           </div>

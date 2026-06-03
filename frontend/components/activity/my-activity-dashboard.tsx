@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { AlertCircle, BookOpen, CheckCircle2, ChevronDown, ChevronUp, Clock3, Loader2, UserCircle2 } from 'lucide-react'
 import { markActivityItemRead, markActivityItemUnread } from '@/app/actions/activity'
 import { deletePendingSubjectProposal } from '@/app/actions/contributions'
+import { MaterialGroupCard, type MaterialGroupData } from '@/components/subject/material-group-card'
 import { Button } from '@/components/ui/button'
 import type { PublicProfileIdentityDraft } from '@/lib/public-profile-identity'
 import { cn } from '@/lib/utils'
@@ -55,7 +56,7 @@ export type ActivityAction =
 export type ActivityCardData = {
   id: string
   title: string
-  customContent?: ReactNode
+  materialGroup?: MaterialGroupData
   subtitle?: string
   supportingText?: string
   subjectFilter?: {
@@ -182,8 +183,8 @@ export function MyActivityDashboard({ publicIdentity, sections: initialSections 
 
       {activeSection ? (
         <section className="space-y-4">
-          <div className="overflow-x-auto pb-1">
-            <div className="inline-flex min-w-full gap-2 rounded-2xl border border-border bg-card p-2 sm:min-w-0">
+          <div className="overflow-x-auto pb-4">
+            <div className="inline-flex min-w-full gap-2 rounded-[1.5rem] bg-card/60 backdrop-blur-xl p-2 sm:min-w-0 shadow-sm border border-white/10 dark:border-white/5">
               {sections.map((section) => {
                 const isActive = section.id === activeSection.id
                 return (
@@ -192,14 +193,14 @@ export function MyActivityDashboard({ publicIdentity, sections: initialSections 
                     type="button"
                     onClick={() => setActiveSectionId(section.id)}
                     className={cn(
-                      'flex min-w-[10rem] flex-1 items-center justify-between gap-3 rounded-xl border px-3 py-3 text-left transition-colors',
+                      'flex min-w-[10rem] flex-1 items-center justify-between gap-3 rounded-xl px-4 py-3 text-left transition-all',
                       isActive
-                        ? 'border-primary/20 bg-primary/10 text-foreground'
-                        : 'border-border bg-background text-muted-foreground hover:bg-muted hover:text-foreground',
+                        ? 'bg-primary text-primary-foreground shadow-md shadow-primary/20'
+                        : 'bg-transparent text-muted-foreground hover:bg-muted/50 hover:text-foreground',
                     )}
                   >
                     <span className="truncate text-sm font-semibold">{section.title}</span>
-                    <span className="rounded-full bg-background/80 px-2 py-0.5 text-xs font-semibold text-foreground">
+                    <span className={cn("rounded-full px-2 py-0.5 text-xs font-semibold", isActive ? "bg-white/20 text-white" : "bg-background/80 text-foreground")}>
                       {getSectionItemCount(section)}
                     </span>
                   </button>
@@ -285,9 +286,9 @@ function renderSectionContent({
         ) : null}
       </div>
 
-      <div className="rounded-2xl border border-border bg-card p-4">
+      <div className="rounded-[2rem] bg-card/40 backdrop-blur-xl p-6 sm:p-8 shadow-sm border border-white/10 dark:border-white/5">
         <div
-          className="grid gap-2"
+          className="grid gap-3"
           style={{ gridTemplateColumns: `repeat(${section.tabs.length}, minmax(0, 1fr))` }}
         >
           {section.tabs.map((tab) => {
@@ -298,15 +299,15 @@ function renderSectionContent({
                 type="button"
                 onClick={() => setActiveTabs((current) => ({ ...current, [section.id]: tab.id }))}
                 className={cn(
-                  'rounded-xl border px-3 py-3 text-left transition-colors',
+                  'rounded-2xl px-4 py-4 text-left transition-all border',
                   isActive
-                    ? cn(getToneSurfaceClass(tab.tone), 'border-current/20')
-                    : 'border-border bg-background text-muted-foreground hover:bg-muted hover:text-foreground',
+                    ? cn(getToneSurfaceClass(tab.tone), 'border-current/20 shadow-sm')
+                    : 'border-white/5 bg-card/30 text-muted-foreground hover:bg-muted/50 hover:text-foreground hover:border-white/10',
                 )}
               >
                 <div className="flex items-center justify-between gap-3">
                   <span className="truncate text-sm font-semibold">{tab.label}</span>
-                  <span className="rounded-full bg-background/80 px-2 py-0.5 text-xs font-semibold text-foreground">
+                  <span className={cn("rounded-full px-2.5 py-0.5 text-xs font-bold", isActive ? "bg-current/10" : "bg-background/80")}>
                     {tab.items.length}
                   </span>
                 </div>
@@ -416,15 +417,15 @@ function getSectionItemCount(section: ActivitySectionData) {
 
 function SummaryCard({ card }: { card: SummaryCardData }) {
   return (
-    <div className="rounded-2xl border border-border bg-card p-4">
-      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-        <span className={cn('inline-flex h-8 w-8 items-center justify-center rounded-full', getToneSurfaceClass(card.tone))}>
+    <div className="rounded-3xl bg-card/60 backdrop-blur-xl shadow-sm hover:shadow-md hover:-translate-y-1 transition-all p-6 border border-white/10 dark:border-white/5">
+      <div className="flex items-center gap-3 text-sm text-muted-foreground font-medium">
+        <span className={cn('inline-flex h-10 w-10 items-center justify-center rounded-2xl shadow-inner', getToneSurfaceClass(card.tone))}>
           {card.icon}
         </span>
         <span>{card.label}</span>
       </div>
-      <p className="mt-3 text-xl font-semibold text-foreground">{card.value}</p>
-      <p className="mt-2 text-sm text-muted-foreground">{card.meta}</p>
+      <p className="mt-4 text-3xl font-bold text-foreground">{card.value}</p>
+      <p className="mt-2 text-xs text-muted-foreground/80 leading-relaxed">{card.meta}</p>
     </div>
   )
 }
@@ -442,13 +443,21 @@ function ActivityCard({
 }) {
   const attentionPending = Boolean(item.attention && pendingKey === getAttentionKey(item.attention))
 
-  if (item.customContent) {
-    return <>{item.customContent}</>
+  if (item.materialGroup) {
+    return (
+      <MaterialGroupCard
+        group={item.materialGroup}
+        showSubject
+        isOwner
+        compact
+        defaultExpanded={false}
+      />
+    )
   }
 
   return (
-    <div className={cn('rounded-2xl border border-border bg-background/70 p-4', item.attention?.acknowledged ? 'opacity-75' : null)}>
-      <div className="flex flex-col gap-3">
+    <div className={cn('rounded-3xl bg-card/40 backdrop-blur-md shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all p-5 sm:p-6 border border-white/10 dark:border-white/5', item.attention?.acknowledged ? 'opacity-75' : null)}>
+      <div className="flex flex-col gap-4">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             <p className="font-semibold text-foreground">{item.title}</p>

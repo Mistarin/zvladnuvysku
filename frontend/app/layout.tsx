@@ -8,7 +8,11 @@ import { FeedbackButton } from "@/components/layout/feedback-button";
 import { WelcomeDisplayNameModal } from "@/components/layout/welcome-display-name-modal";
 import { getPublicProfileIdentity, hasPublicProfileIdentity } from "@/lib/public-profile-identity";
 import { createClient } from "@/lib/supabase/server";
+import { Inter, Outfit } from "next/font/google";
 import { cookies } from "next/headers";
+
+const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
+const outfit = Outfit({ subsets: ["latin"], variable: "--font-outfit" });
 
 export const metadata: Metadata = {
   title: {
@@ -16,7 +20,7 @@ export const metadata: Metadata = {
     default: "Zvládnu Výšku — Studentský hub Ostravské univerzity",
   },
   description:
-    "Najdi svůj předmět na Ostravské univerzitě. Hodnocení obtížnosti, kartičky, reálné zkušenosti studentů.",
+    "Najdi předmět na Ostravské univerzitě. Hodnocení obtížnosti, kartičky, reálné zkušenosti studentů.",
   keywords: [
     "Ostravská univerzita",
     "předměty",
@@ -57,7 +61,7 @@ export default async function RootLayout({
 
   return (
     <html lang="cs" suppressHydrationWarning>
-      <body className="min-h-screen flex flex-col antialiased">
+      <body className={`${inter.variable} ${outfit.variable} font-sans min-h-screen flex flex-col antialiased`}>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"

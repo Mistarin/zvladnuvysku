@@ -25,20 +25,20 @@ interface HomePageClientProps {
 const FEATURES = [
   {
     Icon: Search,
-    title: "Chytré vyhledávání",
-    desc: "Najdi předmět podle názvu nebo zkratky. Výsledky okamžitě.",
+    title: "Najdi, co tě čeká",
+    desc: "Přestaň tápat. Zjisti náročnost a požadavky předmětu dřív, než si ho zapíšeš.",
     href: "/predmety",
   },
   {
     Icon: BarChart3,
-    title: "Reálné hodnocení",
-    desc: "Obtížnost, časová náročnost a docházka od skutečných studentů.",
+    title: "Od studentů pro studenty",
+    desc: "Žádné PR řeči ze sylabu. Jen tvrdá data o docházce a obtížnosti od těch, co to už přežili.",
     href: "/predmety",
   },
   {
     Icon: FlipVertical,
-    title: "Kartičky",
-    desc: "Spaced repetition učení přizpůsobené každému předmětu.",
+    title: "Uč se chytře, ne dlouho",
+    desc: "Netrav noci nad skripty. Použij sdílené flashcards pro efektivní učení přesně na míru předmětu.",
     href: "/flashcardy",
   },
 ];
@@ -98,6 +98,15 @@ export function HomePageClient({ siteStats }: HomePageClientProps) {
     [query, flashcardQuery, materialQuery, isFlashcardMode, isMaterialMode, isGroupMode, router, clearSearch]
   );
 
+  const handleTabClick = useCallback((mode: "subjects" | "flashcards" | "materials" | "groups") => {
+    let newQuery = query.replace(/^\.[fms]\s*/, "");
+    if (mode === "flashcards") newQuery = `.f ${newQuery}`;
+    else if (mode === "materials") newQuery = `.m ${newQuery}`;
+    else if (mode === "groups") newQuery = `.s ${newQuery}`;
+    setQuery(newQuery);
+    setIsFocused(true);
+  }, [query, setQuery]);
+
   const placeholder =
     searchMode === "flashcards"
       ? "Název balíčku…"
@@ -116,37 +125,23 @@ export function HomePageClient({ siteStats }: HomePageClientProps) {
   return (
     <div className="relative overflow-hidden">
       <section className="home-hero">
-        <div className="relative w-full mb-8 flex justify-center pointer-events-none select-none">
-          <div
-            className={`transition-all ease-out text-center ${
-              isFocused
-                ? "opacity-0 translate-y-4 duration-150 delay-0"
-                : "opacity-100 translate-y-0 duration-300 delay-150"
-            }`}
-            aria-hidden={isFocused}
-          >
+        <div className="relative w-full mb-8 flex flex-col items-center pointer-events-none select-none">
+          <div className="transition-all ease-out text-center">
             <h1 className="home-title text-balance">
-              Najdi svůj{" "}
+              Najdi{" "}
               <span className="home-title-accent">
                 {searchMode === "flashcards"
-                  ? "balíček"
+                  ? "kartičky"
                   : searchMode === "materials"
-                    ? "materiál"
+                    ? "materiály"
                     : searchMode === "groups"
-                      ? "materiály"
+                      ? "složky"
                       : "předmět"}
               </span>
             </h1>
           </div>
 
-          <div
-            className={`absolute inset-0 flex items-center justify-center transition-all ease-out ${
-              isFocused
-                ? "opacity-100 translate-y-0 duration-300 delay-150"
-                : "opacity-0 translate-y-4 duration-150 delay-0"
-            }`}
-            aria-hidden={!isFocused}
-          >
+          <div className="mt-4 transition-all ease-out opacity-100">
             <p className="text-lg md:text-xl font-medium text-muted-foreground/80 tracking-tight px-4 text-balance text-center max-w-md">
               {searchMode === "flashcards"
                 ? "Hledáš balíček kartiček? Zkus zadat název nebo předmět."
@@ -210,26 +205,56 @@ export function HomePageClient({ siteStats }: HomePageClientProps) {
           </div>
 
           <div className="home-search-helper">
-            <div className="home-search-modes">
-              <span className="keyboard-shortcut-hint">Zkratky hledání:</span>
-              <span className="rounded-full border border-border bg-card px-2.5 py-1 keyboard-shortcut-hint">
-                <span className="font-mono text-primary">.f</span> kartičky
-              </span>
-              <span className="rounded-full border border-border bg-card px-2.5 py-1 keyboard-shortcut-hint">
-                <span className="font-mono text-sky-700">.m</span> materiály
-              </span>
-              <span className="rounded-full border border-border bg-card px-2.5 py-1 keyboard-shortcut-hint">
-                <span className="font-mono text-amber-600">.s</span> skupiny
-              </span>
+            <div className="flex flex-wrap justify-center gap-2 mt-4">
+              <button
+                onClick={() => handleTabClick("subjects")}
+                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
+                  searchMode === "subjects"
+                    ? "bg-foreground text-background shadow-md scale-105"
+                    : "bg-card border border-white/5 text-muted-foreground hover:bg-muted/50 hover:text-foreground shadow-sm"
+                }`}
+              >
+                Předměty
+              </button>
+              <button
+                onClick={() => handleTabClick("flashcards")}
+                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
+                  searchMode === "flashcards"
+                    ? "bg-primary text-primary-foreground shadow-md scale-105"
+                    : "bg-card border border-white/5 text-muted-foreground hover:bg-muted/50 hover:text-foreground shadow-sm"
+                }`}
+              >
+                Kartičky
+              </button>
+              <button
+                onClick={() => handleTabClick("materials")}
+                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
+                  searchMode === "materials"
+                    ? "bg-sky-600 text-white shadow-md scale-105"
+                    : "bg-card border border-white/5 text-muted-foreground hover:bg-muted/50 hover:text-foreground shadow-sm"
+                }`}
+              >
+                Materiály
+              </button>
+              <button
+                onClick={() => handleTabClick("groups")}
+                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
+                  searchMode === "groups"
+                    ? "bg-amber-600 text-white shadow-md scale-105"
+                    : "bg-card border border-white/5 text-muted-foreground hover:bg-muted/50 hover:text-foreground shadow-sm"
+                }`}
+              >
+                Skupiny
+              </button>
             </div>
 
-            <p className="home-hint">
+            <p className="home-hint mt-4">
               {searchMode === "flashcards"
-                ? <><span className="font-mono text-primary">.F</span> režim — hledáš balíčky kartiček</>
+                ? "Hledáš balíčky kartiček pro konkrétní předmět."
                 : searchMode === "materials"
-                  ? <><span className="font-mono text-sky-700">.M</span> režim — hledáš studijní materiály</>
+                  ? "Hledáš konkrétní studijní materiály, poznámky nebo skripta."
                   : searchMode === "groups"
-                    ? <><span className="font-mono text-amber-600">.S</span> režim — hledáš skupiny materiálů</>
+                    ? "Hledáš ucelené skupiny materiálů k vybranému tématu."
                     : "Jednotný studentský hub. Proč generovat stokrát to, co už dávno existuje?"}
             </p>
           </div>
@@ -251,7 +276,7 @@ export function HomePageClient({ siteStats }: HomePageClientProps) {
       </div>
 
       {/* Features section */}
-      <section className="container mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-16 border-t border-border/50">
+      <section className="container mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-16 border-t border-white/5">
         <div className="text-center mb-10">
           <h2 className="text-2xl sm:text-3xl font-bold text-foreground">
             Vše, co potřebuješ vědět
@@ -289,7 +314,7 @@ export function HomePageClient({ siteStats }: HomePageClientProps) {
         </p>
       </section>
 
-      <section className="container mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-16 border-t border-border/50">
+      <section className="container mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-16 border-t border-white/5">
         <div className="text-center space-y-4">
           <h2 className="text-2xl font-bold text-foreground">
             Začni hned teď

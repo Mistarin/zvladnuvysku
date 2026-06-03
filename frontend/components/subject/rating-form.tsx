@@ -7,6 +7,7 @@ import { deleteOwnSubjectRating, getMySubjectRating } from '@/app/actions/contri
 import { ReviewVisibilityField } from '@/components/review/review-visibility-field'
 import { useRating } from '@/hooks/use-rating'
 import { WelcomeDisplayNameModal } from '@/components/layout/welcome-display-name-modal'
+import { Loader2 } from 'lucide-react'
 
 interface RatingFormProps {
   subjectId: string
@@ -213,7 +214,7 @@ export function RatingForm({
             maxLength={2000}
             rows={3}
             placeholder="Sdílej svou zkušenost s předmětem..."
-            className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground resize-none outline-none focus:ring-1 focus:ring-primary/40 focus:border-primary/40 transition-all"
+            className="w-full rounded-xl border border-white/5 shadow-inner bg-muted/30 px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground resize-none outline-none focus:ring-1 focus:ring-primary/40 focus:border-transparent focus:bg-background transition-all"
           />
           <p className="text-xs text-muted-foreground/50 text-right">
             {comment.length}/2000
@@ -240,8 +241,9 @@ export function RatingForm({
           <button
             type="submit"
             disabled={isSubmitting || isDeleting || overall === 0}
-            className="w-full py-2.5 rounded-xl font-medium text-sm accent-gradient text-white hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed sm:w-auto sm:px-6"
+            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl font-medium text-sm accent-gradient text-white hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed sm:w-auto sm:px-6"
           >
+            {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
             {isSubmitting ? 'Ukládám...' : hasExistingRating ? 'Uložit změny' : 'Uložit hodnocení'}
           </button>
           {hasExistingRating && (
@@ -249,8 +251,9 @@ export function RatingForm({
               type="button"
               onClick={handleDelete}
               disabled={isSubmitting || isDeleting}
-              className="w-full rounded-xl border border-destructive/20 px-4 py-2.5 text-sm font-medium text-destructive transition-colors hover:bg-destructive/10 disabled:opacity-50 sm:w-auto"
+              className="w-full flex items-center justify-center gap-2 rounded-xl border border-destructive/20 px-4 py-2.5 text-sm font-medium text-destructive transition-colors hover:bg-destructive/10 disabled:opacity-50 sm:w-auto"
             >
+              {isDeleting && <Loader2 className="h-4 w-4 animate-spin" />}
               {isDeleting ? 'Mažu...' : 'Smazat recenzi'}
             </button>
           )}
