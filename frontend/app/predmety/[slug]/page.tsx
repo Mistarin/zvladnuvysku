@@ -91,6 +91,13 @@ export default async function PredmetDetailPage({ params }: PageProps) {
   }
 
   const subject = data as Subject;
+  const { data: subjectRatingStatsData } = await supabase
+    .from("subject_rating_stats")
+    .select("avg_difficulty, total_ratings")
+    .eq("subject_id", subject.id)
+    .maybeSingle();
+
+  const subjectRatingStats = subjectRatingStatsData as Pick<SubjectRatingStats, "avg_difficulty" | "total_ratings"> | null;
   const isLoggedIn = Boolean(user);
   const profile = user
     ? (
@@ -116,7 +123,10 @@ export default async function PredmetDetailPage({ params }: PageProps) {
 
       <div className="mb-8 space-y-4">
         <h1 className="text-3xl font-bold text-foreground sm:text-4xl">{subject.name}</h1>
-        <SubjectMeta subject={subject} />
+        <SubjectMeta
+          subject={subject}
+          averageDifficulty={subjectRatingStats?.total_ratings ? subjectRatingStats.avg_difficulty : null}
+        />
       </div>
 
       <div className="mb-8 grid grid-cols-1 gap-8 lg:grid-cols-3">
@@ -444,14 +454,32 @@ async function SubjectMaterialsSection({
   );
 }
 
-function SubjectMeta({ subject }: { subject: Subject }) {
+function SubjectMeta({
+  subject,
+  averageDifficulty,
+}: {
+  subject: Subject;
+  averageDifficulty: number | null;
+}) {
   return (
     <div className="flex flex-wrap items-center gap-3">
       <span className="rounded-lg bg-primary/10 px-2 py-1 font-mono text-sm font-bold text-primary/80">{subject.short_tag}</span>
       {(subject.faculty || subject.department) && <span className="rounded-lg bg-muted/50 px-2 py-1 text-sm text-muted-foreground">{[subject.faculty, subject.department].filter(Boolean).join(" · ")}</span>}
       {subject.credits && <span className="flex items-center gap-1.5 rounded-lg bg-blue-500/10 px-2.5 py-1 text-sm font-medium text-blue-600 dark:text-blue-400"><Diamond className="h-3.5 w-3.5" /> {formatCredits(subject.credits)}</span>}
-      {subject.difficulty && <DifficultyBadge difficulty={subject.difficulty} size="lg" showLabel />}
-      {subject.time_intensity && <span className="flex items-center gap-1.5 rounded-lg bg-purple-500/10 px-2.5 py-1 text-sm font-medium text-purple-600 dark:text-purple-400 whitespace-nowrap"><Clock className="h-3.5 w-3.5" /> Náročnost: {subject.time_intensity}/5</span>}
+      {(averageDifficulty || subject.time_intensity) && (
+        <div className="inline-flex flex-wrap overflow-hidden rounded-lg border border-border bg-card/70">
+          {averageDifficulty && (
+            <div className="flex items-center gap-2 px-2.5 py-1 text-sm">
+              <DifficultyBadge difficulty={averageDifficulty} size="lg" showLabel />
+            </div>
+          )}
+          {subject.time_intensity && (
+            <div className={`flex items-center gap-1.5 bg-purple-500/5 px-2.5 py-1 text-sm font-medium text-purple-600 dark:text-purple-400 whitespace-nowrap ${averageDifficulty ? "border-l border-border" : ""}`}>
+              <Clock className="h-3.5 w-3.5" /> Časová náročnost: {subject.time_intensity}/5
+            </div>
+          )}
+        </div>
+      )}
       {renderAttendance(subject.attendance_type)}
       {subject.semester && <span className="rounded-lg bg-slate-500/10 px-2.5 py-1 text-sm font-medium text-slate-600 dark:text-slate-400">{SEMESTER_LABELS[subject.semester] || subject.semester}</span>}
       {subject.year && <span className="flex items-center gap-1.5 rounded-lg bg-indigo-500/10 px-2.5 py-1 text-sm font-medium text-indigo-600 dark:text-indigo-400"><Calendar className="h-3.5 w-3.5" /> {subject.year}. ročník</span>}

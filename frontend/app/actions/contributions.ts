@@ -777,7 +777,7 @@ export async function searchSubjectsForProposal(query: string): Promise<{ succes
   try {
     const supabase = await createClient()
     const { data, error } = await supabase
-      .from('subjects')
+      .from('subject_search_view')
       .select('id, slug, name, short_tag, faculty, difficulty, credits, semester')
       .or(`name.ilike.%${normalizedQuery}%,short_tag.ilike.%${normalizedQuery}%`)
       .limit(6)
@@ -799,7 +799,7 @@ export async function getSubjectSearchCache(): Promise<{ success: true; data: Su
   try {
     const supabase = await createClient()
     const { data, error } = await supabase
-      .from('subjects')
+      .from('subject_search_view')
       .select('id, slug, name, short_tag, faculty, difficulty, credits, semester')
       .order('name')
 

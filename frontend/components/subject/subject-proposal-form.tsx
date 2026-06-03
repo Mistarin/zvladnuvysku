@@ -576,14 +576,24 @@ export function SubjectProposalForm({
           />
         </div>
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 2xl:grid-cols-4">
-          <div>
-            <FieldLabel>Obtížnost (1–5)</FieldLabel>
-            <Input type="number" min={1} max={5} value={form.difficulty} onChange={(e) => set('difficulty', Number(e.target.value))} />
-          </div>
-          <div>
-            <FieldLabel>Časová náročnost (1–5)</FieldLabel>
-            <Input type="number" min={1} max={5} value={form.time_intensity} onChange={(e) => set('time_intensity', Number(e.target.value))} />
+        <div className="grid grid-cols-1 gap-4 2xl:grid-cols-4">
+          <div className="space-y-2 sm:col-span-2 2xl:col-span-2">
+            <div>
+              <FieldLabel>Náročnost předmětu</FieldLabel>
+              <p className="text-xs text-muted-foreground">
+                Vyplň obě hodnoty společně: jak těžká je látka a kolik času typicky bere.
+              </p>
+            </div>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div>
+                <FieldLabel>Obtížnost (1–5)</FieldLabel>
+                <Input type="number" min={1} max={5} value={form.difficulty} onChange={(e) => set('difficulty', Number(e.target.value))} />
+              </div>
+              <div>
+                <FieldLabel>Časová náročnost (1–5)</FieldLabel>
+                <Input type="number" min={1} max={5} value={form.time_intensity} onChange={(e) => set('time_intensity', Number(e.target.value))} />
+              </div>
+            </div>
           </div>
           <div>
             <FieldLabel>Kredity</FieldLabel>

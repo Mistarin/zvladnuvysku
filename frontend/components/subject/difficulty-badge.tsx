@@ -6,14 +6,6 @@ const DIFFICULTY_LABELS: Record<number, string> = {
   5: "Velmi těžký",
 };
 
-const DIFFICULTY_EMOJIS: Record<number, string> = {
-  1: "😊",
-  2: "🙂",
-  3: "😐",
-  4: "😓",
-  5: "💀",
-};
-
 interface DifficultyBadgeProps {
   difficulty: number;
   size?: "sm" | "default" | "lg";
@@ -27,7 +19,9 @@ export function DifficultyBadge({
 }: DifficultyBadgeProps) {
   const clampedDifficulty = Math.min(5, Math.max(1, Math.round(difficulty)));
   const label = DIFFICULTY_LABELS[clampedDifficulty] || "Neznámá";
-  const emoji = DIFFICULTY_EMOJIS[clampedDifficulty] || "❓";
+  const displayValue = Number.isInteger(difficulty)
+    ? difficulty.toFixed(0)
+    : difficulty.toFixed(1);
 
   const sizeClasses = {
     sm: "text-[10px] px-1.5 py-0.5",
@@ -38,18 +32,17 @@ export function DifficultyBadge({
   return (
     <span
       className={`
-        inline-flex items-center gap-1 rounded-full font-medium whitespace-nowrap
+        inline-flex items-center rounded-full font-medium whitespace-nowrap
         badge-difficulty-${clampedDifficulty}
         ${sizeClasses[size]}
       `}
-      title={`Obtížnost: ${label}`}
-      aria-label={`Obtížnost ${clampedDifficulty} z 5 — ${label}`}
+      title={`Obtížnost: ${displayValue}/5 — ${label}`}
+      aria-label={`Obtížnost ${displayValue} z 5 — ${label}`}
     >
-      <span aria-hidden>{emoji}</span>
       {showLabel ? (
-        <span>{label}</span>
+        <span>Obtížnost: {displayValue}/5</span>
       ) : (
-        <span>{clampedDifficulty}/5</span>
+        <span>{displayValue}/5</span>
       )}
     </span>
   );
