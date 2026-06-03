@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Check, UserPlus } from 'lucide-react'
+import { AlertTriangle, Check, ChevronDown, FileText, ListChecks, SlidersHorizontal, UserPlus, Users, X } from 'lucide-react'
 import {
   getSubjectDetailsForProposal,
   submitSubjectProposal,
@@ -44,9 +44,9 @@ export interface SubjectDetails {
 const subjectDetailsCache = new Map<string, SubjectDetails>()
 
 const SEMESTER_OPTIONS = [
-  { value: 'zimní', label: '❄️ Zimní' },
-  { value: 'letní', label: '☀️ Letní' },
-  { value: 'oba', label: '🔄 Oba semestry' },
+  { value: 'zimní', label: 'Zimní' },
+  { value: 'letní', label: 'Letní' },
+  { value: 'oba', label: 'Oba semestry' },
 ]
 
 const ATTENDANCE_OPTIONS = [
@@ -608,21 +608,13 @@ export function SubjectProposalForm({
             className="flex w-full items-center justify-between px-7 py-5 text-left hover:bg-muted/20 transition-colors"
           >
             <div>
-              <h2 className="font-semibold text-foreground flex items-center gap-2">📝 Obsah předmětu</h2>
+              <h2 className="flex items-center gap-2 font-semibold text-foreground">
+                <ListChecks className="h-4 w-4 text-primary" />
+                Obsah předmětu
+              </h2>
               <p className="text-xs text-muted-foreground mt-0.5">Popis, cílová skupina, reálné požadavky</p>
             </div>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={2}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className={`h-5 w-5 text-muted-foreground transition-transform duration-200 shrink-0 ${openSections.obsah ? 'rotate-180' : ''}`}
-            >
-              <polyline points="6 9 12 15 18 9" />
-            </svg>
+            <ChevronDown className={`h-5 w-5 shrink-0 text-muted-foreground transition-transform duration-200 ${openSections.obsah ? 'rotate-180' : ''}`} />
           </button>
           {openSections.obsah && (
             <div className="px-7 pb-7 space-y-5 border-t border-white/5">
@@ -665,54 +657,63 @@ export function SubjectProposalForm({
             className="flex w-full items-center justify-between px-7 py-5 text-left hover:bg-muted/20 transition-colors"
           >
             <div>
-              <h2 className="font-semibold text-foreground flex items-center gap-2">📊 Parametry</h2>
+              <h2 className="flex items-center gap-2 font-semibold text-foreground">
+                <SlidersHorizontal className="h-4 w-4 text-primary" />
+                Parametry
+              </h2>
               <p className="text-xs text-muted-foreground mt-0.5">Obtížnost, kredity, semestr, docházka</p>
             </div>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={2}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className={`h-5 w-5 text-muted-foreground transition-transform duration-200 shrink-0 ${openSections.parametry ? 'rotate-180' : ''}`}
-            >
-              <polyline points="6 9 12 15 18 9" />
-            </svg>
+            <ChevronDown className={`h-5 w-5 shrink-0 text-muted-foreground transition-transform duration-200 ${openSections.parametry ? 'rotate-180' : ''}`} />
           </button>
           {openSections.parametry && (
             <div className="px-7 pb-7 space-y-5 border-t border-white/5 pt-5">
-              <div className="grid grid-cols-1 gap-4 2xl:grid-cols-4">
-                <div className="space-y-2 sm:col-span-2 2xl:col-span-2">
+              <div className="space-y-4">
+                <div className="space-y-2">
                   <div>
                     <FieldLabel>Náročnost předmětu</FieldLabel>
                     <p className="text-xs text-muted-foreground">
-                      Vyplně obě hodnoty společně: jak těžká je látka a kolik času typicky bere.
+                      Vyplň obě hodnoty společně: jak těžká je látka a kolik času typicky bere.
                     </p>
                   </div>
-                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    <div>
-                      <FieldLabel>Obtížnost (1–5)</FieldLabel>
-                      <Input type="number" min={1} max={5} value={form.difficulty} onChange={(e) => set('difficulty', Number(e.target.value))} />
-                    </div>
-                    <div>
-                      <FieldLabel>Časová náročnost (1–5)</FieldLabel>
-                      <Input type="number" min={1} max={5} value={form.time_intensity} onChange={(e) => set('time_intensity', Number(e.target.value))} />
-                    </div>
+                </div>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                  <div>
+                    <FieldLabel>Obtížnost (1–5)</FieldLabel>
+                    <Input type="number" min={1} max={5} value={form.difficulty} onChange={(e) => set('difficulty', Number(e.target.value))} />
                   </div>
-                </div>
-                <div>
-                  <FieldLabel>Kredity</FieldLabel>
-                  <Input type="number" min={1} max={30} placeholder="5" value={form.credits} onChange={(e) => set('credits', e.target.value)} />
-                </div>
-                <div>
-                  <FieldLabel>Ročník</FieldLabel>
-                  <Input type="number" min={1} max={5} placeholder="1" value={form.year} onChange={(e) => set('year', e.target.value)} />
+                  <div>
+                    <FieldLabel>Časová náročnost (1–5)</FieldLabel>
+                    <Input type="number" min={1} max={5} value={form.time_intensity} onChange={(e) => set('time_intensity', Number(e.target.value))} />
+                  </div>
+                  <div>
+                    <FieldLabel>Kredity</FieldLabel>
+                    <Input type="number" min={1} max={30} placeholder="5" value={form.credits} onChange={(e) => set('credits', e.target.value)} />
+                  </div>
+                  <div>
+                    <FieldLabel>Ročník</FieldLabel>
+                    <Input type="number" min={1} max={5} placeholder="1" value={form.year} onChange={(e) => set('year', e.target.value)} />
+                  </div>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 2xl:grid-cols-3">
+              <div className="grid grid-cols-1 gap-4 lg:grid-cols-4">
+                <div>
+                  <FieldLabel>Zkouška z domova</FieldLabel>
+                  <label className="flex w-full cursor-pointer items-center gap-3">
+                    <input
+                      type="checkbox"
+                      checked={form.exam_from_home}
+                      onChange={(e) => set('exam_from_home', e.target.checked)}
+                      className="peer sr-only"
+                    />
+                    <span className="flex min-h-11 w-full items-center justify-start gap-3 rounded-xl border border-white/5 bg-background/50 px-4 py-3 text-left transition-all hover:bg-muted/50 peer-checked:border-emerald-500/50 peer-checked:bg-emerald-500/10">
+                      <span className="flex h-5 w-5 items-center justify-center rounded border border-white/10 bg-background text-transparent transition-all peer-checked:border-emerald-500 peer-checked:bg-emerald-500 peer-checked:text-white">
+                        <Check className="h-3.5 w-3.5" strokeWidth={3} />
+                      </span>
+                      <span className="text-sm font-medium text-foreground">Povolit zkoušku z domova</span>
+                    </span>
+                  </label>
+                </div>
                 <div>
                   <FieldLabel>Semestr</FieldLabel>
                   <Select value={form.semester} onChange={(e) => set('semester', e.target.value)}>
@@ -727,28 +728,12 @@ export function SubjectProposalForm({
                     {FACULTIES.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                   </Select>
                 </div>
-                <div className="lg:col-span-2 2xl:col-span-1">
+                <div>
                   <FieldLabel>Docházka</FieldLabel>
-                  <div className="space-y-3">
-                    <Select value={form.attendance_type} onChange={(e) => set('attendance_type', e.target.value)}>
-                      <option value="">– vybrat –</option>
-                      {ATTENDANCE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-                    </Select>
-                    <label className="flex w-full cursor-pointer items-center gap-3">
-                      <input
-                        type="checkbox"
-                        checked={form.exam_from_home}
-                        onChange={(e) => set('exam_from_home', e.target.checked)}
-                        className="peer sr-only"
-                      />
-                      <span className="flex w-full items-center justify-start gap-3 rounded-[1.5rem] border-2 border-white/5 bg-background/50 backdrop-blur-md px-5 py-3 text-left transition-all hover:bg-muted/50 peer-checked:border-emerald-500/50 peer-checked:bg-emerald-500/10 peer-checked:shadow-[0_0_30px_-5px_rgba(16,185,129,0.4)]">
-                        <span className="flex h-7 w-7 items-center justify-center rounded-full border-2 border-white/10 bg-background text-sm text-transparent transition-all peer-checked:border-emerald-500 peer-checked:bg-emerald-500 peer-checked:text-white peer-checked:shadow-[0_0_15px_rgba(16,185,129,0.8)]">
-                          <Check className="h-4 w-4" strokeWidth={3} />
-                        </span>
-                        <span className="whitespace-nowrap text-base font-semibold text-foreground">Zkouška z domova</span>
-                      </span>
-                    </label>
-                  </div>
+                  <Select value={form.attendance_type} onChange={(e) => set('attendance_type', e.target.value)}>
+                    <option value="">– vybrat –</option>
+                    {ATTENDANCE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                  </Select>
                 </div>
               </div>
             </div>
@@ -765,7 +750,8 @@ export function SubjectProposalForm({
             <div className="flex items-center gap-3">
               <div>
                 <h2 className="font-semibold text-foreground flex items-center gap-2">
-                  👥 Vyučující
+                  <Users className="h-4 w-4 text-primary" />
+                  Vyučující
                   {selectedTeachers.length > 0 && (
                     <span className="ml-1 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-primary/15 px-1.5 text-[11px] font-bold text-primary">
                       {selectedTeachers.length}
@@ -775,18 +761,7 @@ export function SubjectProposalForm({
                 <p className="text-xs text-muted-foreground mt-0.5">Vyučující předmětu</p>
               </div>
             </div>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={2}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className={`h-5 w-5 text-muted-foreground transition-transform duration-200 shrink-0 ${openSections.ucitele ? 'rotate-180' : ''}`}
-            >
-              <polyline points="6 9 12 15 18 9" />
-            </svg>
+            <ChevronDown className={`h-5 w-5 shrink-0 text-muted-foreground transition-transform duration-200 ${openSections.ucitele ? 'rotate-180' : ''}`} />
           </button>
           {openSections.ucitele && (
             <div className="px-7 pb-7 space-y-3 border-t border-white/5 pt-5">
@@ -1072,7 +1047,7 @@ export function SubjectProposalForm({
             className="inline-flex items-center justify-center w-full px-4 py-6 border-2 border-dashed border-white/10 rounded-[1.5rem] bg-card/30 cursor-pointer hover:bg-muted/50 hover:border-primary/50 transition-colors"
           >
             <div className="text-center">
-              <span className="text-2xl opacity-80">📄</span>
+              <FileText className="mx-auto h-8 w-8 text-muted-foreground" />
               <p className="mt-2 text-sm font-medium text-foreground">Vybrat PDF soubory</p>
               <p className="text-xs text-muted-foreground mt-1">Maximálně 2 MB na soubor</p>
             </div>
@@ -1099,7 +1074,7 @@ export function SubjectProposalForm({
                 <div key={item.id} className="rounded-xl bg-card/60 backdrop-blur-md border border-white/5 p-4 text-sm space-y-3 shadow-sm">
                   <div className="flex items-center justify-between gap-3">
                     <div className="flex items-center gap-2 truncate">
-                      <span>📄</span>
+                      <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
                       <span className="truncate">{item.file.name}</span>
                       <span className="text-muted-foreground text-xs">({(item.file.size / 1024 / 1024).toFixed(1)} MB)</span>
                     </div>
@@ -1108,7 +1083,7 @@ export function SubjectProposalForm({
                       onClick={() => setMaterials(prev => prev.filter((current) => current.id !== item.id))}
                       className="text-muted-foreground hover:text-destructive p-1"
                     >
-                      ✕
+                      <X className="h-4 w-4" />
                     </button>
                   </div>
                   <div className="sm:max-w-[180px]">
@@ -1145,7 +1120,8 @@ export function SubjectProposalForm({
 
       <div className="rounded-xl border border-red-500/40 bg-red-500/5 p-4 text-sm space-y-2">
         <p className="font-semibold text-red-600 dark:text-red-400 flex items-center gap-2">
-          ⚠️ Materiály jsou moderované
+          <AlertTriangle className="h-4 w-4" />
+          Materiály jsou moderované
         </p>
         <ul className="text-muted-foreground space-y-1 list-disc list-inside text-xs">
           <li>Vyhni se AI slopu a odfláknutým materiálům. Takové vracíme ke kontrole.</li>
