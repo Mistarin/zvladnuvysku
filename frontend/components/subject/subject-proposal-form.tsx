@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { AlertTriangle, Check, ChevronDown, FileText, ListChecks, SlidersHorizontal, UserPlus, Users, X } from 'lucide-react'
 import {
@@ -58,9 +59,7 @@ const ATTENDANCE_OPTIONS = [
 
 const DESCRIPTION_TEMPLATE = `- Řeší se hlavně...
 - Výuka probíhá...
-- Zakončení je...
 - Tématikou je...
-- Výuka probíhá...
 - Zakončení je formou...`
 
 const TARGET_AUDIENCE_TEMPLATE = `- Hodí se pro studenty, kteří...
@@ -97,6 +96,11 @@ const FIELD_LABELS: Record<string, string> = {
 
 const SUBMIT_TIMEOUT_MS = 30000
 const MAX_PROPOSAL_MATERIALS = 8
+const sectionBodyClass = 'border-t border-white/5 px-7 pb-7 pt-5'
+const primaryButtonClass = 'rounded-xl bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:-translate-y-0.5 hover:opacity-90'
+const secondaryButtonClass = 'rounded-xl border border-white/5 px-6 py-2.5 text-sm font-medium text-foreground shadow-inner transition-all hover:bg-muted/50'
+const subtleButtonClass = 'rounded-lg px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground'
+const smallPrimaryButtonClass = 'rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-50'
 
 type ProposalUploadItem = {
   id: string
@@ -591,7 +595,7 @@ export function SubjectProposalForm({
             setError(null)
             setStep(2)
             window.scrollTo({ top: 0, behavior: 'smooth' })
-          }} className="px-6 py-2.5 rounded-xl text-sm font-medium bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover:opacity-90 hover:-translate-y-0.5 transition-all">Pokračovat</button>
+          }} className={primaryButtonClass}>Pokračovat</button>
         </div>
       </div>
       </div>
@@ -617,8 +621,8 @@ export function SubjectProposalForm({
             <ChevronDown className={`h-5 w-5 shrink-0 text-muted-foreground transition-transform duration-200 ${openSections.obsah ? 'rotate-180' : ''}`} />
           </button>
           {openSections.obsah && (
-            <div className="px-7 pb-7 space-y-5 border-t border-white/5">
-              <div className="pt-5">
+            <div className={`${sectionBodyClass} space-y-5`}>
+              <div>
                 <FieldLabel>Popis předmětu</FieldLabel>
                 <Textarea
                   rows={4}
@@ -666,7 +670,7 @@ export function SubjectProposalForm({
             <ChevronDown className={`h-5 w-5 shrink-0 text-muted-foreground transition-transform duration-200 ${openSections.parametry ? 'rotate-180' : ''}`} />
           </button>
           {openSections.parametry && (
-            <div className="px-7 pb-7 space-y-5 border-t border-white/5 pt-5">
+            <div className={`${sectionBodyClass} space-y-5`}>
               <div className="space-y-4">
                 <div className="space-y-2">
                   <div>
@@ -764,7 +768,7 @@ export function SubjectProposalForm({
             <ChevronDown className={`h-5 w-5 shrink-0 text-muted-foreground transition-transform duration-200 ${openSections.ucitele ? 'rotate-180' : ''}`} />
           </button>
           {openSections.ucitele && (
-            <div className="px-7 pb-7 space-y-3 border-t border-white/5 pt-5">
+            <div className={`${sectionBodyClass} space-y-3`}>
               {selectedTeachers.length > 0 && (
                 <div className="flex flex-wrap gap-2">
                   {selectedTeachers.map((t, i) => (
@@ -774,8 +778,8 @@ export function SubjectProposalForm({
                       {t.department && (
                         <span className="text-[10px] text-muted-foreground">· {t.department}</span>
                       )}
-                      <button type="button" onClick={() => setSelectedTeachers(prev => prev.filter((_, idx) => idx !== i))} className="text-muted-foreground hover:text-destructive ml-1">
-                        ×
+                      <button type="button" onClick={() => setSelectedTeachers(prev => prev.filter((_, idx) => idx !== i))} className="ml-1 text-muted-foreground transition-colors hover:text-destructive">
+                        <X className="h-3.5 w-3.5" />
                       </button>
                     </div>
                   ))}
@@ -826,7 +830,7 @@ export function SubjectProposalForm({
                       setNewTeacherFaculty((currentFaculty) => currentFaculty || form.faculty || initialFaculty || '')
                       setIsAddingNewTeacher(true)
                     }}
-                    className="inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline"
+                    className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs font-medium text-primary transition-colors hover:bg-primary/10"
                   >
                     <UserPlus className="h-3.5 w-3.5" />
                     Nevidíš vyučujícího? Přidat nového
@@ -907,7 +911,7 @@ export function SubjectProposalForm({
                     <button
                       type="button"
                       onClick={resetTeacherComposer}
-                      className="px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground"
+                      className={subtleButtonClass}
                     >
                       Zpět k vyhledávání
                     </button>
@@ -925,7 +929,7 @@ export function SubjectProposalForm({
                         setTeacherSearchResults([])
                         resetTeacherComposer()
                       }}
-                      className="px-3 py-1.5 text-xs bg-primary text-primary-foreground rounded-md disabled:opacity-50"
+                      className={smallPrimaryButtonClass}
                     >
                       Přidat učitele
                     </button>
@@ -940,11 +944,11 @@ export function SubjectProposalForm({
           <button type="button" onClick={() => {
             setStep(1)
             window.scrollTo({ top: 0, behavior: 'smooth' })
-          }} className="px-6 py-2.5 rounded-xl text-sm font-medium border border-white/5 shadow-inner text-foreground hover:bg-muted/50 transition-all">Zpět</button>
+          }} className={secondaryButtonClass}>Zpět</button>
           <button type="button" onClick={() => {
             setStep(3)
             window.scrollTo({ top: 0, behavior: 'smooth' })
-          }} className="px-6 py-2.5 rounded-xl text-sm font-medium bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover:opacity-90 hover:-translate-y-0.5 transition-all">Pokračovat</button>
+          }} className={primaryButtonClass}>Pokračovat</button>
         </div>
       </div>
       {/* STEP 3 */}
@@ -1128,14 +1132,16 @@ export function SubjectProposalForm({
           <li>Radši přilož víc stran pohromadě než několik drobných PDF zvlášť.</li>
           <li>XP se počítají přímo z bodů: 1 bod = 10 XP, 2 body = 20 XP, 3 body = 30 XP a 4 body = 40 XP.</li>
         </ul>
-        <a href="/jak-to-funguje" target="_blank" className="text-xs text-primary hover:underline">Jak fungují body? →</a>
+        <Link href="/jak-to-funguje" target="_blank" className="text-xs font-medium text-primary transition-colors hover:text-primary/80">
+          Jak fungují body
+        </Link>
       </div>
 
       <div className="flex justify-between pt-4 gap-4">
         <button type="button" onClick={() => {
           setStep(2)
           window.scrollTo({ top: 0, behavior: 'smooth' })
-        }} className="px-6 py-2.5 rounded-xl text-sm font-medium border border-white/5 shadow-inner text-foreground hover:bg-muted/50 transition-all">Zpět</button>
+        }} className={secondaryButtonClass}>Zpět</button>
         
         <button type="submit" disabled={isSubmitting}
           className="flex-1 py-3 rounded-xl font-bold text-sm accent-gradient text-white shadow-lg shadow-primary/20 hover:opacity-90 hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
