@@ -1,6 +1,7 @@
 "use server";
 
 import { isFacultyCode } from "@/lib/faculties";
+import { normalizeDepartmentName } from "@/lib/department-name";
 import { createClient } from "@/lib/supabase/server";
 import { generateTeacherSlug, getTeacherPath } from "@/lib/teacher-slug";
 import { revalidatePath } from "next/cache";
@@ -34,7 +35,7 @@ export async function createTeacher(data: TeacherInsert) {
         name: data.name,
         slug: normalizedSlug,
         faculty: data.faculty,
-        department: data.department || null,
+        department: normalizeDepartmentName(data.department),
       } as never);
 
     if (error) throw error;
@@ -66,7 +67,7 @@ export async function updateTeacher(id: string, data: Partial<TeacherInsert>) {
         ...(data.name !== undefined && { name: data.name }),
         ...(normalizedSlug !== undefined && { slug: normalizedSlug }),
         ...(data.faculty !== undefined && { faculty: data.faculty }),
-        ...(data.department !== undefined && { department: data.department || null }),
+        ...(data.department !== undefined && { department: normalizeDepartmentName(data.department) }),
         ...(data.is_approved !== undefined && { is_approved: data.is_approved }),
       } as never)
       .eq("id", id);

@@ -6,6 +6,7 @@ import { MaterialGroupCard, type MaterialGroupData } from "@/components/subject/
 import { getPublicProfilePath } from "@/lib/public-profile";
 import { getPublicProfileIdentity, hasPublicProfileIdentity } from "@/lib/public-profile-identity";
 import { createClient } from "@/lib/supabase/server";
+import { normalizeDepartmentName } from "@/lib/department-name";
 import { getStoragePublicUrl } from "@/lib/storage";
 import type { ActivityAcknowledgement, Feedback, FlashcardDeck, Profile, Subject, SubjectMaterial, SubjectProposalRecord } from "@/lib/types/database";
 import { formatFileSize } from "@/lib/utils";
@@ -459,7 +460,7 @@ function formatProposalTeachers(teachers: ProposalData["teachers"]) {
     .map((teacher) => {
       const name = teacher.name?.trim();
       if (!name) return null;
-      const details = [teacher.faculty, teacher.department].filter(Boolean).join(' · ')
+      const details = [teacher.faculty, normalizeDepartmentName(teacher.department)].filter(Boolean).join(' · ')
       return details ? `${name} (${details})` : name;
     })
     .filter(Boolean)

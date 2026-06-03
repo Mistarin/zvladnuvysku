@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { normalizeDepartmentName } from "@/lib/department-name";
 import { isFacultyCode } from "@/lib/faculties";
 import { createClient } from "@/lib/supabase/server";
 import { generateTeacherSlug } from "@/lib/teacher-slug";
@@ -36,7 +37,7 @@ export async function proposeTeacher(data: {
         name: data.name,
         slug,
         faculty: data.faculty,
-        department: data.department || null,
+        department: normalizeDepartmentName(data.department),
         is_approved: false,
         proposed_by: user?.id ?? null,
       };

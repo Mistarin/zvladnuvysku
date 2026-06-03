@@ -1,6 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { normalizeDepartmentName } from '@/lib/department-name'
 import { isFacultyCode } from '@/lib/faculties'
 import { createClient } from '@/lib/supabase/server'
 import type { Database, SubjectRating, TeacherRating } from '@/lib/types/database'
@@ -139,12 +140,6 @@ function isPdfFile(file: File) {
 
 function hasText(value: unknown) {
   return typeof value === 'string' && value.trim().length > 0
-}
-
-function normalizeDepartmentName(value: string) {
-  const trimmed = value.trim()
-  if (!trimmed) return ''
-  return trimmed.charAt(0).toLocaleUpperCase('cs-CZ') + trimmed.slice(1)
 }
 
 function startsWithUppercase(value: string) {
@@ -424,7 +419,7 @@ export async function submitSubjectProposal(formData: FormData): Promise<ActionR
       ...teacher,
       name: teacher.name.trim(),
       faculty: teacher.faculty?.trim() || payload.form.faculty.trim() || undefined,
-      department: teacher.department ? normalizeDepartmentName(teacher.department) : undefined,
+      department: normalizeDepartmentName(teacher.department) ?? undefined,
     }))
     const totalMaterialCount = existingMaterials.length + uploadedMaterials.length
     const normalizedMaterialGroupTitle = payload.materialGroupTitle?.trim() || getProposalMaterialGroupTitle(existingProposal?.data) || undefined
@@ -839,7 +834,13 @@ export async function searchTeachersForProposal(query: string): Promise<{ succes
       return { success: false, error: `Nepodařilo se vyhledat vyučující: ${error.message}` }
     }
 
-    return { success: true, data: (data as TeacherSearchItem[] | null) ?? [] }
+    return {
+      success: true,
+      data: ((data as TeacherSearchItem[] | null) ?? []).map((teacher) => ({
+        ...teacher,
+        department: normalizeDepartmentName(teacher.department),
+      })),
+    }
   } catch (error) {
     return {
       success: false,
@@ -861,7 +862,13 @@ export async function getTeacherSearchCache(): Promise<{ success: true; data: Te
       return { success: false, error: `Nepodařilo se načíst cache vyučujících: ${error.message}` }
     }
 
-    return { success: true, data: (data as TeacherSearchItem[] | null) ?? [] }
+    return {
+      success: true,
+      data: ((data as TeacherSearchItem[] | null) ?? []).map((teacher) => ({
+        ...teacher,
+        department: normalizeDepartmentName(teacher.department),
+      })),
+    }
   } catch (error) {
     return {
       success: false,

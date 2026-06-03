@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { createTeacher, updateTeacher } from "@/app/admin/ucitele/actions";
+import { normalizeDepartmentName } from "@/lib/department-name";
 import { FACULTIES } from "@/lib/faculties";
 import { generateTeacherSlug } from "@/lib/teacher-slug";
 import type { Teacher } from "@/lib/types/database";
@@ -16,12 +17,6 @@ interface TeacherFormDialogProps {
   onOpenChange?: (open: boolean) => void;
   /** Existing department names for autocomplete */
   departmentSuggestions?: string[];
-}
-
-/** Auto-capitalise first letter of every typed word / first character */
-function capitaliseFirst(value: string): string {
-  if (!value) return value;
-  return value.charAt(0).toUpperCase() + value.slice(1);
 }
 
 export function TeacherFormDialog({
@@ -69,9 +64,8 @@ export function TeacherFormDialog({
   };
 
   const handleDeptChange = (value: string) => {
-    const capitalised = capitaliseFirst(value);
-    setDeptInput(capitalised);
-    setFormData((prev) => ({ ...prev, department: capitalised }));
+    setDeptInput(value);
+    setFormData((prev) => ({ ...prev, department: value }));
     setShowDeptDropdown(true);
   };
 
@@ -173,8 +167,13 @@ export function TeacherFormDialog({
                     id="department"
                     value={deptInput}
                     onChange={(e) => handleDeptChange(e.target.value)}
+                    onBlur={() => {
+                      const normalized = normalizeDepartmentName(deptInput) ?? "";
+                      setDeptInput(normalized);
+                      setFormData((prev) => ({ ...prev, department: normalized }));
+                      setTimeout(() => setShowDeptDropdown(false), 150);
+                    }}
                     onFocus={() => setShowDeptDropdown(true)}
-                    onBlur={() => setTimeout(() => setShowDeptDropdown(false), 150)}
                     className="w-full px-3 py-2 pr-8 bg-background border border-border rounded-md text-sm outline-none focus:ring-1 focus:ring-primary/50 focus:border-primary/50"
                     placeholder="Název katedry"
                     autoCapitalize="sentences"

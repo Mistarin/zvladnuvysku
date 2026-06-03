@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
+import { normalizeDepartmentName } from '@/lib/department-name'
 import { hasPublicProfileIdentity } from '@/lib/public-profile-identity'
 import { createClient } from '@/lib/supabase/server'
 import { SubjectProposalForm, type InitialSubjectProposal, type SubjectDetails } from '@/components/subject/subject-proposal-form'
@@ -185,7 +186,7 @@ function normalizeProposalTeachers(teachers: ProposalData['teachers']) {
       id: typeof teacher.id === 'string' ? teacher.id : undefined,
       name: teacher.name.trim(),
       faculty: typeof teacher.faculty === 'string' ? teacher.faculty : null,
-      department: typeof teacher.department === 'string' ? teacher.department : null,
+      department: normalizeDepartmentName(typeof teacher.department === 'string' ? teacher.department : null),
     }]
   })
 }

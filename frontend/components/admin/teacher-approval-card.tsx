@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { updateTeacher, deleteTeacher } from "@/app/admin/ucitele/actions";
 import { TeacherFormDialog } from "@/components/admin/teacher-form-dialog";
 import { PublicUserLink } from "@/components/profile/public-user-link";
+import { normalizeDepartmentName } from "@/lib/department-name";
 import { CheckCircle, XCircle, Pencil, Loader2 } from "lucide-react";
 import type { PublicUserSummary } from "@/lib/public-user-summaries";
 import type { Teacher } from "@/lib/types/database";
@@ -59,7 +60,7 @@ export function TeacherApprovalCard({ teacher, author }: TeacherApprovalCardProp
           <h3 className="font-semibold text-lg text-foreground">{teacher.name}</h3>
           <div className="text-sm text-muted-foreground mt-1 flex gap-2 items-center">
             <span className="font-mono bg-muted px-1.5 py-0.5 rounded text-xs">{teacher.faculty}</span>
-            <span>{teacher.department || "Katedra neuvedena"}</span>
+            <span>{normalizeDepartmentName(teacher.department) || "Katedra neuvedena"}</span>
           </div>
           <div className="text-xs text-muted-foreground mt-1">
             Slug: <span className="font-mono">{teacher.slug}</span>

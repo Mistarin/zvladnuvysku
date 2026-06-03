@@ -1,4 +1,5 @@
 import { getTeacherSearchCache } from '@/app/actions/contributions'
+import { normalizeDepartmentName } from '@/lib/department-name'
 
 export interface TeacherCacheEntry {
   id: string
@@ -19,6 +20,7 @@ async function fetchAllTeachers(): Promise<TeacherCacheEntry[]> {
 
   return result.data.map((teacher) => ({
     ...teacher,
+    department: normalizeDepartmentName(teacher.department),
     _nameLower: teacher.name.toLowerCase(),
   }))
 }

@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import { normalizeDepartmentName } from "@/lib/department-name";
 import { createClient } from "@/lib/supabase/server";
 import { TeacherRatingForm } from "@/components/teacher/teacher-rating-form";
 import { TeacherReviews } from "@/components/teacher/teacher-reviews";
@@ -128,8 +129,8 @@ export default async function TeacherDetailPage({ params }: PageProps) {
               >
                 {t.faculty}
               </span>
-              {t.department && (
-                <span className="text-sm text-muted-foreground">{t.department}</span>
+              {normalizeDepartmentName(t.department) && (
+                <span className="text-sm text-muted-foreground">{normalizeDepartmentName(t.department)}</span>
               )}
             </div>
             <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-1">

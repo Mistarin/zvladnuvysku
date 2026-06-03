@@ -1,12 +1,13 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Check } from 'lucide-react'
+import { Check, UserPlus } from 'lucide-react'
 import {
   getSubjectDetailsForProposal,
   submitSubjectProposal,
 } from '@/app/actions/contributions'
 import { WelcomeDisplayNameModal } from '@/components/layout/welcome-display-name-modal'
+import { normalizeDepartmentName } from '@/lib/department-name'
 import { FACULTIES } from '@/lib/faculties'
 import { getSubjectCache, searchInCache, type SubjectCacheEntry } from '@/lib/subject-cache'
 import { getTeacherCache, searchTeachersInCache, type TeacherCacheEntry } from '@/lib/teacher-cache'
@@ -57,7 +58,10 @@ const ATTENDANCE_OPTIONS = [
 
 const DESCRIPTION_TEMPLATE = `- Řeší se hlavně...
 - Výuka probíhá...
-- Zakončení je...`
+- Zakončení je...
+- Tématikou je...
+- Výuka probíhá...
+- Zakončení je formou...`
 
 const TARGET_AUDIENCE_TEMPLATE = `- Hodí se pro studenty, kteří...
 - Nedává moc smysl, pokud...`
@@ -196,14 +200,23 @@ function getInitialTeachers(initialProposal?: InitialSubjectProposal | null) {
     id: teacher.id,
     name: teacher.name,
     faculty: teacher.faculty ?? '',
-    department: teacher.department ?? '',
+    department: normalizeDepartmentName(teacher.department) ?? '',
   })) ?? []
 }
 
-function normalizeDepartmentName(value: string) {
-  const trimmed = value.trim()
-  if (!trimmed) return ''
-  return trimmed.charAt(0).toLocaleUpperCase('cs-CZ') + trimmed.slice(1)
+function isSameTeacher(
+  left: { id?: string; name: string; faculty: string; department: string },
+  right: { id?: string; name: string; faculty: string; department: string },
+) {
+  if (left.id && right.id) {
+    return left.id === right.id
+  }
+
+  return (
+    left.name.trim().localeCompare(right.name.trim(), 'cs', { sensitivity: 'base' }) === 0 &&
+    left.faculty === right.faculty &&
+    left.department.trim().localeCompare(right.department.trim(), 'cs', { sensitivity: 'base' }) === 0
+  )
 }
 
 export function SubjectProposalForm({
@@ -233,10 +246,8 @@ export function SubjectProposalForm({
   const [teacherSearch, setTeacherSearch] = useState('')
   const [teacherSearchResults, setTeacherSearchResults] = useState<TeacherSearchResult[]>([])
   const [isAddingNewTeacher, setIsAddingNewTeacher] = useState(false)
-  const [newTeacherName, setNewTeacherName] = useState('')
-  const [newTeacherFaculty, setNewTeacherFaculty] = useState('')
+  const [newTeacherFaculty, setNewTeacherFaculty] = useState(initialProposal?.form.faculty ?? initialFaculty ?? '')
   const [newTeacherDepartment, setNewTeacherDepartment] = useState('')
-  const [isCreatingNewDepartment, setIsCreatingNewDepartment] = useState(false)
 
   const [form, setForm] = useState(() => getInitialForm(initialProposal))
 
@@ -349,10 +360,28 @@ export function SubjectProposalForm({
     new Set(
       teacherCache
         .filter((teacher) => teacher.faculty === newTeacherFaculty)
-        .map((teacher) => teacher.department?.trim())
+        .map((teacher) => normalizeDepartmentName(teacher.department))
         .filter((department): department is string => Boolean(department)),
     ),
   ).sort((left, right) => left.localeCompare(right, 'cs'))
+
+  const normalizedNewTeacherDepartment = normalizeDepartmentName(newTeacherDepartment) ?? ''
+  const canAddNewTeacher = Boolean(teacherSearch.trim() && newTeacherFaculty && normalizedNewTeacherDepartment)
+  const shouldShowTeacherEmptyState = teacherSearch.trim().length >= 2 && teacherSearchResults.length === 0 && !isAddingNewTeacher
+
+  const addTeacherSelection = (teacher: { id?: string; name: string; faculty: string; department: string }) => {
+    setSelectedTeachers((previous) => (
+      previous.some((current) => isSameTeacher(current, teacher))
+        ? previous
+        : [...previous, teacher]
+    ))
+  }
+
+  const resetTeacherComposer = () => {
+    setIsAddingNewTeacher(false)
+    setNewTeacherFaculty(form.faculty || initialFaculty || '')
+    setNewTeacherDepartment('')
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -453,6 +482,9 @@ export function SubjectProposalForm({
               setSelectedTeachers([])
               setTeacherSearch('')
               setTeacherSearchResults([])
+              setIsAddingNewTeacher(false)
+              setNewTeacherFaculty('')
+              setNewTeacherDepartment('')
               setMaterials([])
               setMaterialGroupTitle('')
               setError(null)
@@ -626,50 +658,70 @@ export function SubjectProposalForm({
               </div>
             )}
 
-            {!isAddingNewTeacher ? (
-              <div className="relative">
-                <Input placeholder="Hledat učitele podle jména..." value={teacherSearch} onChange={(e) => searchTeachers(e.target.value)} />
-                {teacherSearchResults.length > 0 && (
-                  <div className="absolute z-10 w-full mt-1 rounded-xl border border-border bg-popover shadow-xl overflow-hidden">
-                    {teacherSearchResults.map((t) => (
-                      <button key={t.id} type="button" 
-                        onClick={() => { 
-                          if (!selectedTeachers.find(st => st.id === t.id)) {
-                            setSelectedTeachers(prev => [...prev, { ...t, department: t.department ?? '' }])
-                          }
-                          setTeacherSearch('')
-                          setTeacherSearchResults([]) 
-                        }}
-                        className="w-full text-left px-3 py-2.5 text-sm hover:bg-muted transition-colors flex items-center gap-2">
-                        <span className="font-mono text-xs bg-primary/10 text-primary px-1.5 py-0.5 rounded">{t.faculty}</span>
-                        <span>{t.name}</span>
-                        {t.department && <span className="text-xs text-muted-foreground">· {t.department}</span>}
-                      </button>
-                    ))}
-                  </div>
-                )}
-                <div className="mt-2 text-right">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setNewTeacherFaculty((currentFaculty) => currentFaculty || form.faculty)
-                      setNewTeacherDepartment('')
-                      setIsCreatingNewDepartment(false)
-                      setIsAddingNewTeacher(true)
-                    }}
-                    className="text-xs text-primary hover:underline"
-                  >
-                    Nenašel(a) jsi učitele? Přidej ho!
-                  </button>
+            <div className="relative space-y-2">
+              <Input
+                placeholder="Hledat učitele nebo napsat nové jméno..."
+                value={teacherSearch}
+                onChange={(e) => searchTeachers(e.target.value)}
+              />
+              {teacherSearchResults.length > 0 && !isAddingNewTeacher && (
+                <div className="absolute z-10 w-full mt-1 rounded-xl border border-border bg-popover shadow-xl overflow-hidden">
+                  {teacherSearchResults.map((t) => (
+                    <button
+                      key={t.id}
+                      type="button"
+                      onClick={() => {
+                        addTeacherSelection({
+                          ...t,
+                          department: t.department ?? '',
+                        })
+                        setTeacherSearch('')
+                        setTeacherSearchResults([])
+                      }}
+                      className="w-full text-left px-3 py-2.5 text-sm hover:bg-muted transition-colors flex items-center gap-2"
+                    >
+                      <span className="font-mono text-xs bg-primary/10 text-primary px-1.5 py-0.5 rounded">{t.faculty}</span>
+                      <span>{t.name}</span>
+                      {t.department && <span className="text-xs text-muted-foreground">· {t.department}</span>}
+                    </button>
+                  ))}
                 </div>
+              )}
+
+              {shouldShowTeacherEmptyState && (
+                <p className="text-xs text-muted-foreground">Nenalezen žádný schválený vyučující pro tento dotaz.</p>
+              )}
+
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="text-xs text-muted-foreground">
+                  Když vyučující neexistuje, můžeš ho rovnou založit bez ztráty rozepsaného návrhu.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setNewTeacherFaculty((currentFaculty) => currentFaculty || form.faculty || initialFaculty || '')
+                    setIsAddingNewTeacher(true)
+                  }}
+                  className="inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline"
+                >
+                  <UserPlus className="h-3.5 w-3.5" />
+                  Nevidíš vyučujícího? Přidat nového
+                </button>
               </div>
-            ) : (
-              <div className="p-3 bg-muted/50 rounded-lg border border-border space-y-3">
-                <h4 className="text-sm font-medium">Nový vyučující</h4>
+            </div>
+
+            {isAddingNewTeacher && (
+              <div className="rounded-lg border border-border bg-muted/50 p-3 space-y-3">
+                <div className="space-y-1">
+                  <h4 className="text-sm font-medium">Nový vyučující</h4>
+                  <p className="text-xs text-muted-foreground">
+                    Jméno se bere z pole výše. Tady už jen doplň fakultu a katedru.
+                  </p>
+                </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <FieldLabel>Jméno a příjmení (s tituly)</FieldLabel>
-                    <Input placeholder="Mgr. Jan Novák, Ph.D." value={newTeacherName} onChange={e => setNewTeacherName(e.target.value)} />
+                    <Input value={teacherSearch} readOnly placeholder="Napiš jméno do pole výše" />
                   </div>
                   <div>
                     <FieldLabel>Fakulta</FieldLabel>
@@ -679,67 +731,51 @@ export function SubjectProposalForm({
                     </Select>
                   </div>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <FieldLabel>Katedra</FieldLabel>
-                    <Select
-                      value={isCreatingNewDepartment ? '__new__' : newTeacherDepartment}
-                      onChange={e => {
-                        if (e.target.value === '__new__') {
-                          setIsCreatingNewDepartment(true)
-                          setNewTeacherDepartment('')
-                          return
-                        }
-                        setIsCreatingNewDepartment(false)
-                        setNewTeacherDepartment(e.target.value)
-                      }}
-                    >
-                      <option value="">– vybrat –</option>
-                      {teacherDepartmentOptions.map((department) => (
-                        <option key={department} value={department}>{department}</option>
-                      ))}
-                      <option value="__new__">+ Přidat novou katedru</option>
-                    </Select>
-                  </div>
-                  <div>
-                    {isCreatingNewDepartment ? (
-                      <>
-                        <FieldLabel>Nová katedra</FieldLabel>
-                        <Input
-                          placeholder="Katedra matematiky"
-                          value={newTeacherDepartment}
-                          onChange={e => setNewTeacherDepartment(normalizeDepartmentName(e.target.value))}
-                        />
-                        <p className="mt-1 text-xs text-muted-foreground">Název katedry musí začínat velkým písmenem.</p>
-                      </>
-                    ) : (
-                      <>
-                        <FieldLabel>Náhled katedry</FieldLabel>
-                        <Input value={newTeacherDepartment} readOnly placeholder="Vyber katedru nebo přidej novou" />
-                      </>
-                    )}
-                  </div>
+                <div>
+                  <FieldLabel>Katedra</FieldLabel>
+                  <Input
+                    list="teacher-department-options"
+                    placeholder="Např. Katedra pedagogiky a andragogiky"
+                    value={newTeacherDepartment}
+                    onChange={e => setNewTeacherDepartment(e.target.value)}
+                    onBlur={e => setNewTeacherDepartment(normalizeDepartmentName(e.target.value) ?? '')}
+                  />
+                  <datalist id="teacher-department-options">
+                    {teacherDepartmentOptions.map((department) => (
+                      <option key={department} value={department} />
+                    ))}
+                  </datalist>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Pole přijímá existující i novou katedru. Víceslovné názvy jsou podporované.
+                  </p>
                 </div>
                 <div className="flex justify-end gap-2">
-                  <button type="button" onClick={() => {
-                    setIsAddingNewTeacher(false)
-                    setIsCreatingNewDepartment(false)
-                  }} className="px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground">Zrušit</button>
-                  <button type="button" 
-                    disabled={!newTeacherName || !newTeacherFaculty || !newTeacherDepartment}
+                  <button
+                    type="button"
+                    onClick={resetTeacherComposer}
+                    className="px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground"
+                  >
+                    Zpět k vyhledávání
+                  </button>
+                  <button
+                    type="button"
+                    disabled={!canAddNewTeacher}
                     onClick={() => {
-                      setSelectedTeachers(prev => [...prev, {
-                        name: newTeacherName.trim(),
+                      if (!canAddNewTeacher) {
+                        return
+                      }
+
+                      addTeacherSelection({
+                        name: teacherSearch.trim(),
                         faculty: newTeacherFaculty,
-                        department: normalizeDepartmentName(newTeacherDepartment),
-                      }])
-                      setNewTeacherName('')
-                      setNewTeacherFaculty(form.faculty)
-                      setNewTeacherDepartment('')
-                      setIsCreatingNewDepartment(false)
-                      setIsAddingNewTeacher(false)
-                    }} 
-                    className="px-3 py-1.5 text-xs bg-primary text-primary-foreground rounded-md disabled:opacity-50">
+                        department: normalizedNewTeacherDepartment,
+                      })
+                      setTeacherSearch('')
+                      setTeacherSearchResults([])
+                      resetTeacherComposer()
+                    }}
+                    className="px-3 py-1.5 text-xs bg-primary text-primary-foreground rounded-md disabled:opacity-50"
+                  >
                     Přidat učitele
                   </button>
                 </div>

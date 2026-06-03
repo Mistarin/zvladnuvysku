@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { normalizeDepartmentName } from "@/lib/department-name";
 import { createClient } from "@/lib/supabase/server";
 import { TeacherProposalDialog } from "@/components/teacher/teacher-proposal-dialog";
 import { FACULTIES, getFacultyColor } from "@/lib/faculties";
@@ -136,9 +137,9 @@ async function TeachersListSection() {
                       >
                         {faculty}
                       </span>
-                      {teacher.department && (
+                      {normalizeDepartmentName(teacher.department) && (
                         <span className="text-xs text-muted-foreground line-clamp-1">
-                          {teacher.department}
+                          {normalizeDepartmentName(teacher.department)}
                         </span>
                       )}
                     </div>

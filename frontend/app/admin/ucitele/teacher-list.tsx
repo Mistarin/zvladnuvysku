@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import type { Teacher } from "@/lib/types/database";
 import { TeacherFormDialog } from "@/components/admin/teacher-form-dialog";
 import { deleteTeacher } from "@/app/admin/ucitele/actions";
+import { normalizeDepartmentName } from "@/lib/department-name";
 import { Plus, Edit2, Trash2, Search, Loader2 } from "lucide-react";
 
 export function TeacherList({ initialTeachers }: { initialTeachers: Teacher[] }) {
@@ -12,12 +13,12 @@ export function TeacherList({ initialTeachers }: { initialTeachers: Teacher[] })
 
   // Collect unique, non-empty departments for the combobox
   const departmentSuggestions = Array.from(
-    new Set(initialTeachers.map((t) => t.department).filter((d): d is string => Boolean(d?.trim())))
+    new Set(initialTeachers.map((t) => normalizeDepartmentName(t.department)).filter((d): d is string => Boolean(d?.trim())))
   ).sort();
 
   const filteredTeachers = initialTeachers.filter(t => 
     t.name.toLowerCase().includes(search.toLowerCase()) || 
-    t.department?.toLowerCase().includes(search.toLowerCase()) ||
+    normalizeDepartmentName(t.department)?.toLowerCase().includes(search.toLowerCase()) ||
     t.faculty.toLowerCase().includes(search.toLowerCase())
   );
 
@@ -91,8 +92,8 @@ export function TeacherList({ initialTeachers }: { initialTeachers: Teacher[] })
                         <span className="px-2 py-0.5 text-xs rounded-md bg-muted font-medium">
                           {teacher.faculty}
                         </span>
-                        {teacher.department && (
-                          <span className="text-muted-foreground text-xs">{teacher.department}</span>
+                        {normalizeDepartmentName(teacher.department) && (
+                          <span className="text-muted-foreground text-xs">{normalizeDepartmentName(teacher.department)}</span>
                         )}
                       </div>
                     </td>

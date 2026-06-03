@@ -1,6 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { normalizeDepartmentName } from '@/lib/department-name'
 import { getPublicProfilePath } from '@/lib/public-profile'
 import { createClient } from '@/lib/supabase/server'
 import { generateTeacherSlug } from '@/lib/teacher-slug'
@@ -102,12 +103,6 @@ function normalizeProposalMaterialGroupTitle(title: string | null | undefined) {
 function buildMaterialGroupFallbackTitle(subject: Pick<Database['public']['Tables']['subjects']['Row'], 'name' | 'short_tag'>) {
   const base = subject.short_tag?.trim() || subject.name?.trim() || 'Materiály'
   return `${base} — materiály`
-}
-
-function normalizeDepartmentName(value: string | null | undefined) {
-  const trimmed = value?.trim() ?? ''
-  if (!trimmed) return null
-  return trimmed.charAt(0).toLocaleUpperCase('cs-CZ') + trimmed.slice(1)
 }
 
 async function insertSubjectWithUniqueSlug(

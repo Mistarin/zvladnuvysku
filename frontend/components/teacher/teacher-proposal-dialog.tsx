@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { proposeTeacher } from "@/app/ucitele/actions";
 import * as Dialog from "@radix-ui/react-dialog";
 import { X, Loader2 } from "lucide-react";
+import { normalizeDepartmentName } from "@/lib/department-name";
 import { WelcomeDisplayNameModal } from "@/components/layout/welcome-display-name-modal";
 import { FACULTIES } from "@/lib/faculties";
 
@@ -133,6 +134,7 @@ export function TeacherProposalDialog({
                     id="department"
                     value={formData.department}
                     onChange={(e) => setFormData(prev => ({ ...prev, department: e.target.value }))}
+                    onBlur={(e) => setFormData(prev => ({ ...prev, department: normalizeDepartmentName(e.target.value) ?? "" }))}
                     className="w-full px-3 py-2 bg-background border border-border rounded-md text-sm outline-none focus:ring-1 focus:ring-primary/50 focus:border-primary/50"
                     placeholder="Zkratka nebo název"
                   />
