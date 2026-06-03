@@ -19,6 +19,8 @@ export interface SubjectProposal {
   proposed_by_profile?: PublicUserSummary | null
   status: 'pending' | 'approved' | 'rejected'
   created_at: string
+  reviewed_at?: string | null
+  rejection_reason?: string | null
 }
 
 const FIELD_LABELS: Record<string, string> = {
@@ -56,6 +58,7 @@ function formatProposalValue(value: unknown): string {
 interface ProposalCardProps {
   proposal: SubjectProposal
   currentSubjectData?: Record<string, unknown> | null
+  readonly?: boolean
 }
 
 type ProposalMaterial = {
@@ -92,7 +95,7 @@ function getMaterialGroupTitle(value: unknown) {
   return typeof value === 'string' ? value : ''
 }
 
-export function ProposalCard({ proposal, currentSubjectData }: ProposalCardProps) {
+export function ProposalCard({ proposal, currentSubjectData, readonly = false }: ProposalCardProps) {
   const proposalDataRecord = proposal.data as Record<string, unknown>
   const [isPending, setIsPending] = useState(false)
   const [rejectReason, setRejectReason] = useState('')
@@ -135,6 +138,23 @@ export function ProposalCard({ proposal, currentSubjectData }: ProposalCardProps
   const formattedDate = new Date(proposal.created_at).toLocaleDateString('cs-CZ', {
     day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit',
   })
+  const formattedReviewedDate = proposal.reviewed_at
+    ? new Date(proposal.reviewed_at).toLocaleDateString('cs-CZ', {
+        day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit',
+      })
+    : null
+  const statusTone =
+    proposal.status === 'approved'
+      ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'
+      : proposal.status === 'rejected'
+        ? 'bg-destructive/10 text-destructive'
+        : 'bg-amber-500/15 text-amber-700 dark:text-amber-400'
+  const statusLabel =
+    proposal.status === 'approved'
+      ? 'Schváleno'
+      : proposal.status === 'rejected'
+        ? 'Zamítnuto'
+        : 'Čeká'
 
   if (done && feedback?.type === 'success') {
     return (
@@ -155,6 +175,10 @@ export function ProposalCard({ proposal, currentSubjectData }: ProposalCardProps
         </span>
         <span className="flex items-center gap-1 text-xs text-muted-foreground">
           <Calendar className="w-3 h-3" /> {formattedDate}
+        </span>
+        <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${statusTone}`}>
+          {proposal.status === 'approved' ? <CheckCircle className="w-3 h-3" /> : proposal.status === 'rejected' ? <XCircle className="w-3 h-3" /> : <FileText className="w-3 h-3" />}
+          {statusLabel}
         </span>
         <span className="flex items-center gap-1 text-xs text-muted-foreground">
           <User className="w-3 h-3" />
@@ -274,6 +298,23 @@ export function ProposalCard({ proposal, currentSubjectData }: ProposalCardProps
         </div>
       )}
 
+      {(formattedReviewedDate || proposal.rejection_reason) && (
+        <div className="space-y-2 rounded-xl border border-white/5 bg-background/50 px-4 py-3 text-sm shadow-sm">
+          {formattedReviewedDate && (
+            <div>
+              <p className="mb-1 text-xs font-medium text-muted-foreground">Vyřízeno</p>
+              <p className="text-foreground">{formattedReviewedDate}</p>
+            </div>
+          )}
+          {proposal.rejection_reason && (
+            <div>
+              <p className="mb-1 text-xs font-medium text-muted-foreground">Důvod zamítnutí</p>
+              <p className="text-foreground">{proposal.rejection_reason}</p>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Feedback banner */}
       {feedback && (
         <div className={`rounded-lg px-3 py-2.5 text-sm font-medium ${
@@ -286,7 +327,8 @@ export function ProposalCard({ proposal, currentSubjectData }: ProposalCardProps
       )}
 
       {/* Actions */}
-      <div className="flex flex-wrap gap-3 pt-4 mt-2 border-t border-white/5">
+      {!readonly && proposal.status === 'pending' && (
+        <div className="flex flex-wrap gap-3 pt-4 mt-2 border-t border-white/5">
         <button onClick={handleApprove} disabled={isPending}
           className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium accent-gradient text-white hover:opacity-90 transition-all disabled:opacity-50">
           <CheckCircle className="w-4 h-4" /> {isPending ? 'Zpracovávám…' : 'Schválit'}
@@ -312,7 +354,8 @@ export function ProposalCard({ proposal, currentSubjectData }: ProposalCardProps
             <XCircle className="w-4 h-4" /> Zamítnout
           </button>
         )}
-      </div>
+        </div>
+      )}
     </div>
   )
 }

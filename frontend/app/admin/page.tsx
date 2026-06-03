@@ -19,7 +19,7 @@ export const metadata: Metadata = {
   description: "Správa návrhů předmětů.",
 };
 
-type QueueKey = "all" | "proposals" | "materials" | "comments" | "feedback" | "teachers";
+type QueueKey = "all" | "proposals" | "materials" | "comments" | "feedback" | "teachers" | "history";
 
 export default async function AdminPage(props: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
@@ -32,7 +32,8 @@ export default async function AdminPage(props: {
     rawQueueFilter === "materials" ||
     rawQueueFilter === "comments" ||
     rawQueueFilter === "feedback" ||
-    rawQueueFilter === "teachers"
+    rawQueueFilter === "teachers" ||
+    rawQueueFilter === "history"
       ? rawQueueFilter
       : "all";
   const query = (searchParams.q as string | undefined)?.trim().toLowerCase() ?? "";
@@ -95,6 +96,7 @@ export default async function AdminPage(props: {
             { key: "comments", label: "Komentáře" },
             { key: "feedback", label: "Feedback" },
             { key: "teachers", label: "Učitelé" },
+            { key: "history", label: "Historie návrhů" },
           ] as Array<{ key: QueueKey; label: string }>).map((queue) => {
             const params = new URLSearchParams();
             if (facultyFilter) params.set("faculty", facultyFilter);
@@ -164,6 +166,15 @@ async function AdminQueuesSection({
     .limit(queueItemLimit);
 
   let proposals = (rawProposals ?? []) as SubjectProposal[];
+  const { data: rawProposalHistory } = queueFilter === "history"
+    ? await supabase
+        .from("subject_proposals")
+        .select("*")
+        .in("status", ["approved", "rejected"])
+        .order("reviewed_at", { ascending: false })
+        .limit(queueItemLimit)
+    : { data: [] as SubjectProposal[] };
+  let proposalHistory = (rawProposalHistory ?? []) as SubjectProposal[];
 
   type MaterialWithSubject = Database["public"]["Tables"]["subject_materials"]["Row"] & {
     subject: Pick<Database["public"]["Tables"]["subjects"]["Row"], "name" | "faculty" | "slug"> | null;
@@ -233,6 +244,7 @@ async function AdminQueuesSection({
   const userSummaries = await getPublicUserSummaryMap(
     [
       ...proposals.map((proposal) => proposal.proposed_by),
+      ...proposalHistory.map((proposal) => proposal.proposed_by),
       ...unapprovedMaterials.map((material) => material.uploader_id),
       ...unapprovedSubjectRatings.filter((rating) => !rating.is_anonymous).map((rating) => rating.user_id),
       ...unapprovedTeacherRatings.filter((rating) => !rating.is_anonymous).map((rating) => rating.user_id),
@@ -244,6 +256,7 @@ async function AdminQueuesSection({
 
   if (facultyFilter) {
     proposals = proposals.filter((p) => (p.data as { faculty?: string }).faculty === facultyFilter);
+    proposalHistory = proposalHistory.filter((p) => (p.data as { faculty?: string }).faculty === facultyFilter);
     unapprovedMaterials = unapprovedMaterials.filter((m) => m.subject?.faculty === facultyFilter);
     unapprovedSubjectRatings = unapprovedSubjectRatings.filter((r) => r.subject?.faculty === facultyFilter);
     unapprovedTeacherRatings = unapprovedTeacherRatings.filter((r) => r.teacher?.faculty === facultyFilter);
@@ -255,6 +268,15 @@ async function AdminQueuesSection({
     String(proposal.data.name ?? ""),
     String(proposal.data.short_tag ?? ""),
     String(proposal.note ?? ""),
+    proposal.proposed_by,
+    proposal.proposed_by_email,
+    userSummaries[proposal.proposed_by]?.displayName,
+  ));
+  proposalHistory = proposalHistory.filter((proposal) => matchesQuery(
+    String(proposal.data.name ?? ""),
+    String(proposal.data.short_tag ?? ""),
+    String(proposal.note ?? ""),
+    String(proposal.rejection_reason ?? ""),
     proposal.proposed_by,
     proposal.proposed_by_email,
     userSummaries[proposal.proposed_by]?.displayName,
@@ -306,9 +328,19 @@ async function AdminQueuesSection({
     proposed_by_email: undefined as string | undefined,
     proposed_by_profile: userSummaries[proposal.proposed_by] ?? null,
   }));
+  const proposalHistoryWithEmail = proposalHistory.map((proposal) => ({
+    ...proposal,
+    proposed_by_email: undefined as string | undefined,
+    proposed_by_profile: userSummaries[proposal.proposed_by] ?? null,
+  }));
 
-  const allDone = proposalsWithEmail.length === 0 && unapprovedMaterials.length === 0 && unapprovedComments.length === 0 && filteredFeedback.length === 0 && unapprovedTeachers.length === 0;
-  const isQueueVisible = (queueKey: Exclude<QueueKey, "all">) => queueFilter === "all" || queueFilter === queueKey;
+  const allDone = queueFilter === "history"
+    ? proposalHistoryWithEmail.length === 0
+    : proposalsWithEmail.length === 0 && unapprovedMaterials.length === 0 && unapprovedComments.length === 0 && filteredFeedback.length === 0 && unapprovedTeachers.length === 0;
+  const isQueueVisible = (queueKey: Exclude<QueueKey, "all">) =>
+    queueKey === "history"
+      ? queueFilter === "history"
+      : queueFilter === "all" || queueFilter === queueKey;
 
   return (
     <>
@@ -337,6 +369,20 @@ async function AdminQueuesSection({
                     key={proposal.id}
                     proposal={proposal}
                     currentSubjectData={proposal.type === "edit" && proposal.subject_id ? subjectsMap[proposal.subject_id] ?? null : null}
+                  />
+                ))}
+              </div>
+            </QueueSection>
+          )}
+          {isQueueVisible("history") && proposalHistoryWithEmail.length > 0 && (
+            <QueueSection icon="🗂️" title="Historie návrhů" countLabel={formatCount(proposalHistoryWithEmail.length, "záznam", "záznamy", "záznamů")}>
+              <div className="space-y-4">
+                {proposalHistoryWithEmail.map((proposal) => (
+                  <ProposalCard
+                    key={proposal.id}
+                    proposal={proposal}
+                    currentSubjectData={proposal.type === "edit" && proposal.subject_id ? subjectsMap[proposal.subject_id] ?? null : null}
+                    readonly
                   />
                 ))}
               </div>

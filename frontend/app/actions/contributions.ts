@@ -476,9 +476,23 @@ export async function submitSubjectProposal(formData: FormData): Promise<ActionR
 
     if (error) {
       if (error.code === '23505') {
-        // Duplicate submission token — treat as success (idempotent submit)
-        try { revalidatePath('/moje-aktivita') } catch { /* ignore revalidation errors */ }
-        return { success: true }
+        const { data: existingRow, error: duplicateLookupError } = await supabase
+          .from('subject_proposals')
+          .select('id')
+          .eq('submission_token', proposalFilesKey)
+          .eq('proposed_by', user.id)
+          .maybeSingle()
+
+        if (!duplicateLookupError && existingRow) {
+          try { revalidatePath('/moje-aktivita') } catch { /* ignore revalidation errors */ }
+          return { success: true }
+        }
+
+        if (uploadedPaths.length > 0) {
+          await cleanupUploadedPaths()
+        }
+
+        return { success: false, error: 'Návrh se nepodařilo bezpečně uložit kvůli konfliktu odeslání. Zkus ho prosím odeslat znovu.' }
       }
       if (uploadedPaths.length > 0) {
         await cleanupUploadedPaths()
