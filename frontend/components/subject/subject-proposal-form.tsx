@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
-import { AlertTriangle, Check, ChevronDown, FileText, ListChecks, SlidersHorizontal, UserPlus, Users, X } from 'lucide-react'
+import { AlertTriangle, ChevronDown, FileText, ListChecks, SlidersHorizontal, UserPlus, Users, X } from 'lucide-react'
 import {
   getSubjectDetailsForProposal,
   submitSubjectProposal,
@@ -703,18 +703,15 @@ export function SubjectProposalForm({
               <div className="grid grid-cols-1 gap-4 lg:grid-cols-4">
                 <div>
                   <FieldLabel>Zkouška z domova</FieldLabel>
-                  <label className="flex w-full cursor-pointer items-center gap-3">
+                  <label className="flex w-full cursor-pointer items-center">
                     <input
                       type="checkbox"
                       checked={form.exam_from_home}
                       onChange={(e) => set('exam_from_home', e.target.checked)}
                       className="peer sr-only"
                     />
-                    <span className="flex min-h-11 w-full items-center justify-start gap-3 rounded-xl border border-white/5 bg-background/50 px-4 py-3 text-left transition-all hover:bg-muted/50 peer-checked:border-emerald-500/50 peer-checked:bg-emerald-500/10">
-                      <span className="flex h-5 w-5 items-center justify-center rounded border border-white/10 bg-background text-transparent transition-all peer-checked:border-emerald-500 peer-checked:bg-emerald-500 peer-checked:text-white">
-                        <Check className="h-3.5 w-3.5" strokeWidth={3} />
-                      </span>
-                      <span className="text-sm font-medium text-foreground">Povolit zkoušku z domova</span>
+                    <span className="flex h-10 w-full items-center rounded-xl border border-white/5 bg-background px-3 text-sm text-foreground shadow-inner transition-all hover:bg-muted/50 peer-checked:border-emerald-500/40 peer-checked:bg-emerald-500/10 peer-checked:text-emerald-700 dark:peer-checked:text-emerald-400">
+                      Povolit zkoušku z domova
                     </span>
                   </label>
                 </div>
