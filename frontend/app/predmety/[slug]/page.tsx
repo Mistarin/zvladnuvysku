@@ -11,6 +11,7 @@ import { ReportIssueDialog } from "@/components/feedback/report-issue-dialog";
 import { ShareLinkButton } from "@/components/share/share-link-button";
 import { PublicUserLink } from "@/components/profile/public-user-link";
 import { getPublicProfileIdentity, hasPublicProfileIdentity } from "@/lib/public-profile-identity";
+import { getTeacherPath } from "@/lib/teacher-slug";
 import { getPublicUserSummaryMap } from "@/lib/public-user-summaries";
 import { getSharePath } from "@/lib/share-links";
 import type { Database, Subject, SubjectRatingStats } from "@/lib/types/database";
@@ -299,7 +300,7 @@ async function SubjectSidebarSection({
               const ratingCount = stats?.total_ratings ?? 0;
               return (
                 <div key={teacher.id} className="flex flex-col gap-2 rounded-xl border border-border bg-card p-4 shadow-sm">
-                  <Link href={`/ucitele/${teacher.slug}`} className="group flex flex-col">
+                  <Link href={getTeacherPath(teacher.slug)} className="group flex flex-col">
                     <span className="font-medium text-foreground transition-colors group-hover:text-primary">{teacher.name}</span>
                     <div className="mt-1 flex items-center justify-between">
                       <span className="text-xs uppercase tracking-wider text-muted-foreground">{teacher.faculty}</span>
@@ -313,7 +314,7 @@ async function SubjectSidebarSection({
                       )}
                     </div>
                   </Link>
-                  <Link href={`/ucitele/${teacher.slug}#ohodnotit`} className="mt-1 inline-block text-xs font-medium text-primary/80 transition-colors hover:text-primary">
+                  <Link href={`${getTeacherPath(teacher.slug)}#ohodnotit`} className="mt-1 inline-block text-xs font-medium text-primary/80 transition-colors hover:text-primary">
                     Přidat hodnocení učitele →
                   </Link>
                 </div>

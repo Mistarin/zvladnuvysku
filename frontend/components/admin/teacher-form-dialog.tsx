@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { createTeacher, updateTeacher } from "@/app/admin/ucitele/actions";
 import { FACULTIES } from "@/lib/faculties";
+import { generateTeacherSlug } from "@/lib/teacher-slug";
 import type { Teacher } from "@/lib/types/database";
 import * as Dialog from "@radix-ui/react-dialog";
 import { X, Loader2, ChevronDown } from "lucide-react";
@@ -15,16 +16,6 @@ interface TeacherFormDialogProps {
   onOpenChange?: (open: boolean) => void;
   /** Existing department names for autocomplete */
   departmentSuggestions?: string[];
-}
-
-// Funkce na automatické generování slugu z názvu
-function generateSlug(text: string) {
-  return text
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)+/g, "");
 }
 
 /** Auto-capitalise first letter of every typed word / first character */
@@ -69,9 +60,9 @@ export function TeacherFormDialog({
     const newName = e.target.value;
     setFormData((prev) => {
       // Pokud uživatel slug ručně nezměnil, generujeme ho automaticky podle jména
-      const autoSlug = generateSlug(prev.name);
+      const autoSlug = generateTeacherSlug(prev.name);
       if (prev.slug === autoSlug || prev.slug === "") {
-        return { ...prev, name: newName, slug: generateSlug(newName) };
+        return { ...prev, name: newName, slug: generateTeacherSlug(newName) };
       }
       return { ...prev, name: newName };
     });

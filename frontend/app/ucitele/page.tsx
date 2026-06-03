@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { TeacherProposalDialog } from "@/components/teacher/teacher-proposal-dialog";
 import { FACULTIES, getFacultyColor } from "@/lib/faculties";
 import { getPublicProfileIdentity, hasPublicProfileIdentity } from "@/lib/public-profile-identity";
+import { getTeacherPath } from "@/lib/teacher-slug";
 import type { Teacher } from "@/lib/types/database";
 
 export const metadata: Metadata = {
@@ -117,7 +118,7 @@ async function TeachersListSection() {
               return (
                 <Link
                   key={teacher.id}
-                  href={`/ucitele/${teacher.slug}`}
+                  href={getTeacherPath(teacher.slug)}
                   className="glass-card p-5 group hover:border-primary/50 transition-all hover:-translate-y-1 block"
                 >
                   <div className="flex flex-col gap-2">

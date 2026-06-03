@@ -2,6 +2,7 @@
 
 import { isFacultyCode } from "@/lib/faculties";
 import { createClient } from "@/lib/supabase/server";
+import { generateTeacherSlug, getTeacherPath } from "@/lib/teacher-slug";
 import { revalidatePath } from "next/cache";
 import type { TeacherInsert } from "@/lib/types/database";
 
@@ -24,13 +25,14 @@ export async function createTeacher(data: TeacherInsert) {
       return { error: "Vyber platnou fakultu." };
     }
 
+    const normalizedSlug = generateTeacherSlug(data.slug || data.name);
     const supabase = await checkAdmin();
 
     const { error } = await supabase
       .from("teachers")
       .insert({
         name: data.name,
-        slug: data.slug,
+        slug: normalizedSlug,
         faculty: data.faculty,
         department: data.department || null,
       } as never);
@@ -53,13 +55,16 @@ export async function updateTeacher(id: string, data: Partial<TeacherInsert>) {
       return { error: "Vyber platnou fakultu." };
     }
 
+    const normalizedSlug = data.slug !== undefined
+      ? generateTeacherSlug(data.slug || data.name || "")
+      : undefined;
     const supabase = await checkAdmin();
 
     const { error } = await supabase
       .from("teachers")
       .update({
         ...(data.name !== undefined && { name: data.name }),
-        ...(data.slug !== undefined && { slug: data.slug }),
+        ...(normalizedSlug !== undefined && { slug: normalizedSlug }),
         ...(data.faculty !== undefined && { faculty: data.faculty }),
         ...(data.department !== undefined && { department: data.department || null }),
         ...(data.is_approved !== undefined && { is_approved: data.is_approved }),
@@ -71,8 +76,8 @@ export async function updateTeacher(id: string, data: Partial<TeacherInsert>) {
     revalidatePath("/admin");
     revalidatePath("/admin/ucitele");
     revalidatePath("/ucitele");
-    if (data.slug) {
-      revalidatePath(`/ucitele/${data.slug}`);
+    if (normalizedSlug) {
+      revalidatePath(getTeacherPath(normalizedSlug));
     }
     
     return { success: true };

@@ -5,6 +5,7 @@ import { TeacherRatingForm } from "@/components/teacher/teacher-rating-form";
 import { TeacherReviews } from "@/components/teacher/teacher-reviews";
 import { getFacultyColor } from "@/lib/faculties";
 import { getPublicProfileIdentity, hasPublicProfileIdentity } from "@/lib/public-profile-identity";
+import { generateTeacherSlug } from "@/lib/teacher-slug";
 import type { Database } from "@/lib/types/database";
 
 interface PageProps {
@@ -18,22 +19,48 @@ type TeacherSubjectJoinRow = {
   subjects: TeacherSubject | TeacherSubject[] | null;
 };
 
+function decodeRouteSlug(value: string) {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
+}
+
 export default async function TeacherDetailPage({ params }: PageProps) {
   const { slug } = await params;
   const supabase = await createClient();
+  const routeSlug = decodeRouteSlug(slug).trim();
+  const canonicalRouteSlug = generateTeacherSlug(routeSlug);
 
-  // Fetch teacher
-  const { data: teacher, error: teacherError } = await supabase
+  const { data: exactTeacher, error: teacherError } = await supabase
     .from("teachers")
     .select("*")
-    .eq("slug", slug)
-    .single();
+    .eq("slug", routeSlug)
+    .maybeSingle();
 
-  if (teacherError || !teacher) {
+  let teacher = exactTeacher as TeacherRow | null;
+
+  if (!teacher) {
+    const { data: fallbackTeachers, error: fallbackError } = await supabase
+      .from("teachers")
+      .select("*")
+      .eq("is_approved", true);
+
+    if (fallbackError) {
+      console.error("[teacher-detail] Fallback slug lookup failed:", fallbackError.message);
+    } else {
+      teacher = ((fallbackTeachers ?? []) as TeacherRow[]).find(
+        (candidate) => generateTeacherSlug(candidate.slug) === canonicalRouteSlug,
+      ) ?? null;
+    }
+  }
+
+  if ((teacherError && !teacher) || !teacher) {
     notFound();
   }
 
-  const t = teacher as TeacherRow;
+  const t = teacher;
 
   // Fetch subjects taught by teacher
   const { data: stData } = await supabase

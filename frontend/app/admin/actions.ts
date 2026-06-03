@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { getPublicProfilePath } from '@/lib/public-profile'
 import { createClient } from '@/lib/supabase/server'
+import { generateTeacherSlug } from '@/lib/teacher-slug'
 import type { Database } from '@/lib/types/database'
 
 // Inline type for subject_proposals (table not in generated Database types yet)
@@ -60,7 +61,7 @@ function revalidateContributionSurfaces(userId?: string | null) {
   }
 }
 
-function generateSlug(value: string) {
+function generateSubjectSlug(value: string) {
   return value
     .toLowerCase()
     .normalize('NFD')
@@ -113,7 +114,7 @@ async function insertSubjectWithUniqueSlug(
   supabase: Awaited<ReturnType<typeof createClient>>,
   payload: SubjectInsert
 ) {
-  const baseSlug = generateSlug(payload.slug?.trim() || payload.short_tag?.trim() || payload.name?.trim() || 'predmet') || 'predmet'
+  const baseSlug = generateSubjectSlug(payload.slug?.trim() || payload.short_tag?.trim() || payload.name?.trim() || 'predmet') || 'predmet'
   let lastError: { code?: string; message?: string } | null = null
 
   for (let attempt = 0; attempt < 10; attempt += 1) {
@@ -441,11 +442,10 @@ async function processTeachers(
       }
 
       // Create new teacher
-      const slug = t.name.toLowerCase().replace(/[^a-z0-9á-ž]+/g, '-').replace(/(^-|-$)/g, '')
       const teacherInsert: TeacherInsert = {
         name: t.name,
         faculty,
-        slug: slug + '-' + Math.floor(Math.random() * 1000),
+        slug: `${generateTeacherSlug(t.name)}-${Math.floor(Math.random() * 1000)}`,
         department,
         is_approved: true,
         proposed_by: proposedBy,

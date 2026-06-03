@@ -3,16 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { isFacultyCode } from "@/lib/faculties";
 import { createClient } from "@/lib/supabase/server";
+import { generateTeacherSlug } from "@/lib/teacher-slug";
 import type { TeacherInsert } from "@/lib/types/database";
-
-function generateSlug(text: string) {
-  return text
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)+/g, "");
-}
 
 function withSlugSuffix(slug: string, attempt: number) {
   if (attempt === 0) return slug;
@@ -35,7 +27,7 @@ export async function proposeTeacher(data: {
       data: { user },
     } = await supabase.auth.getUser();
 
-    const baseSlug = data.slug?.trim() || generateSlug(data.name);
+    const baseSlug = generateTeacherSlug(data.slug?.trim() || data.name);
     let lastError: { code?: string; message?: string } | null = null;
 
     for (let attempt = 0; attempt < 5; attempt += 1) {

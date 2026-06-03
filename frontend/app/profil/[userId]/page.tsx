@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ProfileSubjectContributions, type ProfileDeckContribution, type ProfileMaterialContribution, type ProfileMaterialGroupContribution } from "@/components/profile/profile-subject-contributions";
 import { getFacultyColor } from "@/lib/faculties";
+import { getTeacherPath } from "@/lib/teacher-slug";
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/types/database";
 import { getStoragePublicUrl } from "@/lib/storage";
@@ -308,7 +309,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
                 {review.rating ? <span className="text-sm font-bold text-amber-500">{review.rating}/5 ★</span> : null}
               </div>
               {review.teacher && (
-                <Link href={`/ucitele/${review.teacher.slug}`} className="mt-1 block text-xs text-muted-foreground hover:text-foreground">
+                <Link href={getTeacherPath(review.teacher.slug)} className="mt-1 block text-xs text-muted-foreground hover:text-foreground">
                   Detail vyučujícího
                 </Link>
               )}
