@@ -78,7 +78,7 @@ function TeacherRatingCell({ subject }: { subject: SubjectWithStats }) {
       </div>
 
       {hasMultipleTeachers && (
-        <div className="pointer-events-none absolute right-0 top-full z-20 mt-2 hidden min-w-[18rem] rounded-2xl border border-white/10 bg-popover/95 p-3 text-left shadow-2xl backdrop-blur-md group-hover:block group-focus-within:block">
+        <div className="pointer-events-none absolute bottom-full right-0 z-20 mb-2 hidden min-w-[18rem] rounded-2xl border border-white/10 bg-popover/95 p-3 text-left shadow-2xl backdrop-blur-md group-hover:block group-focus-within:block">
           <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             Vyučující
           </p>
@@ -133,7 +133,7 @@ export function SubjectTable({
   }
 
   return (
-    <div className="w-full overflow-x-auto rounded-xl border border-border">
+    <div className="w-full overflow-x-auto rounded-xl border border-border xl:overflow-visible">
       <table className="w-full" role="grid" aria-label="Tabulka předmětů">
         <thead>
           <tr className="border-b border-border bg-muted/50">

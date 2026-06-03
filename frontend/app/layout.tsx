@@ -70,7 +70,7 @@ export default async function RootLayout({
         >
           <SoundProvider>
             <Navbar initialUser={user} />
-            <main className="flex-1">{children}</main>
+            <main className="flex-1 pb-[25vh]">{children}</main>
             <Footer />
             <FeedbackButton />
             <WelcomeDisplayNameModal
