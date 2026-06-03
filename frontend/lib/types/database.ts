@@ -103,10 +103,12 @@ export interface Database {
           overall_rating: number | null
           comment: string | null
           comment_is_approved: boolean | null
+          is_anonymous: boolean
           created_at: string
         }
         Insert: Omit<Database['public']['Tables']['subject_ratings']['Row'], 'id' | 'created_at' | 'comment_is_approved' | 'overall_rating'> & {
           comment_is_approved?: boolean | null
+          is_anonymous?: boolean
           overall_rating?: number | null
         }
         Update: Partial<Database['public']['Tables']['subject_ratings']['Insert']>
@@ -149,10 +151,40 @@ export interface Database {
           rating: number | null
           review: string | null
           comment_is_approved: boolean | null
+          is_anonymous: boolean
           created_at: string
         }
-        Insert: Omit<Database['public']['Tables']['teacher_ratings']['Row'], 'id' | 'created_at' | 'comment_is_approved'> & { comment_is_approved?: boolean | null }
+        Insert: Omit<Database['public']['Tables']['teacher_ratings']['Row'], 'id' | 'created_at' | 'comment_is_approved'> & {
+          comment_is_approved?: boolean | null
+          is_anonymous?: boolean
+        }
         Update: Partial<Database['public']['Tables']['teacher_ratings']['Insert']>
+      }
+      public_subject_reviews: {
+        Row: {
+          id: string
+          subject_id: string
+          overall: number
+          comment: string
+          created_at: string
+          author_user_id: string | null
+          is_anonymous: boolean
+        }
+        Insert: Database['public']['Tables']['public_subject_reviews']['Row']
+        Update: Partial<Database['public']['Tables']['public_subject_reviews']['Insert']>
+      }
+      public_teacher_reviews: {
+        Row: {
+          id: string
+          teacher_id: string
+          rating: number
+          review: string
+          created_at: string
+          author_user_id: string | null
+          is_anonymous: boolean
+        }
+        Insert: Database['public']['Tables']['public_teacher_reviews']['Row']
+        Update: Partial<Database['public']['Tables']['public_teacher_reviews']['Insert']>
       }
       subject_teachers: {
         Row: {

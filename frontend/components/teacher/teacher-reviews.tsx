@@ -2,14 +2,16 @@ import { createClient } from "@/lib/supabase/server";
 import { ReportIssueDialog } from "@/components/feedback/report-issue-dialog";
 import { PublicUserLink } from "@/components/profile/public-user-link";
 import { getPublicUserSummaryMap } from "@/lib/public-user-summaries";
-import type { TeacherRating } from "@/lib/types/database";
+import type { Database } from "@/lib/types/database";
+
+type PublicTeacherReview = Database["public"]["Tables"]["public_teacher_reviews"]["Row"];
 
 export async function TeacherReviews({ teacherId }: { teacherId: string }) {
   const supabase = await createClient();
 
   const { data: reviews, error } = await supabase
-    .from("teacher_ratings")
-    .select("id, rating, review, created_at, comment_is_approved, user_id")
+    .from("public_teacher_reviews")
+    .select("id, rating, review, created_at, author_user_id, is_anonymous")
     .eq("teacher_id", teacherId)
     .order("created_at", { ascending: false });
 
@@ -26,9 +28,9 @@ export async function TeacherReviews({ teacherId }: { teacherId: string }) {
     );
   }
 
-  const typedReviews = reviews as TeacherRating[];
+  const typedReviews = reviews as PublicTeacherReview[];
   const reviewerSummaries = await getPublicUserSummaryMap(
-    typedReviews.map((review) => review.user_id),
+    typedReviews.map((review) => review.author_user_id).filter((value): value is string => Boolean(value)),
     supabase,
   );
 
@@ -42,45 +44,37 @@ export async function TeacherReviews({ teacherId }: { teacherId: string }) {
                 {[1, 2, 3, 4, 5].map((star) => (
                   <span
                     key={star}
-                    className={star <= (review.rating || 0) ? "text-yellow-400" : "text-muted opacity-40 grayscale"}
+                    className={star <= review.rating ? "text-yellow-400" : "text-muted opacity-40 grayscale"}
                   >
                     ⭐
                   </span>
                 ))}
               </div>
-              <PublicUserLink
-                userId={review.user_id}
-                summary={reviewerSummaries[review.user_id] ?? null}
-                fallbackLabel="Student"
-              />
+              {review.author_user_id ? (
+                <PublicUserLink
+                  userId={review.author_user_id}
+                  summary={reviewerSummaries[review.author_user_id] ?? null}
+                  fallbackLabel="Student"
+                />
+              ) : (
+                <span className="text-sm text-muted-foreground">Anonymní recenze</span>
+              )}
             </div>
             <span className="text-xs text-muted-foreground">
               {new Date(review.created_at).toLocaleDateString("cs-CZ")}
             </span>
           </div>
-          {review.review ? (
-            review.comment_is_approved ? (
-              <div className="space-y-3">
-                <p className="text-foreground text-sm leading-relaxed whitespace-pre-wrap">
-                  {review.review}
-                </p>
-                <ReportIssueDialog
-                  sourceType="teacher_rating"
-                  sourceId={review.id}
-                  sourceLabel="Recenze vyučujícího"
-                  compact
-                />
-              </div>
-            ) : (
-              <p className="text-amber-500/80 text-sm italic">
-                Komentář čeká na schválení administrátorem.
-              </p>
-            )
-          ) : (
-            <p className="text-muted-foreground/60 text-sm italic">
-              Bez slovního komentáře.
+          <div className="space-y-3">
+            <p className="text-foreground text-sm leading-relaxed whitespace-pre-wrap">
+              {review.review}
             </p>
-          )}
+            <ReportIssueDialog
+              sourceType="teacher_rating"
+              sourceId={review.id}
+              sourceLabel="Recenze vyučujícího"
+              compact
+            />
+          </div>
         </div>
       ))}
     </div>

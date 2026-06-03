@@ -174,6 +174,7 @@ async function AdminQueuesSection({
     created_at: string;
     overall: number | null;
     user_id: string;
+    is_anonymous: boolean;
     subject: Pick<Database["public"]["Tables"]["subjects"]["Row"], "name" | "faculty"> | null;
   };
   type TeacherCommentQueueItem = {
@@ -182,6 +183,7 @@ async function AdminQueuesSection({
     created_at: string;
     rating: number | null;
     user_id: string;
+    is_anonymous: boolean;
     teacher: Pick<Database["public"]["Tables"]["teachers"]["Row"], "name" | "faculty"> | null;
   };
   type FeedbackItem = Database["public"]["Tables"]["feedback"]["Row"];
@@ -232,8 +234,8 @@ async function AdminQueuesSection({
     [
       ...proposals.map((proposal) => proposal.proposed_by),
       ...unapprovedMaterials.map((material) => material.uploader_id),
-      ...unapprovedSubjectRatings.map((rating) => rating.user_id),
-      ...unapprovedTeacherRatings.map((rating) => rating.user_id),
+      ...unapprovedSubjectRatings.filter((rating) => !rating.is_anonymous).map((rating) => rating.user_id),
+      ...unapprovedTeacherRatings.filter((rating) => !rating.is_anonymous).map((rating) => rating.user_id),
       ...unapprovedTeachers.map((teacher) => teacher.proposed_by),
       ...unresolvedFeedback.map((feedback) => feedback.user_id),
     ],
@@ -258,8 +260,16 @@ async function AdminQueuesSection({
     userSummaries[proposal.proposed_by]?.displayName,
   ));
   unapprovedMaterials = unapprovedMaterials.filter((material) => matchesQuery(material.title, material.subject?.name, material.file_path, userSummaries[material.uploader_id]?.displayName));
-  unapprovedSubjectRatings = unapprovedSubjectRatings.filter((rating) => matchesQuery(rating.comment, rating.subject?.name, userSummaries[rating.user_id]?.displayName));
-  unapprovedTeacherRatings = unapprovedTeacherRatings.filter((rating) => matchesQuery(rating.review, rating.teacher?.name, userSummaries[rating.user_id]?.displayName));
+  unapprovedSubjectRatings = unapprovedSubjectRatings.filter((rating) => matchesQuery(
+    rating.comment,
+    rating.subject?.name,
+    rating.is_anonymous ? undefined : userSummaries[rating.user_id]?.displayName,
+  ));
+  unapprovedTeacherRatings = unapprovedTeacherRatings.filter((rating) => matchesQuery(
+    rating.review,
+    rating.teacher?.name,
+    rating.is_anonymous ? undefined : userSummaries[rating.user_id]?.displayName,
+  ));
   unapprovedTeachers = unapprovedTeachers.filter((teacher) => matchesQuery(teacher.name, teacher.slug, teacher.department, teacher.faculty, teacher.proposed_by ? userSummaries[teacher.proposed_by]?.displayName : undefined));
   const filteredFeedback = unresolvedFeedback.filter((feedback) => matchesQuery(feedback.message, feedback.source_label, feedback.source_type, feedback.type, feedback.user_id ? userSummaries[feedback.user_id]?.displayName : undefined));
 
@@ -272,7 +282,8 @@ async function AdminQueuesSection({
       targetName: r.subject?.name || "Neznámý předmět",
       overall_rating: r.overall,
       user_id: r.user_id,
-      author: userSummaries[r.user_id] ?? null,
+      is_anonymous: r.is_anonymous,
+      author: r.is_anonymous ? null : (userSummaries[r.user_id] ?? null),
     })),
     ...unapprovedTeacherRatings.map((r) => ({
       id: r.id,
@@ -282,7 +293,8 @@ async function AdminQueuesSection({
       targetName: r.teacher?.name || "Neznámý učitel",
       overall_rating: r.rating,
       user_id: r.user_id,
-      author: userSummaries[r.user_id] ?? null,
+      is_anonymous: r.is_anonymous,
+      author: r.is_anonymous ? null : (userSummaries[r.user_id] ?? null),
     })),
   ].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
 

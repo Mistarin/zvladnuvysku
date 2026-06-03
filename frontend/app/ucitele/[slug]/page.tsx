@@ -14,7 +14,6 @@ interface PageProps {
 }
 
 type TeacherRow = Database["public"]["Tables"]["teachers"]["Row"];
-type TeacherRatingRow = Database["public"]["Tables"]["teacher_ratings"]["Row"];
 type TeacherSubject = Pick<Database["public"]["Tables"]["subjects"]["Row"], "slug" | "name" | "short_tag">;
 type TeacherSubjectJoinRow = {
   subjects: TeacherSubject | TeacherSubject[] | null;
@@ -76,17 +75,14 @@ export default async function TeacherDetailPage({ params }: PageProps) {
     return Array.isArray(row.subjects) ? row.subjects : [row.subjects];
   });
     
-  // Fetch all ratings for avg
-  const { data: teacherRatings } = await supabase
-    .from("teacher_ratings")
-    .select("rating, review, created_at, comment_is_approved")
+  const { data: teacherRatingStats } = await supabase
+    .from("teacher_rating_stats")
+    .select("avg_rating, total_ratings")
     .eq("teacher_id", t.id)
-    .order("created_at", { ascending: false });
+    .maybeSingle();
 
-  const ratings = (teacherRatings ?? []) as Pick<TeacherRatingRow, "rating" | "review" | "created_at" | "comment_is_approved">[];
-  const avgRating = ratings.length 
-    ? (ratings.reduce((acc, r) => acc + (r.rating || 0), 0) / ratings.length).toFixed(1)
-    : "—";
+  const ratingStats = teacherRatingStats as Database["public"]["Tables"]["teacher_rating_stats"]["Row"] | null;
+  const avgRating = ratingStats?.total_ratings ? ratingStats.avg_rating.toFixed(1) : "—";
 
   const { data: { user } } = await supabase.auth.getUser();
   const isLoggedIn = !!user;
@@ -143,7 +139,7 @@ export default async function TeacherDetailPage({ params }: PageProps) {
               {avgRating} <span className="text-xl">⭐</span>
             </div>
             <div className="text-xs text-muted-foreground mt-1">
-              {ratings.length || 0} hodnocení
+              {ratingStats?.total_ratings || 0} hodnocení
             </div>
           </div>
         </div>

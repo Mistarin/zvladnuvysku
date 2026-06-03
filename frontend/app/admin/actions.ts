@@ -606,6 +606,12 @@ export async function approveRatingComment(ratingId: string, type: "subject" | "
   try {
     const { supabase } = await getAdminClient()
     const table = type === "subject" ? "subject_ratings" : "teacher_ratings"
+    const { data: existingRowData } = await supabase
+      .from(table)
+      .select('user_id')
+      .eq('id', ratingId)
+      .maybeSingle()
+    const existingRow = existingRowData as { user_id: string } | null
     
     const { error } = await supabase
       .from(table)
@@ -615,6 +621,10 @@ export async function approveRatingComment(ratingId: string, type: "subject" | "
     if (error) return { success: false, error: `Chyba při schvalování komentáře: ${error.message}` }
     
     revalidatePath('/admin')
+    revalidatePath('/')
+    if (existingRow?.user_id) {
+      revalidatePath(getPublicProfilePath(existingRow.user_id))
+    }
     revalidatePath(`/${type === 'subject' ? 'predmety' : 'ucitele'}/[slug]`, 'page')
     
     return { success: true }
@@ -627,6 +637,12 @@ export async function rejectRatingComment(ratingId: string, type: "subject" | "t
   try {
     const { supabase } = await getAdminClient()
     const table = type === "subject" ? "subject_ratings" : "teacher_ratings"
+    const { data: existingRowData } = await supabase
+      .from(table)
+      .select('user_id')
+      .eq('id', ratingId)
+      .maybeSingle()
+    const existingRow = existingRowData as { user_id: string } | null
     
     // We only set comment/review to NULL. We don't delete the row, so the star rating remains.
     const { error } = await supabase
@@ -637,6 +653,10 @@ export async function rejectRatingComment(ratingId: string, type: "subject" | "t
     if (error) return { success: false, error: `Chyba při mazání textu komentáře: ${error.message}` }
     
     revalidatePath('/admin')
+    revalidatePath('/')
+    if (existingRow?.user_id) {
+      revalidatePath(getPublicProfilePath(existingRow.user_id))
+    }
     revalidatePath(`/${type === 'subject' ? 'predmety' : 'ucitele'}/[slug]`, 'page')
     
     return { success: true }

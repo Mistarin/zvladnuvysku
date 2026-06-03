@@ -2,8 +2,10 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { deleteOwnSubjectRating, getMySubjectRating } from '@/app/actions/contributions'
+import { ReviewVisibilityField } from '@/components/review/review-visibility-field'
 import { useRating } from '@/hooks/use-rating'
-import { getMySubjectRating } from '@/app/actions/contributions'
 import { WelcomeDisplayNameModal } from '@/components/layout/welcome-display-name-modal'
 
 interface RatingFormProps {
@@ -57,6 +59,7 @@ export function RatingForm({
   initialDisplayName,
   initialFaculty,
 }: RatingFormProps) {
+  const router = useRouter()
   const { submit, isSubmitting, error, success } = useRating()
 
   const [overall, setOverall] = useState(0)
@@ -64,30 +67,46 @@ export function RatingForm({
   const [usefulness, setUsefulness] = useState(0)
   const [workload, setWorkload] = useState(0)
   const [comment, setComment] = useState('')
+  const [isAnonymous, setIsAnonymous] = useState(false)
+  const [hasExistingRating, setHasExistingRating] = useState(false)
   const [hasPublicProfileIdentity, setHasPublicProfileIdentity] = useState(initialHasPublicProfileIdentity)
   const [showDisplayNameModal, setShowDisplayNameModal] = useState(false)
+  const [statusMessage, setStatusMessage] = useState<string | null>(null)
+  const [statusTone, setStatusTone] = useState<'success' | 'error'>('success')
+  const [isDeleting, setIsDeleting] = useState(false)
 
   useEffect(() => {
-    if (!isLoggedIn) return;
-    
+    if (!isLoggedIn) return
+
     async function fetchExisting() {
       const result = await getMySubjectRating(subjectId)
-      if (!result.success || !result.data) {
-        return;
+      if (!result.success) {
+        return
       }
       const existingRating = result.data
 
       if (existingRating) {
-        setOverall(existingRating.overall || 0);
-        setDifficulty(existingRating.difficulty || 0);
-        setUsefulness(existingRating.usefulness || 0);
-        setWorkload(existingRating.workload || 0);
-        setComment(existingRating.comment || '');
+        setOverall(existingRating.overall || 0)
+        setDifficulty(existingRating.difficulty || 0)
+        setUsefulness(existingRating.usefulness || 0)
+        setWorkload(existingRating.workload || 0)
+        setComment(existingRating.comment || '')
+        setIsAnonymous(existingRating.is_anonymous)
+        setHasExistingRating(true)
+        return
       }
+
+      setOverall(0)
+      setDifficulty(0)
+      setUsefulness(0)
+      setWorkload(0)
+      setComment('')
+      setIsAnonymous(false)
+      setHasExistingRating(false)
     }
-    
-    fetchExisting();
-  }, [subjectId, isLoggedIn]);
+
+    fetchExisting()
+  }, [subjectId, isLoggedIn])
 
   if (!isLoggedIn) {
     return (
@@ -105,31 +124,57 @@ export function RatingForm({
     )
   }
 
-  if (success) {
-    return (
-      <div className="text-center py-6 space-y-2">
-        <div className="text-3xl">🎉</div>
-        <p className="font-medium text-foreground">Hodnocení uloženo!</p>
-        <p className="text-sm text-muted-foreground">Díky za zpětnou vazbu.</p>
-      </div>
-    )
-  }
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (overall === 0) return
-    if (!hasPublicProfileIdentity) {
+    if (!isAnonymous && !hasPublicProfileIdentity) {
       setShowDisplayNameModal(true)
       return
     }
-    await submit({
+    setStatusMessage(null)
+    setStatusTone('success')
+    const saved = await submit({
       subjectId,
       overall,
       difficulty: difficulty || undefined,
       usefulness: usefulness || undefined,
       workload: workload || undefined,
       comment,
+      isAnonymous,
     })
+    if (!saved) return
+
+    setHasExistingRating(true)
+    setStatusMessage('Hodnocení bylo uloženo.')
+    router.refresh()
+  }
+
+  const handleDelete = async () => {
+    if (!window.confirm('Opravdu chceš smazat celé svoje hodnocení tohoto předmětu?')) {
+      return
+    }
+
+    setIsDeleting(true)
+    setStatusMessage(null)
+    setStatusTone('success')
+    const result = await deleteOwnSubjectRating(subjectId)
+    setIsDeleting(false)
+
+    if (!result.success) {
+      setStatusTone('error')
+      setStatusMessage(result.error)
+      return
+    }
+
+    setOverall(0)
+    setDifficulty(0)
+    setUsefulness(0)
+    setWorkload(0)
+    setComment('')
+    setIsAnonymous(false)
+    setHasExistingRating(false)
+    setStatusMessage('Hodnocení bylo smazáno.')
+    router.refresh()
   }
 
   return (
@@ -154,6 +199,8 @@ export function RatingForm({
           <StarPicker label="Pracovní zátěž" value={workload} onChange={setWorkload} />
         </div>
 
+        <ReviewVisibilityField isAnonymous={isAnonymous} onChange={setIsAnonymous} />
+
         {/* Komentář */}
         <div className="space-y-1">
           <label className="text-xs text-muted-foreground" htmlFor="rating-comment">
@@ -173,17 +220,41 @@ export function RatingForm({
           </p>
         </div>
 
+        {statusMessage && (
+          <p className={`text-sm ${statusTone === 'error' ? 'text-destructive' : 'text-emerald-600 dark:text-emerald-400'}`}>
+            {statusMessage}
+          </p>
+        )}
+
+        {success && !statusMessage && (
+          <p className="text-sm text-emerald-600 dark:text-emerald-400">
+            Hodnocení bylo uloženo.
+          </p>
+        )}
+
         {error && (
           <p className="text-sm text-destructive">{error}</p>
         )}
 
-        <button
-          type="submit"
-          disabled={isSubmitting || overall === 0}
-          className="w-full py-2.5 rounded-xl font-medium text-sm accent-gradient text-white hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {isSubmitting ? 'Ukládám...' : 'Uložit hodnocení'}
-        </button>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <button
+            type="submit"
+            disabled={isSubmitting || isDeleting || overall === 0}
+            className="w-full py-2.5 rounded-xl font-medium text-sm accent-gradient text-white hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed sm:w-auto sm:px-6"
+          >
+            {isSubmitting ? 'Ukládám...' : hasExistingRating ? 'Uložit změny' : 'Uložit hodnocení'}
+          </button>
+          {hasExistingRating && (
+            <button
+              type="button"
+              onClick={handleDelete}
+              disabled={isSubmitting || isDeleting}
+              className="w-full rounded-xl border border-destructive/20 px-4 py-2.5 text-sm font-medium text-destructive transition-colors hover:bg-destructive/10 disabled:opacity-50 sm:w-auto"
+            >
+              {isDeleting ? 'Mažu...' : 'Smazat recenzi'}
+            </button>
+          )}
+        </div>
       </form>
 
       <WelcomeDisplayNameModal

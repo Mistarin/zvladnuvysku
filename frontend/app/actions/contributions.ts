@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { normalizeDepartmentName } from '@/lib/department-name'
 import { isFacultyCode } from '@/lib/faculties'
+import { getPublicProfilePath } from '@/lib/public-profile'
 import { createClient } from '@/lib/supabase/server'
 import type { Database, SubjectRating, TeacherRating } from '@/lib/types/database'
 import { containsProfanity } from '@/lib/profanity'
@@ -61,12 +62,14 @@ type SubjectRatingInput = {
   usefulness?: number
   workload?: number
   comment?: string
+  isAnonymous?: boolean
 }
 
 type TeacherRatingInput = {
   teacherId: string
   rating: number
   review?: string
+  isAnonymous?: boolean
 }
 
 type ExistingSubjectRatingResult =
@@ -110,6 +113,12 @@ type SubjectDetailsResult =
 
 const MAX_PDF_FILE_SIZE = 2 * 1024 * 1024
 const MAX_PROPOSAL_MATERIALS = 8
+
+function revalidateReviewSurfaces(userId: string, type: 'subject' | 'teacher') {
+  revalidatePath('/')
+  revalidatePath(getPublicProfilePath(userId))
+  revalidatePath(type === 'subject' ? '/predmety/[slug]' : '/ucitele/[slug]', 'page')
+}
 
 function sanitizeProposalFilename(filename: string, fallbackExtension = 'pdf') {
   const trimmed = filename.trim()
@@ -681,6 +690,7 @@ export async function saveSubjectRating(input: SubjectRatingInput): Promise<Acti
       usefulness: input.usefulness ?? null,
       workload: input.workload ?? null,
       comment: input.comment?.trim() || null,
+      is_anonymous: Boolean(input.isAnonymous),
     }
 
     const { error } = await supabase
@@ -691,7 +701,7 @@ export async function saveSubjectRating(input: SubjectRatingInput): Promise<Acti
       return { success: false, error: `Nepodařilo se uložit hodnocení: ${error.message}` }
     }
 
-    revalidatePath('/predmety/[slug]', 'page')
+    revalidateReviewSurfaces(user.id, 'subject')
     return { success: true }
   } catch (error) {
     return {
@@ -748,6 +758,7 @@ export async function saveTeacherRating(input: TeacherRatingInput): Promise<Acti
       user_id: user.id,
       rating: input.rating,
       review: input.review?.trim() || null,
+      is_anonymous: Boolean(input.isAnonymous),
     }
 
     const { error } = await supabase
@@ -758,12 +769,74 @@ export async function saveTeacherRating(input: TeacherRatingInput): Promise<Acti
       return { success: false, error: `Chyba při ukládání: ${error.message}` }
     }
 
-    revalidatePath('/ucitele/[slug]', 'page')
+    revalidateReviewSurfaces(user.id, 'teacher')
     return { success: true }
   } catch (error) {
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Nepodařilo se uložit hodnocení vyučujícího.',
+    }
+  }
+}
+
+export async function deleteOwnSubjectRating(subjectId: string): Promise<ActionResult> {
+  try {
+    const supabase = await createClient()
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+
+    if (!user) {
+      return { success: false, error: 'Pro smazání hodnocení se musíš přihlásit.' }
+    }
+
+    const { error } = await supabase
+      .from('subject_ratings')
+      .delete()
+      .eq('subject_id', subjectId)
+      .eq('user_id', user.id)
+
+    if (error) {
+      return { success: false, error: `Nepodařilo se smazat hodnocení: ${error.message}` }
+    }
+
+    revalidateReviewSurfaces(user.id, 'subject')
+    return { success: true }
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Nepodařilo se smazat hodnocení předmětu.',
+    }
+  }
+}
+
+export async function deleteOwnTeacherRating(teacherId: string): Promise<ActionResult> {
+  try {
+    const supabase = await createClient()
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+
+    if (!user) {
+      return { success: false, error: 'Pro smazání hodnocení se musíte přihlásit.' }
+    }
+
+    const { error } = await supabase
+      .from('teacher_ratings')
+      .delete()
+      .eq('teacher_id', teacherId)
+      .eq('user_id', user.id)
+
+    if (error) {
+      return { success: false, error: `Nepodařilo se smazat hodnocení: ${error.message}` }
+    }
+
+    revalidateReviewSurfaces(user.id, 'teacher')
+    return { success: true }
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Nepodařilo se smazat hodnocení vyučujícího.',
     }
   }
 }

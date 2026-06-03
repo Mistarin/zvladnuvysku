@@ -124,19 +124,15 @@ export default async function PublicProfilePage({ params }: PageProps) {
       .eq("uploader_id", userId)
       .order("created_at", { ascending: false }),
     supabase
-      .from("subject_ratings")
+      .from("public_subject_reviews")
       .select("id, overall, comment, created_at, subject:subject_id(slug, short_tag, name)")
-      .eq("user_id", userId)
-      .eq("comment_is_approved", true)
-      .not("comment", "is", null)
+      .eq("author_user_id", userId)
       .order("created_at", { ascending: false })
       .limit(12),
     supabase
-      .from("teacher_ratings")
+      .from("public_teacher_reviews")
       .select("id, rating, review, created_at, teacher:teacher_id(slug, name)")
-      .eq("user_id", userId)
-      .eq("comment_is_approved", true)
-      .not("review", "is", null)
+      .eq("author_user_id", userId)
       .order("created_at", { ascending: false })
       .limit(12),
   ]);

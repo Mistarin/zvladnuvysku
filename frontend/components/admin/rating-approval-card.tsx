@@ -14,6 +14,7 @@ interface RatingApprovalCardProps {
     targetName: string; // jméno předmětu nebo učitele
     overall_rating?: number | null; // pro info o tom kolik dal hvězdiček
     user_id: string;
+    is_anonymous?: boolean;
     author?: PublicUserSummary | null;
   };
 }
@@ -67,12 +68,16 @@ export function RatingApprovalCard({ rating }: RatingApprovalCardProps) {
             Napsáno {new Date(rating.created_at).toLocaleDateString('cs-CZ')}
           </p>
           <div className="mt-2">
-            <PublicUserLink
-              userId={rating.user_id}
-              summary={rating.author ?? null}
-              fallbackLabel={`Uživatel ${rating.user_id.slice(0, 8)}…`}
-              allowFallbackLink
-            />
+            {rating.is_anonymous ? (
+              <span className="text-sm text-muted-foreground">Anonymní recenze</span>
+            ) : (
+              <PublicUserLink
+                userId={rating.user_id}
+                summary={rating.author ?? null}
+                fallbackLabel={`Uživatel ${rating.user_id.slice(0, 8)}…`}
+                allowFallbackLink
+              />
+            )}
           </div>
         </div>
       </div>

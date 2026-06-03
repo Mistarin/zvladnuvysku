@@ -66,10 +66,10 @@ type SubjectMaterialListItem = Pick<
 >;
 
 type SubjectComment = Pick<
-  Database["public"]["Tables"]["subject_ratings"]["Row"],
-  "id" | "created_at" | "comment" | "user_id"
+  Database["public"]["Tables"]["public_subject_reviews"]["Row"],
+  "id" | "created_at" | "comment" | "author_user_id" | "is_anonymous"
 > & {
-  overall: number | null;
+  overall: number;
 };
 
 export default async function PredmetDetailPage({ params }: PageProps) {
@@ -207,18 +207,16 @@ async function SubjectRatingsSection({
   const supabase = await createClient();
   const [{ data: rawRatings }, { data: ratingStatsData }] = await Promise.all([
     supabase
-      .from("subject_ratings")
-      .select("id, overall, comment, created_at, user_id")
+      .from("public_subject_reviews")
+      .select("id, overall, comment, created_at, author_user_id, is_anonymous")
       .eq("subject_id", subject.id)
-      .eq("comment_is_approved", true)
-      .not("comment", "is", null)
       .order("created_at", { ascending: false }),
     supabase.from("subject_rating_stats").select("*").eq("subject_id", subject.id).single(),
   ]);
 
   const ratingsWithComments = (rawRatings ?? []) as SubjectComment[];
   const reviewerSummaries = await getPublicUserSummaryMap(
-    ratingsWithComments.map((rating) => rating.user_id),
+    ratingsWithComments.map((rating) => rating.author_user_id).filter((value): value is string => Boolean(value)),
     supabase,
   );
   const ratingStats = ratingStatsData as SubjectRatingStats | null;
@@ -252,11 +250,15 @@ async function SubjectRatingsSection({
               <div key={rating.id} className="glass-card space-y-2 p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <PublicUserLink
-                      userId={rating.user_id}
-                      summary={reviewerSummaries[rating.user_id] ?? null}
-                      fallbackLabel="Student"
-                    />
+                    {rating.author_user_id ? (
+                      <PublicUserLink
+                        userId={rating.author_user_id}
+                        summary={reviewerSummaries[rating.author_user_id] ?? null}
+                        fallbackLabel="Student"
+                      />
+                    ) : (
+                      <span className="text-sm text-muted-foreground">Anonymní recenze</span>
+                    )}
                     <span className="text-xs text-muted-foreground">•</span>
                     <span className="text-xs text-muted-foreground">{new Date(rating.created_at).toLocaleDateString("cs-CZ")}</span>
                   </div>

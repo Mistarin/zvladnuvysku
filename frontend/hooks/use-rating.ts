@@ -10,10 +10,11 @@ interface RatingInput {
   usefulness?: number
   workload?: number
   comment?: string
+  isAnonymous?: boolean
 }
 
 interface UseRatingReturn {
-  submit: (input: RatingInput) => Promise<void>
+  submit: (input: RatingInput) => Promise<boolean>
   isSubmitting: boolean
   error: string | null
   success: boolean
@@ -33,12 +34,14 @@ export function useRating(): UseRatingReturn {
       const result = await saveSubjectRating(input)
       if (!result.success) {
         setError(result.error)
-        return
+        return false
       }
       setSuccess(true)
+      return true
     } catch (err) {
       console.error('Chyba při hodnocení:', err)
       setError('Nepodařilo se uložit hodnocení. Zkus to znovu.')
+      return false
     } finally {
       setIsSubmitting(false)
     }

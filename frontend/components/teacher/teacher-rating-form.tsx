@@ -3,8 +3,9 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { getMyTeacherRating, saveTeacherRating } from "@/app/actions/contributions";
+import { deleteOwnTeacherRating, getMyTeacherRating, saveTeacherRating } from "@/app/actions/contributions";
 import { WelcomeDisplayNameModal } from "@/components/layout/welcome-display-name-modal";
+import { ReviewVisibilityField } from "@/components/review/review-visibility-field";
 
 interface TeacherRatingFormProps {
   teacherId: string;
@@ -27,16 +28,19 @@ export function TeacherRatingForm({
   const [review, setReview] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [isAnonymous, setIsAnonymous] = useState(false);
+  const [hasExistingRating, setHasExistingRating] = useState(false);
   const [hasPublicProfileIdentity, setHasPublicProfileIdentity] = useState(initialHasPublicProfileIdentity);
   const [showDisplayNameModal, setShowDisplayNameModal] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     if (!isLoggedIn) return;
 
     async function fetchExisting() {
       const result = await getMyTeacherRating(teacherId)
-      if (!result.success || !result.data) {
+      if (!result.success) {
         return;
       }
       const existingRating = result.data;
@@ -44,7 +48,15 @@ export function TeacherRatingForm({
       if (existingRating) {
         setRating(existingRating.rating || 0);
         setReview(existingRating.review || '');
+        setIsAnonymous(existingRating.is_anonymous);
+        setHasExistingRating(true);
+        return;
       }
+
+      setRating(0);
+      setReview("");
+      setIsAnonymous(false);
+      setHasExistingRating(false);
     }
 
     fetchExisting();
@@ -56,18 +68,20 @@ export function TeacherRatingForm({
       setError("Vyberte hodnocení 1-5 hvězdiček.");
       return;
     }
-    if (!hasPublicProfileIdentity) {
+    if (!isAnonymous && !hasPublicProfileIdentity) {
       setShowDisplayNameModal(true);
       return;
     }
     
     setIsSubmitting(true);
     setError(null);
+    setSuccessMessage(null);
 
     const result = await saveTeacherRating({
       teacherId,
       rating,
       review,
+      isAnonymous,
     });
 
     setIsSubmitting(false);
@@ -77,7 +91,32 @@ export function TeacherRatingForm({
       return;
     }
 
-    setSuccess(true);
+    setHasExistingRating(true);
+    setSuccessMessage("Hodnocení bylo uloženo.");
+    router.refresh();
+  };
+
+  const handleDelete = async () => {
+    if (!window.confirm("Opravdu chcete smazat celé svoje hodnocení tohoto vyučujícího?")) {
+      return;
+    }
+
+    setIsDeleting(true);
+    setError(null);
+    setSuccessMessage(null);
+    const result = await deleteOwnTeacherRating(teacherId);
+    setIsDeleting(false);
+
+    if (!result.success) {
+      setError(result.error);
+      return;
+    }
+
+    setRating(0);
+    setReview("");
+    setIsAnonymous(false);
+    setHasExistingRating(false);
+    setSuccessMessage("Hodnocení bylo smazáno.");
     router.refresh();
   };
 
@@ -93,14 +132,6 @@ export function TeacherRatingForm({
         >
           Přihlásit se
         </Link>
-      </div>
-    );
-  }
-
-  if (success) {
-    return (
-      <div className="p-4 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-center">
-        Děkujeme! Vaše hodnocení bylo uloženo.
       </div>
     );
   }
@@ -145,15 +176,33 @@ export function TeacherRatingForm({
           />
         </div>
 
+        <ReviewVisibilityField isAnonymous={isAnonymous} onChange={setIsAnonymous} />
+
+        {successMessage && (
+          <p className="text-sm text-emerald-600 dark:text-emerald-400">{successMessage}</p>
+        )}
+
         {error && <p className="text-sm text-destructive font-medium">{error}</p>}
 
-        <button
-          type="submit"
-          disabled={isSubmitting || !rating}
-          className="w-full sm:w-auto px-6 py-2.5 bg-primary text-primary-foreground rounded-lg font-medium text-sm transition-all hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {isSubmitting ? "Ukládám..." : "Odeslat hodnocení"}
-        </button>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <button
+            type="submit"
+            disabled={isSubmitting || isDeleting || !rating}
+            className="w-full sm:w-auto px-6 py-2.5 bg-primary text-primary-foreground rounded-lg font-medium text-sm transition-all hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isSubmitting ? "Ukládám..." : hasExistingRating ? "Uložit změny" : "Odeslat hodnocení"}
+          </button>
+          {hasExistingRating && (
+            <button
+              type="button"
+              onClick={handleDelete}
+              disabled={isSubmitting || isDeleting}
+              className="w-full rounded-lg border border-destructive/20 px-4 py-2.5 text-sm font-medium text-destructive transition-colors hover:bg-destructive/10 disabled:opacity-50 sm:w-auto"
+            >
+              {isDeleting ? "Mažu..." : "Smazat recenzi"}
+            </button>
+          )}
+        </div>
       </form>
 
       <WelcomeDisplayNameModal
