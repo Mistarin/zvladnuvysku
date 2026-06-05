@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation'
 import { TeacherList } from './teacher-list'
 import { AdminAutoRefresh } from '@/components/admin/admin-auto-refresh'
 import { ShieldAlert, Users } from 'lucide-react'
+import Link from 'next/link'
 
 export const metadata: Metadata = {
   title: 'Správa vyučujících | Admin panel',
@@ -33,10 +34,17 @@ export default async function AdminTeachersPage() {
     )
   }
 
-  const { data: teachers, error } = await supabase
-    .from('teachers')
-    .select('*')
-    .order('name', { ascending: true })
+  const [{ data: teachers, error }, { data: departments }] = await Promise.all([
+    supabase
+      .from('teachers')
+      .select('*')
+      .order('name', { ascending: true }),
+    supabase
+      .from('departments')
+      .select('id, name, faculty, slug')
+      .order('faculty')
+      .order('name', { ascending: true }),
+  ])
 
   if (error) {
     console.error("Error fetching teachers:", error)
@@ -45,6 +53,17 @@ export default async function AdminTeachersPage() {
   return (
     <div className="container mx-auto px-4 py-8 max-w-6xl space-y-8 animate-in fade-in slide-in-from-bottom-4">
       <AdminAutoRefresh />
+      <div className="flex items-center gap-4 border-b border-white/5 pb-4">
+        <Link href="/admin" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+          ← Zpět do adminu
+        </Link>
+        <Link href="/admin/subjects" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+          Správa předmětů
+        </Link>
+        <Link href="/admin/katedry" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+          Správa kateder
+        </Link>
+      </div>
       <div className="flex items-center gap-3 border-b border-white/5 pb-4">
         <div className="p-2.5 bg-primary/10 rounded-xl">
           <Users className="w-6 h-6 text-primary" />
@@ -59,7 +78,7 @@ export default async function AdminTeachersPage() {
         </div>
       </div>
 
-      <TeacherList initialTeachers={teachers || []} />
+      <TeacherList initialTeachers={teachers || []} departments={(departments as never[]) || []} />
     </div>
   )
 }

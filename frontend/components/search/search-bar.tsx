@@ -1,6 +1,7 @@
 "use client";
 
-import { useRef, useEffect } from "react";
+import type { KeyboardEventHandler } from "react";
+import { useEffect, useRef } from "react";
 import { Search, X } from "lucide-react";
 import { useSound } from "../layout/sound-provider";
 
@@ -12,6 +13,10 @@ interface SearchBarProps {
   isFocused?: boolean;
   placeholder?: string;
   size?: "default" | "large";
+  inputId?: string;
+  ariaLabel?: string;
+  className?: string;
+  onKeyDown?: KeyboardEventHandler<HTMLInputElement>;
 }
 
 export function SearchBar({
@@ -22,6 +27,10 @@ export function SearchBar({
   isFocused,
   placeholder = "Hledat předmět nebo zkratku...",
   size = "default",
+  inputId = "subject-search",
+  ariaLabel = "Vyhledávání",
+  className,
+  onKeyDown,
 }: SearchBarProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const { isSoundEnabled } = useSound();
@@ -48,25 +57,24 @@ export function SearchBar({
   return (
     <div
       className={`
-        relative flex items-center w-full
-        bg-card border rounded-2xl
-        transition-all duration-200
-        search-bar-container
+        search-bar-container relative flex w-full items-center rounded-2xl border border-border/80 bg-card/90 shadow-sm
+        transition-[border-color,box-shadow,background-color] duration-200
         ${
           isFocused
-            ? "ring-1 shadow-lg search-bar-focused"
-            : "border-transparent hover:shadow-md"
+            ? "ring-1 shadow-md search-bar-focused"
+            : "hover:border-border hover:bg-card"
         }
+        ${className ?? ""}
       `}
     >
-      {/* Input */}
       <input
         ref={inputRef}
-        id="subject-search"
+        id={inputId}
         type="search"
         value={query}
         onChange={(e) => onQueryChange(e.target.value)}
         onFocus={handleFocus}
+        onKeyDown={onKeyDown}
         onBlur={(e) => {
           if (!e.relatedTarget?.closest("[data-search-suggestions]")) {
             onBlur?.();
@@ -78,43 +86,33 @@ export function SearchBar({
         className={`
           flex-1 bg-transparent border-none outline-none
           text-foreground placeholder:text-muted-foreground
-          ${isLarge ? "py-4 pl-6 pr-24 text-lg" : "py-2.5 pl-4 pr-20 text-sm"}
+          ${isLarge ? "py-4 pl-5 pr-24 text-lg" : "py-3 pl-4 pr-20 text-sm"}
         `}
-        aria-label="Vyhledat předmět"
+        aria-label={ariaLabel}
         aria-autocomplete="list"
       />
 
-      {/* Right side icons container (slides in when typing) */}
-      <div className="absolute right-3 flex items-center overflow-hidden">
-        <div
-          className={`
-            flex items-center gap-2 transition-all duration-300 ease-out
-            ${
-              hasText
-                ? "translate-x-0 opacity-100"
-                : "translate-x-4 opacity-0 pointer-events-none"
-            }
-          `}
-        >
-          {query && (
-            <button
-              onClick={() => {
-                onQueryChange("");
-                inputRef.current?.focus();
-              }}
-              className="p-1 text-muted-foreground hover:text-foreground transition-colors"
-              aria-label="Vymazat hledání"
-            >
-              <X size={isLarge ? 20 : 16} />
-            </button>
-          )}
-          
-          {/* Vertical divider */}
-          <div className="w-px h-5 bg-border mx-1" />
-          
-          <div className="p-1 text-primary">
-            <Search size={isLarge ? 20 : 16} strokeWidth={2.5} />
-          </div>
+      <div className="absolute right-3 flex items-center gap-2">
+        {hasText ? (
+          <>
+            {query && (
+              <button
+                onClick={() => {
+                  onQueryChange("");
+                  inputRef.current?.focus();
+                }}
+                className="p-1 text-muted-foreground transition-colors hover:text-foreground"
+                aria-label="Vymazat hledání"
+              >
+                <X size={isLarge ? 20 : 16} />
+              </button>
+            )}
+
+            <div className="mx-1 h-5 w-px bg-border" />
+          </>
+        ) : null}
+        <div className="p-1 text-primary">
+          <Search size={isLarge ? 20 : 16} strokeWidth={2.5} />
         </div>
       </div>
     </div>

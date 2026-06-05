@@ -35,12 +35,14 @@ export async function createTeacher(data: TeacherInsert) {
         name: data.name,
         slug: normalizedSlug,
         faculty: data.faculty,
+        department_id: data.department_id ?? null,
         department: normalizeDepartmentName(data.department),
       } as never);
 
     if (error) throw error;
     
     revalidatePath("/admin/ucitele");
+    revalidatePath("/admin/katedry");
     revalidatePath("/ucitele");
     
     return { success: true };
@@ -67,6 +69,7 @@ export async function updateTeacher(id: string, data: Partial<TeacherInsert>) {
         ...(data.name !== undefined && { name: data.name }),
         ...(normalizedSlug !== undefined && { slug: normalizedSlug }),
         ...(data.faculty !== undefined && { faculty: data.faculty }),
+        ...(data.department_id !== undefined && { department_id: data.department_id }),
         ...(data.department !== undefined && { department: normalizeDepartmentName(data.department) }),
         ...(data.is_approved !== undefined && { is_approved: data.is_approved }),
       } as never)
@@ -76,6 +79,7 @@ export async function updateTeacher(id: string, data: Partial<TeacherInsert>) {
     
     revalidatePath("/admin");
     revalidatePath("/admin/ucitele");
+    revalidatePath("/admin/katedry");
     revalidatePath("/ucitele");
     if (normalizedSlug) {
       revalidatePath(getTeacherPath(normalizedSlug));
@@ -101,6 +105,7 @@ export async function deleteTeacher(id: string) {
     
     revalidatePath("/admin");
     revalidatePath("/admin/ucitele");
+    revalidatePath("/admin/katedry");
     revalidatePath("/ucitele");
     
     return { success: true };

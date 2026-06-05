@@ -90,8 +90,8 @@ export function Navbar({ initialUser }: NavbarProps) {
     : "";
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border/50 bg-background/80 backdrop-blur-md">
-      <div className="container mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+    <header className="sticky top-0 z-50 w-full border-b border-border/60 bg-background/95 supports-[backdrop-filter]:bg-background/90 md:supports-[backdrop-filter]:bg-background/80 md:supports-[backdrop-filter]:backdrop-blur-md">
+      <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8">
         <nav className="flex h-14 items-center justify-between">
           {/* Logo */}
           <Link
@@ -238,7 +238,7 @@ export function Navbar({ initialUser }: NavbarProps) {
 
       {/* Mobile scrollable nav tabs — always visible, replaces hamburger for navigation */}
       <div className="border-t border-border/40 md:hidden">
-        <div className="container mx-auto max-w-6xl px-4">
+        <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8">
           <div className="flex gap-2 overflow-x-auto py-2 no-scrollbar relative">
             {navLinks.map((link) => (
               <Link

@@ -314,6 +314,37 @@ export function HomePageClient({ siteStats }: HomePageClientProps) {
         </p>
       </section>
 
+      <section className="container mx-auto max-w-5xl border-t border-white/5 px-4 py-16 sm:px-6 lg:px-8">
+        <div className="grid gap-6 rounded-[2rem] border border-white/5 bg-card/40 p-8 shadow-sm backdrop-blur md:grid-cols-[1.4fr_0.9fr] md:items-center">
+          <div className="space-y-3">
+            <span className="inline-flex rounded-full border border-primary/15 bg-primary/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-primary">
+              Proč ZvládnuVýšku
+            </span>
+            <h2 className="text-2xl font-bold text-foreground sm:text-3xl">
+              Nejsme další sklad PDF souborů
+            </h2>
+            <p className="text-sm leading-relaxed text-muted-foreground sm:text-base">
+              Otevřené studijní materiály, důvěryhodné recenze a chytré kartičky pro Ostravskou univerzitu na jednom místě.
+              Bez reklam, bez paywallů a bez virtuální měny.
+            </p>
+          </div>
+          <div className="flex flex-col gap-3 sm:flex-row md:flex-col">
+            <Link
+              href="/proc-ne-primat"
+              className="inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold text-white accent-gradient hover:opacity-90"
+            >
+              Proč ne Primát?
+            </Link>
+            <Link
+              href="/materialy"
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-background/70 px-5 py-3 text-sm font-semibold text-foreground hover:bg-muted/50"
+            >
+              Prozkoumat materiály
+            </Link>
+          </div>
+        </div>
+      </section>
+
       <section className="container mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-16 border-t border-white/5">
         <div className="text-center space-y-4">
           <h2 className="text-2xl font-bold text-foreground">

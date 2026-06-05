@@ -1,7 +1,11 @@
 export type MaterialDirectorySubject = {
+  id: string;
   name: string;
   slug: string;
   short_tag: string;
+  difficulty?: number | null;
+  avg_subject_rating?: number | null;
+  avg_teacher_rating?: number | null;
 } | null;
 
 export type SearchableMaterialDirectoryItem = {

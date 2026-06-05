@@ -30,10 +30,17 @@ export default async function AdminSubjectsPage() {
     )
   }
 
-  const { data: subjects } = await supabase
+  const [{ data: subjects }, { data: departments }] = await Promise.all([
+    supabase
     .from('subjects')
-    .select('id, name, short_tag, faculty, semester, difficulty, credits, slug')
-    .order('name', { ascending: true })
+    .select('id, name, short_tag, faculty, semester, difficulty, credits, slug, department, department_id, department_ref:department_id(id, name, faculty)')
+    .order('name', { ascending: true }),
+    supabase
+      .from('departments')
+      .select('id, name, faculty, slug')
+      .order('faculty')
+      .order('name', { ascending: true }),
+  ])
 
   return (
     <div className="container mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-8 space-y-6">
@@ -46,6 +53,9 @@ export default async function AdminSubjectsPage() {
         <Link href="/admin/materialy" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
           Správa materiálů
         </Link>
+        <Link href="/admin/katedry" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+          Správa kateder
+        </Link>
         <span className="text-sm font-semibold text-foreground">Správa předmětů</span>
       </div>
 
@@ -54,7 +64,7 @@ export default async function AdminSubjectsPage() {
         <p className="text-muted-foreground text-sm">{subjects?.length ?? 0} předmětů v databázi</p>
       </div>
 
-      <SubjectAdminTable subjects={subjects ?? []} />
+      <SubjectAdminTable subjects={(subjects as never[]) ?? []} departments={(departments as never[]) ?? []} />
     </div>
   )
 }

@@ -25,7 +25,7 @@ type MaterialGroupWithSubject = {
   share_slug: string;
   uploader_id: string;
   created_at: string;
-  subject: { name: string; slug: string; short_tag: string } | null;
+  subject: { id: string; name: string; slug: string; short_tag: string } | null;
   materials: Array<{
     id: string;
     title: string;
@@ -126,7 +126,7 @@ async function MyActivitySections({ userId }: { userId: string }) {
     supabase.from("subject_materials").select("*, subject:subject_id(name, slug, short_tag)").eq("uploader_id", userId).order("created_at", { ascending: false }),
     supabase
       .from("material_groups")
-      .select("id, title, share_slug, uploader_id, created_at, subject:subject_id(name, slug, short_tag), materials:subject_materials(id, title, share_slug, file_path, size_bytes, page_count, moderation_status)")
+      .select("id, title, share_slug, uploader_id, created_at, subject:subject_id(id, name, slug, short_tag), materials:subject_materials(id, title, share_slug, file_path, size_bytes, page_count, moderation_status)")
       .eq("uploader_id", userId)
       .order("created_at", { ascending: false }),
     (supabase as unknown as {

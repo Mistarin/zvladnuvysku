@@ -86,6 +86,12 @@ export function Footer() {
                 >
                   Vyučující
                 </Link>
+                <Link
+                  href="/proc-ne-primat"
+                  className="hover:text-foreground transition-colors"
+                >
+                  Proč ne Primát?
+                </Link>
               </div>
 
               <Link

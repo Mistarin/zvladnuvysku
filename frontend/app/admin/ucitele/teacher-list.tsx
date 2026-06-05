@@ -5,16 +5,18 @@ import type { Teacher } from "@/lib/types/database";
 import { TeacherFormDialog } from "@/components/admin/teacher-form-dialog";
 import { deleteTeacher } from "@/app/admin/ucitele/actions";
 import { normalizeDepartmentName } from "@/lib/department-name";
+import { type DepartmentOption } from "@/lib/departments";
 import { Plus, Edit2, Trash2, Search, Loader2 } from "lucide-react";
 
-export function TeacherList({ initialTeachers }: { initialTeachers: Teacher[] }) {
+export function TeacherList({
+  initialTeachers,
+  departments,
+}: {
+  initialTeachers: Teacher[];
+  departments: DepartmentOption[];
+}) {
   const [search, setSearch] = useState("");
   const [isPending, startTransition] = useTransition();
-
-  // Collect unique, non-empty departments for the combobox
-  const departmentSuggestions = Array.from(
-    new Set(initialTeachers.map((t) => normalizeDepartmentName(t.department)).filter((d): d is string => Boolean(d?.trim())))
-  ).sort();
 
   const filteredTeachers = initialTeachers.filter(t => 
     t.name.toLowerCase().includes(search.toLowerCase()) || 
@@ -55,7 +57,7 @@ export function TeacherList({ initialTeachers }: { initialTeachers: Teacher[] })
               Přidat vyučujícího
             </button>
           }
-          departmentSuggestions={departmentSuggestions}
+          departments={departments}
         />
       </div>
 
@@ -101,7 +103,7 @@ export function TeacherList({ initialTeachers }: { initialTeachers: Teacher[] })
                       <div className="flex items-center justify-end gap-2">
                         <TeacherFormDialog 
                           teacher={teacher}
-                          departmentSuggestions={departmentSuggestions}
+                          departments={departments}
                           trigger={
                             <button className="p-1.5 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-md transition-colors" title="Upravit">
                               <Edit2 className="w-4 h-4" />

@@ -24,7 +24,6 @@ interface SubjectProposal {
 
 type SubjectInsert = Database['public']['Tables']['subjects']['Insert']
 type MaterialGroupInsert = Database['public']['Tables']['material_groups']['Insert']
-type SubjectMaterialRow = Database['public']['Tables']['subject_materials']['Row']
 type SubjectMaterialInsert = Database['public']['Tables']['subject_materials']['Insert']
 type TeacherInsert = Database['public']['Tables']['teachers']['Insert']
 type SubjectTeacherInsert = Database['public']['Tables']['subject_teachers']['Insert']
@@ -406,9 +405,17 @@ export async function deleteSubject(subjectId: string): Promise<ActionResult> {
 export async function updateSubject(subjectId: string, data: Record<string, unknown>): Promise<ActionResult> {
   try {
     const { supabase } = await getAdminClient()
-    const { error } = await supabase.from('subjects').update(data as never).eq('id', subjectId)
+    const payload = {
+      ...data,
+      ...(data.department !== undefined
+        ? { department: normalizeDepartmentName(typeof data.department === 'string' ? data.department : null) }
+        : {}),
+    }
+    const { error } = await supabase.from('subjects').update(payload as never).eq('id', subjectId)
     if (error) return { success: false, error: `Chyba při ukládání: ${error.message}` }
     revalidatePath('/admin')
+    revalidatePath('/admin/subjects')
+    revalidatePath('/admin/katedry')
     revalidatePath('/moje-aktivita')
     revalidatePath('/predmety')
     revalidatePath(`/predmety/${data.slug ?? subjectId}`)

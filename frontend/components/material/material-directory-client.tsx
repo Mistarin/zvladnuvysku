@@ -3,9 +3,11 @@
 import { useDeferredValue, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ExternalLink, FileText, FolderOpen } from "lucide-react";
+import { ListPageHeader } from "@/components/layout/list-page-shell";
 import { ReportIssueDialog } from "@/components/feedback/report-issue-dialog";
 import { SearchBar } from "@/components/search/search-bar";
 import { ShareLinkButton } from "@/components/share/share-link-button";
+import { DifficultyBadge } from "@/components/subject/difficulty-badge";
 import { MaterialGroupCard, type MaterialGroupData } from "@/components/subject/material-group-card";
 import {
   filterMaterialDirectoryGroups,
@@ -111,19 +113,16 @@ export function MaterialDirectoryClient({
 
   return (
     <div className="mb-8 space-y-4">
-      <div className="flex items-center gap-3">
-        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-sky-500/10">
-          <FileText className="h-5 w-5 text-sky-700" />
-        </div>
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Studijní materiály</h1>
-          <p className="text-muted-foreground">
-            {query.trim()
-              ? <>Výsledky pro &bdquo;<span className="font-medium text-foreground">{query.trim()}</span>&ldquo;</>
-              : "Schválené materiály a přehledné skupiny napříč předměty."}
-          </p>
-        </div>
-      </div>
+      <ListPageHeader
+        title="Studijní materiály"
+        description={
+          query.trim()
+            ? <>Výsledky pro &bdquo;<span className="font-medium text-foreground">{query.trim()}</span>&ldquo;</>
+            : "Schválené materiály a přehledné skupiny napříč předměty."
+        }
+        icon={<FileText className="h-5 w-5 text-sky-700" />}
+        className="mb-0"
+      />
 
       <div className="space-y-2">
         <div>
@@ -317,6 +316,7 @@ function SingleMaterialRow({ material }: { material: FlattenedMaterial }) {
                 {material.subject.short_tag} · {material.subject.name}
               </Link>
             )}
+            {material.subject ? <MaterialSubjectMeta subject={material.subject} /> : null}
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-muted-foreground sm:text-xs">
@@ -357,6 +357,27 @@ function SingleMaterialRow({ material }: { material: FlattenedMaterial }) {
           compact
         />
       </div>
+    </div>
+  );
+}
+
+function MaterialSubjectMeta({ subject }: { subject: NonNullable<FlattenedMaterial["subject"]> }) {
+  const hasMetadata = subject.difficulty || subject.avg_subject_rating || subject.avg_teacher_rating;
+  if (!hasMetadata) return null;
+
+  return (
+    <div className="mt-2 flex flex-wrap items-center gap-1.5 sm:hidden">
+      {subject.difficulty ? <DifficultyBadge difficulty={subject.difficulty} size="sm" /> : null}
+      {subject.avg_subject_rating ? (
+        <span className="rounded-full border border-amber-500/20 bg-amber-500/10 px-2 py-0.5 text-[10px] font-medium text-amber-700 dark:text-amber-400">
+          Předmět {subject.avg_subject_rating.toFixed(1)} ★
+        </span>
+      ) : null}
+      {subject.avg_teacher_rating ? (
+        <span className="rounded-full border border-primary/15 bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
+          Učitel {subject.avg_teacher_rating.toFixed(1)} ★
+        </span>
+      ) : null}
     </div>
   );
 }

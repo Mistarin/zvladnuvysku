@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { ListPageShell } from "@/components/layout/list-page-shell";
 import { MaterialDirectoryClient } from "@/components/material/material-directory-client";
 import { getPublicMaterialDirectorySnapshot } from "@/lib/material-directory";
 
@@ -19,13 +19,7 @@ export default async function MaterialListPage({ searchParams }: PageProps) {
   const { groups, standaloneMaterials } = await getPublicMaterialDirectorySnapshot();
 
   return (
-    <div className="container mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
-      <nav className="mb-6 flex items-center gap-2 text-sm text-muted-foreground">
-        <Link href="/" className="transition-colors hover:text-foreground">Domů</Link>
-        <span>/</span>
-        <span className="font-medium text-foreground">Materiály</span>
-      </nav>
-
+    <ListPageShell>
       <MaterialDirectoryClient
         groups={groups}
         standaloneMaterials={standaloneMaterials}
@@ -33,6 +27,6 @@ export default async function MaterialListPage({ searchParams }: PageProps) {
         initialView={view === "files" ? "files" : "groups"}
         focusedGroupId={focusedGroupId}
       />
-    </div>
+    </ListPageShell>
   );
 }

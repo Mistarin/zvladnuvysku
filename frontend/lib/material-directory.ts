@@ -28,7 +28,15 @@ export type PublicMaterialGroupData = {
   created_at: string;
   uploader_id: string;
   uploader_display_name: string | null;
-  subject: { name: string; slug: string; short_tag: string } | null;
+  subject: {
+    id: string;
+    name: string;
+    slug: string;
+    short_tag: string;
+    difficulty?: number | null;
+    avg_subject_rating?: number | null;
+    avg_teacher_rating?: number | null;
+  } | null;
   materials: PublicMaterialGroupItem[];
 };
 
@@ -42,7 +50,15 @@ export type PublicStandaloneMaterial = {
   page_count: number | null;
   group_id: string | null;
   created_at: string;
-  subject: { name: string; slug: string; short_tag: string } | null;
+  subject: {
+    id: string;
+    name: string;
+    slug: string;
+    short_tag: string;
+    difficulty?: number | null;
+    avg_subject_rating?: number | null;
+    avg_teacher_rating?: number | null;
+  } | null;
 };
 
 export type PublicApprovedMaterial = PublicStandaloneMaterial;
@@ -55,7 +71,15 @@ export type MaterialDirectorySearchResult =
       share_slug: string;
       created_at: string;
       uploader_display_name: string | null;
-      subject: { name: string; slug: string; short_tag: string } | null;
+      subject: {
+        id: string;
+        name: string;
+        slug: string;
+        short_tag: string;
+        difficulty?: number | null;
+        avg_subject_rating?: number | null;
+        avg_teacher_rating?: number | null;
+      } | null;
       material_count: number;
     }
   | {
@@ -67,7 +91,15 @@ export type MaterialDirectorySearchResult =
       public_url: string;
       size_bytes: number;
       created_at: string;
-      subject: { name: string; slug: string; short_tag: string } | null;
+      subject: {
+        id: string;
+        name: string;
+        slug: string;
+        short_tag: string;
+        difficulty?: number | null;
+        avg_subject_rating?: number | null;
+        avg_teacher_rating?: number | null;
+      } | null;
     };
 
 type RawGroup = {
@@ -76,7 +108,7 @@ type RawGroup = {
   share_slug: string;
   uploader_id: string;
   created_at: string;
-  subject: { name: string; slug: string; short_tag: string } | null;
+  subject: { id: string; name: string; slug: string; short_tag: string } | null;
   materials: Array<{
     id: string;
     title: string;
@@ -138,12 +170,12 @@ async function loadPublicMaterialDirectorySnapshot() {
   const [{ data: rawGroups }, { data: rawMaterials }] = await Promise.all([
     supabase
       .from("material_groups")
-      .select("id, title, share_slug, uploader_id, created_at, subject:subject_id(name, slug, short_tag), materials:subject_materials(id, title, share_slug, file_path, size_bytes, page_count, created_at, moderation_status)")
+      .select("id, title, share_slug, uploader_id, created_at, subject:subject_id(id, name, slug, short_tag), materials:subject_materials(id, title, share_slug, file_path, size_bytes, page_count, created_at, moderation_status)")
       .order("created_at", { ascending: false })
       .limit(80),
     supabase
       .from("subject_materials")
-      .select("id, title, share_slug, file_path, size_bytes, page_count, group_id, created_at, subject:subject_id(name, slug, short_tag)")
+      .select("id, title, share_slug, file_path, size_bytes, page_count, group_id, created_at, subject:subject_id(id, name, slug, short_tag)")
       .eq("moderation_status", "approved")
       .is("group_id", null)
       .order("created_at", { ascending: false })
@@ -151,6 +183,40 @@ async function loadPublicMaterialDirectorySnapshot() {
   ]);
 
   const groups = (rawGroups ?? []) as RawGroup[];
+  const subjectIds = [...new Set([
+    ...groups.map((group) => group.subject?.id).filter(Boolean),
+    ...((rawMaterials ?? []) as Array<{ subject: { id: string } | null }>).map((material) => material.subject?.id).filter(Boolean),
+  ])] as string[];
+
+  const subjectStatsMap = new Map<string, { difficulty: number | null; avg_subject_rating: number | null; avg_teacher_rating: number | null }>();
+  if (subjectIds.length > 0) {
+    const { data: subjectStatsRows } = await supabase
+      .from("subject_search_view")
+      .select("id, difficulty, avg_subject_rating, avg_teacher_rating")
+      .in("id", subjectIds);
+
+    for (const row of (subjectStatsRows ?? []) as Array<{
+      id: string;
+      difficulty: number | null;
+      avg_subject_rating: number | null;
+      avg_teacher_rating: number | null;
+    }>) {
+      subjectStatsMap.set(row.id, {
+        difficulty: row.difficulty,
+        avg_subject_rating: row.avg_subject_rating,
+        avg_teacher_rating: row.avg_teacher_rating,
+      });
+    }
+  }
+
+  const hydrateSubject = <T extends { id: string; name: string; slug: string; short_tag: string } | null>(subject: T) => {
+    if (!subject) return null;
+    return {
+      ...subject,
+      ...subjectStatsMap.get(subject.id),
+    };
+  };
+
   const approvedGroups = groups
     .map((group) => ({
       id: group.id,
@@ -158,7 +224,7 @@ async function loadPublicMaterialDirectorySnapshot() {
       share_slug: group.share_slug,
       created_at: group.created_at,
       uploader_id: group.uploader_id,
-      subject: group.subject,
+      subject: hydrateSubject(group.subject),
       materials: (group.materials ?? [])
         .filter((material) => material.moderation_status === "approved")
         .map((material) => ({
@@ -185,9 +251,10 @@ async function loadPublicMaterialDirectorySnapshot() {
     page_count: number | null;
     group_id: string | null;
     created_at: string;
-    subject: { name: string; slug: string; short_tag: string } | null;
+    subject: { id: string; name: string; slug: string; short_tag: string } | null;
   }>).map((material) => ({
     ...material,
+    subject: hydrateSubject(material.subject),
     public_url: getStoragePublicUrl("study_materials", material.file_path) ?? "",
   }));
 

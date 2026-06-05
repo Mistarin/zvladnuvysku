@@ -90,6 +90,15 @@ export default async function AdminMaterialsPage(props: {
         <Link href="/admin" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
           ← Zpět do adminu
         </Link>
+        <Link href="/admin/subjects" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+          Správa předmětů
+        </Link>
+        <Link href="/admin/ucitele" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+          Správa vyučujících
+        </Link>
+        <Link href="/admin/katedry" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+          Správa kateder
+        </Link>
         <span className="text-sm font-semibold text-foreground">Správa materiálů</span>
       </div>
 

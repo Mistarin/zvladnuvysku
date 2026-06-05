@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { FolderOpen, FileText, User, ChevronDown, ChevronUp, Pencil, Trash2 } from 'lucide-react'
 import { ShareLinkButton } from '@/components/share/share-link-button'
+import { DifficultyBadge } from '@/components/subject/difficulty-badge'
 import { getSharePath } from '@/lib/share-links'
 import { formatFileSize } from '@/lib/utils'
 import { deleteMaterialGroup, renameMaterialGroup } from '@/app/actions/contributions'
@@ -28,7 +29,15 @@ export interface MaterialGroupData {
   created_at: string
   uploader_id: string
   uploader_display_name: string | null
-  subject: { name: string; slug: string; short_tag: string } | null
+  subject: {
+    id: string
+    name: string
+    slug: string
+    short_tag: string
+    difficulty?: number | null
+    avg_subject_rating?: number | null
+    avg_teacher_rating?: number | null
+  } | null
   materials: MaterialGroupItem[]
 }
 
@@ -114,6 +123,22 @@ export function MaterialGroupCard({
           )}
           <span className="ml-auto">{new Date(group.created_at).toLocaleDateString('cs-CZ')}</span>
         </div>
+
+        {group.subject ? (
+          <div className="mb-2 flex flex-wrap items-center gap-1.5 sm:hidden">
+            {group.subject.difficulty ? <DifficultyBadge difficulty={group.subject.difficulty} size="sm" /> : null}
+            {group.subject.avg_subject_rating ? (
+              <span className="rounded-full border border-amber-500/20 bg-amber-500/10 px-2 py-0.5 text-[10px] font-medium text-amber-700 dark:text-amber-400">
+                Předmět {group.subject.avg_subject_rating.toFixed(1)} ★
+              </span>
+            ) : null}
+            {group.subject.avg_teacher_rating ? (
+              <span className="rounded-full border border-primary/15 bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
+                Učitel {group.subject.avg_teacher_rating.toFixed(1)} ★
+              </span>
+            ) : null}
+          </div>
+        ) : null}
 
         {/* Title row */}
         <div className="flex items-start gap-2">
@@ -216,6 +241,21 @@ export function MaterialGroupCard({
                       {formatFileSize(material.size_bytes)}
                       {material.page_count != null && ` · ${material.page_count} stran`}
                     </p>
+                    {group.subject ? (
+                      <div className="mt-1 flex flex-wrap items-center gap-1.5 sm:hidden">
+                        {group.subject.difficulty ? <DifficultyBadge difficulty={group.subject.difficulty} size="sm" /> : null}
+                        {group.subject.avg_subject_rating ? (
+                          <span className="rounded-full border border-amber-500/20 bg-amber-500/10 px-2 py-0.5 text-[10px] font-medium text-amber-700 dark:text-amber-400">
+                            Předmět {group.subject.avg_subject_rating.toFixed(1)} ★
+                          </span>
+                        ) : null}
+                        {group.subject.avg_teacher_rating ? (
+                          <span className="rounded-full border border-primary/15 bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
+                            Učitel {group.subject.avg_teacher_rating.toFixed(1)} ★
+                          </span>
+                        ) : null}
+                      </div>
+                    ) : null}
                   </div>
                 </a>
                 <span className={`text-xs px-2 py-0.5 rounded-full shrink-0 ${

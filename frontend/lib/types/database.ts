@@ -9,6 +9,20 @@ export type Json =
 export interface Database {
   public: {
     Tables: {
+      departments: {
+        Row: {
+          id: string
+          slug: string
+          name: string
+          faculty: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: Omit<Database['public']['Tables']['departments']['Row'], 'id' | 'created_at' | 'updated_at' | 'slug'> & {
+          slug?: string
+        }
+        Update: Partial<Database['public']['Tables']['departments']['Insert']>
+      }
       subjects: {
         Row: {
           id: string
@@ -26,11 +40,14 @@ export interface Database {
           semester: 'zimní' | 'letní' | 'oba' | null
           faculty: string | null
           department: string | null
+          department_id: string | null
           year: number | null
           created_at: string
           updated_at: string
         }
-        Insert: Omit<Database['public']['Tables']['subjects']['Row'], 'id' | 'created_at' | 'updated_at'>
+        Insert: Omit<Database['public']['Tables']['subjects']['Row'], 'id' | 'created_at' | 'updated_at' | 'department_id'> & {
+          department_id?: string | null
+        }
         Update: Partial<Database['public']['Tables']['subjects']['Insert']>
       }
       subject_tags: {
@@ -133,11 +150,13 @@ export interface Database {
           name: string
           faculty: string
           department: string | null
+          department_id: string | null
           is_approved: boolean | null
           proposed_by: string | null
           created_at: string
         }
-        Insert: Omit<Database['public']['Tables']['teachers']['Row'], 'id' | 'created_at' | 'is_approved' | 'proposed_by'> & {
+        Insert: Omit<Database['public']['Tables']['teachers']['Row'], 'id' | 'created_at' | 'is_approved' | 'proposed_by' | 'department_id'> & {
+          department_id?: string | null
           is_approved?: boolean | null
           proposed_by?: string | null
         }
@@ -404,6 +423,8 @@ export interface Database {
 // Convenience types
 export type Subject = Database['public']['Tables']['subjects']['Row']
 export type SubjectInsert = Database['public']['Tables']['subjects']['Insert']
+export type Department = Database['public']['Tables']['departments']['Row']
+export type DepartmentInsert = Database['public']['Tables']['departments']['Insert']
 export type SubjectTag = Database['public']['Tables']['subject_tags']['Row']
 export type FlashcardDeck = Database['public']['Tables']['flashcard_decks']['Row']
 export type Flashcard = Database['public']['Tables']['flashcards']['Row']

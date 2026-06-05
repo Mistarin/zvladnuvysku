@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { SearchBar } from "@/components/search/search-bar";
 import type { FilterConfig } from "@/hooks/use-subject-filters";
 import type { SubjectFilters } from "@/lib/subjects";
 
@@ -24,6 +25,7 @@ export function SearchFilters({
 }: SearchFiltersProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [queryInput, setQueryInput] = useState(filters.query ?? "");
+  const [isFocused, setIsFocused] = useState(false);
   const queryCommitTimeoutRef = useRef<number | null>(null);
 
   useEffect(() => {
@@ -84,64 +86,46 @@ export function SearchFilters({
 
   return (
     <div className="space-y-3">
-      {/* Text search */}
-      <div className="relative">
-        <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-        </span>
-        <input
-          id="predmety-search"
-          type="text"
-          placeholder="Hledat předmět nebo zkratku…"
-          value={queryInput}
-          onChange={(e) => {
-            const nextQuery = e.target.value;
+      <div className="space-y-2">
+        <SearchBar
+          inputId="predmety-search"
+          ariaLabel="Hledat předmět"
+          query={queryInput}
+          onQueryChange={(nextQuery) => {
             setQueryInput(nextQuery);
             scheduleQueryCommit(nextQuery);
           }}
+          onFocus={() => setIsFocused(true)}
           onBlur={() => {
+            setIsFocused(false);
             if (queryCommitTimeoutRef.current !== null) {
               window.clearTimeout(queryCommitTimeoutRef.current);
               queryCommitTimeoutRef.current = null;
             }
             commitQuery(queryInput);
           }}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              if (queryCommitTimeoutRef.current !== null) {
-                window.clearTimeout(queryCommitTimeoutRef.current);
-                queryCommitTimeoutRef.current = null;
-              }
-              commitQuery(queryInput);
+          onKeyDown={(event) => {
+            if (event.key !== "Enter") return;
+            if (queryCommitTimeoutRef.current !== null) {
+              window.clearTimeout(queryCommitTimeoutRef.current);
+              queryCommitTimeoutRef.current = null;
             }
+            commitQuery(queryInput);
           }}
-          className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-border bg-card text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-1 focus:ring-primary/40 focus:border-primary/40 transition-all"
+          isFocused={isFocused}
+          placeholder="Hledat předmět nebo zkratku…"
         />
-        {queryInput && (
-          <button
-            onClick={() => {
-              if (queryCommitTimeoutRef.current !== null) {
-                window.clearTimeout(queryCommitTimeoutRef.current);
-                queryCommitTimeoutRef.current = null;
-              }
-              setQueryInput("");
-              onFilterChange("query", undefined);
-            }}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-            aria-label="Vymazat hledání"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-          </button>
-        )}
+        <p className="text-xs text-muted-foreground">
+          {queryInput.trim() ? "Výsledky se aktualizují průběžně." : "Zadej název předmětu nebo zkratku."}
+        </p>
       </div>
 
-      {/* Toggle button */}
       <div className="flex items-center justify-between">
         <button
           id="filter-toggle"
           onClick={() => setIsOpen(!isOpen)}
           className={`
-            flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium border transition-all duration-150
+            flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-medium transition-all duration-150
             ${isOpen || activeFilterCount > 0
               ? "bg-primary/10 text-primary border-primary/30"
               : "bg-card text-muted-foreground border-border hover:text-foreground hover:bg-muted"
@@ -169,13 +153,11 @@ export function SearchFilters({
         </div>
       </div>
 
-      {/* Filter panel */}
       {isOpen && (
-        <div className="bg-card border border-border rounded-xl p-4 animate-slide-down">
+        <div className="rounded-2xl border border-border bg-card/90 p-4 shadow-sm animate-slide-down">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {filterConfig.map((config) => (
               <div key={config.key} className="space-y-2">
-                {/* Boolean filters get special styling — no duplicate label */}
                 {config.type !== "boolean" && (
                   <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                     {config.label}
@@ -196,7 +178,7 @@ export function SearchFilters({
                             handleMultiSelect(filterKey, option.value)
                           }
                           className={`
-                            text-xs px-2.5 py-1 rounded-lg border transition-all duration-100
+                            rounded-lg border px-2.5 py-1 text-xs transition-all duration-100
                             ${isSelected
                               ? "bg-primary text-primary-foreground border-primary"
                               : "bg-background text-foreground border-border hover:border-primary/50 hover:bg-primary/5"
@@ -229,7 +211,6 @@ export function SearchFilters({
                           value={currentValue}
                           onChange={(e) => {
                             const newValue = Number(e.target.value);
-                            // When slider returns to default — deactivate the filter
                             if (newValue === defaultValue) {
                               setFilter(filterKey, undefined);
                             } else {
@@ -290,7 +271,6 @@ export function SearchFilters({
 
                 {config.type === "boolean" && (
                   <label className="flex items-center gap-3 cursor-pointer group">
-                    {/* Custom styled checkbox */}
                     <div className="relative flex-shrink-0">
                       <input
                         type="checkbox"

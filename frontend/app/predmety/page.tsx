@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { SubjectsFilterPanel } from "@/components/subject/subjects-filter-panel";
 import { SubjectsResultsPanel } from "@/components/subject/subjects-results-panel";
 import { SubjectsResultsSkeleton } from "@/components/subject/subjects-results-skeleton";
+import { ListPageHeader, ListPageShell } from "@/components/layout/list-page-shell";
 import {
   getSubjectFiltersFromSearchParams,
   getSubjectPageFromSearchParams,
@@ -18,20 +19,22 @@ export default async function PredmetyPage({ searchParams }: PredmetyPageProps) 
   const key = JSON.stringify(resolvedSearchParams);
 
   return (
-    <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-foreground">Předměty</h1>
-        <p className="text-muted-foreground mt-1">
+    <ListPageShell>
+      <ListPageHeader
+        title="Předměty"
+        description={
+          <>
           Procházej předměty Ostravské univerzity. Filtruj podle obtížnosti, semestru nebo katedry.
-        </p>
-      </div>
+          </>
+        }
+      />
       <div className="space-y-6">
         <SubjectsFilterPanel />
         <Suspense key={key} fallback={<SubjectsResultsSkeleton />}>
           <SubjectsResultsSection searchParams={resolvedSearchParams} />
         </Suspense>
       </div>
-    </div>
+    </ListPageShell>
   );
 }
 

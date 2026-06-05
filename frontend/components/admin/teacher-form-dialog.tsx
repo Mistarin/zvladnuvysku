@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { createTeacher, updateTeacher } from "@/app/admin/ucitele/actions";
 import { normalizeDepartmentName } from "@/lib/department-name";
+import { filterDepartmentsByFaculty, sortDepartments, type DepartmentOption } from "@/lib/departments";
 import { FACULTIES } from "@/lib/faculties";
 import { generateTeacherSlug } from "@/lib/teacher-slug";
 import type { Teacher } from "@/lib/types/database";
@@ -15,8 +16,7 @@ interface TeacherFormDialogProps {
   trigger?: React.ReactNode;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
-  /** Existing department names for autocomplete */
-  departmentSuggestions?: string[];
+  departments?: DepartmentOption[];
 }
 
 export function TeacherFormDialog({
@@ -24,7 +24,7 @@ export function TeacherFormDialog({
   trigger,
   open,
   onOpenChange,
-  departmentSuggestions = [],
+  departments = [],
 }: TeacherFormDialogProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -42,14 +42,9 @@ export function TeacherFormDialog({
     slug: teacher?.slug || "",
     faculty: teacher?.faculty || FACULTIES[0].value,
     department: teacher?.department || "",
+    department_id: teacher?.department_id || "",
   });
-
-  const [deptInput, setDeptInput] = useState(teacher?.department || "");
-  const [showDeptDropdown, setShowDeptDropdown] = useState(false);
-
-  const filteredDepts = departmentSuggestions.filter(
-    (d) => d.toLowerCase().includes(deptInput.toLowerCase()) && d !== deptInput
-  );
+  const availableDepartments = sortDepartments(filterDepartmentsByFaculty(departments, formData.faculty));
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newName = e.target.value;
@@ -63,18 +58,6 @@ export function TeacherFormDialog({
     });
   };
 
-  const handleDeptChange = (value: string) => {
-    setDeptInput(value);
-    setFormData((prev) => ({ ...prev, department: value }));
-    setShowDeptDropdown(true);
-  };
-
-  const selectDept = (dept: string) => {
-    setDeptInput(dept);
-    setFormData((prev) => ({ ...prev, department: dept }));
-    setShowDeptDropdown(false);
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -85,9 +68,19 @@ export function TeacherFormDialog({
     }
 
     startTransition(async () => {
+      const selectedDepartment = availableDepartments.find((department) => department.id === formData.department_id) ?? null;
       const result = isEditing
-        ? await updateTeacher(teacher.id, { ...formData, department: formData.department || null })
-        : await createTeacher({ ...formData, department: formData.department || null, is_approved: true });
+        ? await updateTeacher(teacher.id, {
+            ...formData,
+            department_id: selectedDepartment?.id ?? null,
+            department: selectedDepartment?.name ?? null,
+          })
+        : await createTeacher({
+            ...formData,
+            department_id: selectedDepartment?.id ?? null,
+            department: selectedDepartment?.name ?? null,
+            is_approved: true,
+          });
 
       if (result.error) {
         setError(result.error);
@@ -151,7 +144,7 @@ export function TeacherFormDialog({
                 <select
                   id="faculty"
                   value={formData.faculty}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, faculty: e.target.value }))}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, faculty: e.target.value, department_id: "", department: "" }))}
                   className="w-full px-3 py-2 bg-background border border-border rounded-md text-sm outline-none focus:ring-1 focus:ring-primary/50 focus:border-primary/50"
                 >
                   {FACULTIES.map((fac) => (
@@ -163,45 +156,31 @@ export function TeacherFormDialog({
               <div className="space-y-2">
                 <label htmlFor="department" className="text-sm font-medium">Katedra</label>
                 <div className="relative">
-                  <input
+                  <select
                     id="department"
-                    value={deptInput}
-                    onChange={(e) => handleDeptChange(e.target.value)}
-                    onBlur={() => {
-                      const normalized = normalizeDepartmentName(deptInput) ?? "";
-                      setDeptInput(normalized);
-                      setFormData((prev) => ({ ...prev, department: normalized }));
-                      setTimeout(() => setShowDeptDropdown(false), 150);
+                    value={formData.department_id}
+                    onChange={(e) => {
+                      const selectedDepartment = availableDepartments.find((department) => department.id === e.target.value) ?? null;
+                      setFormData((prev) => ({
+                        ...prev,
+                        department_id: e.target.value,
+                        department: normalizeDepartmentName(selectedDepartment?.name) ?? "",
+                      }));
                     }}
-                    onFocus={() => setShowDeptDropdown(true)}
                     className="w-full px-3 py-2 pr-8 bg-background border border-border rounded-md text-sm outline-none focus:ring-1 focus:ring-primary/50 focus:border-primary/50"
-                    placeholder="Název katedry"
-                    autoCapitalize="sentences"
-                  />
-                  {departmentSuggestions.length > 0 && (
-                    <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-                  )}
-
-                  {showDeptDropdown && filteredDepts.length > 0 && (
-                    <div className="absolute left-0 right-0 top-full mt-1 z-10 bg-card border border-border rounded-lg shadow-lg max-h-40 overflow-y-auto">
-                      {filteredDepts.map((dept) => (
-                        <button
-                          key={dept}
-                          type="button"
-                          onMouseDown={() => selectDept(dept)}
-                          className="w-full text-left px-3 py-2 text-sm hover:bg-muted transition-colors"
-                        >
-                          {dept}
-                        </button>
-                      ))}
-                      {deptInput && !departmentSuggestions.includes(deptInput) && (
-                        <div className="px-3 py-2 text-xs text-muted-foreground border-t border-border">
-                          + Vytvořit: <span className="font-semibold text-foreground">{deptInput}</span>
-                        </div>
-                      )}
-                    </div>
-                  )}
+                  >
+                    <option value="">Vyber katedru</option>
+                    {availableDepartments.map((department) => (
+                      <option key={department.id} value={department.id}>
+                        {department.name}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
                 </div>
+                <p className="text-xs text-muted-foreground">
+                  Chybí katedra? Přidej ji nejdřív ve správě kateder.
+                </p>
               </div>
             </div>
 

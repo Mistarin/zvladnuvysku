@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { ListPageHeader, ListPageShell } from "@/components/layout/list-page-shell";
 import { SearchLandingBar } from "@/components/search/search-landing-bar";
 import { ShareLinkButton } from "@/components/share/share-link-button";
 import { BookOpen, Layers } from "lucide-react";
@@ -45,27 +46,17 @@ export default async function FlashcardDeckListPage({ searchParams }: PageProps)
   } = await supabase.auth.getUser();
 
   return (
-    <div className="container mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
-      <nav className="mb-6 flex items-center gap-2 text-sm text-muted-foreground">
-        <Link href="/" className="transition-colors hover:text-foreground">Domů</Link>
-        <span>/</span>
-        <span className="text-foreground font-medium">Kartičky</span>
-      </nav>
-
+    <ListPageShell>
+      <ListPageHeader
+        title="Balíčky kartiček"
+        description={
+          query
+            ? <>Výsledky pro „<span className="font-medium text-foreground">{query}</span>“</>
+            : "Veřejné balíčky napříč předměty."
+        }
+        icon={<Layers className="ui-accent-text h-5 w-5" />}
+      />
       <div className="mb-8 space-y-2">
-        <div className="flex items-center gap-3">
-          <div className="ui-accent-soft flex h-11 w-11 items-center justify-center rounded-2xl">
-            <Layers className="ui-accent-text h-5 w-5" />
-          </div>
-          <div>
-            <h1 className="text-3xl font-bold text-foreground">Balíčky kartiček</h1>
-            <p className="text-muted-foreground">
-              {query
-                ? <>Výsledky pro „<span className="font-medium text-foreground">{query}</span>“</>
-                : "Veřejné balíčky napříč předměty."}
-            </p>
-          </div>
-        </div>
         <SearchLandingBar
           basePath="/flashcardy"
           placeholder="Hledat balíček nebo předmět..."
@@ -91,7 +82,7 @@ export default async function FlashcardDeckListPage({ searchParams }: PageProps)
       <Suspense key={query} fallback={<PublicDeckListSkeleton />}>
         <PublicDeckListSection query={query} />
       </Suspense>
-    </div>
+    </ListPageShell>
   );
 }
 

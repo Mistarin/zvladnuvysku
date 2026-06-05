@@ -126,7 +126,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
       .order("created_at", { ascending: false }),
     supabase
       .from("material_groups")
-      .select("id, title, share_slug, uploader_id, created_at, subject:subject_id(slug, short_tag, name), materials:subject_materials(id, title, share_slug, file_path, size_bytes, page_count, moderation_status)")
+      .select("id, title, share_slug, uploader_id, created_at, subject:subject_id(id, slug, short_tag, name), materials:subject_materials(id, title, share_slug, file_path, size_bytes, page_count, moderation_status)")
       .eq("uploader_id", userId)
       .order("created_at", { ascending: false }),
     supabase
@@ -164,7 +164,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
     share_slug: string;
     uploader_id: string;
     created_at: string;
-    subject: { slug: string; short_tag: string; name: string } | null;
+    subject: { id: string; slug: string; short_tag: string; name: string } | null;
 	    materials: Array<{
 	      id: string;
 	      title: string;
