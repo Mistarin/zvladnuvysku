@@ -11,6 +11,7 @@ import { FacultyFilter } from "@/components/admin/faculty-filter";
 import { FeedbackApprovalCard } from "@/components/admin/feedback-approval-card";
 import { TeacherApprovalCard } from "@/components/admin/teacher-approval-card";
 import { MaterialStorageAudit } from "@/components/admin/material-storage-audit";
+import { AdminAutoRefresh } from "@/components/admin/admin-auto-refresh";
 import { getPublicUserSummaryMap } from "@/lib/public-user-summaries";
 import type { Database } from "@/lib/types/database";
 
@@ -64,6 +65,7 @@ export default async function AdminPage(props: {
 
   return (
     <div className="container mx-auto max-w-3xl space-y-8 px-4 py-8 sm:px-6 lg:px-8">
+      <AdminAutoRefresh />
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div className="flex items-center gap-2">
           <ClipboardList className="h-6 w-6 text-primary" />

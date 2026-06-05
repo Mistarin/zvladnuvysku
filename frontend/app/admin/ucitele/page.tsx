@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { TeacherList } from './teacher-list'
+import { AdminAutoRefresh } from '@/components/admin/admin-auto-refresh'
 import { ShieldAlert, Users } from 'lucide-react'
 
 export const metadata: Metadata = {
@@ -43,6 +44,7 @@ export default async function AdminTeachersPage() {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-6xl space-y-8 animate-in fade-in slide-in-from-bottom-4">
+      <AdminAutoRefresh />
       <div className="flex items-center gap-3 border-b border-white/5 pb-4">
         <div className="p-2.5 bg-primary/10 rounded-xl">
           <Users className="w-6 h-6 text-primary" />

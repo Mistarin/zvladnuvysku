@@ -3,6 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ShieldAlert } from "lucide-react";
 import { MaterialManagementCard } from "@/components/admin/material-management-card";
+import { AdminAutoRefresh } from "@/components/admin/admin-auto-refresh";
 import { getPublicUserSummaryMap } from "@/lib/public-user-summaries";
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/types/database";
@@ -84,6 +85,7 @@ export default async function AdminMaterialsPage(props: {
 
   return (
     <div className="container mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8 space-y-6">
+      <AdminAutoRefresh />
       <div className="flex items-center gap-4 border-b border-white/5 pb-4">
         <Link href="/admin" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
           ← Zpět do adminu

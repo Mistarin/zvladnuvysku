@@ -40,9 +40,76 @@ interface NewDeckFormProps {
   initialDeckData?: InitialDeckData
 }
 
-const IMAGE_MAX_FILE_SIZE = 100 * 1024
+const IMAGE_UPLOAD_MAX_FILE_SIZE = 3 * 1024 * 1024
+const IMAGE_STORAGE_MAX_FILE_SIZE = 50 * 1024
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/avif']
 const IMAGE_ACCEPT = '.jpg,.jpeg,.png,.webp,.avif,image/jpeg,image/png,image/webp,image/avif'
+const COMPRESSED_IMAGE_TYPE = 'image/webp'
+
+function loadImage(file: File): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const objectUrl = URL.createObjectURL(file)
+    const image = new window.Image()
+
+    image.onload = () => {
+      URL.revokeObjectURL(objectUrl)
+      resolve(image)
+    }
+
+    image.onerror = () => {
+      URL.revokeObjectURL(objectUrl)
+      reject(new Error('Obrázek se nepodařilo načíst.'))
+    }
+
+    image.src = objectUrl
+  })
+}
+
+async function compressFlashcardImage(file: File): Promise<File> {
+  if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+    throw new Error('Obrázek musí být ve formátu JPG, PNG, WEBP nebo AVIF.')
+  }
+
+  if (file.size > IMAGE_UPLOAD_MAX_FILE_SIZE) {
+    throw new Error('Obrázek může mít před kompresí maximálně 3 MB.')
+  }
+
+  const image = await loadImage(file)
+  const canvas = document.createElement('canvas')
+  const context = canvas.getContext('2d')
+
+  if (!context) {
+    throw new Error('Prohlížeč nepodporuje kompresi obrázků.')
+  }
+
+  const qualitySteps = [0.82, 0.72, 0.62, 0.52, 0.42, 0.32]
+  const scaleSteps = [1, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4]
+
+  for (const scale of scaleSteps) {
+    canvas.width = Math.max(1, Math.round(image.naturalWidth * scale))
+    canvas.height = Math.max(1, Math.round(image.naturalHeight * scale))
+    context.clearRect(0, 0, canvas.width, canvas.height)
+    context.drawImage(image, 0, 0, canvas.width, canvas.height)
+
+    for (const quality of qualitySteps) {
+      const blob = await new Promise<Blob | null>((resolve) => {
+        canvas.toBlob(resolve, COMPRESSED_IMAGE_TYPE, quality)
+      })
+
+      if (!blob) continue
+
+      if (blob.size <= IMAGE_STORAGE_MAX_FILE_SIZE) {
+        const baseName = file.name.replace(/\.[^.]+$/, '') || 'flashcard-image'
+        return new File([blob], `${baseName}.webp`, {
+          type: COMPRESSED_IMAGE_TYPE,
+          lastModified: Date.now(),
+        })
+      }
+    }
+  }
+
+  throw new Error('Obrázek se nepodařilo zkomprimovat pod 50 KB. Zkuste menší nebo jednodušší obrázek.')
+}
 
 function createOption(text = ''): MultipleChoiceOption {
   return { id: crypto.randomUUID(), text }
@@ -154,6 +221,7 @@ export function NewDeckForm({ initialSubject = null, initialDeckData }: NewDeckF
   const [collapsedQuestions, setCollapsedQuestions] = useState<Record<string, boolean>>({})
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [compressingQuestionKey, setCompressingQuestionKey] = useState<string | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -321,19 +389,54 @@ export function NewDeckForm({ initialSubject = null, initialDeckData }: NewDeckF
     )
   }
 
-  const handleMediaChange = (index: number, file: File | null) => {
-    setQuestions((prev) =>
-      prev.map((question, i) =>
-        i === index
-          ? {
-              ...question,
-              mediaFile: file,
-              mediaPreviewUrl: file ? URL.createObjectURL(file) : question.mediaPreviewUrl,
-              removeMedia: file ? false : question.removeMedia,
-            }
-          : question
+  const handleMediaChange = async (index: number, file: File | null) => {
+    if (!file) {
+      setQuestions((prev) =>
+        prev.map((question, i) =>
+          i === index
+            ? {
+                ...question,
+                mediaFile: null,
+                removeMedia: question.mediaPath ? false : question.removeMedia,
+              }
+            : question
+        )
       )
-    )
+      return
+    }
+
+    const question = questions[index]
+    if (!question) return
+
+    const questionKey = getQuestionKey(question, index)
+    setCompressingQuestionKey(questionKey)
+    setError('')
+
+    try {
+      const compressedFile = await compressFlashcardImage(file)
+      const previewUrl = URL.createObjectURL(compressedFile)
+
+      setQuestions((prev) =>
+        prev.map((currentQuestion, i) =>
+          i === index
+            ? {
+                ...currentQuestion,
+                mediaFile: compressedFile,
+                mediaPreviewUrl: previewUrl,
+                removeMedia: false,
+              }
+            : currentQuestion
+        )
+      )
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? `Otázka ${index + 1}: ${err.message}`
+          : `Otázka ${index + 1}: Nepodařilo se připravit obrázek.`
+      )
+    } finally {
+      setCompressingQuestionKey((current) => (current === questionKey ? null : current))
+    }
   }
 
   const handleRemoveMedia = (index: number) => {
@@ -360,8 +463,11 @@ export function NewDeckForm({ initialSubject = null, initialDeckData }: NewDeckF
     }
 
     for (const [index, question] of valid.entries()) {
-      if (question.mediaFile && (!ALLOWED_IMAGE_TYPES.includes(question.mediaFile.type) || question.mediaFile.size > IMAGE_MAX_FILE_SIZE)) {
-        return { valid: [], error: `Otázka ${index + 1}: obrázek musí být do 100 KB a ve formátu JPG, PNG, WEBP nebo AVIF.` }
+      if (
+        question.mediaFile &&
+        (!ALLOWED_IMAGE_TYPES.includes(question.mediaFile.type) || question.mediaFile.size > IMAGE_STORAGE_MAX_FILE_SIZE)
+      ) {
+        return { valid: [], error: `Otázka ${index + 1}: finální obrázek musí mít do 50 KB a být ve formátu JPG, PNG, WEBP nebo AVIF.` }
       }
 
       if (question.type === 'multiple_choice') {
@@ -395,6 +501,7 @@ export function NewDeckForm({ initialSubject = null, initialDeckData }: NewDeckF
 
     const { valid, error: validationError } = validateQuestions(questions)
     if (validationError) return setError(validationError)
+    if (compressingQuestionKey) return setError('Počkejte na dokončení komprese obrázku.')
 
     setLoading(true)
 
@@ -705,17 +812,22 @@ export function NewDeckForm({ initialSubject = null, initialDeckData }: NewDeckF
               </div>
 
               <div className="space-y-2">
-                <label className="text-xs text-muted-foreground">Obrázek k otázce (volitelný, max 100 KB, JPG/PNG/WEBP/AVIF)</label>
+                <label className="text-xs text-muted-foreground">Obrázek k otázce (volitelný, vstup max 3 MB, automatická komprese na max 50 KB)</label>
                 <input
                   type="file"
                   accept={IMAGE_ACCEPT}
                   onChange={(e) => handleMediaChange(index, e.target.files?.[0] ?? null)}
                   className="block w-full text-sm text-muted-foreground file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20 cursor-pointer border border-border rounded-lg bg-background"
                 />
-                {question.mediaFile && (
-                  <p className="text-xs text-muted-foreground">Vybraný soubor: {question.mediaFile.name}</p>
+                {compressingQuestionKey === questionKey && (
+                  <p className="text-xs text-muted-foreground">Komprimuji obrázek...</p>
                 )}
-                {!question.mediaFile && question.mediaPreviewUrl && !question.removeMedia && (
+                {question.mediaFile && (
+                  <p className="text-xs text-muted-foreground">
+                    Připravený soubor: {question.mediaFile.name} ({Math.round(question.mediaFile.size / 1024)} KB)
+                  </p>
+                )}
+                {question.mediaPreviewUrl && !question.removeMedia && (
                   <div className="space-y-2">
                     <Image
                       src={question.mediaPreviewUrl}

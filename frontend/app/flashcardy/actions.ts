@@ -48,7 +48,7 @@ type SaveDeckValidatedQuestion = SaveDeckQuestion & {
   answerText: string
 }
 
-const IMAGE_MAX_FILE_SIZE = 100 * 1024
+const IMAGE_STORAGE_MAX_FILE_SIZE = 50 * 1024
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/avif']
 
 function isFlashcardQuestionType(value: string): value is FlashcardQuestionType {
@@ -485,8 +485,8 @@ export async function saveOwnDeck(formData: FormData): Promise<SaveDeckResult> {
       let mediaPath = question.mediaPath
 
       if (mediaFile) {
-        if (!ALLOWED_IMAGE_TYPES.includes(mediaFile.type) || mediaFile.size > IMAGE_MAX_FILE_SIZE) {
-          throw new Error(`Otázka ${index + 1}: obrázek musí být do 100 KB a ve formátu JPG, PNG, WEBP nebo AVIF.`)
+        if (!ALLOWED_IMAGE_TYPES.includes(mediaFile.type) || mediaFile.size > IMAGE_STORAGE_MAX_FILE_SIZE) {
+          throw new Error(`Otázka ${index + 1}: finální obrázek musí mít do 50 KB a být ve formátu JPG, PNG, WEBP nebo AVIF.`)
         }
 
         if (question.mediaPath) {

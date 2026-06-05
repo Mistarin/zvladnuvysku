@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
+import { AdminAutoRefresh } from '@/components/admin/admin-auto-refresh'
 import { SubjectAdminTable } from '@/components/subject/subject-admin-table'
 import { ShieldAlert } from 'lucide-react'
 import Link from 'next/link'
@@ -36,6 +37,7 @@ export default async function AdminSubjectsPage() {
 
   return (
     <div className="container mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+      <AdminAutoRefresh />
       {/* Nav tabs */}
       <div className="flex items-center gap-4 border-b border-white/5 pb-4">
         <Link href="/admin" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
