@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getPublicProfilePath } from "@/lib/public-profile";
 import type { PublicUserSummary } from "@/lib/public-user-summaries";
 import { getFacultyColor } from "@/lib/faculties";
+import { analyticsEvents, analyticsSources, trackEvent } from "@/lib/analytics";
 
 interface PublicUserLinkProps {
   userId: string;
@@ -25,6 +26,12 @@ export function PublicUserLink({
       {canLink ? (
         <Link
           href={getPublicProfilePath(userId)}
+          onClick={() =>
+            trackEvent(analyticsEvents.openPublicProfile, {
+              source: analyticsSources.userLink,
+              has_summary: Boolean(summary),
+            })
+          }
           className="truncate text-sm font-medium text-foreground hover:text-primary"
         >
           {label}

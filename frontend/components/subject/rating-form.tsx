@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { deleteOwnSubjectRating, getMySubjectRating } from '@/app/actions/contributions'
+import { analyticsEvents, trackEvent } from '@/lib/analytics'
 import { ReviewVisibilityField } from '@/components/review/review-visibility-field'
 import { useRating } from '@/hooks/use-rating'
 import { WelcomeDisplayNameModal } from '@/components/layout/welcome-display-name-modal'
@@ -159,6 +160,13 @@ export function RatingForm({
         ? 'Hodnocení bylo uloženo. Slovní recenze teď čeká na schválení moderátorem.'
         : 'Hodnocení bylo uloženo.',
     )
+    trackEvent(analyticsEvents.submitSubjectReview, {
+      subject_id: subjectId,
+      is_anonymous: isAnonymous,
+      has_comment: Boolean(comment.trim()),
+      moderation_pending: result.moderationPending,
+      overall,
+    })
     router.refresh()
   }
 

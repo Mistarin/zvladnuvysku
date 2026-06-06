@@ -9,6 +9,7 @@ import { getPublicProfileIdentity, hasPublicProfileIdentity } from "@/lib/public
 import { hasAcceptedCurrentLegalVersion, hasCompletedPublicProfileSetup } from "@/lib/legal-consent";
 import { Button } from "@/components/ui/button";
 import { WelcomeDisplayNameModal } from "@/components/layout/welcome-display-name-modal";
+import { analyticsEvents, analyticsSources, trackEvent } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
 import type {
   HallOfFamePeriod,
@@ -145,6 +146,7 @@ export function HallOfFameSection({
                 </div>
                 <Link
                   href="/prihlaseni"
+                  onClick={() => trackEvent(analyticsEvents.clickLogin, { source: analyticsSources.hallOfFameCta })}
                   className="inline-flex h-8 items-center justify-center rounded-lg bg-primary px-3 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
                 >
                   Přihlásit se

@@ -2,6 +2,8 @@ import { Suspense } from "react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import { TrackEventOnMount } from "@/components/analytics/track-event-on-mount";
+import { analyticsEvents } from "@/lib/analytics";
 import { createClient } from "@/lib/supabase/server";
 import { RatingForm } from "@/components/subject/rating-form";
 import { RatingStats } from "@/components/subject/rating-stats";
@@ -149,6 +151,10 @@ export default async function PredmetDetailPage({ params, searchParams }: PagePr
 
   return (
     <div className="container mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
+      <TrackEventOnMount
+        eventName={analyticsEvents.viewSubjectDetail}
+        params={{ subject_slug: slug, subject_id: subject.id }}
+      />
       <nav className="mb-6 flex items-center gap-2 text-sm text-muted-foreground" aria-label="Drobečková navigace">
         <Link href="/" className="transition-colors hover:text-foreground">Domů</Link>
         <span>/</span>

@@ -4,13 +4,6 @@ import { useEffect, useState } from "react";
 import Script from "next/script";
 import type { CookieConsentState } from "@/lib/cookie-consent";
 
-declare global {
-  interface Window {
-    dataLayer: unknown[];
-    gtag?: (...args: unknown[]) => void;
-  }
-}
-
 interface GoogleAnalyticsProps {
   initialConsent: CookieConsentState | null;
 }
@@ -23,9 +16,12 @@ export function GoogleAnalytics({ initialConsent }: GoogleAnalyticsProps) {
     const handleConsentChange = (event: Event) => {
       const nextConsent = (event as CustomEvent<CookieConsentState>).detail;
       setConsent(nextConsent);
+      const gtag = (window as Window & {
+        gtag?: (command: string, action: string, params?: Record<string, unknown>) => void;
+      }).gtag;
 
-      if (typeof window.gtag === "function") {
-        window.gtag("consent", "update", {
+      if (typeof gtag === "function") {
+        gtag("consent", "update", {
           analytics_storage: nextConsent.analytics ? "granted" : "denied",
         });
       }

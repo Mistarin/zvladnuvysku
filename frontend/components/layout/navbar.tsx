@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { SettingsMenu } from "./settings-menu";
 import { createClient } from "@/lib/supabase/client";
+import { analyticsEvents, analyticsSources, trackEvent } from "@/lib/analytics";
 import { useEffect, useState } from "react";
 import type { User } from "@supabase/supabase-js";
 import Image from "next/image";
@@ -194,6 +195,7 @@ export function Navbar({ initialUser }: NavbarProps) {
                 <Link
                   href="/prihlaseni"
                   prefetch
+                  onClick={() => trackEvent(analyticsEvents.clickLogin, { source: analyticsSources.navbarDesktop })}
                   className="px-4 py-1.5 text-sm font-semibold rounded-lg bg-foreground text-background hover:scale-105 transition-transform"
                 >
                   Přihlásit
@@ -227,6 +229,7 @@ export function Navbar({ initialUser }: NavbarProps) {
               <Link
                 href="/prihlaseni"
                 prefetch
+                onClick={() => trackEvent(analyticsEvents.clickLogin, { source: analyticsSources.navbarMobile })}
                 className="px-3 py-1.5 text-sm font-semibold rounded-lg bg-foreground text-background"
               >
                 Přihlásit

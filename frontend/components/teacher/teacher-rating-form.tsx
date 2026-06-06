@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { deleteOwnTeacherRating, getMyTeacherRating, saveTeacherRating } from "@/app/actions/contributions";
+import { analyticsEvents, trackEvent } from "@/lib/analytics";
 import { WelcomeDisplayNameModal } from "@/components/layout/welcome-display-name-modal";
 import { ReviewVisibilityField } from "@/components/review/review-visibility-field";
 import { Clock3 } from "lucide-react";
@@ -106,6 +107,13 @@ export function TeacherRatingForm({
         ? "Hodnocení bylo uloženo. Slovní recenze teď čeká na schválení moderátorem."
         : "Hodnocení bylo uloženo.",
     );
+    trackEvent(analyticsEvents.submitTeacherReview, {
+      teacher_id: teacherId,
+      is_anonymous: isAnonymous,
+      has_review: Boolean(review.trim()),
+      moderation_pending: result.moderationPending,
+      rating,
+    });
     router.refresh();
   };
 

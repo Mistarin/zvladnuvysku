@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Check, ChevronDown, ChevronUp, Copy, GripVertical, Plus, Trash2 } from 'lucide-react'
 import { saveOwnDeck } from '@/app/flashcardy/actions'
+import { analyticsEvents, trackEvent } from '@/lib/analytics'
 import {
   type DeckSubjectRef,
   getFlashcardMediaUrl,
@@ -541,6 +542,12 @@ export function NewDeckForm({ initialSubject = null, initialDeckData }: NewDeckF
         throw new Error(result.error)
       }
 
+      trackEvent(analyticsEvents.saveFlashcardDeck, {
+        is_edit: isEditing,
+        is_public: isPublic,
+        question_count: valid.length,
+        has_subject: Boolean(selectedSubject?.id),
+      })
       router.push(`/flashcardy/${result.deckId}`)
       router.refresh()
     } catch (err: unknown) {

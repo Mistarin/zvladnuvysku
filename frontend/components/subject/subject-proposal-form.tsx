@@ -8,6 +8,7 @@ import {
   getSubjectDetailsForProposal,
   submitSubjectProposal,
 } from '@/app/actions/contributions'
+import { analyticsEvents, trackEvent } from '@/lib/analytics'
 import { WelcomeDisplayNameModal } from '@/components/layout/welcome-display-name-modal'
 import { normalizeDepartmentName } from '@/lib/department-name'
 import { FACULTIES } from '@/lib/faculties'
@@ -459,6 +460,12 @@ export function SubjectProposalForm({
       ])
 
       if (!result.success) { setError(result.error); return }
+      trackEvent(analyticsEvents.submitSubjectProposal, {
+        proposal_type: type,
+        has_materials: materials.length > 0,
+        teacher_count: selectedTeachers.length,
+        is_edit: Boolean(initialProposal),
+      })
       setSubmissionToken(createSubmissionToken())
       const successParams = new URLSearchParams({
         submitted: initialProposal ? 'edit' : 'new',

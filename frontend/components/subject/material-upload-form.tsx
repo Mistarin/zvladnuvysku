@@ -6,6 +6,7 @@ import { uploadSubjectMaterial, createMaterialGroup } from "@/app/actions/contri
 import { WelcomeDisplayNameModal } from "@/components/layout/welcome-display-name-modal";
 import { FileText, FolderPlus, Info, Loader2, TriangleAlert, X } from "lucide-react";
 import Link from "next/link";
+import { analyticsEvents, trackEvent } from "@/lib/analytics";
 
 interface MaterialUploadFormProps {
   subjectId: string;
@@ -120,6 +121,11 @@ export function MaterialUploadForm({
       setIsGroup(false);
       setGroupTitle("");
       setSuccessMessage("Materiál byl nahrán a čeká na schválení moderátorem. Stav uvidíš v Mojí aktivitě.");
+      trackEvent(analyticsEvents.uploadMaterial, {
+        subject_id: subjectId,
+        is_group_upload: isGroup,
+        has_page_count: Boolean(pageCount),
+      });
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Nastala neočekávaná chyba.");

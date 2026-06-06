@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { TrackEventOnMount } from "@/components/analytics/track-event-on-mount";
+import { analyticsEvents } from "@/lib/analytics";
 import { ProfileSubjectContributions, type ProfileDeckContribution, type ProfileMaterialContribution, type ProfileMaterialGroupContribution } from "@/components/profile/profile-subject-contributions";
 import { getFacultyColor } from "@/lib/faculties";
 import { normalizeFacultyList } from "@/lib/public-profile-identity";
@@ -225,6 +227,10 @@ export default async function PublicProfilePage({ params }: PageProps) {
 
   return (
     <div className="container mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
+      <TrackEventOnMount
+        eventName={analyticsEvents.viewPublicProfile}
+        params={{ profile_user_id: userId, is_owner: viewer?.id === userId }}
+      />
       <nav className="mb-5 flex items-center gap-2 text-sm text-muted-foreground">
         <Link href="/" className="transition-colors hover:text-foreground">Domů</Link>
         <span>/</span>
