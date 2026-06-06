@@ -106,7 +106,7 @@ export default async function PredmetDetailPage({ params, searchParams }: PagePr
     ? (
         await supabase
           .from("profiles")
-          .select("display_name, faculty")
+          .select("display_name, faculty, secondary_faculty")
           .eq("user_id", user.id)
           .maybeSingle()
       ).data ?? null

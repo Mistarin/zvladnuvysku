@@ -52,7 +52,7 @@ export default async function RootLayout({
     ? (
         await supabase
           .from("profiles")
-          .select("display_name, faculty")
+          .select("display_name, faculty, secondary_faculty")
           .eq("user_id", user.id)
           .maybeSingle()
       ).data ?? null
@@ -77,6 +77,7 @@ export default async function RootLayout({
               initialOpen={Boolean(user) && shouldPromptDisplayName && !hasPublicProfileIdentity(profile)}
               initialDisplayName={publicIdentity.displayName}
               initialFaculty={publicIdentity.faculty}
+              initialSecondaryFaculty={publicIdentity.secondaryFaculty}
               clearCookieOnClose
             />
           </SoundProvider>

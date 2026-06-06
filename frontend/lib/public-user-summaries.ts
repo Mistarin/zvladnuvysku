@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { normalizeFaculty } from "@/lib/public-profile-identity";
+import { normalizeFacultyList } from "@/lib/public-profile-identity";
 import type { Database } from "@/lib/types/database";
 import type { FacultyCode } from "@/lib/faculties";
 
@@ -7,6 +7,8 @@ export interface PublicUserSummary {
   userId: string;
   displayName: string | null;
   faculty: FacultyCode | null;
+  secondaryFaculty: FacultyCode | null;
+  faculties: FacultyCode[];
   totalXp: number;
   level: number;
 }
@@ -41,15 +43,21 @@ export async function getPublicUserSummaryMap(
   }
 
   return Object.fromEntries(
-    (data ?? []).map((summary) => [
-      summary.user_id,
-      {
-        userId: summary.user_id,
-        displayName: summary.display_name,
-        faculty: normalizeFaculty(summary.faculty) || null,
-        totalXp: summary.total_xp,
-        level: summary.level,
-      } satisfies PublicUserSummary,
-    ]),
+    (data ?? []).map((summary) => {
+      const faculties = normalizeFacultyList([summary.faculty, summary.secondary_faculty]);
+
+      return [
+        summary.user_id,
+        {
+          userId: summary.user_id,
+          displayName: summary.display_name,
+          faculty: faculties[0] || null,
+          secondaryFaculty: faculties[1] || null,
+          faculties,
+          totalXp: summary.total_xp,
+          level: summary.level,
+        } satisfies PublicUserSummary,
+      ];
+    }),
   );
 }

@@ -11,6 +11,7 @@ type ActionResult = { success: true } | { success: false; error: string }
 export async function upsertPublicProfileIdentity({
   displayName,
   faculty,
+  secondaryFaculty,
 }: PublicProfileIdentity): Promise<ActionResult> {
   const trimmedDisplayName = displayName.trim()
 
@@ -20,6 +21,14 @@ export async function upsertPublicProfileIdentity({
 
   if (!isFacultyCode(faculty)) {
     return { success: false, error: 'Vyber jednu z podporovaných fakult.' }
+  }
+
+  if (secondaryFaculty && !isFacultyCode(secondaryFaculty)) {
+    return { success: false, error: 'Druhá fakulta není platná.' }
+  }
+
+  if (secondaryFaculty && secondaryFaculty === faculty) {
+    return { success: false, error: 'Druhá fakulta se musí lišit od primární.' }
   }
 
   try {
@@ -39,6 +48,7 @@ export async function upsertPublicProfileIdentity({
           user_id: user.id,
           display_name: trimmedDisplayName,
           faculty,
+          secondary_faculty: secondaryFaculty || null,
         } as never,
         {
           onConflict: 'user_id',

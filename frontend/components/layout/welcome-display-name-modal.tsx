@@ -3,7 +3,7 @@
 import { useEffect, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import * as Dialog from '@radix-ui/react-dialog'
-import { AlertTriangle, ArrowLeft, CheckCircle2, Loader2, Sparkles } from 'lucide-react'
+import { AlertTriangle, ArrowLeft, Loader2, Sparkles } from 'lucide-react'
 import { upsertPublicProfileIdentity } from '@/app/actions/hall-of-fame'
 import { FACULTIES } from '@/lib/faculties'
 import {
@@ -15,6 +15,7 @@ interface WelcomeDisplayNameModalProps {
   initialOpen?: boolean
   initialDisplayName: string
   initialFaculty?: string | null
+  initialSecondaryFaculty?: string | null
   open?: boolean
   onOpenChange?: (open: boolean) => void
   onCompleted?: (identity: PublicProfileIdentity) => void
@@ -41,6 +42,7 @@ export function WelcomeDisplayNameModal({
   initialOpen = false,
   initialDisplayName,
   initialFaculty = null,
+  initialSecondaryFaculty = null,
   open,
   onOpenChange,
   onCompleted,
@@ -49,7 +51,10 @@ export function WelcomeDisplayNameModal({
   const router = useRouter()
   const [internalOpen, setInternalOpen] = useState(initialOpen)
   const [displayName, setDisplayName] = useState(initialDisplayName)
-  const [faculty, setFaculty] = useState(getPublicProfileIdentity({ faculty: initialFaculty }).faculty)
+  const [faculty, setFaculty] = useState(getPublicProfileIdentity({ faculty: initialFaculty, secondary_faculty: initialSecondaryFaculty }).faculty)
+  const [secondaryFaculty, setSecondaryFaculty] = useState(
+    getPublicProfileIdentity({ faculty: initialFaculty, secondary_faculty: initialSecondaryFaculty }).secondaryFaculty
+  )
   const [step, setStep] = useState<ModalStep>(1)
   const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
@@ -64,13 +69,15 @@ export function WelcomeDisplayNameModal({
     const identity = getPublicProfileIdentity({
       display_name: initialDisplayName,
       faculty: initialFaculty,
+      secondary_faculty: initialSecondaryFaculty,
     })
 
     setDisplayName(identity.displayName)
     setFaculty(identity.faculty)
+    setSecondaryFaculty(identity.secondaryFaculty)
     setStep(1)
     setError(null)
-  }, [initialDisplayName, initialFaculty, isOpen])
+  }, [initialDisplayName, initialFaculty, initialSecondaryFaculty, isOpen])
 
   const setOpen = (nextOpen: boolean) => {
     if (!nextOpen && clearCookieOnClose) {
@@ -121,10 +128,17 @@ export function WelcomeDisplayNameModal({
       return
     }
 
+    if (secondaryFaculty && secondaryFaculty === faculty) {
+      setError('Druhá fakulta se musí lišit od primární.')
+      return
+    }
+
     startTransition(async () => {
       const identity = {
         displayName: displayName.trim(),
         faculty,
+        secondaryFaculty,
+        faculties: [faculty, secondaryFaculty].filter((item): item is typeof faculty => Boolean(item)),
       } satisfies PublicProfileIdentity
 
       const result = await upsertPublicProfileIdentity(identity)
@@ -196,35 +210,57 @@ export function WelcomeDisplayNameModal({
                 </div>
               ) : (
                 <div className="space-y-3">
-                  <label className="text-sm font-medium text-foreground">Fakulta</label>
-                  <div className="grid gap-2 sm:grid-cols-2">
-                    {FACULTIES.map((item) => {
-                      const isActive = faculty === item.value
+                  <div className="space-y-2">
+                    <label htmlFor="welcome-primary-faculty" className="text-sm font-medium text-foreground">
+                      Primární fakulta
+                    </label>
+                    <select
+                      id="welcome-primary-faculty"
+                      value={faculty}
+                      onChange={(event) => {
+                        const nextFaculty = event.target.value as typeof faculty
+                        setFaculty(nextFaculty)
+                        if (secondaryFaculty === nextFaculty) {
+                          setSecondaryFaculty('')
+                        }
+                        setError(null)
+                      }}
+                      className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none transition-all focus:border-primary/40 focus:ring-2 focus:ring-primary/30"
+                    >
+                      <option value="">Vyber fakultu</option>
+                      {FACULTIES.map((item) => (
+                        <option key={item.value} value={item.value}>
+                          {item.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
 
-                      return (
-                        <button
-                          key={item.value}
-                          type="button"
-                          onClick={() => {
-                            setFaculty(item.value)
-                            setError(null)
-                          }}
-                          className={`rounded-xl border px-4 py-3 text-left transition-colors ${
-                            isActive
-                              ? 'border-primary/40 bg-primary/10 text-foreground'
-                              : 'border-border bg-background text-muted-foreground hover:bg-muted hover:text-foreground'
-                          }`}
-                        >
-                          <div className="flex items-center justify-between gap-3">
-                            <div>
-                              <p className="text-sm font-semibold text-foreground">{item.shortLabel}</p>
-                              <p className="mt-1 text-xs leading-5 text-muted-foreground">{item.label}</p>
-                            </div>
-                            {isActive ? <CheckCircle2 className="size-4 text-primary" /> : null}
-                          </div>
-                        </button>
-                      )
-                    })}
+                  <div className="space-y-2">
+                    <label htmlFor="welcome-secondary-faculty" className="text-sm font-medium text-foreground">
+                      Druhá fakulta
+                      <span className="ml-2 text-xs font-normal text-muted-foreground">(volitelné)</span>
+                    </label>
+                    <select
+                      id="welcome-secondary-faculty"
+                      value={secondaryFaculty}
+                      onChange={(event) => {
+                        setSecondaryFaculty(event.target.value as typeof secondaryFaculty)
+                        setError(null)
+                      }}
+                      className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none transition-all focus:border-primary/40 focus:ring-2 focus:ring-primary/30"
+                    >
+                      <option value="">Bez druhé fakulty</option>
+                      {FACULTIES.filter((item) => item.value !== faculty).map((item) => (
+                        <option key={item.value} value={item.value}>
+                          {item.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="rounded-xl border border-border bg-background/70 px-4 py-3 text-xs text-muted-foreground">
+                    Veřejně se budou zobrazovat až dvě fakulty. Primární je povinná, druhá je volitelná.
                   </div>
                 </div>
               )}

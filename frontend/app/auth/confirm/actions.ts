@@ -35,7 +35,7 @@ async function setPostAuthDisplayNameCookie(
 ) {
   const { data: profile } = await supabase
     .from('profiles')
-    .select('display_name, faculty')
+    .select('display_name, faculty, secondary_faculty')
     .eq('user_id', userId)
     .maybeSingle()
 

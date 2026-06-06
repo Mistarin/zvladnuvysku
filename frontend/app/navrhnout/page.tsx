@@ -42,9 +42,10 @@ type ProposalData = {
 
 export default async function NavrhnoutPage({ searchParams }: PageProps) {
   let hasPublicIdentity = false
-  let publicProfile: { display_name?: string | null; faculty?: string | null } = {
+  let publicProfile: { display_name?: string | null; faculty?: string | null; secondary_faculty?: string | null } = {
     display_name: '',
     faculty: null,
+    secondary_faculty: null,
   }
   let initialProposal: InitialSubjectProposal | null = null
   let submittedState: { kind: 'new' | 'edit'; subjectSlug?: string | null } | null = null
@@ -68,7 +69,7 @@ export default async function NavrhnoutPage({ searchParams }: PageProps) {
 
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('display_name, faculty')
+      .select('display_name, faculty, secondary_faculty')
       .eq('user_id', user.id)
       .maybeSingle()
 
@@ -76,7 +77,7 @@ export default async function NavrhnoutPage({ searchParams }: PageProps) {
       console.error('[navrhnout] Failed to load profile:', profileError.message)
     }
 
-    publicProfile = (profile as { display_name?: string | null; faculty?: string | null } | null) ?? publicProfile
+    publicProfile = (profile as { display_name?: string | null; faculty?: string | null; secondary_faculty?: string | null } | null) ?? publicProfile
     hasPublicIdentity = hasPublicProfileIdentity(profile)
 
     if (proposalId) {

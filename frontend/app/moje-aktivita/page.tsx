@@ -80,10 +80,10 @@ export default async function MyActivityPage() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("display_name, faculty")
+    .select("display_name, faculty, secondary_faculty")
     .eq("user_id", user.id)
     .maybeSingle();
-  const typedProfile = profile as Pick<Profile, "display_name" | "faculty"> | null;
+  const typedProfile = profile as Pick<Profile, "display_name" | "faculty" | "secondary_faculty"> | null;
   const hasPublicIdentity = hasPublicProfileIdentity(typedProfile);
 
   return (

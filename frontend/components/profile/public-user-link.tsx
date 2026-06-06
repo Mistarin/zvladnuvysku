@@ -34,15 +34,20 @@ export function PublicUserLink({
           {label}
         </span>
       )}
-      {summary?.faculty ? (
-        <span
-          className="shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold"
-          style={{
-            backgroundColor: `${getFacultyColor(summary.faculty) ?? "var(--foreground)"}20`,
-            color: getFacultyColor(summary.faculty) ?? "var(--foreground)",
-          }}
-        >
-          {summary.faculty}
+      {summary?.faculties?.length ? (
+        <span className="inline-flex items-center gap-1 shrink-0">
+          {summary.faculties.map((faculty) => (
+            <span
+              key={faculty}
+              className="rounded-full px-2 py-0.5 text-[11px] font-semibold"
+              style={{
+                backgroundColor: `${getFacultyColor(faculty) ?? "var(--foreground)"}20`,
+                color: getFacultyColor(faculty) ?? "var(--foreground)",
+              }}
+            >
+              {faculty}
+            </span>
+          ))}
         </span>
       ) : null}
       {summary ? (

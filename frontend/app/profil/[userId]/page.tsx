@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ProfileSubjectContributions, type ProfileDeckContribution, type ProfileMaterialContribution, type ProfileMaterialGroupContribution } from "@/components/profile/profile-subject-contributions";
 import { getFacultyColor } from "@/lib/faculties";
+import { normalizeFacultyList } from "@/lib/public-profile-identity";
 import { getTeacherPath } from "@/lib/teacher-slug";
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/types/database";
@@ -72,11 +73,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const supabase = await createClient();
   const { data: profile } = await supabase
     .from("profiles")
-    .select("display_name, faculty")
+    .select("display_name, faculty, secondary_faculty")
     .eq("user_id", userId)
     .maybeSingle();
 
-  const typedProfile = profile as { display_name?: string | null; faculty?: string | null } | null;
+  const typedProfile = profile as { display_name?: string | null; faculty?: string | null; secondary_faculty?: string | null } | null;
   const displayName = typedProfile?.display_name?.trim();
   return {
     title: displayName ? `${displayName} | Profil` : "Profil uživatele",
@@ -109,7 +110,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
     { data: teacherReviewsData },
   ] = await Promise.all([
     supabase.auth.getUser(),
-    supabase.from("profiles").select("user_id, display_name, faculty").eq("user_id", userId).maybeSingle(),
+    supabase.from("profiles").select("user_id, display_name, faculty, secondary_faculty").eq("user_id", userId).maybeSingle(),
     typedSupabase.rpc("get_public_profile_stats", { profile_user_id: userId }),
     supabase
       .from("flashcard_decks")
@@ -143,9 +144,9 @@ export default async function PublicProfilePage({ params }: PageProps) {
       .limit(20),
   ]);
 
-  const typedProfile = profile as { user_id: string; display_name: string | null; faculty: string | null } | null;
+  const typedProfile = profile as { user_id: string; display_name: string | null; faculty: string | null; secondary_faculty: string | null } | null;
   const displayName = typedProfile?.display_name?.trim();
-  const faculty = typedProfile?.faculty?.trim() || null;
+  const faculties = normalizeFacultyList([typedProfile?.faculty, typedProfile?.secondary_faculty]);
   const viewerRole = viewer?.app_metadata?.role as string | undefined;
   const canViewWithoutPublicName = viewer?.id === userId || viewerRole === "admin" || viewerRole === "moderator";
   const visibleName = displayName || (canViewWithoutPublicName ? `Uživatel ${userId.slice(0, 8)}…` : null);
@@ -241,8 +242,9 @@ export default async function PublicProfilePage({ params }: PageProps) {
             <div>
               <h1 className="text-3xl font-bold text-foreground sm:text-4xl">{visibleName}</h1>
               <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-muted-foreground sm:text-base">
-                {faculty ? (
+                {faculties.map((faculty) => (
                   <span
+                    key={faculty}
                     className="rounded-full px-2.5 py-1 text-xs font-semibold"
                     style={{
                       backgroundColor: `${getFacultyColor(faculty) ?? "var(--foreground)"}20`,
@@ -251,7 +253,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
                   >
                     {faculty}
                   </span>
-                ) : null}
+                ))}
                 <span className="text-sm">Level {stats.level} · {stats.total_xp} XP</span>
               </div>
             </div>

@@ -182,6 +182,7 @@ export function HallOfFameSection({
         onOpenChange={setShowIdentityModal}
         initialDisplayName={publicIdentity.displayName}
         initialFaculty={publicIdentity.faculty}
+        initialSecondaryFaculty={publicIdentity.secondaryFaculty}
       />
     </section>
   );
@@ -248,7 +249,7 @@ function PodiumColumn({
       <p className={`text-xs sm:text-sm font-semibold text-foreground text-center truncate w-full group-hover:text-primary transition-colors ${isFirst ? "font-bold" : ""}`}>
         {entry.display_name}
       </p>
-      {entry.faculty ? <FacultyPill faculty={entry.faculty} /> : null}
+      <FacultyPills faculties={[entry.faculty, entry.secondary_faculty].filter(Boolean)} />
       {/* Score */}
       <p className={`${sizeClass} font-bold text-foreground`}>{entry.total_score}</p>
       {/* Podium block */}
@@ -286,7 +287,7 @@ function LeaderboardRow({ entry, index }: { entry: HallOfFameRow; index: number 
       <div className="flex-1 min-w-0">
         <p className="text-sm font-semibold text-foreground truncate">{entry.display_name}</p>
         <div className="mt-0.5 flex flex-wrap items-center gap-3">
-          {entry.faculty ? <FacultyPill faculty={entry.faculty} compact /> : null}
+          <FacultyPills faculties={[entry.faculty, entry.secondary_faculty].filter(Boolean)} compact />
           <ScorePillInline icon={<FlipVertical className="size-3" />} value={entry.flashcard_count} />
           <ScorePillInline icon={<FileText className="size-3" />} value={entry.material_count} />
           <ScorePillInline icon={<UserRound className="size-3" />} value={entry.teacher_count} />
@@ -319,7 +320,6 @@ function ScorePillInline({ icon, value }: { icon: React.ReactNode; value: number
 
 function FacultyPill({ faculty, compact = false }: { faculty: string; compact?: boolean }) {
   const color = getFacultyColor(faculty) ?? "var(--foreground)";
-
   return (
     <span
       className={cn(
@@ -333,5 +333,18 @@ function FacultyPill({ faculty, compact = false }: { faculty: string; compact?: 
     >
       {faculty}
     </span>
+  );
+}
+
+function FacultyPills({ faculties, compact = false }: { faculties: Array<string | null | undefined>; compact?: boolean }) {
+  const items = faculties.filter((faculty): faculty is string => Boolean(faculty));
+  if (items.length === 0) return null;
+
+  return (
+    <div className="flex flex-wrap items-center justify-center gap-1">
+      {items.map((faculty) => (
+        <FacultyPill key={faculty} faculty={faculty} compact={compact} />
+      ))}
+    </div>
   );
 }

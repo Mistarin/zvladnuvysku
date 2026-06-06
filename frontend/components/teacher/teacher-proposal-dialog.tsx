@@ -12,12 +12,14 @@ interface TeacherProposalDialogProps {
   hasPublicProfileIdentity: boolean;
   initialDisplayName: string;
   initialFaculty: string | null;
+  initialSecondaryFaculty?: string | null;
 }
 
 export function TeacherProposalDialog({
   hasPublicProfileIdentity: initialHasPublicProfileIdentity,
   initialDisplayName,
   initialFaculty,
+  initialSecondaryFaculty = null,
 }: TeacherProposalDialogProps) {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -175,6 +177,7 @@ export function TeacherProposalDialog({
         onOpenChange={setShowDisplayNameModal}
         initialDisplayName={initialDisplayName}
         initialFaculty={initialFaculty}
+        initialSecondaryFaculty={initialSecondaryFaculty}
         onCompleted={() => {
           setHasPublicProfileIdentity(true);
         }}

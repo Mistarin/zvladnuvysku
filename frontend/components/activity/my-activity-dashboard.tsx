@@ -625,7 +625,7 @@ function buildSummaryCards(publicIdentity: PublicProfileIdentityDraft, sections:
       meta: hasIdentity
         ? (
             <>
-              {publicIdentity.faculty} · Zobrazuje se u profilu, recenzí a v Hall of Fame.{' '}
+              {publicIdentity.faculties.join(' · ')} · Zobrazuje se u profilu, recenzí a v Hall of Fame.{' '}
               <Link href="/#hall-of-fame" className="text-primary hover:underline">
                 Upravit
               </Link>
