@@ -225,17 +225,17 @@ export default async function PublicProfilePage({ params }: PageProps) {
 
   return (
     <div className="container mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
-      <nav className="mb-5 flex items-center gap-2 text-sm text-[#8FA3B8]">
-        <Link href="/" className="transition-colors hover:text-[#F4F8FB]">Domů</Link>
+      <nav className="mb-5 flex items-center gap-2 text-sm text-muted-foreground">
+        <Link href="/" className="transition-colors hover:text-foreground">Domů</Link>
         <span>/</span>
-        <span className="font-medium text-[#CBD7E6]">{visibleName}</span>
+        <span className="font-medium text-foreground">{visibleName}</span>
       </nav>
 
-      <div className="mb-8 bg-[linear-gradient(180deg,#0D1B2E,#07111F)] p-2 sm:p-4">
+      <div className="mb-8 p-0 sm:p-0 dark:bg-[linear-gradient(180deg,#0D1B2E,#07111F)] dark:p-2 sm:dark:p-4">
         <div className="space-y-4">
           <div>
-            <h1 className="text-4xl font-bold text-[#F4F8FB] sm:text-5xl">{visibleName}</h1>
-            <div className="mt-3 flex flex-wrap items-center gap-2 text-sm text-[#8FA3B8] sm:text-base">
+            <h1 className="text-4xl font-bold text-foreground sm:text-5xl">{visibleName}</h1>
+            <div className="mt-3 flex flex-wrap items-center gap-2 text-sm text-muted-foreground sm:text-base">
               {faculties.map((faculty) => (
                 <span
                   key={faculty}
@@ -248,16 +248,16 @@ export default async function PublicProfilePage({ params }: PageProps) {
                   {faculty}
                 </span>
               ))}
-              <span className="text-sm font-medium text-[#F4F8FB]">Level {stats.level}</span>
+              <span className="text-sm font-medium text-foreground">Level {stats.level}</span>
             </div>
           </div>
 
           <div className="max-w-xl">
             <div className="flex items-center justify-between text-sm">
-              <span className="font-medium text-[#F4F8FB]">{stats.level_progress_xp}/{stats.next_level_xp} XP</span>
-              <span className="text-[#8FA3B8]">Zbývá {Math.max(stats.next_level_xp - stats.level_progress_xp, 0)} XP</span>
+              <span className="font-medium text-foreground">{stats.level_progress_xp}/{stats.next_level_xp} XP</span>
+              <span className="text-muted-foreground">Zbývá {Math.max(stats.next_level_xp - stats.level_progress_xp, 0)} XP</span>
             </div>
-            <div className="mt-3 h-2 overflow-hidden rounded-full bg-[#13243A]">
+            <div className="mt-3 h-2 overflow-hidden rounded-full bg-muted dark:bg-[#13243A]">
               <div
                 className="h-full rounded-full bg-[#02BED6] shadow-[0_0_18px_rgba(2,190,214,0.35)] transition-all duration-700"
                 style={{ width: `${progressPercent}%` }}
@@ -266,7 +266,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
             {isOwnProfile && (
               <Link
                 href="/#hall-of-fame"
-                className="mt-3 inline-flex text-xs font-medium text-[#8FA3B8] transition-colors hover:text-[#35D7E8]"
+                className="mt-3 inline-flex text-xs font-medium text-muted-foreground transition-colors hover:text-primary"
               >
                 Body se převádějí na XP v poměru 1:10 →
               </Link>

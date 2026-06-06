@@ -265,6 +265,39 @@
     color: var(--text-main);
   }
 
+  .ui-secondary-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.375rem;
+    border: 1px solid var(--color-border);
+    background: var(--surface-elevated);
+    color: var(--text-main);
+    transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
+  }
+
+  .ui-secondary-button:hover {
+    background: var(--surface-hover);
+    border-color: var(--border-strong, var(--color-border));
+    color: var(--text-main);
+  }
+
+  button.border.border-border.bg-background:not(input):not(select):not(textarea),
+  button.border.border-border.bg-card,
+  a.border.border-border.bg-background,
+  a.border.border-border.bg-card {
+    background: var(--surface-elevated);
+    color: var(--text-main);
+  }
+
+  button.border.border-border.bg-background:not(input):not(select):not(textarea):hover,
+  button.border.border-border.bg-card:hover,
+  a.border.border-border.bg-background:hover,
+  a.border.border-border.bg-card:hover {
+    background: var(--surface-hover);
+    border-color: var(--border-strong, var(--color-border));
+  }
+
   /* Harmonize older utility-heavy surfaces with the graphite palette. */
   .border-white\/5,
   .border-white\/10 {

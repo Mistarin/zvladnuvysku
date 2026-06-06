@@ -184,7 +184,7 @@ export function MyActivityDashboard({ publicIdentity, sections: initialSections 
       {activeSection ? (
         <section className="space-y-4">
           <div className="overflow-x-auto pb-1">
-            <div className="inline-flex min-w-full gap-2 rounded-2xl border border-[#22344D] bg-[#0D1B2E] p-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] sm:min-w-0">
+            <div className="inline-flex min-w-full gap-2 rounded-2xl border border-border bg-card p-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] dark:border-[#22344D] dark:bg-[#0D1B2E] sm:min-w-0">
               {sections.map((section) => {
                 const isActive = section.id === activeSection.id
                 return (
@@ -195,8 +195,8 @@ export function MyActivityDashboard({ publicIdentity, sections: initialSections 
                     className={cn(
                       'flex min-w-[10rem] flex-1 items-center justify-between gap-3 rounded-xl border px-4 py-3 text-left transition-colors',
                       isActive
-                        ? 'border-[#22344D] bg-[#13243A] text-[#F4F8FB]'
-                        : 'border-transparent bg-transparent text-[#8FA3B8] hover:border-[#22344D] hover:bg-white/[0.03] hover:text-[#F4F8FB]',
+                        ? 'border-border bg-muted text-foreground dark:border-[#22344D] dark:bg-[#13243A] dark:text-[#F4F8FB]'
+                        : 'border-transparent bg-transparent text-muted-foreground hover:border-border hover:bg-muted/60 hover:text-foreground dark:text-[#8FA3B8] dark:hover:border-[#22344D] dark:hover:bg-white/[0.03] dark:hover:text-[#F4F8FB]',
                     )}
                   >
                     <span className="truncate text-sm font-semibold">{section.title}</span>
@@ -204,8 +204,8 @@ export function MyActivityDashboard({ publicIdentity, sections: initialSections 
                       className={cn(
                         'rounded-md border px-2 py-0.5 text-xs font-semibold',
                         isActive
-                          ? 'border-[#22344D] bg-white/[0.06] text-[#F4F8FB]'
-                          : 'border-[#22344D] bg-[#13243A] text-[#CBD7E6]',
+                          ? 'border-border bg-background text-foreground dark:border-[#22344D] dark:bg-white/[0.06] dark:text-[#F4F8FB]'
+                          : 'border-border bg-card text-muted-foreground dark:border-[#22344D] dark:bg-[#13243A] dark:text-[#CBD7E6]',
                       )}
                     >
                       {getSectionItemCount(section)}
@@ -283,8 +283,8 @@ function renderSectionContent({
     <>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h2 className="text-xl font-bold text-[#F4F8FB]">{section.title}</h2>
-          <p className="mt-1 text-sm text-[#8FA3B8]">{section.description}</p>
+          <h2 className="text-xl font-bold text-foreground dark:text-[#F4F8FB]">{section.title}</h2>
+          <p className="mt-1 text-sm text-muted-foreground dark:text-[#8FA3B8]">{section.description}</p>
         </div>
         {section.actionHref && section.actionLabel ? (
           <Link href={section.actionHref} className="text-sm font-medium text-[#02BED6] transition-colors hover:text-[#35D7E8]">
@@ -293,9 +293,9 @@ function renderSectionContent({
         ) : null}
       </div>
 
-      <div className="rounded-[28px] border border-[#22344D] bg-[linear-gradient(180deg,#0D1B2E,#07111F)] p-5 shadow-[0_18px_60px_rgba(0,0,0,0.28)] sm:p-6">
+      <div className="rounded-[28px] border border-border bg-card p-5 shadow-[0_8px_24px_rgba(17,24,39,0.06)] dark:border-[#22344D] dark:bg-[linear-gradient(180deg,#0D1B2E,#07111F)] dark:shadow-[0_18px_60px_rgba(0,0,0,0.28)] sm:p-6">
         <div
-          className="grid gap-2 rounded-2xl border border-[#22344D] bg-[#0D1B2E] p-2"
+          className="grid gap-2 rounded-2xl border border-border bg-background p-2 dark:border-[#22344D] dark:bg-[#0D1B2E]"
           style={{ gridTemplateColumns: `repeat(${section.tabs.length}, minmax(0, 1fr))` }}
         >
           {section.tabs.map((tab) => {
@@ -308,8 +308,8 @@ function renderSectionContent({
                 className={cn(
                   'rounded-xl border px-4 py-3 text-left transition-colors',
                   isActive
-                    ? 'border-[#22344D] bg-[#13243A] text-[#F4F8FB]'
-                    : 'border-transparent bg-transparent text-[#8FA3B8] hover:border-[#22344D] hover:bg-white/[0.03] hover:text-[#F4F8FB]',
+                    ? 'border-border bg-muted text-foreground dark:border-[#22344D] dark:bg-[#13243A] dark:text-[#F4F8FB]'
+                    : 'border-transparent bg-transparent text-muted-foreground hover:border-border hover:bg-muted/60 hover:text-foreground dark:text-[#8FA3B8] dark:hover:border-[#22344D] dark:hover:bg-white/[0.03] dark:hover:text-[#F4F8FB]',
                 )}
               >
                 <div className="flex items-center justify-between gap-3">
@@ -319,7 +319,7 @@ function renderSectionContent({
                       'rounded-md border px-2.5 py-0.5 text-xs font-bold',
                       isActive
                         ? getToneCounterClass(tab.tone)
-                        : 'border-[#22344D] bg-[#13243A] text-[#CBD7E6]',
+                        : 'border-border bg-card text-muted-foreground dark:border-[#22344D] dark:bg-[#13243A] dark:text-[#CBD7E6]',
                     )}
                   >
                     {tab.items.length}
@@ -330,9 +330,9 @@ function renderSectionContent({
           })}
         </div>
 
-        <div className="mt-5 border-t border-[#22344D] pt-5">
+        <div className="mt-5 border-t border-border pt-5 dark:border-[#22344D]">
           <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-sm text-[#8FA3B8]">{activeTab.description}</p>
+            <p className="text-sm text-muted-foreground dark:text-[#8FA3B8]">{activeTab.description}</p>
             {subjectOptions.length > 1 ? (
               <select
                 value={selectedSubject}
@@ -342,7 +342,7 @@ function renderSectionContent({
                     [section.id]: event.target.value,
                   }))
                 }
-                className="w-full rounded-xl border border-[#22344D] bg-[#13243A] px-3 py-2 text-sm text-[#F4F8FB] outline-none transition-colors focus:border-[#35D7E8]/50 focus:ring-1 focus:ring-[#35D7E8]/30 sm:w-64"
+                className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground outline-none transition-colors focus:border-primary/50 focus:ring-1 focus:ring-primary/30 dark:border-[#22344D] dark:bg-[#13243A] dark:text-[#F4F8FB] dark:focus:border-[#35D7E8]/50 dark:focus:ring-[#35D7E8]/30 sm:w-64"
               >
                 <option value="">Všechny předměty</option>
                 {subjectOptions.map((subject) => (
@@ -367,7 +367,7 @@ function renderSectionContent({
               ))}
 
               {olderItems.length > 0 ? (
-                <div className="rounded-2xl border border-dashed border-[#22344D] bg-white/[0.02] p-3">
+                <div className="rounded-2xl border border-dashed border-border bg-background/50 p-3 dark:border-[#22344D] dark:bg-white/[0.02]">
                   <button
                     type="button"
                     onClick={() =>
@@ -376,7 +376,7 @@ function renderSectionContent({
                         [expandKey]: !isExpanded,
                       }))
                     }
-                    className="flex w-full items-center justify-between gap-3 text-left text-sm font-medium text-[#F4F8FB]"
+                    className="flex w-full items-center justify-between gap-3 text-left text-sm font-medium text-foreground dark:text-[#F4F8FB]"
                   >
                     <span>{isExpanded ? 'Skrýt starší položky' : `Zobrazit starší položky (${olderItems.length})`}</span>
                     {isExpanded ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
@@ -399,7 +399,7 @@ function renderSectionContent({
               ) : null}
             </div>
           ) : (
-            <div className="rounded-2xl border border-dashed border-[#22344D] bg-white/[0.02] px-4 py-8 text-center text-sm text-[#8FA3B8]">
+            <div className="rounded-2xl border border-dashed border-border bg-background/50 px-4 py-8 text-center text-sm text-muted-foreground dark:border-[#22344D] dark:bg-white/[0.02] dark:text-[#8FA3B8]">
               {selectedSubject ? 'Pro vybraný předmět tu nic není.' : activeTab.empty}
             </div>
           )}
@@ -431,15 +431,15 @@ function getSectionItemCount(section: ActivitySectionData) {
 
 function SummaryCard({ card }: { card: SummaryCardData }) {
   return (
-    <div className="rounded-[24px] border border-[#22344D] bg-[rgba(13,27,46,0.94)] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
-      <div className="flex items-center gap-3 text-sm font-medium text-[#8FA3B8]">
+    <div className="rounded-[24px] border border-border bg-card p-5 shadow-[0_8px_24px_rgba(17,24,39,0.06)] dark:border-[#22344D] dark:bg-[rgba(13,27,46,0.94)] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
+      <div className="flex items-center gap-3 text-sm font-medium text-muted-foreground dark:text-[#8FA3B8]">
         <span className={cn('inline-flex h-10 w-10 items-center justify-center rounded-xl border', getToneSurfaceClass(card.tone))}>
           {card.icon}
         </span>
         <span>{card.label}</span>
       </div>
-      <p className="mt-4 text-3xl font-bold text-[#F4F8FB]">{card.value}</p>
-      <p className="mt-2 text-xs leading-relaxed text-[#8FA3B8]">{card.meta}</p>
+      <p className="mt-4 text-3xl font-bold text-foreground dark:text-[#F4F8FB]">{card.value}</p>
+      <p className="mt-2 text-xs leading-relaxed text-muted-foreground dark:text-[#8FA3B8]">{card.meta}</p>
     </div>
   )
 }
@@ -473,14 +473,14 @@ function ActivityCard({
   return (
     <div
       className={cn(
-        'rounded-[24px] border border-[#22344D] bg-[rgba(13,27,46,0.94)] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.02)]',
+        'rounded-[24px] border border-border bg-card p-5 shadow-[0_8px_24px_rgba(17,24,39,0.06)] dark:border-[#22344D] dark:bg-[rgba(13,27,46,0.94)] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.02)]',
         item.attention?.acknowledged ? 'opacity-75' : null,
       )}
     >
       <div className="flex flex-col gap-4">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <p className="font-semibold text-[#F4F8FB]">{item.title}</p>
+            <p className="font-semibold text-foreground dark:text-[#F4F8FB]">{item.title}</p>
             {item.badges.map((badge) => (
               <StatusBadge key={`${item.id}-${badge.label}`} tone={badge.tone}>
                 {badge.label}
@@ -488,34 +488,34 @@ function ActivityCard({
             ))}
           </div>
 
-          {item.subtitle ? <p className="mt-1 text-sm text-[#8FA3B8]">{item.subtitle}</p> : null}
-          {item.supportingText ? <p className="mt-1 text-sm text-[#8FA3B8]">{item.supportingText}</p> : null}
+          {item.subtitle ? <p className="mt-1 text-sm text-muted-foreground dark:text-[#8FA3B8]">{item.subtitle}</p> : null}
+          {item.supportingText ? <p className="mt-1 text-sm text-muted-foreground dark:text-[#8FA3B8]">{item.supportingText}</p> : null}
           {item.link ? (
             item.link.external ? (
               <a
                 href={item.link.href}
                 target="_blank"
                 rel="noreferrer"
-                className="mt-2 inline-flex items-center gap-2 text-sm text-[#02BED6] transition-colors hover:text-[#35D7E8]"
+                className="mt-2 inline-flex items-center gap-2 text-sm text-primary transition-colors hover:text-primary/80 dark:text-[#02BED6] dark:hover:text-[#35D7E8]"
               >
                 {item.link.label}
               </a>
             ) : (
-              <Link href={item.link.href} className="mt-2 inline-flex items-center gap-2 text-sm text-[#02BED6] transition-colors hover:text-[#35D7E8]">
+              <Link href={item.link.href} className="mt-2 inline-flex items-center gap-2 text-sm text-primary transition-colors hover:text-primary/80 dark:text-[#02BED6] dark:hover:text-[#35D7E8]">
                 {item.link.label}
               </Link>
             )
           ) : null}
         </div>
 
-        {item.body ? <p className="whitespace-pre-wrap text-sm text-[#CBD7E6]">{item.body}</p> : null}
+        {item.body ? <p className="whitespace-pre-wrap text-sm text-foreground/80 dark:text-[#CBD7E6]">{item.body}</p> : null}
 
         {item.meta.length > 0 ? (
           <div className="grid gap-3 sm:grid-cols-2">
             {item.meta.map((meta) => (
-              <div key={`${item.id}-${meta.label}`} className="rounded-xl border border-[#22344D] bg-[#13243A] px-3 py-2">
-                <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-[#8FA3B8]">{meta.label}</p>
-                <p className="mt-1 text-sm text-[#CBD7E6]">{meta.value}</p>
+              <div key={`${item.id}-${meta.label}`} className="rounded-xl border border-border bg-background px-3 py-2 dark:border-[#22344D] dark:bg-[#13243A]">
+                <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground dark:text-[#8FA3B8]">{meta.label}</p>
+                <p className="mt-1 text-sm text-foreground/80 dark:text-[#CBD7E6]">{meta.value}</p>
               </div>
             ))}
           </div>
@@ -530,9 +530,9 @@ function ActivityCard({
                   'rounded-xl border px-3 py-2',
                   panel.tone === 'danger'
                     ? 'border-destructive/25 bg-destructive/10'
-                    : panel.tone === 'info'
-                      ? 'border-sky-400/25 bg-sky-500/10'
-                      : 'border-[#22344D] bg-[#13243A]',
+                  : panel.tone === 'info'
+                      ? 'border-primary/20 bg-primary/10'
+                      : 'border-border bg-background dark:border-[#22344D] dark:bg-[#13243A]',
                 )}
               >
                 <p
@@ -541,8 +541,8 @@ function ActivityCard({
                     panel.tone === 'danger'
                       ? 'text-destructive'
                       : panel.tone === 'info'
-                        ? 'text-sky-300'
-                        : 'text-[#8FA3B8]',
+                        ? 'text-primary'
+                        : 'text-muted-foreground dark:text-[#8FA3B8]',
                   )}
                 >
                   {panel.label}
@@ -553,8 +553,8 @@ function ActivityCard({
                     panel.tone === 'danger'
                       ? 'text-destructive'
                       : panel.tone === 'info'
-                        ? 'text-sky-100'
-                        : 'text-[#CBD7E6]',
+                        ? 'text-foreground'
+                        : 'text-foreground/80 dark:text-[#CBD7E6]',
                   )}
                 >
                   {panel.value}
@@ -572,7 +572,7 @@ function ActivityCard({
                   <Link
                     key={`${item.id}-${action.href}`}
                     href={action.href}
-                    className="inline-flex h-8 items-center justify-center rounded-lg border border-[#22344D] bg-[#13243A] px-3 text-[0.8rem] font-medium text-[#F4F8FB] transition-colors hover:bg-[#22344D]"
+                    className="inline-flex h-8 items-center justify-center rounded-lg border border-border bg-background px-3 text-[0.8rem] font-medium text-foreground transition-colors hover:bg-muted dark:border-[#22344D] dark:bg-[#13243A] dark:text-[#F4F8FB] dark:hover:bg-[#22344D]"
                   >
                     {action.label}
                   </Link>
@@ -751,29 +751,29 @@ function getAttentionKey(attention: ActivityAttention) {
 function getToneSurfaceClass(tone: StatusTone) {
   switch (tone) {
     case 'success':
-      return 'border-emerald-400/20 bg-emerald-500/10 text-emerald-300'
+      return 'border-emerald-500/20 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
     case 'warning':
-      return 'border-amber-400/20 bg-amber-500/10 text-amber-300'
+      return 'border-amber-500/20 bg-amber-500/10 text-amber-700 dark:text-amber-300'
     case 'danger':
       return 'border-destructive/30 bg-destructive/10 text-destructive'
     case 'info':
-      return 'border-sky-400/20 bg-sky-500/10 text-sky-300'
+      return 'border-primary/20 bg-primary/10 text-primary'
     default:
-      return 'border-[#22344D] bg-[#13243A] text-[#CBD7E6]'
+      return 'border-border bg-background text-foreground/80 dark:border-[#22344D] dark:bg-[#13243A] dark:text-[#CBD7E6]'
   }
 }
 
 function getToneCounterClass(tone: StatusTone) {
   switch (tone) {
     case 'success':
-      return 'border-emerald-400/20 bg-emerald-500/10 text-emerald-300'
+      return 'border-emerald-500/20 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
     case 'warning':
-      return 'border-amber-400/20 bg-amber-500/10 text-amber-300'
+      return 'border-amber-500/20 bg-amber-500/10 text-amber-700 dark:text-amber-300'
     case 'danger':
       return 'border-destructive/30 bg-destructive/10 text-destructive'
     case 'info':
-      return 'border-sky-400/20 bg-sky-500/10 text-sky-300'
+      return 'border-primary/20 bg-primary/10 text-primary'
     default:
-      return 'border-[#22344D] bg-[#13243A] text-[#F4F8FB]'
+      return 'border-border bg-background text-foreground dark:border-[#22344D] dark:bg-[#13243A] dark:text-[#F4F8FB]'
   }
 }

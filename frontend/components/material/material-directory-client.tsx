@@ -44,6 +44,9 @@ interface MaterialDirectoryClientProps {
   focusedGroupId?: string;
 }
 
+const materialSecondaryButtonClass =
+  "inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-2.5 py-2 text-xs font-medium text-foreground transition-colors hover:bg-muted sm:text-sm";
+
 export function MaterialDirectoryClient({
   groups,
   standaloneMaterials,
@@ -145,10 +148,10 @@ export function MaterialDirectoryClient({
         <button
           type="button"
           onClick={() => setView("groups")}
-          className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${
+          className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
             view === "groups"
-              ? "border-[#F6B73C]/30 bg-[#F6B73C]/10 text-[#F6B73C]"
-              : "border-border bg-card text-muted-foreground hover:bg-[var(--surface-hover)]"
+              ? "border-border bg-muted text-foreground"
+              : "border-border bg-card text-foreground hover:bg-muted"
           }`}
         >
           <FolderOpen className="h-3.5 w-3.5" />
@@ -157,10 +160,10 @@ export function MaterialDirectoryClient({
         <button
           type="button"
           onClick={() => setView("files")}
-          className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${
+          className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
             view === "files"
-              ? "border-primary/30 bg-primary/10 text-primary"
-              : "border-border bg-card text-muted-foreground hover:bg-[var(--surface-hover)]"
+              ? "border-border bg-muted text-foreground"
+              : "border-border bg-card text-foreground hover:bg-muted"
           }`}
         >
           <FileText className="h-3.5 w-3.5" />
@@ -333,7 +336,7 @@ function SingleMaterialRow({ material }: { material: FlattenedMaterial }) {
         {material.subject && (
           <Link
             href={`/predmety/${material.subject.slug}`}
-            className="rounded-lg border border-border bg-card px-2.5 py-2 text-xs font-medium transition-colors hover:bg-muted sm:text-sm"
+            className={materialSecondaryButtonClass}
           >
             Předmět
           </Link>

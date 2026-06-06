@@ -94,17 +94,17 @@ export default async function MyActivityPage() {
         </span>
       </div>
 
-      <div className="mb-6 rounded-[30px] border border-[#22344D] bg-[linear-gradient(180deg,#0D1B2E,#07111F)] p-6 shadow-[0_24px_80px_rgba(0,0,0,0.32)] sm:p-7">
+      <div className="mb-6 rounded-[30px] border border-border bg-card p-6 shadow-[0_8px_24px_rgba(17,24,39,0.06)] dark:border-[#22344D] dark:bg-[linear-gradient(180deg,#0D1B2E,#07111F)] dark:shadow-[0_24px_80px_rgba(0,0,0,0.32)] sm:p-7">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-slate-50 sm:text-4xl">Moje aktivita</h1>
-            <p className="mt-3 max-w-2xl text-sm text-slate-400 sm:text-base">
+            <h1 className="text-3xl font-bold text-foreground dark:text-[#F4F8FB] sm:text-4xl">Moje aktivita</h1>
+            <p className="mt-3 max-w-2xl text-sm text-muted-foreground dark:text-[#8FA3B8] sm:text-base">
             Všechny tvoje balíčky, návrhy, materiály i feedback na jednom místě.
             </p>
           </div>
           <Link
             href={hasPublicIdentity ? getPublicProfilePath(user.id) : "/#hall-of-fame"}
-            className="inline-flex items-center justify-center rounded-xl border border-[#22344D] bg-[#13243A] px-5 py-2.5 text-sm font-medium text-[#F4F8FB] transition-colors hover:bg-[#22344D]"
+            className="inline-flex items-center justify-center rounded-xl border border-border bg-card px-5 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-muted dark:border-[#22344D] dark:bg-[#13243A] dark:text-[#F4F8FB] dark:hover:bg-[#22344D]"
           >
             {hasPublicIdentity ? "Otevřít veřejný profil" : "Doplnit veřejný profil"}
           </Link>
