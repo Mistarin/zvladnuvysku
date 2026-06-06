@@ -52,7 +52,7 @@ export function SubjectTabs({
       <div
         role="tablist"
         aria-label="Sekce předmětu"
-        className="mb-6 flex gap-1 rounded-2xl border border-white/5 bg-muted/40 p-1 backdrop-blur-sm"
+        className="mb-6 flex gap-1 rounded-2xl border border-border bg-card p-1"
       >
         {tabs.map((tab) => (
           <Link
@@ -64,8 +64,8 @@ export function SubjectTabs({
             href={tab.id === 'prehled' ? basePath : `${basePath}?tab=${tab.id}`}
             className={`relative flex flex-1 items-center justify-center gap-1.5 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
               activeTab === tab.id
-                ? 'bg-background text-foreground shadow-sm shadow-black/10'
-                : 'text-muted-foreground hover:text-foreground'
+                ? 'bg-secondary text-foreground shadow-sm'
+                : 'text-muted-foreground hover:bg-muted hover:text-foreground'
             }`}
           >
             <span className="hidden sm:block">{tab.icon}</span>

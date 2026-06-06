@@ -43,7 +43,7 @@ function StarPicker({
             className="text-xl transition-transform hover:scale-110"
             aria-label={`${star} z 5`}
           >
-            <span className={active >= star ? 'text-yellow-400' : 'text-muted/60'}>
+            <span className={active >= star ? 'text-[#F6B73C]' : 'text-muted/60'}>
               ★
             </span>
           </button>
@@ -120,7 +120,7 @@ export function RatingForm({
         </p>
         <Link
           href="/prihlaseni"
-          className="inline-flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-medium accent-gradient text-white hover:opacity-90 transition-all"
+          className="inline-flex items-center gap-2 rounded-lg bg-primary px-5 py-2 text-sm font-medium text-primary-foreground transition-all hover:bg-[#35D7E8]"
         >
           Přihlásit se →
         </Link>
@@ -212,7 +212,7 @@ export function RatingForm({
         <ReviewVisibilityField isAnonymous={isAnonymous} onChange={setIsAnonymous} />
 
         {hasExistingRating && isCommentPending ? (
-          <div className="flex items-start gap-2 rounded-xl border border-amber-500/20 bg-amber-500/10 px-3 py-2 text-sm text-amber-700 dark:text-amber-300">
+          <div className="flex items-start gap-2 rounded-xl border border-[#F6B73C]/25 bg-[#F6B73C]/10 px-3 py-2 text-sm text-[#F6B73C]">
             <Clock3 className="mt-0.5 size-4 shrink-0" />
             <p>Tvoje slovní recenze čeká na schválení moderátorem.</p>
           </div>
@@ -230,7 +230,7 @@ export function RatingForm({
             maxLength={2000}
             rows={3}
             placeholder="Sdílej svou zkušenost s předmětem..."
-            className="w-full rounded-xl border border-white/5 shadow-inner bg-muted/30 px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground resize-none outline-none focus:ring-1 focus:ring-primary/40 focus:border-transparent focus:bg-background transition-all"
+            className="w-full resize-none rounded-xl border border-border bg-input px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground outline-none transition-all focus:border-transparent focus:bg-background focus:ring-1 focus:ring-primary/40"
           />
           <p className="text-xs text-muted-foreground/50 text-right">
             {comment.length}/2000
@@ -238,13 +238,13 @@ export function RatingForm({
         </div>
 
         {statusMessage && (
-          <p className={`text-sm ${statusTone === 'error' ? 'text-destructive' : 'text-emerald-600 dark:text-emerald-400'}`}>
+          <p className={`text-sm ${statusTone === 'error' ? 'text-destructive' : 'text-[#70C96B]'}`}>
             {statusMessage}
           </p>
         )}
 
         {success && !statusMessage && (
-          <p className="text-sm text-emerald-600 dark:text-emerald-400">
+          <p className="text-sm text-[#70C96B]">
             Hodnocení bylo uloženo.
           </p>
         )}
@@ -257,7 +257,7 @@ export function RatingForm({
           <button
             type="submit"
             disabled={isSubmitting || isDeleting || overall === 0}
-            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl font-medium text-sm accent-gradient text-white hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed sm:w-auto sm:px-6"
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-2.5 text-sm font-medium text-primary-foreground transition-all hover:bg-[#35D7E8] disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:px-6"
           >
             {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
             {isSubmitting ? 'Ukládám...' : hasExistingRating ? 'Uložit změny' : 'Uložit hodnocení'}

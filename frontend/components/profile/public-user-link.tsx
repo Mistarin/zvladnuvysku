@@ -39,10 +39,9 @@ export function PublicUserLink({
           {summary.faculties.map((faculty) => (
             <span
               key={faculty}
-              className="rounded-full px-2 py-0.5 text-[11px] font-semibold"
+              className="faculty-accent-chip rounded-md px-2 py-0.5 text-[11px] font-semibold"
               style={{
-                backgroundColor: `${getFacultyColor(faculty) ?? "var(--foreground)"}20`,
-                color: getFacultyColor(faculty) ?? "var(--foreground)",
+                ["--faculty-color" as string]: getFacultyColor(faculty) ?? "var(--foreground)",
               }}
             >
               {faculty}

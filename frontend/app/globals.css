@@ -7,7 +7,7 @@
 @property --brand-sync-color {
   syntax: '<color>';
   inherits: true;
-  initial-value: #0078B4;
+  initial-value: #02BED6;
 }
 
 
@@ -16,25 +16,25 @@
   --font-sans: var(--font-inter), "Inter", sans-serif;
   --font-display: var(--font-outfit), "Outfit", sans-serif;
   
-  --color-background: hsl(0 0% 98%);
-  --color-foreground: hsl(0 0% 9%);
-  --color-card: hsl(0 0% 100%);
-  --color-card-foreground: hsl(0 0% 9%);
-  --color-popover: hsl(0 0% 100%);
-  --color-popover-foreground: hsl(0 0% 9%);
-  --color-primary: hsl(187 98% 42%);
-  --color-primary-foreground: hsl(0 0% 100%);
-  --color-secondary: hsl(60 5% 94%);
-  --color-secondary-foreground: hsl(0 0% 15%);
-  --color-muted: hsl(60 5% 96%);
-  --color-muted-foreground: hsl(0 0% 45%);
-  --color-accent: hsl(187 98% 42%);
-  --color-accent-foreground: hsl(0 0% 100%);
-  --color-destructive: hsl(0 72% 51%);
-  --color-destructive-foreground: hsl(0 0% 100%);
-  --color-border: hsl(60 5% 94%);
-  --color-input: hsl(60 5% 90%);
-  --color-ring: hsl(187 98% 42%);
+  --color-background: #0B0B0D;
+  --color-foreground: #F4F4F5;
+  --color-card: #18181B;
+  --color-card-foreground: #F4F4F5;
+  --color-popover: #18181B;
+  --color-popover-foreground: #F4F4F5;
+  --color-primary: #02BED6;
+  --color-primary-foreground: #061012;
+  --color-secondary: #202024;
+  --color-secondary-foreground: #F4F4F5;
+  --color-muted: #111113;
+  --color-muted-foreground: #A1A1AA;
+  --color-accent: #02BED6;
+  --color-accent-foreground: #061012;
+  --color-destructive: #F05D5E;
+  --color-destructive-foreground: #F4F4F5;
+  --color-border: #303036;
+  --color-input: #202024;
+  --color-ring: #35D7E8;
 
   --radius-sm: 0.375rem;
   --radius-md: 0.5rem;
@@ -47,38 +47,58 @@
   :root {
     /* Custom CSS properties (not Tailwind utilities) */
     --accent-color: #02BED6;
-    --accent-light: #38d2e4;
-    --accent-glow: rgba(2, 190, 214, 0.18);
-    --brand-sync-color: #0078B4;
+    --accent-light: #35D7E8;
+    --accent-glow: rgba(2, 190, 214, 0.24);
+    --brand-sync-color: #02BED6;
+    --surface-elevated: #18181B;
+    --surface-soft: #111113;
+    --surface-hover: #202024;
+    --surface-raised: #26262B;
+    --text-main: #F4F4F5;
+    --text-normal: #D4D4D8;
+    --text-muted: #A1A1AA;
+    --color-success: #70C96B;
+    --color-warning: #F6B73C;
+    --color-student-accent: #F6B73C;
 
-    color-scheme: light;
+    color-scheme: dark;
   }
 
   .dark {
-    --color-background: #080D19;
-    --color-foreground: hsl(60 5% 95%);
-    --color-card: hsl(0 0% 10%);
-    --color-card-foreground: hsl(60 5% 95%);
-    --color-popover: hsl(0 0% 10%);
-    --color-popover-foreground: hsl(60 5% 95%);
-    --color-primary: hsl(187 98% 48%);
-    --color-primary-foreground: hsl(0 0% 7%);
-    --color-secondary: hsl(0 0% 15%);
-    --color-secondary-foreground: hsl(60 5% 85%);
-    --color-muted: hsl(0 0% 15%);
-    --color-muted-foreground: hsl(0 0% 55%);
-    --color-accent: hsl(187 98% 48%);
-    --color-accent-foreground: hsl(0 0% 7%);
-    --color-destructive: hsl(0 62% 58%);
-    --color-destructive-foreground: hsl(0 0% 100%);
-    --color-border: hsl(0 0% 12%);
-    --color-input: hsl(0 0% 18%);
-    --color-ring: hsl(187 98% 48%);
+    --color-background: #0B0B0D;
+    --color-foreground: #F4F4F5;
+    --color-card: #18181B;
+    --color-card-foreground: #F4F4F5;
+    --color-popover: #18181B;
+    --color-popover-foreground: #F4F4F5;
+    --color-primary: #02BED6;
+    --color-primary-foreground: #061012;
+    --color-secondary: #202024;
+    --color-secondary-foreground: #F4F4F5;
+    --color-muted: #111113;
+    --color-muted-foreground: #A1A1AA;
+    --color-accent: #02BED6;
+    --color-accent-foreground: #061012;
+    --color-destructive: #F05D5E;
+    --color-destructive-foreground: #F4F4F5;
+    --color-border: #303036;
+    --color-input: #202024;
+    --color-ring: #35D7E8;
 
-    --accent-color: #1acbe0;
-    --accent-light: #59daea;
-    --accent-glow: rgba(26, 203, 224, 0.24);
-    --brand-sync-color: #0C5A88;
+    --accent-color: #02BED6;
+    --accent-light: #35D7E8;
+    --accent-glow: rgba(2, 190, 214, 0.24);
+    --brand-sync-color: #02BED6;
+    --surface-elevated: #18181B;
+    --surface-soft: #111113;
+    --surface-hover: #202024;
+    --surface-raised: #26262B;
+    --text-main: #F4F4F5;
+    --text-normal: #D4D4D8;
+    --text-muted: #A1A1AA;
+    --color-success: #70C96B;
+    --color-warning: #F6B73C;
+    --color-student-accent: #F6B73C;
 
     color-scheme: dark;
   }
@@ -92,7 +112,7 @@
 
   body {
     background-color: var(--color-background);
-    color: var(--color-foreground);
+    color: var(--text-normal);
     font-family: var(--font-sans), 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
     font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
     -webkit-font-smoothing: antialiased;
@@ -121,17 +141,6 @@
     background-color: var(--color-background);
   }
 
-  /* Brand color pulse — only when user has no motion preference */
-  @media (prefers-reduced-motion: no-preference) {
-    html {
-      animation: brandSyncPulse 60s linear infinite;
-    }
-
-    html.dark {
-      animation-name: brandSyncPulseDark;
-    }
-  }
-
   :focus-visible {
     outline: 2px solid var(--accent-color);
     outline-offset: 2px;
@@ -152,12 +161,12 @@
 
 @layer components {
   .glass-card {
-    background-color: color-mix(in srgb, var(--color-card) 88%, transparent);
+    background-color: var(--surface-elevated);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
-    border: 1px solid color-mix(in srgb, var(--color-foreground) 6%, transparent);
+    border: 1px solid var(--color-border);
     border-radius: 1.25rem;
-    box-shadow: 0 4px 20px -10px color-mix(in srgb, var(--color-foreground) 8%, transparent);
+    box-shadow: 0 8px 30px -18px rgba(0, 0, 0, 0.45);
   }
 
   .accent-gradient {
@@ -184,61 +193,199 @@
   @media (hover: hover) and (pointer: fine) {
     .hover-card:hover {
       transform: translateY(-2px);
-      box-shadow: 0 8px 24px -4px var(--accent-glow), 0 4px 8px -2px rgba(0, 0, 0, 0.1);
+      background-color: var(--surface-hover);
+      box-shadow: 0 8px 24px -4px var(--accent-glow), 0 4px 8px -2px rgba(0, 0, 0, 0.18);
     }
   }
 
   /* Difficulty badges */
   .badge-difficulty-1 {
-    background-color: rgb(209 250 229);
-    color: rgb(6 95 70);
+    background-color: color-mix(in srgb, var(--color-success) 16%, transparent);
+    color: var(--color-success);
   }
   .badge-difficulty-2 {
-    background-color: rgb(220 252 231);
-    color: rgb(22 101 52);
+    background-color: color-mix(in srgb, var(--color-success) 22%, transparent);
+    color: var(--color-success);
   }
   .badge-difficulty-3 {
-    background-color: rgb(254 243 199);
-    color: rgb(146 64 14);
+    background-color: color-mix(in srgb, var(--color-warning) 18%, transparent);
+    color: var(--color-warning);
   }
   .badge-difficulty-4 {
-    background-color: rgb(255 237 213);
-    color: rgb(154 52 18);
+    background-color: color-mix(in srgb, var(--color-warning) 24%, transparent);
+    color: var(--color-warning);
   }
   .badge-difficulty-5 {
-    background-color: rgb(254 226 226);
-    color: rgb(153 27 27);
+    background-color: color-mix(in srgb, var(--color-destructive) 18%, transparent);
+    color: var(--color-destructive);
   }
 
   .dark .badge-difficulty-1 {
-    background-color: rgba(6, 78, 59, 0.3);
-    color: rgb(52 211 153);
+    background-color: color-mix(in srgb, var(--color-success) 16%, transparent);
+    color: var(--color-success);
   }
   .dark .badge-difficulty-2 {
-    background-color: rgba(20, 83, 45, 0.3);
-    color: rgb(74 222 128);
+    background-color: color-mix(in srgb, var(--color-success) 22%, transparent);
+    color: var(--color-success);
   }
   .dark .badge-difficulty-3 {
-    background-color: rgba(120, 53, 15, 0.3);
-    color: rgb(251 191 36);
+    background-color: color-mix(in srgb, var(--color-warning) 18%, transparent);
+    color: var(--color-warning);
   }
   .dark .badge-difficulty-4 {
-    background-color: rgba(124, 45, 18, 0.3);
-    color: rgb(251 146 60);
+    background-color: color-mix(in srgb, var(--color-warning) 24%, transparent);
+    color: var(--color-warning);
   }
   .dark .badge-difficulty-5 {
-    background-color: rgba(127, 29, 29, 0.3);
-    color: rgb(252 165 165);
+    background-color: color-mix(in srgb, var(--color-destructive) 18%, transparent);
+    color: var(--color-destructive);
   }
 
   .search-backdrop {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.3);
+    background: rgba(7, 17, 31, 0.72);
     backdrop-filter: blur(4px);
     -webkit-backdrop-filter: blur(4px);
     z-index: 40;
     animation: fadeIn 150ms ease;
+  }
+
+  .faculty-accent-chip {
+    background:
+      radial-gradient(
+        circle at top right,
+        color-mix(in srgb, var(--faculty-color) 14%, transparent),
+        transparent 38%
+      ),
+      var(--surface-elevated);
+    border: 1px solid var(--color-border);
+    box-shadow: inset 3px 0 0 0 var(--faculty-color);
+    color: var(--text-main);
+  }
+
+  /* Harmonize older utility-heavy surfaces with the graphite palette. */
+  .border-white\/5,
+  .border-white\/10 {
+    border-color: var(--color-border) !important;
+  }
+
+  .bg-card\/40,
+  .bg-card\/60,
+  .bg-card\/70,
+  .bg-card\/80 {
+    background-color: color-mix(in srgb, var(--surface-elevated) 92%, transparent) !important;
+  }
+
+  .bg-background\/30,
+  .bg-background\/40,
+  .bg-background\/50,
+  .bg-background\/60,
+  .bg-background\/70 {
+    background-color: color-mix(in srgb, var(--color-background) 82%, var(--surface-soft) 18%) !important;
+  }
+
+  .bg-muted\/20,
+  .bg-muted\/30,
+  .bg-muted\/40,
+  .bg-muted\/50,
+  .bg-muted\/60 {
+    background-color: color-mix(in srgb, var(--surface-soft) 88%, transparent) !important;
+  }
+
+  .bg-emerald-500\/10,
+  .bg-emerald-500\/15,
+  .bg-emerald-500\/20 {
+    background-color: color-mix(in srgb, var(--color-success) 12%, transparent) !important;
+  }
+
+  .text-emerald-500,
+  .text-emerald-600,
+  .text-emerald-700,
+  .dark\:text-emerald-400 {
+    color: var(--color-success) !important;
+  }
+
+  .border-emerald-500\/20,
+  .border-emerald-500\/30,
+  .peer-checked\:border-emerald-500\/40 {
+    border-color: color-mix(in srgb, var(--color-success) 30%, transparent) !important;
+  }
+
+  .bg-amber-500\/10,
+  .bg-amber-500\/15,
+  .bg-amber-500\/20 {
+    background-color: color-mix(in srgb, var(--color-warning) 12%, transparent) !important;
+  }
+
+  .text-amber-400,
+  .text-amber-500,
+  .text-amber-600,
+  .text-amber-700,
+  .text-amber-900,
+  .dark\:text-amber-300,
+  .dark\:text-amber-400 {
+    color: var(--color-warning) !important;
+  }
+
+  .border-amber-500\/20,
+  .border-amber-500\/30,
+  .border-amber-500\/40 {
+    border-color: color-mix(in srgb, var(--color-warning) 30%, transparent) !important;
+  }
+
+  .bg-blue-500\/10,
+  .bg-blue-500\/15,
+  .bg-blue-500\/20,
+  .bg-sky-500\/5,
+  .bg-sky-500\/10 {
+    background-color: color-mix(in srgb, var(--color-primary) 12%, transparent) !important;
+  }
+
+  .text-blue-500,
+  .text-blue-600,
+  .text-sky-400,
+  .text-sky-500,
+  .text-sky-600,
+  .text-sky-700,
+  .text-sky-800,
+  .dark\:text-sky-300,
+  .dark\:text-sky-400 {
+    color: var(--color-primary) !important;
+  }
+
+  .border-blue-500\/20,
+  .border-sky-500\/20,
+  .border-sky-500\/30 {
+    border-color: color-mix(in srgb, var(--color-primary) 30%, transparent) !important;
+  }
+
+  .bg-red-500\/5,
+  .bg-red-500\/10 {
+    background-color: color-mix(in srgb, var(--color-destructive) 10%, transparent) !important;
+  }
+
+  .text-red-600,
+  .dark\:text-red-400 {
+    color: var(--color-destructive) !important;
+  }
+
+  .border-red-500\/20,
+  .border-red-500\/40 {
+    border-color: color-mix(in srgb, var(--color-destructive) 30%, transparent) !important;
+  }
+
+  .bg-slate-500\/10,
+  .bg-indigo-500\/10 {
+    background-color: color-mix(in srgb, var(--surface-raised) 70%, transparent) !important;
+  }
+
+  .text-slate-500,
+  .text-slate-600,
+  .dark\:text-slate-400,
+  .text-indigo-600,
+  .dark\:text-indigo-400 {
+    color: var(--text-muted) !important;
   }
 
   .home-ambient-glow-aura {
@@ -296,13 +443,13 @@
   }
 
   .search-bar-focused {
-    border-color: #4b5563 !important;
-    box-shadow: 0 0 0 1px #4b5563, 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1) !important;
+    border-color: var(--color-ring) !important;
+    box-shadow: 0 0 0 1px var(--color-ring), 0 10px 15px -3px rgba(0, 0, 0, 0.18), 0 4px 6px -4px rgba(0, 0, 0, 0.18) !important;
   }
 
   .dark .search-bar-focused {
-    border-color: #374151 !important;
-    box-shadow: 0 0 0 1px #374151, 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -4px rgba(0, 0, 0, 0.3) !important;
+    border-color: var(--color-ring) !important;
+    box-shadow: 0 0 0 1px var(--color-ring), 0 10px 15px -3px rgba(0, 0, 0, 0.34), 0 4px 6px -4px rgba(0, 0, 0, 0.34) !important;
   }
 
   /* Only suppress transitions on the input itself (prevents focus flash),
@@ -436,7 +583,7 @@
 
 @media (max-width: 767px) {
   .glass-card {
-    background-color: color-mix(in srgb, var(--color-card) 96%, transparent);
+    background-color: color-mix(in srgb, var(--color-card) 98%, transparent);
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
     box-shadow: 0 2px 10px -8px color-mix(in srgb, var(--color-foreground) 16%, transparent);
@@ -460,24 +607,6 @@
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
-}
-
-@keyframes brandSyncPulse {
-  0%, 100% { --brand-sync-color: #0078B4; }
-  16.66% { --brand-sync-color: #02BED6; }
-  33.33% { --brand-sync-color: #EE7202; }
-  50% { --brand-sync-color: #703287; }
-  66.66% { --brand-sync-color: #F3B400; }
-  83.33% { --brand-sync-color: #CC0A1C; }
-}
-
-@keyframes brandSyncPulseDark {
-  0%, 100% { --brand-sync-color: #0C5A88; }
-  16.66% { --brand-sync-color: #0A8FA1; }
-  33.33% { --brand-sync-color: #A45B1A; }
-  50% { --brand-sync-color: #5A2A76; }
-  66.66% { --brand-sync-color: #B07D16; }
-  83.33% { --brand-sync-color: #9A1826; }
 }
 
 @keyframes slideUp {

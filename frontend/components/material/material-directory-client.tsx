@@ -120,7 +120,7 @@ export function MaterialDirectoryClient({
             ? <>Výsledky pro &bdquo;<span className="font-medium text-foreground">{query.trim()}</span>&ldquo;</>
             : "Schválené materiály a přehledné skupiny napříč předměty."
         }
-        icon={<FileText className="h-5 w-5 text-sky-700" />}
+        icon={<FileText className="h-5 w-5 text-primary" />}
         className="mb-0"
       />
 
@@ -147,8 +147,8 @@ export function MaterialDirectoryClient({
           onClick={() => setView("groups")}
           className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${
             view === "groups"
-              ? "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400"
-              : "border-border text-muted-foreground hover:bg-muted"
+              ? "border-[#F6B73C]/30 bg-[#F6B73C]/10 text-[#F6B73C]"
+              : "border-border bg-card text-muted-foreground hover:bg-[var(--surface-hover)]"
           }`}
         >
           <FolderOpen className="h-3.5 w-3.5" />
@@ -159,8 +159,8 @@ export function MaterialDirectoryClient({
           onClick={() => setView("files")}
           className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${
             view === "files"
-              ? "border-sky-500/30 bg-sky-500/10 text-sky-700 dark:text-sky-400"
-              : "border-border text-muted-foreground hover:bg-muted"
+              ? "border-primary/30 bg-primary/10 text-primary"
+              : "border-border bg-card text-muted-foreground hover:bg-[var(--surface-hover)]"
           }`}
         >
           <FileText className="h-3.5 w-3.5" />
@@ -211,7 +211,7 @@ function MaterialGroupsSection({
       {groups.length > 0 && (
         <section className="space-y-3">
           <h2 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-            <FolderOpen className="h-4 w-4 text-amber-500" />
+            <FolderOpen className="h-4 w-4 text-[#F6B73C]" />
             Skupiny materiálů
             <span className="text-xs font-normal normal-case">({groups.length})</span>
           </h2>
@@ -230,7 +230,7 @@ function MaterialGroupsSection({
       {ungroupedMaterials.length > 0 && (
         <section className="space-y-3">
           <h2 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-            <FileText className="h-4 w-4 text-sky-600" />
+            <FileText className="h-4 w-4 text-primary" />
             Jednotlivé soubory
             <span className="text-xs font-normal normal-case">({ungroupedMaterials.length})</span>
           </h2>
@@ -278,7 +278,9 @@ function EmptyState({
 }) {
   return (
     <div className="glass-card space-y-3 rounded-2xl p-10 text-center">
-      <p className="text-4xl">📄</p>
+      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+        <FileText className="h-6 w-6" />
+      </div>
       <p className="text-lg font-semibold text-foreground">Žádné materiály</p>
       <p className="text-sm text-muted-foreground">
         {query ? "Pro tenhle dotaz jsme nic nenašli." : "Zatím tu nejsou žádné schválené materiály."}
@@ -287,7 +289,7 @@ function EmptyState({
         <button
           type="button"
           onClick={onClearQuery}
-          className="text-sm text-sky-700 hover:underline"
+          className="text-sm text-primary hover:underline"
         >
           {filesView ? "Zobrazit všechny soubory" : "Zobrazit všechny materiály"}
         </button>
@@ -301,8 +303,8 @@ function SingleMaterialRow({ material }: { material: FlattenedMaterial }) {
     <div className="glass-card flex flex-col gap-3 rounded-lg p-3 sm:flex-row sm:items-center sm:justify-between sm:p-3.5">
       <div className="min-w-0 space-y-1">
         <div className="flex min-w-0 items-start gap-2">
-          <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-sky-500/10">
-            <FileText className="h-3.5 w-3.5 text-sky-700" />
+          <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+            <FileText className="h-3.5 w-3.5 text-primary" />
           </div>
           <div className="min-w-0">
             <p className="line-clamp-2 text-sm font-semibold leading-snug text-foreground sm:line-clamp-1">
@@ -311,7 +313,7 @@ function SingleMaterialRow({ material }: { material: FlattenedMaterial }) {
             {material.subject && (
               <Link
                 href={`/predmety/${material.subject.slug}`}
-                className="mt-0.5 block text-xs font-medium text-sky-700 transition-colors hover:text-sky-800 dark:text-sky-400 dark:hover:text-sky-300"
+                className="mt-0.5 block text-xs font-medium text-primary transition-colors hover:text-[#35D7E8]"
               >
                 {material.subject.short_tag} · {material.subject.name}
               </Link>
@@ -345,7 +347,7 @@ function SingleMaterialRow({ material }: { material: FlattenedMaterial }) {
           href={material.public_url}
           target="_blank"
           rel="noreferrer"
-          className="inline-flex items-center gap-1.5 rounded-lg bg-sky-600 px-2.5 py-2 text-xs font-medium text-white transition-colors hover:bg-sky-700 sm:px-3 sm:text-sm"
+          className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-2.5 py-2 text-xs font-medium text-primary-foreground transition-colors hover:bg-[#35D7E8] sm:px-3 sm:text-sm"
         >
           PDF
           <ExternalLink className="h-3.5 w-3.5" />
@@ -369,7 +371,7 @@ function MaterialSubjectMeta({ subject }: { subject: NonNullable<FlattenedMateri
     <div className="mt-2 flex flex-wrap items-center gap-1.5 sm:hidden">
       {subject.difficulty ? <DifficultyBadge difficulty={subject.difficulty} size="sm" /> : null}
       {subject.avg_subject_rating ? (
-        <span className="rounded-full border border-amber-500/20 bg-amber-500/10 px-2 py-0.5 text-[10px] font-medium text-amber-700 dark:text-amber-400">
+        <span className="rounded-full border border-[#F6B73C]/25 bg-[#F6B73C]/10 px-2 py-0.5 text-[10px] font-medium text-[#F6B73C]">
           Předmět {subject.avg_subject_rating.toFixed(1)} ★
         </span>
       ) : null}

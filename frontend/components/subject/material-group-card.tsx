@@ -109,14 +109,14 @@ export function MaterialGroupCard({
     <div
       className={
         dashboardSurface
-          ? 'overflow-hidden rounded-[24px] border border-white/10 bg-[rgba(255,255,255,0.03)] shadow-[inset_0_1px_0_rgba(255,255,255,0.02)]'
+          ? 'overflow-hidden rounded-[24px] border border-[#22344D] bg-[rgba(13,27,46,0.94)] shadow-[inset_0_1px_0_rgba(255,255,255,0.02)]'
           : 'glass-card overflow-hidden'
       }
     >
       {/* Header */}
-      <div className={`${compact ? 'p-3.5' : 'p-4'} ${isExpanded ? 'border-b border-white/5' : ''}`}>
+      <div className={`${compact ? 'p-3.5' : 'p-4'} ${isExpanded ? 'border-b border-[#22344D]' : ''}`}>
         {/* Uploader line */}
-        <div className={`flex items-center gap-1.5 text-xs ${dashboardSurface ? 'text-slate-400' : 'text-muted-foreground'} ${compact ? 'mb-1.5' : 'mb-2'}`}>
+        <div className={`flex items-center gap-1.5 text-xs ${dashboardSurface ? 'text-[#8FA3B8]' : 'text-muted-foreground'} ${compact ? 'mb-1.5' : 'mb-2'}`}>
           <User className="w-3 h-3" />
           <span>{group.uploader_display_name ?? 'Anonymní'}</span>
           {showSubject && group.subject && (
@@ -125,7 +125,7 @@ export function MaterialGroupCard({
               <Link
                 href={`/predmety/${group.subject.slug}`}
                 className={dashboardSurface
-                  ? 'rounded-md border border-[#02BED6]/20 bg-[#02BED6]/10 px-1.5 py-0.5 font-mono font-semibold text-[#6dd9e8] transition-colors hover:bg-[#02BED6]/15'
+                  ? 'rounded-md border border-[#22344D] bg-[#13243A] px-1.5 py-0.5 font-mono font-semibold text-[#02BED6] transition-colors hover:text-[#35D7E8]'
                   : 'font-mono font-semibold bg-primary/10 text-primary px-1.5 py-0.5 rounded hover:bg-primary/20 transition-colors'}
               >
                 {group.subject.short_tag}
@@ -139,7 +139,7 @@ export function MaterialGroupCard({
           <div className="mb-2 flex flex-wrap items-center gap-1.5 sm:hidden">
             {group.subject.difficulty ? <DifficultyBadge difficulty={group.subject.difficulty} size="sm" /> : null}
             {group.subject.avg_subject_rating ? (
-              <span className="rounded-full border border-amber-500/20 bg-amber-500/10 px-2 py-0.5 text-[10px] font-medium text-amber-700 dark:text-amber-400">
+              <span className="rounded-full border border-[#F6B73C]/25 bg-[#F6B73C]/12 px-2 py-0.5 text-[10px] font-medium text-[#F6B73C]">
                 Předmět {group.subject.avg_subject_rating.toFixed(1)} ★
               </span>
             ) : null}
@@ -153,14 +153,14 @@ export function MaterialGroupCard({
 
         {/* Title row */}
         <div className="flex items-start gap-2">
-          <FolderOpen className={`${compact ? 'w-4 h-4' : 'w-5 h-5'} text-amber-500 mt-0.5 shrink-0`} />
+          <FolderOpen className={`${compact ? 'w-4 h-4' : 'w-5 h-5'} mt-0.5 shrink-0 text-[#F6B73C]`} />
           {isEditing ? (
             <div className="flex-1 flex gap-2">
               <input
                 value={editTitle}
                 onChange={e => setEditTitle(e.target.value)}
                 onKeyDown={e => { if (e.key === 'Enter') handleRename(); if (e.key === 'Escape') setIsEditing(false) }}
-                className="flex-1 rounded-lg border border-white/5 bg-background shadow-inner px-2 py-1 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                className="flex-1 rounded-lg border border-[#22344D] bg-background shadow-inner px-2 py-1 text-sm outline-none focus:ring-2 focus:ring-[#35D7E8]/25"
                 autoFocus
                 disabled={isPending}
                 maxLength={120}
@@ -170,7 +170,7 @@ export function MaterialGroupCard({
             </div>
           ) : (
             <div className="flex-1 min-w-0">
-              <h3 className={`${compact ? 'text-sm' : 'text-base'} break-words font-semibold leading-tight ${dashboardSurface ? 'text-slate-50' : 'text-foreground'}`}>
+              <h3 className={`${compact ? 'text-sm' : 'text-base'} break-words font-semibold leading-tight ${dashboardSurface ? 'text-[#F4F8FB]' : 'text-foreground'}`}>
                 {currentTitle}
               </h3>
             </div>
@@ -179,15 +179,15 @@ export function MaterialGroupCard({
 
         {/* Stats + controls */}
         <div className={`flex items-center gap-3 ${compact ? 'mt-1.5' : 'mt-2'} flex-wrap`}>
-          <span className={`text-xs ${dashboardSurface ? 'text-slate-400' : 'text-muted-foreground'}`}>
+          <span className={`text-xs ${dashboardSurface ? 'text-[#8FA3B8]' : 'text-muted-foreground'}`}>
             {group.materials.length} {group.materials.length === 1 ? 'soubor' : group.materials.length < 5 ? 'soubory' : 'souborů'}
             {totalPages > 0 && ` · ${totalPages} stran`}
           </span>
           {approvedCount > 0 && (
-            <span className="text-xs text-emerald-600 dark:text-emerald-400">{approvedCount} schváleno</span>
+            <span className="text-xs text-[#70C96B]">{approvedCount} schváleno</span>
           )}
           {pendingCount > 0 && (
-            <span className="text-xs text-amber-600 dark:text-amber-400">{pendingCount} čeká</span>
+            <span className="text-xs text-[#F6B73C]">{pendingCount} čeká</span>
           )}
 
           <div className="ml-auto flex items-center gap-2">
@@ -231,7 +231,7 @@ export function MaterialGroupCard({
 
       {/* Materials list */}
       {isExpanded && (
-        <ul className={`divide-y ${dashboardSurface ? 'divide-white/8' : 'divide-white/5'}`}>
+        <ul className={`divide-y ${dashboardSurface ? 'divide-[#22344D]' : 'divide-white/5'}`}>
           {group.materials.map(material => (
             <li key={material.id}>
               <div className={`group flex items-center gap-3 ${compact ? 'px-3.5 py-2.5' : 'px-4 py-3'} transition-colors ${dashboardSurface ? 'hover:bg-white/[0.03]' : 'hover:bg-muted/50'}`}>
@@ -241,14 +241,14 @@ export function MaterialGroupCard({
                   rel="noreferrer"
                   className="flex min-w-0 flex-1 items-center gap-3"
                 >
-                  <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${dashboardSurface ? 'bg-sky-500/10' : 'bg-sky-500/10'}`}>
-                    <FileText className={`w-3.5 h-3.5 ${dashboardSurface ? 'text-sky-300' : 'text-sky-600'}`} />
+                  <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${dashboardSurface ? 'bg-[#13243A]' : 'bg-sky-500/10'}`}>
+                    <FileText className={`w-3.5 h-3.5 ${dashboardSurface ? 'text-[#02BED6]' : 'text-sky-600'}`} />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className={`${compact ? 'text-[13px]' : 'text-sm'} truncate font-medium transition-colors ${dashboardSurface ? 'text-slate-100 group-hover:text-[#6dd9e8]' : 'text-foreground group-hover:text-primary'}`}>
+                    <p className={`${compact ? 'text-[13px]' : 'text-sm'} truncate font-medium transition-colors ${dashboardSurface ? 'text-[#CBD7E6] group-hover:text-[#35D7E8]' : 'text-foreground group-hover:text-primary'}`}>
                       {material.title}
                     </p>
-                    <p className={`text-xs ${dashboardSurface ? 'text-slate-400' : 'text-muted-foreground'}`}>
+                    <p className={`text-xs ${dashboardSurface ? 'text-[#8FA3B8]' : 'text-muted-foreground'}`}>
                       {formatFileSize(material.size_bytes)}
                       {material.page_count != null && ` · ${material.page_count} stran`}
                     </p>
@@ -256,7 +256,7 @@ export function MaterialGroupCard({
                       <div className="mt-1 flex flex-wrap items-center gap-1.5 sm:hidden">
                         {group.subject.difficulty ? <DifficultyBadge difficulty={group.subject.difficulty} size="sm" /> : null}
                         {group.subject.avg_subject_rating ? (
-                          <span className="rounded-full border border-amber-500/20 bg-amber-500/10 px-2 py-0.5 text-[10px] font-medium text-amber-700 dark:text-amber-400">
+                          <span className="rounded-full border border-[#F6B73C]/25 bg-[#F6B73C]/12 px-2 py-0.5 text-[10px] font-medium text-[#F6B73C]">
                             Předmět {group.subject.avg_subject_rating.toFixed(1)} ★
                           </span>
                         ) : null}
@@ -271,10 +271,10 @@ export function MaterialGroupCard({
                 </a>
                 <span className={`text-xs px-2 py-0.5 rounded-full shrink-0 ${
                   material.moderation_status === 'approved'
-                    ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400'
+                    ? 'bg-[#70C96B]/12 text-[#70C96B]'
                     : material.moderation_status === 'rejected'
                     ? 'bg-destructive/10 text-destructive'
-                    : 'bg-amber-500/10 text-amber-700 dark:text-amber-400'
+                    : 'bg-[#F6B73C]/12 text-[#F6B73C]'
                 }`}>
                   {material.moderation_status === 'approved' ? 'Schváleno' : material.moderation_status === 'rejected' ? 'Zamítnuto' : 'Čeká'}
                 </span>

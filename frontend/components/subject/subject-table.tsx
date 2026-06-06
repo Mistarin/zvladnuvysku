@@ -37,10 +37,10 @@ const SEMESTER_LABELS: Record<string, string> = {
 };
 
 const ATTENDANCE_STYLES: Record<string, { text: string; bg: string }> = {
-  volná: { text: "Volná", bg: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" },
-  povinná: { text: "Povinná (vše)", bg: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400" },
-  "povinné přednášky": { text: "Přednášky", bg: "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400" },
-  "povinná cvičení": { text: "Cvičení", bg: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400" },
+  volná: { text: "Volná", bg: "bg-[#70C96B]/12 text-[#70C96B]" },
+  povinná: { text: "Povinná (vše)", bg: "bg-[#F05D5E]/12 text-[#F05D5E]" },
+  "povinné přednášky": { text: "Přednášky", bg: "bg-[#F6B73C]/12 text-[#F6B73C]" },
+  "povinná cvičení": { text: "Cvičení", bg: "bg-[#F6B73C]/12 text-[#F6B73C]" },
 };
 
 function getAttendanceData(type: string | null | undefined) {
@@ -61,11 +61,11 @@ function TeacherRatingCell({ subject }: { subject: SubjectWithStats }) {
 
   return (
     <div className="group relative inline-flex items-center justify-center">
-      <div className="inline-flex items-center gap-1.5 rounded-full border border-white/5 bg-background/60 px-2.5 py-1 text-sm shadow-inner">
+      <div className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-2.5 py-1 text-sm shadow-inner">
         {average !== null ? (
           <>
-            <span className="font-bold text-amber-500">{average.toFixed(1)}</span>
-            <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-500" />
+            <span className="font-bold text-[#F6B73C]">{average.toFixed(1)}</span>
+            <Star className="h-3.5 w-3.5 fill-[#F6B73C] text-[#F6B73C]" />
           </>
         ) : (
           <span className="text-muted-foreground">—</span>
@@ -78,7 +78,7 @@ function TeacherRatingCell({ subject }: { subject: SubjectWithStats }) {
       </div>
 
       {hasMultipleTeachers && (
-        <div className="pointer-events-none absolute bottom-full right-0 z-20 mb-2 hidden min-w-[18rem] rounded-2xl border border-white/10 bg-popover/95 p-3 text-left shadow-2xl backdrop-blur-md group-hover:block group-focus-within:block">
+        <div className="pointer-events-none absolute bottom-full right-0 z-20 mb-2 hidden min-w-[18rem] rounded-2xl border border-border bg-popover p-3 text-left shadow-2xl backdrop-blur-md group-hover:block group-focus-within:block">
           <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             Vyučující
           </p>
@@ -90,7 +90,7 @@ function TeacherRatingCell({ subject }: { subject: SubjectWithStats }) {
                 className="pointer-events-auto flex items-center justify-between gap-3 rounded-xl px-3 py-2 transition-colors hover:bg-muted/60"
               >
                 <span className="line-clamp-2 text-sm text-foreground">{teacher.name}</span>
-                <span className="shrink-0 text-sm font-medium text-amber-500">
+                <span className="shrink-0 text-sm font-medium text-[#F6B73C]">
                   {teacher.total_ratings > 0 && teacher.avg_rating !== null ? `${teacher.avg_rating.toFixed(1)} ★` : "—"}
                 </span>
               </Link>
@@ -194,18 +194,17 @@ export function SubjectTable({
                     <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
                       {subject.faculty && (
                         <span 
-                          className="inline-flex items-center rounded-md px-2 py-1 text-[10px] font-semibold uppercase tracking-wider"
+                          className="faculty-accent-chip inline-flex items-center rounded-md px-2 py-1 text-[10px] font-semibold uppercase tracking-wider"
                           style={{ 
-                            backgroundColor: `${facultyColor}20`,
-                            color: facultyColor,
+                            ["--faculty-color" as string]: facultyColor,
                           }}
                         >
                           {subject.faculty}
                         </span>
                       )}
                       {subject.exam_from_home && (
-                        <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-md border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
-                          <span className="flex h-3.5 w-3.5 items-center justify-center rounded-sm bg-emerald-500 text-[9px] font-bold text-white">
+                        <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-md border border-[#70C96B]/25 bg-[#70C96B]/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-[#70C96B]">
+                          <span className="flex h-3.5 w-3.5 items-center justify-center rounded-sm bg-[#70C96B] text-[9px] font-bold text-[#061012]">
                             ✓
                           </span>
                           Z domova
@@ -241,8 +240,8 @@ export function SubjectTable({
                   <td className="px-4 py-3 text-center hidden lg:table-cell">
                     {subject.avg_subject_rating ? (
                       <div className="flex items-center justify-center gap-1">
-                        <span className="font-bold text-amber-500">{subject.avg_subject_rating.toFixed(1)}</span>
-                        <span className="text-amber-500 text-xs">★</span>
+                        <span className="font-bold text-[#F6B73C]">{subject.avg_subject_rating.toFixed(1)}</span>
+                        <span className="text-[#F6B73C] text-xs">★</span>
                       </div>
                     ) : (
                       <span className="text-muted-foreground text-sm">—</span>

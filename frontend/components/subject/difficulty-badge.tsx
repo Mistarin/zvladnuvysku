@@ -64,7 +64,7 @@ export function StarRating({ value, max = 5, size = "default" }: StarRatingProps
           key={star}
           className={`${size === "sm" ? "text-xs" : "text-sm"} ${
             star <= Math.round(value)
-              ? "text-amber-400"
+              ? "text-[#F6B73C]"
               : "text-muted-foreground/30"
           }`}
         >

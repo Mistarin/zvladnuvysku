@@ -97,9 +97,9 @@ const FIELD_LABELS: Record<string, string> = {
 
 const SUBMIT_TIMEOUT_MS = 30000
 const MAX_PROPOSAL_MATERIALS = 8
-const sectionBodyClass = 'border-t border-white/5 px-7 pb-7 pt-5'
+const sectionBodyClass = 'border-t border-border px-7 pb-7 pt-5'
 const primaryButtonClass = 'rounded-xl bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:-translate-y-0.5 hover:opacity-90'
-const secondaryButtonClass = 'rounded-xl border border-white/5 px-6 py-2.5 text-sm font-medium text-foreground shadow-inner transition-all hover:bg-muted/50'
+const secondaryButtonClass = 'rounded-xl border border-border bg-card px-6 py-2.5 text-sm font-medium text-foreground shadow-inner transition-all hover:bg-muted/50'
 const subtleButtonClass = 'rounded-lg px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground'
 const smallPrimaryButtonClass = 'rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-50'
 
@@ -129,7 +129,7 @@ function Input({ ...props }: React.InputHTMLAttributes<HTMLInputElement>) {
   return (
     <input
       {...props}
-      className="w-full rounded-xl border border-white/5 shadow-inner bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-1 focus:ring-primary/40 focus:border-primary/40 transition-all"
+      className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground shadow-inner outline-none transition-all placeholder:text-muted-foreground focus:border-primary/40 focus:ring-1 focus:ring-primary/40"
     />
   )
 }
@@ -138,7 +138,7 @@ function Select({ ...props }: React.SelectHTMLAttributes<HTMLSelectElement>) {
   return (
     <select
       {...props}
-      className="w-full rounded-xl border border-white/5 shadow-inner bg-background px-3 py-2 text-sm text-foreground outline-none focus:ring-1 focus:ring-primary/40 focus:border-primary/40 transition-all"
+      className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground shadow-inner outline-none transition-all focus:border-primary/40 focus:ring-1 focus:ring-primary/40"
     />
   )
 }
@@ -148,7 +148,7 @@ function Textarea({ hint, ...props }: React.TextareaHTMLAttributes<HTMLTextAreaE
     <div>
       <textarea
         {...props}
-        className="w-full rounded-xl border border-white/5 shadow-inner bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground resize-none outline-none focus:ring-1 focus:ring-primary/40 focus:border-primary/40 transition-all font-mono"
+        className="w-full resize-none rounded-xl border border-border bg-background px-3 py-2 font-mono text-sm text-foreground shadow-inner outline-none transition-all placeholder:text-muted-foreground focus:border-primary/40 focus:ring-1 focus:ring-primary/40"
       />
       {hint && <p className="text-xs text-muted-foreground mt-1">{hint}</p>}
     </div>

@@ -145,10 +145,10 @@ export function ProposalCard({ proposal, currentSubjectData, readonly = false }:
     : null
   const statusTone =
     proposal.status === 'approved'
-      ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'
+      ? 'bg-[#70C96B]/15 text-[#70C96B]'
       : proposal.status === 'rejected'
         ? 'bg-destructive/10 text-destructive'
-        : 'bg-amber-500/15 text-amber-700 dark:text-amber-400'
+        : 'bg-[#F6B73C]/15 text-[#F6B73C]'
   const statusLabel =
     proposal.status === 'approved'
       ? 'Schváleno'
@@ -158,18 +158,18 @@ export function ProposalCard({ proposal, currentSubjectData, readonly = false }:
 
   if (done && feedback?.type === 'success') {
     return (
-      <div className="glass-card p-4 flex items-center gap-3 text-sm text-muted-foreground opacity-60">
-        <CheckCircle className="w-4 h-4 text-emerald-500 shrink-0" />
+      <div className="glass-card flex items-center gap-3 p-4 text-sm text-muted-foreground opacity-60">
+        <CheckCircle className="h-4 w-4 shrink-0 text-[#70C96B]" />
         <span>{feedback.message} — <span className="font-medium">{String(proposalDataRecord.name ?? proposal.id)}</span></span>
       </div>
     )
   }
 
   return (
-    <div className="glass-card p-6 space-y-5">
+    <div className="glass-card space-y-5 p-6">
       {/* Header */}
       <div className="flex flex-wrap items-center gap-3">
-        <span className={`inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full ${proposal.type === 'new' ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400' : 'bg-blue-500/15 text-blue-600 dark:text-blue-400'}`}>
+        <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${proposal.type === 'new' ? 'bg-[#70C96B]/15 text-[#70C96B]' : 'bg-primary/15 text-primary'}`}>
           {proposal.type === 'new' ? <FilePlus className="w-3 h-3" /> : <FileEdit className="w-3 h-3" />}
           {proposal.type === 'new' ? 'Nový předmět' : 'Úprava'}
         </span>
@@ -203,7 +203,7 @@ export function ProposalCard({ proposal, currentSubjectData, readonly = false }:
           const formattedCurrent = changed ? formatProposalValue(current) : null
 
           return (
-            <div key={key} className={`flex flex-col gap-2 rounded-lg px-3 py-3 text-sm ${changed ? 'bg-amber-500/10 border border-amber-500/20' : 'bg-muted/50'}`}>
+            <div key={key} className={`flex flex-col gap-2 rounded-lg px-3 py-3 text-sm ${changed ? 'border border-[#F6B73C]/20 bg-[#F6B73C]/10' : 'bg-muted/50'}`}>
               <span className="flex items-center gap-1 text-xs font-medium text-muted-foreground min-w-[130px]">
                 <Tag className="w-3 h-3" /> {label}
               </span>
@@ -219,9 +219,9 @@ export function ProposalCard({ proposal, currentSubjectData, readonly = false }:
       </div>
 
       {proposalMaterials.length > 0 && (
-        <div className="space-y-4 rounded-[1.5rem] border border-white/5 bg-background/50 p-5 shadow-sm">
+        <div className="space-y-4 rounded-[1.5rem] border border-border bg-background/50 p-5 shadow-sm">
           <div className="flex items-center gap-2">
-            <FileText className="h-4 w-4 text-sky-600" />
+            <FileText className="h-4 w-4 text-primary" />
             <p className="text-sm font-semibold text-foreground">Navržené PDF materiály</p>
           </div>
 
@@ -235,7 +235,7 @@ export function ProposalCard({ proposal, currentSubjectData, readonly = false }:
                 value={materialGroupTitle}
                 onChange={(e) => setMaterialGroupTitle(e.target.value)}
                 placeholder="např. Vše ke zkoušce"
-                className="w-full rounded-xl border border-white/5 bg-background shadow-inner px-4 py-3 text-sm outline-none focus:ring-1 focus:ring-primary/40 focus:bg-background"
+                className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm shadow-inner outline-none focus:bg-background focus:ring-1 focus:ring-primary/40"
                 maxLength={120}
               />
             </div>
@@ -246,7 +246,7 @@ export function ProposalCard({ proposal, currentSubjectData, readonly = false }:
               const publicUrl = getStoragePublicUrl('study_materials', material.file_path) ?? '#'
 
               return (
-                <div key={`${material.file_path}-${index}`} className="rounded-xl border border-white/5 bg-card/40 p-4 shadow-sm">
+                <div key={`${material.file_path}-${index}`} className="rounded-xl border border-border bg-card p-4 shadow-sm">
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                     <div className="min-w-0">
                       <a

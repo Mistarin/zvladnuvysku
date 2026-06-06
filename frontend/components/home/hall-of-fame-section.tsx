@@ -35,7 +35,7 @@ const PERIOD_LABELS: Record<HallOfFamePeriod, string> = {
   all: "Celkem",
 };
 
-const HALL_OF_FAME_COLOR = "#02BED6";
+const HALL_OF_FAME_COLOR = "#F6B73C";
 
 export function HallOfFameSection({
   leaderboard,
@@ -56,7 +56,7 @@ export function HallOfFameSection({
       id="hall-of-fame"
       className="container mx-auto max-w-6xl scroll-mt-24 px-4 sm:px-6 lg:px-8 pb-16"
     >
-      <div className="relative overflow-hidden rounded-[2.5rem] border border-white/5 bg-card/60 p-6 shadow-[0_30px_80px_-45px_rgba(15,23,42,0.45)] backdrop-blur-xl sm:p-8">
+      <div className="relative overflow-hidden rounded-[2.5rem] border border-border bg-card p-6 shadow-[0_30px_80px_-45px_rgba(0,0,0,0.45)] backdrop-blur-xl sm:p-8">
         <div
           className="pointer-events-none absolute inset-x-0 top-0 h-52 sm:h-60"
           style={{
@@ -91,7 +91,7 @@ export function HallOfFameSection({
               </div>
             </div>
 
-            <div className="inline-flex w-full max-w-sm rounded-[1.5rem] border border-white/5 bg-background/50 p-1 shadow-inner">
+            <div className="inline-flex w-full max-w-sm rounded-[1.5rem] border border-border bg-[var(--surface-soft)] p-1 shadow-inner">
               {(["week", "month", "all"] as HallOfFamePeriod[]).map((key) => (
                 <button
                   key={key}
@@ -100,7 +100,7 @@ export function HallOfFameSection({
                   className={cn(
                     "flex-1 rounded-xl px-4 py-2 text-sm font-medium transition-colors",
                     period === key
-                      ? "bg-foreground text-background shadow-sm"
+                      ? "bg-secondary text-foreground shadow-sm"
                       : "text-muted-foreground hover:text-foreground"
                   )}
                 >
@@ -111,7 +111,7 @@ export function HallOfFameSection({
           </div>
 
           {entries.length === 0 ? (
-            <div className="rounded-[2rem] border-2 border-dashed border-white/10 bg-background/30 px-6 py-12 text-center">
+            <div className="rounded-[2rem] border-2 border-dashed border-border bg-[var(--surface-soft)] px-6 py-12 text-center">
               <p className="text-lg font-semibold text-foreground">
                 Zatím tu nejsou žádní přispěvatelé za toto období.
               </p>
@@ -137,7 +137,7 @@ export function HallOfFameSection({
             </div>
           )}
 
-          <div className="rounded-[2rem] border border-white/5 bg-background/40 p-5 sm:p-6 shadow-sm">
+          <div className="rounded-[2rem] border border-border bg-[var(--surface-soft)] p-5 sm:p-6 shadow-sm">
             {isLoggedIn ? (
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>

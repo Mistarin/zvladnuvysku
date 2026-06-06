@@ -15,13 +15,13 @@ export function FacultyFilter() {
         href={pathname}
         style={{
           backgroundColor: !currentFaculty ? "#02BED6" : undefined,
-          color: !currentFaculty ? "#ffffff" : undefined,
-          borderColor: "#02BED6"
+          color: !currentFaculty ? "#061012" : undefined,
+          borderColor: !currentFaculty ? "#02BED6" : "#303036"
         }}
         className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-all ${
           !currentFaculty 
             ? "shadow-md scale-105" 
-            : "bg-transparent text-muted-foreground hover:opacity-80"
+            : "bg-[#18181B] text-muted-foreground hover:bg-[#202024] hover:text-foreground"
         }`}
       >
         Všechny
@@ -40,14 +40,17 @@ export function FacultyFilter() {
             key={fac.value}
             href={`${pathname}?${params.toString()}`}
             style={{ 
-              backgroundColor: isActive ? fac.color : undefined,
-              color: isActive ? (fac.textDark ? "#000000" : "#ffffff") : undefined,
-              borderColor: fac.color
+              background: isActive
+                ? `radial-gradient(circle at top right, color-mix(in srgb, ${fac.color} 14%, transparent), transparent 38%), #18181B`
+                : "#18181B",
+              color: isActive ? "#F4F4F5" : undefined,
+              borderColor: isActive ? fac.color : "#303036",
+              boxShadow: isActive ? `inset 3px 0 0 0 ${fac.color}` : undefined,
             }}
             className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-all ${
               isActive 
                 ? "shadow-md scale-105" 
-                : "bg-transparent text-muted-foreground hover:opacity-80"
+                : "text-muted-foreground hover:bg-[#202024] hover:text-foreground"
             }`}
           >
             {fac.adminLabel} ({fac.value})
