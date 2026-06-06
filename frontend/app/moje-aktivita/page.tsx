@@ -84,6 +84,7 @@ export default async function MyActivityPage() {
     .eq("user_id", user.id)
     .maybeSingle();
   const typedProfile = profile as Pick<Profile, "display_name" | "faculty" | "secondary_faculty"> | null;
+  const publicIdentity = getPublicProfileIdentity(typedProfile);
   const hasPublicIdentity = hasPublicProfileIdentity(typedProfile);
 
   return (
@@ -101,6 +102,19 @@ export default async function MyActivityPage() {
             <p className="mt-3 max-w-2xl text-sm text-muted-foreground dark:text-[#8FA3B8] sm:text-base">
             Všechny tvoje balíčky, návrhy, materiály i feedback na jednom místě.
             </p>
+            <div className="mt-4 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+              {publicIdentity.faculties.length > 0 ? (
+                <span className="rounded-md bg-primary/10 px-2.5 py-1 font-medium text-primary">
+                  {publicIdentity.faculties.join(' · ')}
+                </span>
+              ) : null}
+              <span className="rounded-md bg-muted px-2.5 py-1 font-medium text-foreground">
+                Veřejné jméno{' '}
+                <span className={hasPublicIdentity ? 'text-primary' : 'text-destructive'}>
+                  {hasPublicIdentity ? 'nastaveno' : 'chybí'}
+                </span>
+              </span>
+            </div>
           </div>
           <Link
             href={hasPublicIdentity ? getPublicProfilePath(user.id) : "/#hall-of-fame"}

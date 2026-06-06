@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { Check, ChevronDown, Search } from 'lucide-react'
+import { Check, ChevronDown, FileText, FolderOpen, Layers3, MessageSquareText, Search, Star, SquareStack } from 'lucide-react'
 import { ShareLinkButton } from '@/components/share/share-link-button'
 import { MaterialGroupCard, type MaterialGroupData } from '@/components/subject/material-group-card'
 import { getSharePath } from '@/lib/share-links'
@@ -74,9 +74,17 @@ export function ProfileSubjectContributions({
   const filteredMaterials = subjectSlug ? materials.filter((material) => material.subject?.slug === subjectSlug) : materials
   const filteredGroups = subjectSlug ? groups.filter((group) => group.subject?.slug === subjectSlug) : groups
   const activeSubjectLabel = subjectOptions.find((subject) => subject.slug === subjectSlug)?.label ?? 'Všechny předměty'
+  const tabs = [
+    { key: 'all', label: 'Vše', count: decks.length + materials.length + groups.length + subjectComments.length + teacherReviews.length, tone: 'default' as const, icon: Layers3 },
+    { key: 'decks', label: 'Kartičky', count: decks.length, tone: 'primary' as const, icon: SquareStack },
+    { key: 'materials', label: 'Materiály', count: materials.length, tone: 'community' as const, icon: FileText },
+    { key: 'groups', label: 'Složky', count: groups.length, tone: 'community' as const, icon: FolderOpen },
+    { key: 'subject-comments', label: 'Komentáře', count: subjectComments.length, tone: 'muted' as const, icon: MessageSquareText },
+    { key: 'teacher-reviews', label: 'Hodnocení', count: teacherReviews.length, tone: 'community' as const, icon: Star },
+  ]
 
   return (
-    <div className="space-y-5 xl:col-span-2">
+    <div className="space-y-6 xl:col-span-2">
       {subjectOptions.length > 1 ? (
         <div className="flex flex-col gap-4 rounded-[24px] border border-border bg-card p-4 shadow-[0_8px_24px_rgba(17,24,39,0.06)]">
           <div className="space-y-1">
@@ -148,15 +156,9 @@ export function ProfileSubjectContributions({
       ) : null}
 
       <div className="flex flex-wrap gap-2 rounded-2xl border border-border bg-card p-2">
-        {[
-          { key: 'all', label: `Vše (${decks.length + materials.length + groups.length + subjectComments.length + teacherReviews.length})` },
-          { key: 'decks', label: `Kartičky (${decks.length})` },
-          { key: 'materials', label: `Materiály (${materials.length})` },
-          { key: 'groups', label: `Složky (${groups.length})` },
-          { key: 'subject-comments', label: `Komentáře (${subjectComments.length})` },
-          { key: 'teacher-reviews', label: `Hodnocení (${teacherReviews.length})` },
-        ].map((tab) => {
+        {tabs.map((tab) => {
           const active = activeTab === tab.key
+          const Icon = tab.icon
           return (
             <button
               key={tab.key}
@@ -170,7 +172,11 @@ export function ProfileSubjectContributions({
                   : 'border-transparent bg-transparent text-muted-foreground hover:border-border hover:bg-muted/60 hover:text-foreground'
               }`}
             >
-              {tab.label}
+              <span className="flex items-center gap-2">
+                <Icon className="size-4" />
+                <span>{tab.label}</span>
+                <span className={getCountBadgeClass(tab.tone, active)}>{tab.count}</span>
+              </span>
             </button>
           )
         })}
@@ -180,12 +186,14 @@ export function ProfileSubjectContributions({
         {(activeTab === 'all' || activeTab === 'decks') && (
           <ProfileContributionSection title="Veřejné balíčky kartiček" empty="Zatím žádné veřejné balíčky.">
           {filteredDecks.map((deck) => (
-            <div key={deck.id} className="flex items-start justify-between gap-3 px-1 py-3">
+            <div key={deck.id} className="flex items-start justify-between gap-3 border-l-3 border-primary/70 pl-4 py-4">
               <div>
                 <Link href={`/flashcardy/${deck.id}`} className="font-semibold text-foreground transition-colors hover:text-primary">
                   {deck.title}
                 </Link>
-                <p className="mt-1 text-sm text-muted-foreground">{deck.card_count} karet</p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  <span className="font-semibold text-primary">{deck.card_count}</span> karet
+                </p>
                 {deck.subject && <SubjectLink subject={deck.subject} />}
               </div>
               <ShareLinkButton
@@ -200,7 +208,7 @@ export function ProfileSubjectContributions({
         {(activeTab === 'all' || activeTab === 'materials') && (
           <ProfileContributionSection title="Samostatné materiály" empty="Zatím žádné samostatné materiály.">
           {filteredMaterials.map((material) => (
-            <div key={material.id} className="flex items-start justify-between gap-3 px-1 py-3">
+            <div key={material.id} className="flex items-start justify-between gap-3 border-l-3 border-[var(--color-student-accent)]/70 pl-4 py-4">
               <div>
                 {material.url ? (
                   <a
@@ -214,7 +222,9 @@ export function ProfileSubjectContributions({
                 ) : (
                   <p className="font-semibold text-foreground">{material.title}</p>
                 )}
-                <p className="mt-1 text-sm text-muted-foreground">{material.sizeLabel}</p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  <span className="font-semibold text-[var(--color-student-accent)]">{material.sizeLabel}</span>
+                </p>
                 {material.subject && <SubjectLink subject={material.subject} />}
               </div>
               <ShareLinkButton
@@ -229,7 +239,9 @@ export function ProfileSubjectContributions({
         {(activeTab === 'all' || activeTab === 'groups') && (
           <ProfileContributionSection title="Složky materiálů" empty="Zatím žádné veřejné složky materiálů.">
           {filteredGroups.map((group) => (
-            <MaterialGroupCard key={group.id} group={group} showSubject surface="dashboard" />
+            <div key={group.id} className="border-l-3 border-[var(--color-student-accent)]/70 pl-4 py-4">
+              <MaterialGroupCard group={group} showSubject surface="dashboard" />
+            </div>
           ))}
           </ProfileContributionSection>
         )}
@@ -237,7 +249,7 @@ export function ProfileSubjectContributions({
         {(activeTab === 'all' || activeTab === 'subject-comments') && (
           <ProfileContributionSection title="Komentáře k předmětům" empty="Zatím žádné schválené komentáře k předmětům.">
             {subjectComments.map((comment) => (
-              <div key={comment.id} className="space-y-2 px-1 py-3">
+              <div key={comment.id} className="space-y-2 border-l-3 border-border pl-4 py-4">
                 <div className="flex items-center justify-between gap-3">
                   <div className="min-w-0">
                     <p className="truncate text-sm font-semibold text-foreground">{comment.subject?.name ?? 'Předmět'}</p>
@@ -254,7 +266,7 @@ export function ProfileSubjectContributions({
                     {comment.is_anonymous && isOwnProfile ? (
                       <span className="rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">anon</span>
                     ) : null}
-                    <span className="text-sm font-semibold text-[#F6B73C]">{comment.overall}/5</span>
+                    <span className="text-sm font-semibold text-[var(--color-student-accent)]">{comment.overall}/5</span>
                   </div>
                 </div>
                 <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground/80">{comment.comment}</p>
@@ -266,7 +278,7 @@ export function ProfileSubjectContributions({
         {(activeTab === 'all' || activeTab === 'teacher-reviews') && (
           <ProfileContributionSection title="Hodnocení učitelů" empty="Zatím žádná schválená hodnocení učitelů.">
             {teacherReviews.map((review) => (
-              <div key={review.id} className="space-y-2 px-1 py-3">
+              <div key={review.id} className="space-y-2 border-l-3 border-[var(--color-student-accent)]/70 pl-4 py-4">
                 <div className="flex items-center justify-between gap-3">
                   <div className="min-w-0">
                     <p className="truncate text-sm font-semibold text-foreground">{review.teacher?.name ?? 'Vyučující'}</p>
@@ -283,7 +295,7 @@ export function ProfileSubjectContributions({
                     {review.is_anonymous && isOwnProfile ? (
                       <span className="rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">anon</span>
                     ) : null}
-                    {review.rating ? <span className="text-sm font-semibold text-[#F6B73C]">{review.rating}/5</span> : null}
+                    {review.rating ? <span className="text-sm font-semibold text-[var(--color-student-accent)]">{review.rating}/5</span> : null}
                   </div>
                 </div>
                 {review.review ? <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground/80">{review.review}</p> : null}
@@ -298,7 +310,7 @@ export function ProfileSubjectContributions({
 
 function SubjectLink({ subject }: { subject: NonNullable<SubjectRef> }) {
   return (
-    <Link href={`/predmety/${subject.slug}`} className="mt-1 block text-xs text-muted-foreground transition-colors hover:text-foreground">
+    <Link href={`/predmety/${subject.slug}`} className="mt-1 block text-xs font-medium text-muted-foreground transition-colors hover:text-foreground">
       {subject.short_tag} · {subject.name}
     </Link>
   )
@@ -319,7 +331,7 @@ function ProfileContributionSection({
     <section className="space-y-4">
       <h2 className="text-xl font-bold text-foreground">{title}</h2>
       {items.length > 0 ? (
-        <div className="divide-y divide-border rounded-2xl bg-card px-4">{items}</div>
+        <div className="divide-y divide-border rounded-2xl bg-card px-5">{items}</div>
       ) : (
         <div className="rounded-[22px] border border-dashed border-border bg-background/50 px-4 py-8 text-center text-sm text-muted-foreground">
           {empty}
@@ -327,6 +339,19 @@ function ProfileContributionSection({
       )}
     </section>
   )
+}
+
+function getCountBadgeClass(tone: 'default' | 'primary' | 'community' | 'muted', active: boolean) {
+  if (active) {
+    if (tone === 'primary') return 'inline-flex min-w-6 items-center justify-center rounded-md bg-primary/12 px-2 py-0.5 text-xs font-semibold text-primary'
+    if (tone === 'community') return 'inline-flex min-w-6 items-center justify-center rounded-md bg-[var(--color-student-accent)]/12 px-2 py-0.5 text-xs font-semibold text-[var(--color-student-accent)]'
+    return 'inline-flex min-w-6 items-center justify-center rounded-md bg-background px-2 py-0.5 text-xs font-semibold text-foreground'
+  }
+
+  if (tone === 'primary') return 'inline-flex min-w-6 items-center justify-center rounded-md bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary'
+  if (tone === 'community') return 'inline-flex min-w-6 items-center justify-center rounded-md bg-[var(--color-student-accent)]/10 px-2 py-0.5 text-xs font-semibold text-[var(--color-student-accent)]'
+  if (tone === 'muted') return 'inline-flex min-w-6 items-center justify-center rounded-md bg-muted px-2 py-0.5 text-xs font-semibold text-muted-foreground'
+  return 'inline-flex min-w-6 items-center justify-center rounded-md bg-muted px-2 py-0.5 text-xs font-semibold text-foreground'
 }
 
 function getSubjectOptions(

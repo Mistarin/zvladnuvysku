@@ -168,7 +168,7 @@ export function MyActivityDashboard({ publicIdentity, sections: initialSections 
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-7">
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
         {summaryCards.map((card) => (
           <SummaryCard key={card.id} card={card} />
@@ -202,9 +202,9 @@ export function MyActivityDashboard({ publicIdentity, sections: initialSections 
                     <span className="truncate text-sm font-semibold">{section.title}</span>
                     <span
                       className={cn(
-                        'rounded-md border px-2 py-0.5 text-xs font-semibold',
+                        'inline-flex min-w-7 items-center justify-center rounded-md border px-2 py-0.5 text-xs font-semibold',
                         isActive
-                          ? 'border-border bg-background text-foreground dark:border-[#22344D] dark:bg-white/[0.06] dark:text-[#F4F8FB]'
+                          ? getSectionCountBadgeClass(section.id)
                           : 'border-border bg-card text-muted-foreground dark:border-[#22344D] dark:bg-[#13243A] dark:text-[#CBD7E6]',
                       )}
                     >
@@ -316,7 +316,7 @@ function renderSectionContent({
                   <span className="truncate text-sm font-semibold">{tab.label}</span>
                   <span
                     className={cn(
-                      'rounded-md border px-2.5 py-0.5 text-xs font-bold',
+                      'inline-flex min-w-7 items-center justify-center rounded-md border px-2.5 py-0.5 text-xs font-bold',
                       isActive
                         ? getToneCounterClass(tab.tone)
                         : 'border-border bg-card text-muted-foreground dark:border-[#22344D] dark:bg-[#13243A] dark:text-[#CBD7E6]',
@@ -438,7 +438,7 @@ function SummaryCard({ card }: { card: SummaryCardData }) {
         </span>
         <span>{card.label}</span>
       </div>
-      <p className="mt-4 text-3xl font-bold text-foreground dark:text-[#F4F8FB]">{card.value}</p>
+      <p className={cn('mt-4 text-3xl font-bold dark:text-[#F4F8FB]', getSummaryValueClass(card.tone))}>{card.value}</p>
       <p className="mt-2 text-xs leading-relaxed text-muted-foreground dark:text-[#8FA3B8]">{card.meta}</p>
     </div>
   )
@@ -474,6 +474,7 @@ function ActivityCard({
     <div
       className={cn(
         'rounded-[24px] border border-border bg-card p-5 shadow-[0_8px_24px_rgba(17,24,39,0.06)] dark:border-[#22344D] dark:bg-[rgba(13,27,46,0.94)] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.02)]',
+        getActivityAccentClass(item),
         item.attention?.acknowledged ? 'opacity-75' : null,
       )}
     >
@@ -488,7 +489,7 @@ function ActivityCard({
             ))}
           </div>
 
-          {item.subtitle ? <p className="mt-1 text-sm text-muted-foreground dark:text-[#8FA3B8]">{item.subtitle}</p> : null}
+          {item.subtitle ? <p className="mt-1 text-sm font-medium text-muted-foreground dark:text-[#8FA3B8]">{item.subtitle}</p> : null}
           {item.supportingText ? <p className="mt-1 text-sm text-muted-foreground dark:text-[#8FA3B8]">{item.supportingText}</p> : null}
           {item.link ? (
             item.link.external ? (
@@ -515,7 +516,7 @@ function ActivityCard({
             {item.meta.map((meta) => (
               <div key={`${item.id}-${meta.label}`} className="rounded-xl border border-border bg-background px-3 py-2 dark:border-[#22344D] dark:bg-[#13243A]">
                 <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground dark:text-[#8FA3B8]">{meta.label}</p>
-                <p className="mt-1 text-sm text-foreground/80 dark:text-[#CBD7E6]">{meta.value}</p>
+                <p className="mt-1 text-sm font-medium text-foreground/85 dark:text-[#CBD7E6]">{meta.value}</p>
               </div>
             ))}
           </div>
@@ -776,4 +777,43 @@ function getToneCounterClass(tone: StatusTone) {
     default:
       return 'border-border bg-background text-foreground dark:border-[#22344D] dark:bg-[#13243A] dark:text-[#F4F8FB]'
   }
+}
+
+function getSectionCountBadgeClass(sectionId: ActivitySectionData['id']) {
+  switch (sectionId) {
+    case 'decks':
+      return 'border-primary/20 bg-primary/10 text-primary dark:border-primary/25 dark:bg-primary/12'
+    case 'materials':
+    case 'groups':
+      return 'border-[var(--color-student-accent)]/20 bg-[var(--color-student-accent)]/10 text-[var(--color-student-accent)]'
+    case 'feedback':
+      return 'border-border bg-background text-foreground dark:border-[#22344D] dark:bg-white/[0.06] dark:text-[#F4F8FB]'
+    case 'proposals':
+      return 'border-amber-500/20 bg-amber-500/10 text-amber-700 dark:text-amber-300'
+    default:
+      return 'border-border bg-background text-foreground dark:border-[#22344D] dark:bg-white/[0.06] dark:text-[#F4F8FB]'
+  }
+}
+
+function getSummaryValueClass(tone: Exclude<StatusTone, 'info'>) {
+  switch (tone) {
+    case 'success':
+      return 'text-emerald-700 dark:text-emerald-300'
+    case 'warning':
+      return 'text-amber-700 dark:text-amber-300'
+    case 'danger':
+      return 'text-destructive'
+    default:
+      return 'text-foreground'
+  }
+}
+
+function getActivityAccentClass(item: ActivityCardData) {
+  if (item.materialGroup) return 'border-l-[3px] border-l-[var(--color-student-accent)]'
+  if (item.badges.some((badge) => badge.tone === 'warning')) return 'border-l-[3px] border-l-amber-500/70'
+  if (item.badges.some((badge) => badge.tone === 'success')) return 'border-l-[3px] border-l-emerald-500/70'
+  if (item.badges.some((badge) => badge.tone === 'danger')) return 'border-l-[3px] border-l-destructive/70'
+  if (item.id.startsWith('deck-')) return 'border-l-[3px] border-l-primary/70'
+  if (item.id.startsWith('material-') || item.id.startsWith('group-')) return 'border-l-[3px] border-l-[var(--color-student-accent)]/70'
+  return 'border-l-[3px] border-l-border'
 }

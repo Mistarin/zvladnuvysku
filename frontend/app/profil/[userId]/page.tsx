@@ -231,8 +231,8 @@ export default async function PublicProfilePage({ params }: PageProps) {
         <span className="font-medium text-foreground">{visibleName}</span>
       </nav>
 
-      <div className="mb-8 pt-3 sm:pt-5">
-        <div className="space-y-4">
+      <div className="mb-10 pt-3 sm:pt-5">
+        <div className="space-y-5">
           <div>
             <h1 className="text-4xl font-bold text-foreground sm:text-5xl">{visibleName}</h1>
             <div className="mt-3 flex flex-wrap items-center gap-2 text-sm text-muted-foreground sm:text-base">
@@ -248,14 +248,20 @@ export default async function PublicProfilePage({ params }: PageProps) {
                   {faculty}
                 </span>
               ))}
-              <span className="text-sm font-medium text-foreground">Level {stats.level}</span>
+              <span className="text-sm font-medium text-foreground">
+                Level <span className="text-primary">{stats.level}</span>
+              </span>
             </div>
           </div>
 
           <div className="max-w-xl">
             <div className="flex items-center justify-between text-sm">
-              <span className="font-medium text-foreground">{stats.level_progress_xp}/{stats.next_level_xp} XP</span>
-              <span className="text-muted-foreground">Zbývá {Math.max(stats.next_level_xp - stats.level_progress_xp, 0)} XP</span>
+              <span className="font-medium text-foreground">
+                <span className="text-primary">{stats.level_progress_xp}</span>/{stats.next_level_xp} XP
+              </span>
+              <span className="text-muted-foreground">
+                Zbývá <span className="font-semibold text-foreground">{Math.max(stats.next_level_xp - stats.level_progress_xp, 0)}</span> XP
+              </span>
             </div>
             <div className="mt-3 h-2 overflow-hidden rounded-full bg-muted dark:bg-[#2A2F36]">
               <div
