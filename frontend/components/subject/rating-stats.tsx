@@ -78,15 +78,16 @@ export function RatingStats({ stats, totalRatings }: RatingStatsProps) {
   return (
     <div className="glass-card p-6 space-y-5">
       {/* Overall */}
-      <div className="flex items-center gap-4">
+      <div className="flex flex-wrap items-center gap-4">
         <div className="text-4xl font-bold text-foreground">
           {avgOverall.toFixed(1)}
         </div>
         <div className="space-y-1">
           <StarDisplay value={avgOverall} />
-          <p className="text-xs font-medium text-muted-foreground">
-            ({totalRatings} {totalRatings === 1 ? 'hodnocení' : totalRatings < 5 ? 'hodnocení' : 'hodnocení'})
-          </p>
+          <div className="inline-flex flex-wrap items-center gap-x-2 gap-y-1 text-xs font-medium text-muted-foreground">
+            <span>{totalRatings}</span>
+            <span>hodnocení</span>
+          </div>
         </div>
       </div>
 
