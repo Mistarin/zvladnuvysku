@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
+import { CookieSettingsButton } from "@/components/layout/cookie-settings-button";
 
 function GitHubIcon() {
   return (
@@ -112,6 +113,7 @@ export function Footer() {
                 <Link href="/legal" className="hover:text-foreground transition-colors">
                   Kontakt
                 </Link>
+                <CookieSettingsButton />
               </div>
 
               <Link

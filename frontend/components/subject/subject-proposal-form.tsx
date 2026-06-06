@@ -172,6 +172,8 @@ interface SubjectProposalFormProps {
   hasPublicProfileIdentity: boolean
   initialDisplayName: string
   initialFaculty: string | null
+  initialLegalAcceptedAt?: string | null
+  initialLegalAcceptedVersion?: string | null
   initialProposal?: InitialSubjectProposal | null
 }
 
@@ -229,6 +231,8 @@ export function SubjectProposalForm({
   hasPublicProfileIdentity: initialHasPublicProfileIdentity,
   initialDisplayName,
   initialFaculty,
+  initialLegalAcceptedAt = null,
+  initialLegalAcceptedVersion = null,
   initialProposal,
 }: SubjectProposalFormProps) {
   const router = useRouter()
@@ -1147,6 +1151,8 @@ export function SubjectProposalForm({
       onOpenChange={setShowDisplayNameModal}
       initialDisplayName={initialDisplayName}
       initialFaculty={initialFaculty}
+      initialLegalAcceptedAt={initialLegalAcceptedAt}
+      initialLegalAcceptedVersion={initialLegalAcceptedVersion}
       onCompleted={() => {
         setHasPublicProfileIdentity(true)
       }}

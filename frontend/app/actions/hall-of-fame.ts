@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { isFacultyCode } from '@/lib/faculties'
+import { CURRENT_LEGAL_ACCEPTANCE_VERSION } from '@/lib/legal-consent'
 import { getPublicProfilePath } from '@/lib/public-profile'
 import { createClient } from '@/lib/supabase/server'
 import type { PublicProfileIdentity } from '@/lib/public-profile-identity'
@@ -12,6 +13,7 @@ export async function upsertPublicProfileIdentity({
   displayName,
   faculty,
   secondaryFaculty,
+  acceptLegal,
 }: PublicProfileIdentity): Promise<ActionResult> {
   const trimmedDisplayName = displayName.trim()
 
@@ -29,6 +31,10 @@ export async function upsertPublicProfileIdentity({
 
   if (secondaryFaculty && secondaryFaculty === faculty) {
     return { success: false, error: 'Druhá fakulta se musí lišit od primární.' }
+  }
+
+  if (!acceptLegal) {
+    return { success: false, error: 'Pro pokračování je potřeba potvrdit pravidla komunity, soukromí a autorská práva.' }
   }
 
   try {
@@ -49,6 +55,8 @@ export async function upsertPublicProfileIdentity({
           display_name: trimmedDisplayName,
           faculty,
           secondary_faculty: secondaryFaculty || null,
+          legal_accepted_at: new Date().toISOString(),
+          legal_accepted_version: CURRENT_LEGAL_ACCEPTANCE_VERSION,
         } as never,
         {
           onConflict: 'user_id',

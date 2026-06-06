@@ -5,7 +5,8 @@ import { createClient } from "@/lib/supabase/server";
 import { TeacherRatingForm } from "@/components/teacher/teacher-rating-form";
 import { TeacherReviews } from "@/components/teacher/teacher-reviews";
 import { getFacultyColor } from "@/lib/faculties";
-import { getPublicProfileIdentity, hasPublicProfileIdentity } from "@/lib/public-profile-identity";
+import { getPublicProfileIdentity } from "@/lib/public-profile-identity";
+import { hasAcceptedCurrentLegalVersion, hasCompletedPublicProfileSetup } from "@/lib/legal-consent";
 import { generateTeacherSlug } from "@/lib/teacher-slug";
 import type { Database } from "@/lib/types/database";
 
@@ -18,6 +19,14 @@ type TeacherSubject = Pick<Database["public"]["Tables"]["subjects"]["Row"], "slu
 type TeacherSubjectJoinRow = {
   subjects: TeacherSubject | TeacherSubject[] | null;
 };
+
+type ViewerProfile = {
+  display_name?: string | null;
+  faculty?: string | null;
+  secondary_faculty?: string | null;
+  legal_accepted_at?: string | null;
+  legal_accepted_version?: string | null;
+} | null;
 
 function decodeRouteSlug(value: string) {
   try {
@@ -86,16 +95,17 @@ export default async function TeacherDetailPage({ params }: PageProps) {
 
   const { data: { user } } = await supabase.auth.getUser();
   const isLoggedIn = !!user;
-  const profile = user
+  const profile: ViewerProfile = user
     ? (
         await supabase
           .from("profiles")
-          .select("display_name, faculty, secondary_faculty")
+          .select("display_name, faculty, secondary_faculty, legal_accepted_at, legal_accepted_version")
           .eq("user_id", user.id)
           .maybeSingle()
-      ).data ?? null
+      ).data as ViewerProfile
     : null;
-  const hasPublicIdentity = hasPublicProfileIdentity(profile);
+  const hasPublicIdentity = hasCompletedPublicProfileSetup(profile);
+  const hasAcceptedLegal = hasAcceptedCurrentLegalVersion(profile);
   const publicIdentity = getPublicProfileIdentity(profile);
 
   const facColor = getFacultyColor(t.faculty) || "var(--foreground)";
@@ -185,6 +195,8 @@ export default async function TeacherDetailPage({ params }: PageProps) {
               hasPublicProfileIdentity={hasPublicIdentity}
               initialDisplayName={publicIdentity.displayName}
               initialFaculty={publicIdentity.faculty}
+              initialLegalAcceptedAt={hasAcceptedLegal ? profile?.legal_accepted_at ?? null : null}
+              initialLegalAcceptedVersion={profile?.legal_accepted_version ?? null}
             />
           </div>
 

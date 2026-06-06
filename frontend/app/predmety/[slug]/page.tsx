@@ -10,7 +10,8 @@ import { ReportIssueDialog } from "@/components/feedback/report-issue-dialog";
 import { ShareLinkButton } from "@/components/share/share-link-button";
 import { PublicUserLink } from "@/components/profile/public-user-link";
 import { SubjectTabs, type Tab as SubjectTab } from "@/components/subject/subject-tabs";
-import { getPublicProfileIdentity, hasPublicProfileIdentity } from "@/lib/public-profile-identity";
+import { getPublicProfileIdentity } from "@/lib/public-profile-identity";
+import { hasCompletedPublicProfileSetup } from "@/lib/legal-consent";
 import { getTeacherPath } from "@/lib/teacher-slug";
 import { getPublicUserSummaryMap } from "@/lib/public-user-summaries";
 import { getSharePath } from "@/lib/share-links";
@@ -74,6 +75,14 @@ type SubjectComment = Pick<
   overall: number;
 };
 
+type ViewerProfile = {
+  display_name?: string | null;
+  faculty?: string | null;
+  secondary_faculty?: string | null;
+  legal_accepted_at?: string | null;
+  legal_accepted_version?: string | null;
+} | null;
+
 export default async function PredmetDetailPage({ params, searchParams }: PageProps) {
   const { slug } = await params;
   const resolvedSearchParams = searchParams ? await searchParams : {};
@@ -102,16 +111,18 @@ export default async function PredmetDetailPage({ params, searchParams }: PagePr
 
   const subjectRatingStats = subjectRatingStatsData as Pick<SubjectRatingStats, "avg_difficulty" | "total_ratings"> | null;
   const isLoggedIn = Boolean(user);
-  const profile = user
+  const profile: ViewerProfile = user
     ? (
         await supabase
           .from("profiles")
-          .select("display_name, faculty, secondary_faculty")
+          .select("display_name, faculty, secondary_faculty, legal_accepted_at, legal_accepted_version")
           .eq("user_id", user.id)
           .maybeSingle()
-      ).data ?? null
+      ).data as ViewerProfile
     : null;
-  const hasPublicIdentity = hasPublicProfileIdentity(profile);
+  const hasPublicIdentity = hasCompletedPublicProfileSetup(profile);
+  const legalAcceptedAt = profile?.legal_accepted_at ?? null;
+  const legalAcceptedVersion = profile?.legal_accepted_version ?? null;
   const publicIdentity = getPublicProfileIdentity(profile);
   const activeTab: SubjectTab =
     resolvedSearchParams.tab === "recenze" || resolvedSearchParams.tab === "materialy"
@@ -201,6 +212,8 @@ export default async function PredmetDetailPage({ params, searchParams }: PagePr
                 hasPublicProfileIdentity={hasPublicIdentity}
                 initialDisplayName={publicIdentity.displayName}
                 initialFaculty={publicIdentity.faculty}
+                initialLegalAcceptedAt={legalAcceptedAt}
+                initialLegalAcceptedVersion={legalAcceptedVersion}
               />
             </Suspense>
           </div>
@@ -212,6 +225,8 @@ export default async function PredmetDetailPage({ params, searchParams }: PagePr
               hasPublicProfileIdentity={hasPublicIdentity}
               initialDisplayName={publicIdentity.displayName}
               initialFaculty={publicIdentity.faculty}
+              initialLegalAcceptedAt={legalAcceptedAt}
+              initialLegalAcceptedVersion={legalAcceptedVersion}
             />
           </Suspense>
         ) : (
@@ -222,6 +237,8 @@ export default async function PredmetDetailPage({ params, searchParams }: PagePr
               hasPublicProfileIdentity={hasPublicIdentity}
               initialDisplayName={publicIdentity.displayName}
               initialFaculty={publicIdentity.faculty}
+              initialLegalAcceptedAt={legalAcceptedAt}
+              initialLegalAcceptedVersion={legalAcceptedVersion}
             />
           </Suspense>
         )}
@@ -242,12 +259,16 @@ async function SubjectRatingsSection({
   hasPublicProfileIdentity,
   initialDisplayName,
   initialFaculty,
+  initialLegalAcceptedAt,
+  initialLegalAcceptedVersion,
 }: {
   subject: Subject;
   isLoggedIn: boolean;
   hasPublicProfileIdentity: boolean;
   initialDisplayName: string;
   initialFaculty: string | null;
+  initialLegalAcceptedAt?: string | null;
+  initialLegalAcceptedVersion?: string | null;
 }) {
   const supabase = await createClient();
   const [{ data: rawRatings }, { data: ratingStatsData }] = await Promise.all([
@@ -282,6 +303,8 @@ async function SubjectRatingsSection({
             hasPublicProfileIdentity={hasPublicProfileIdentity}
             initialDisplayName={initialDisplayName}
             initialFaculty={initialFaculty}
+            initialLegalAcceptedAt={initialLegalAcceptedAt}
+            initialLegalAcceptedVersion={initialLegalAcceptedVersion}
           />
         </div>
       </div>
@@ -330,6 +353,8 @@ async function SubjectSidebarSection({
   hasPublicProfileIdentity,
   initialDisplayName,
   initialFaculty,
+  initialLegalAcceptedAt,
+  initialLegalAcceptedVersion,
 }: {
   subjectId: string;
   slug: string;
@@ -337,6 +362,8 @@ async function SubjectSidebarSection({
   hasPublicProfileIdentity: boolean;
   initialDisplayName: string;
   initialFaculty: string | null;
+  initialLegalAcceptedAt?: string | null;
+  initialLegalAcceptedVersion?: string | null;
 }) {
   const supabase = await createClient();
   const [{ data: stData }, { count: deckCount }] = await Promise.all([
@@ -384,6 +411,8 @@ async function SubjectSidebarSection({
                     hasPublicProfileIdentity={hasPublicProfileIdentity}
                     initialDisplayName={initialDisplayName}
                     initialFaculty={initialFaculty}
+                    initialLegalAcceptedAt={initialLegalAcceptedAt}
+                    initialLegalAcceptedVersion={initialLegalAcceptedVersion}
                   />
                 </div>
               );
@@ -431,12 +460,16 @@ async function SubjectMaterialsSection({
   hasPublicProfileIdentity,
   initialDisplayName,
   initialFaculty,
+  initialLegalAcceptedAt,
+  initialLegalAcceptedVersion,
 }: {
   subject: Subject;
   isLoggedIn: boolean;
   hasPublicProfileIdentity: boolean;
   initialDisplayName: string;
   initialFaculty: string | null;
+  initialLegalAcceptedAt?: string | null;
+  initialLegalAcceptedVersion?: string | null;
 }) {
   const supabase = await createClient();
   const { data: materialsData, error } = await supabase
@@ -499,6 +532,8 @@ async function SubjectMaterialsSection({
             hasPublicProfileIdentity={hasPublicProfileIdentity}
             initialDisplayName={initialDisplayName}
             initialFaculty={initialFaculty}
+            initialLegalAcceptedAt={initialLegalAcceptedAt}
+            initialLegalAcceptedVersion={initialLegalAcceptedVersion}
           />
         ) : (
           <div className="rounded-[1.5rem] border-2 border-dashed border-white/10 bg-background/40 p-6 text-center">

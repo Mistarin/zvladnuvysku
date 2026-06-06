@@ -3,7 +3,7 @@
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import type { EmailOtpType } from '@supabase/supabase-js'
-import { hasPublicProfileIdentity } from '@/lib/public-profile-identity'
+import { hasCompletedPublicProfileSetup } from '@/lib/legal-consent'
 import { createClient } from '@/lib/supabase/server'
 import { isAllowedSchoolEmail, resolvePostAuthRedirect } from '@/lib/auth/post-auth'
 import { getRequestOrigin } from '@/lib/server-origin'
@@ -35,13 +35,13 @@ async function setPostAuthDisplayNameCookie(
 ) {
   const { data: profile } = await supabase
     .from('profiles')
-    .select('display_name, faculty, secondary_faculty')
+    .select('display_name, faculty, secondary_faculty, legal_accepted_at, legal_accepted_version')
     .eq('user_id', userId)
     .maybeSingle()
 
   const cookieStore = await cookies()
 
-  if (!hasPublicProfileIdentity(profile)) {
+  if (!hasCompletedPublicProfileSetup(profile)) {
     cookieStore.set('needs_display_name', '1', {
       path: '/',
       sameSite: 'lax',

@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { CheckCircle2, ClipboardList, Eye } from 'lucide-react'
 import { normalizeDepartmentName } from '@/lib/department-name'
-import { hasPublicProfileIdentity } from '@/lib/public-profile-identity'
+import { hasCompletedPublicProfileSetup } from '@/lib/legal-consent'
 import { createClient } from '@/lib/supabase/server'
 import { SubjectProposalForm, type InitialSubjectProposal, type SubjectDetails } from '@/components/subject/subject-proposal-form'
 import type { SubjectProposalRecord } from '@/lib/types/database'
@@ -42,10 +42,12 @@ type ProposalData = {
 
 export default async function NavrhnoutPage({ searchParams }: PageProps) {
   let hasPublicIdentity = false
-  let publicProfile: { display_name?: string | null; faculty?: string | null; secondary_faculty?: string | null } = {
+  let publicProfile: { display_name?: string | null; faculty?: string | null; secondary_faculty?: string | null; legal_accepted_at?: string | null; legal_accepted_version?: string | null } = {
     display_name: '',
     faculty: null,
     secondary_faculty: null,
+    legal_accepted_at: null,
+    legal_accepted_version: null,
   }
   let initialProposal: InitialSubjectProposal | null = null
   let submittedState: { kind: 'new' | 'edit'; subjectSlug?: string | null } | null = null
@@ -69,7 +71,7 @@ export default async function NavrhnoutPage({ searchParams }: PageProps) {
 
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('display_name, faculty, secondary_faculty')
+      .select('display_name, faculty, secondary_faculty, legal_accepted_at, legal_accepted_version')
       .eq('user_id', user.id)
       .maybeSingle()
 
@@ -77,8 +79,8 @@ export default async function NavrhnoutPage({ searchParams }: PageProps) {
       console.error('[navrhnout] Failed to load profile:', profileError.message)
     }
 
-    publicProfile = (profile as { display_name?: string | null; faculty?: string | null; secondary_faculty?: string | null } | null) ?? publicProfile
-    hasPublicIdentity = hasPublicProfileIdentity(profile)
+    publicProfile = (profile as typeof publicProfile | null) ?? publicProfile
+    hasPublicIdentity = hasCompletedPublicProfileSetup(profile)
 
     if (proposalId) {
       const { data: proposal, error: proposalError } = await supabase
@@ -183,6 +185,8 @@ export default async function NavrhnoutPage({ searchParams }: PageProps) {
         hasPublicProfileIdentity={hasPublicIdentity}
         initialDisplayName={publicProfile.display_name ?? ''}
         initialFaculty={publicProfile.faculty ?? null}
+        initialLegalAcceptedAt={publicProfile.legal_accepted_at ?? null}
+        initialLegalAcceptedVersion={publicProfile.legal_accepted_version ?? null}
         initialProposal={initialProposal}
       />
     </div>

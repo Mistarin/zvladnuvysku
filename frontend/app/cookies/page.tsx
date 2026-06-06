@@ -25,9 +25,8 @@ export default function CookiesPage() {
           Web používá nezbytné cookies pro přihlášení, bezpečnost a stabilní fungování aplikace.
         </LegalLead>
         <p>
-          Dále můžeme používat analytické cookies služby Google Analytics pro měření návštěvnosti a
-          zlepšování produktu. Tyto analytické nástroje používejte jako volitelné a nasazujte je v
-          souladu s pravidly pro souhlas, pokud se na váš provoz vztahují.
+          Dále může po vašem souhlasu používat analytické cookies služby Google Analytics pro
+          měření návštěvnosti a zlepšování produktu.
         </p>
         <p>
           Vedle cookies používá web i lokální úložiště pro nastavení vzhledu a některé uživatelské
@@ -39,6 +38,13 @@ export default function CookiesPage() {
         <LegalTable
           headers={["Název", "Typ", "Účel", "Kategorie", "Doba uchování"]}
           rows={[
+            [
+              "zv_cookie_consent",
+              "Cookie",
+              "Uložení vaší volby, zda povolujete analytické cookies.",
+              "Nezbytné",
+              "180 dní.",
+            ],
             [
               "sb-… auth cookies",
               "Cookie",
@@ -70,7 +76,7 @@ export default function CookiesPage() {
             [
               "_ga, _ga_*",
               "Cookie",
-              "Měření návštěvnosti a základní analytika v Google Analytics.",
+              "Měření návštěvnosti a základní analytika v Google Analytics po udělení souhlasu.",
               "Analytické",
               "Podle nastavení Google Analytics, typicky do 13 měsíců.",
             ],

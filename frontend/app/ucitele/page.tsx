@@ -6,7 +6,8 @@ import { ListPageHeader, ListPageShell } from "@/components/layout/list-page-she
 import { TeacherTable } from "@/components/teacher/teacher-table";
 import { TeachersFilterPanel } from "@/components/teacher/teachers-filter-panel";
 import { TeacherProposalDialog } from "@/components/teacher/teacher-proposal-dialog";
-import { getPublicProfileIdentity, hasPublicProfileIdentity } from "@/lib/public-profile-identity";
+import { getPublicProfileIdentity } from "@/lib/public-profile-identity";
+import { hasAcceptedCurrentLegalVersion, hasCompletedPublicProfileSetup } from "@/lib/legal-consent";
 import { getTeacherFiltersFromSearchParams } from "@/lib/teachers";
 import { getTeachersDirectoryData } from "@/lib/teachers-server";
 
@@ -19,21 +20,30 @@ interface TeachersPageProps {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }
 
+type ViewerProfile = {
+  display_name?: string | null;
+  faculty?: string | null;
+  secondary_faculty?: string | null;
+  legal_accepted_at?: string | null;
+  legal_accepted_version?: string | null;
+} | null;
+
 export default async function TeachersPage({ searchParams }: TeachersPageProps) {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  const profile = user
+  const profile: ViewerProfile = user
     ? (
         await supabase
           .from("profiles")
-          .select("display_name, faculty, secondary_faculty")
+          .select("display_name, faculty, secondary_faculty, legal_accepted_at, legal_accepted_version")
           .eq("user_id", user.id)
           .maybeSingle()
-      ).data ?? null
+      ).data as ViewerProfile
     : null;
-  const hasPublicIdentity = hasPublicProfileIdentity(profile);
+  const hasPublicIdentity = hasCompletedPublicProfileSetup(profile);
+  const hasAcceptedLegal = hasAcceptedCurrentLegalVersion(profile);
   const publicIdentity = getPublicProfileIdentity(profile);
   const resolvedSearchParams = (await searchParams) ?? {};
   const filters = getTeacherFiltersFromSearchParams(resolvedSearchParams);
@@ -49,6 +59,8 @@ export default async function TeachersPage({ searchParams }: TeachersPageProps) 
           initialDisplayName={publicIdentity.displayName}
           initialFaculty={publicIdentity.faculty}
           initialSecondaryFaculty={publicIdentity.secondaryFaculty}
+          initialLegalAcceptedAt={hasAcceptedLegal ? profile?.legal_accepted_at ?? null : null}
+          initialLegalAcceptedVersion={profile?.legal_accepted_version ?? null}
         />}
       />
       <Suspense fallback={<TeachersListSkeleton />}>

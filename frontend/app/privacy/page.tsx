@@ -53,9 +53,10 @@ export default function PrivacyPage() {
           items={[
             <>identifikační a kontaktní údaje spojené s účtem, zejména e-mail a volitelně veřejné zobrazované jméno,</>,
             <>údaje o profilu, které sami doplníte, například fakulta nebo druhá fakulta,</>,
+            <>záznam o tom, kdy a v jaké verzi jste při dokončení veřejného profilu potvrdili pravidla používání webu,</>,
             <>obsah, který na web nahrajete nebo odešlete, například recenze, komentáře, návrhy předmětů, hodnocení vyučujících, materiály, balíčky kartiček nebo zpětnou vazbu,</>,
             <>technické údaje o používání webu, například IP adresa, typ zařízení, základní logy o přihlášení a bezpečnostní záznamy,</>,
-            <>údaje o návštěvnosti a používání webu v rozsahu služby Google Analytics, pokud je na webu aktivní analytické měření.</>,
+            <>údaje o návštěvnosti a používání webu v rozsahu služby Google Analytics, pokud pro analytiku udělíte souhlas.</>,
           ]}
         />
       </LegalCard>
@@ -68,7 +69,7 @@ export default function PrivacyPage() {
             <>anonymní recenze a hodnocení: plnění smlouvy; anonymita se vztahuje k veřejnému zobrazení, nikoli k tomu, že bychom autora interně vůbec neevidovali,</>,
             <>prevence zneužití, spamu, porušování pravidel a ochrana právních nároků: oprávněný zájem,</>,
             <>odpovědi na vaše dotazy a řešení podpory: oprávněný zájem nebo plnění smlouvy podle povahy komunikace,</>,
-            <>analytika návštěvnosti a zlepšování webu prostřednictvím Google Analytics: váš souhlas, pokud je podle práva vyžadován.</>,
+            <>analytika návštěvnosti a zlepšování webu prostřednictvím Google Analytics: váš souhlas.</>,
           ]}
         />
       </LegalCard>
@@ -80,9 +81,9 @@ export default function PrivacyPage() {
           databáze, autentizace a souborového úložiště a poskytovateli analytických služeb.
         </p>
         <p>
-          Pokud je na webu aktivní analytické měření, příjemcem analytických dat může být
-          společnost Google v rámci služby Google Analytics. Údaje dále můžeme zpřístupnit, pokud
-          nám to ukládá právní předpis nebo je to nutné pro ochranu našich práv.
+          Pokud povolíte analytiku, příjemcem analytických dat může být společnost Google v rámci
+          služby Google Analytics. Údaje dále můžeme zpřístupnit, pokud nám to ukládá právní
+          předpis nebo je to nutné pro ochranu našich práv.
         </p>
       </LegalCard>
 

@@ -5,6 +5,7 @@ export type PublicProfileIdentity = {
   faculty: FacultyCode
   secondaryFaculty: FacultyCode | ''
   faculties: FacultyCode[]
+  acceptLegal: boolean
 }
 
 export type PublicProfileIdentityDraft = {
@@ -12,6 +13,7 @@ export type PublicProfileIdentityDraft = {
   faculty: FacultyCode | ''
   secondaryFaculty: FacultyCode | ''
   faculties: FacultyCode[]
+  acceptLegal: boolean
 }
 
 type PublicProfileIdentityRow = {
@@ -51,6 +53,7 @@ export function getPublicProfileIdentity(profile: PublicProfileIdentityRow): Pub
     faculty: faculties[0] ?? '',
     secondaryFaculty: faculties[1] ?? '',
     faculties,
+    acceptLegal: false,
   }
 }
 

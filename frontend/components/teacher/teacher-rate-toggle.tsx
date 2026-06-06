@@ -8,12 +8,16 @@ export function TeacherRateToggle({
   hasPublicProfileIdentity,
   initialDisplayName,
   initialFaculty,
+  initialLegalAcceptedAt,
+  initialLegalAcceptedVersion,
 }: {
   teacherId: string
   isLoggedIn: boolean
   hasPublicProfileIdentity: boolean
   initialDisplayName: string
   initialFaculty: string | null
+  initialLegalAcceptedAt?: string | null
+  initialLegalAcceptedVersion?: string | null
 }) {
   const [open, setOpen] = useState(false)
   return (
@@ -33,6 +37,8 @@ export function TeacherRateToggle({
             hasPublicProfileIdentity={hasPublicProfileIdentity}
             initialDisplayName={initialDisplayName}
             initialFaculty={initialFaculty}
+            initialLegalAcceptedAt={initialLegalAcceptedAt}
+            initialLegalAcceptedVersion={initialLegalAcceptedVersion}
           />
         </div>
       )}

@@ -14,6 +14,8 @@ interface TeacherRatingFormProps {
   hasPublicProfileIdentity: boolean;
   initialDisplayName: string;
   initialFaculty: string | null;
+  initialLegalAcceptedAt?: string | null;
+  initialLegalAcceptedVersion?: string | null;
 }
 
 export function TeacherRatingForm({
@@ -22,6 +24,8 @@ export function TeacherRatingForm({
   hasPublicProfileIdentity: initialHasPublicProfileIdentity,
   initialDisplayName,
   initialFaculty,
+  initialLegalAcceptedAt = null,
+  initialLegalAcceptedVersion = null,
 }: TeacherRatingFormProps) {
   const router = useRouter();
   const [rating, setRating] = useState<number>(0);
@@ -227,6 +231,8 @@ export function TeacherRatingForm({
         onOpenChange={setShowDisplayNameModal}
         initialDisplayName={initialDisplayName}
         initialFaculty={initialFaculty}
+        initialLegalAcceptedAt={initialLegalAcceptedAt}
+        initialLegalAcceptedVersion={initialLegalAcceptedVersion}
         onCompleted={() => {
           setHasPublicProfileIdentity(true);
         }}

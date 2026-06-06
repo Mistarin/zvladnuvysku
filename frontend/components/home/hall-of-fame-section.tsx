@@ -6,6 +6,7 @@ import { Trophy, BookOpen, FileText, FlipVertical, UserRound } from "lucide-reac
 import { getPublicProfilePath } from "@/lib/public-profile";
 import { getFacultyColor } from "@/lib/faculties";
 import { getPublicProfileIdentity, hasPublicProfileIdentity } from "@/lib/public-profile-identity";
+import { hasAcceptedCurrentLegalVersion, hasCompletedPublicProfileSetup } from "@/lib/legal-consent";
 import { Button } from "@/components/ui/button";
 import { WelcomeDisplayNameModal } from "@/components/layout/welcome-display-name-modal";
 import { cn } from "@/lib/utils";
@@ -38,6 +39,8 @@ export function HallOfFameSection({
   const [showIdentityModal, setShowIdentityModal] = useState(false);
   const entries = leaderboard[period] ?? [];
   const hasPublicIdentity = hasPublicProfileIdentity(profile);
+  const hasCompletedOnboarding = hasCompletedPublicProfileSetup(profile);
+  const hasAcceptedLegal = hasAcceptedCurrentLegalVersion(profile);
   const publicIdentity = getPublicProfileIdentity(profile);
 
   const top3 = entries.slice(0, 3);
@@ -121,13 +124,13 @@ export function HallOfFameSection({
                       : "Chceš se dostat do žebříčku? Doplň si veřejnou identitu."}
                   </p>
                   <p className="mt-1 text-sm text-muted-foreground">
-                    {hasPublicIdentity
+                    {hasCompletedOnboarding
                       ? "XP se počítají přímo z bodů: 1 bod = 10 XP, 2 body = 20 XP, 3 body = 30 XP."
-                      : "Bez veřejného jména a fakulty se do veřejného leaderboardu nezapočítáš, i když přispíváš."}
+                      : "Bez dokončeného veřejného profilu a potvrzení pravidel se do veřejného leaderboardu nezapočítáš, i když přispíváš."}
                   </p>
                 </div>
-                <Button variant={hasPublicIdentity ? "outline" : "default"} onClick={() => setShowIdentityModal(true)}>
-                  {hasPublicIdentity ? "Upravit veřejný profil" : "Nastavit veřejný profil"}
+                <Button variant={hasCompletedOnboarding ? "outline" : "default"} onClick={() => setShowIdentityModal(true)}>
+                  {hasCompletedOnboarding ? "Upravit veřejný profil" : "Dokončit veřejný profil"}
                 </Button>
               </div>
             ) : (
@@ -157,6 +160,8 @@ export function HallOfFameSection({
         initialDisplayName={publicIdentity.displayName}
         initialFaculty={publicIdentity.faculty}
         initialSecondaryFaculty={publicIdentity.secondaryFaculty}
+        initialLegalAcceptedAt={hasAcceptedLegal ? profile?.legal_accepted_at ?? null : null}
+        initialLegalAcceptedVersion={profile?.legal_accepted_version ?? null}
       />
     </section>
   );

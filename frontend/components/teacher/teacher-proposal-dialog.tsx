@@ -13,6 +13,8 @@ interface TeacherProposalDialogProps {
   initialDisplayName: string;
   initialFaculty: string | null;
   initialSecondaryFaculty?: string | null;
+  initialLegalAcceptedAt?: string | null;
+  initialLegalAcceptedVersion?: string | null;
 }
 
 export function TeacherProposalDialog({
@@ -20,6 +22,8 @@ export function TeacherProposalDialog({
   initialDisplayName,
   initialFaculty,
   initialSecondaryFaculty = null,
+  initialLegalAcceptedAt = null,
+  initialLegalAcceptedVersion = null,
 }: TeacherProposalDialogProps) {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -178,6 +182,8 @@ export function TeacherProposalDialog({
         initialDisplayName={initialDisplayName}
         initialFaculty={initialFaculty}
         initialSecondaryFaculty={initialSecondaryFaculty}
+        initialLegalAcceptedAt={initialLegalAcceptedAt}
+        initialLegalAcceptedVersion={initialLegalAcceptedVersion}
         onCompleted={() => {
           setHasPublicProfileIdentity(true);
         }}

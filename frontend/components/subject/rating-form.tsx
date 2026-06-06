@@ -15,6 +15,8 @@ interface RatingFormProps {
   hasPublicProfileIdentity: boolean
   initialDisplayName: string
   initialFaculty: string | null
+  initialLegalAcceptedAt?: string | null
+  initialLegalAcceptedVersion?: string | null
 }
 
 function StarPicker({
@@ -59,6 +61,8 @@ export function RatingForm({
   hasPublicProfileIdentity: initialHasPublicProfileIdentity,
   initialDisplayName,
   initialFaculty,
+  initialLegalAcceptedAt = null,
+  initialLegalAcceptedVersion = null,
 }: RatingFormProps) {
   const router = useRouter()
   const { submit, isSubmitting, error, success } = useRating()
@@ -281,6 +285,8 @@ export function RatingForm({
         onOpenChange={setShowDisplayNameModal}
         initialDisplayName={initialDisplayName}
         initialFaculty={initialFaculty}
+        initialLegalAcceptedAt={initialLegalAcceptedAt}
+        initialLegalAcceptedVersion={initialLegalAcceptedVersion}
         onCompleted={() => {
           setHasPublicProfileIdentity(true)
         }}

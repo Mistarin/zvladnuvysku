@@ -285,6 +285,8 @@ export interface Database {
           display_name: string | null
           faculty: string | null
           secondary_faculty: string | null
+          legal_accepted_at: string | null
+          legal_accepted_version: string | null
           created_at: string
           updated_at: string
         }
@@ -292,6 +294,8 @@ export interface Database {
           display_name?: string | null
           faculty?: string | null
           secondary_faculty?: string | null
+          legal_accepted_at?: string | null
+          legal_accepted_version?: string | null
         }
         Update: Partial<Database['public']['Tables']['profiles']['Insert']>
       }

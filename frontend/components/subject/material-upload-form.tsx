@@ -13,6 +13,8 @@ interface MaterialUploadFormProps {
   hasPublicProfileIdentity: boolean;
   initialDisplayName: string;
   initialFaculty: string | null;
+  initialLegalAcceptedAt?: string | null;
+  initialLegalAcceptedVersion?: string | null;
 }
 
 const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2 MB
@@ -23,6 +25,8 @@ export function MaterialUploadForm({
   hasPublicProfileIdentity: initialHasPublicProfileIdentity,
   initialDisplayName,
   initialFaculty,
+  initialLegalAcceptedAt = null,
+  initialLegalAcceptedVersion = null,
 }: MaterialUploadFormProps) {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -286,6 +290,8 @@ export function MaterialUploadForm({
         onOpenChange={setShowDisplayNameModal}
         initialDisplayName={initialDisplayName}
         initialFaculty={initialFaculty}
+        initialLegalAcceptedAt={initialLegalAcceptedAt}
+        initialLegalAcceptedVersion={initialLegalAcceptedVersion}
         onCompleted={() => {
           setHasPublicProfileIdentity(true);
         }}

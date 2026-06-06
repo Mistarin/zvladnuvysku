@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { hasPublicProfileIdentity } from '@/lib/public-profile-identity'
+import { hasCompletedPublicProfileSetup } from '@/lib/legal-consent'
 import type { Database } from '@/lib/types/database'
 
 const ALLOWED_DOMAIN = 'osu.cz'
@@ -44,13 +44,13 @@ export async function buildPostAuthRedirectResponse({
 }) {
   const { data: profile } = await supabase
     .from('profiles')
-    .select('display_name, faculty, secondary_faculty')
+    .select('display_name, faculty, secondary_faculty, legal_accepted_at, legal_accepted_version')
     .eq('user_id', userId)
     .maybeSingle()
 
   const response = NextResponse.redirect(new URL(redirectPath, origin))
 
-  if (!hasPublicProfileIdentity(profile)) {
+  if (!hasCompletedPublicProfileSetup(profile)) {
     response.cookies.set('needs_display_name', '1', {
       path: '/',
       sameSite: 'lax',
