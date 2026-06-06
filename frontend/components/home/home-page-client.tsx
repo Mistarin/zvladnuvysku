@@ -276,43 +276,44 @@ export function HomePageClient({ siteStats }: HomePageClientProps) {
       </div>
 
       {/* Features section */}
-      <section className="container mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-16 border-t border-white/5">
-        <div className="text-center mb-10">
-          <h2 className="text-2xl sm:text-3xl font-bold text-foreground">
-            Vše, co potřebuješ vědět
-          </h2>
-          <div className="mx-auto mt-3 h-1 w-18 rounded-full bg-primary/85" />
-          <p className="text-muted-foreground mt-2">
-            Než si zapíšeš předmět, zjisti co od něj čekat.
+      <section className="border-t border-border py-16">
+        <div className="container mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
+          <div className="mb-10 text-center">
+            <h2 className="text-2xl sm:text-3xl font-bold text-foreground">
+              Vše, co potřebuješ vědět
+            </h2>
+            <div className="mx-auto mt-3 h-1 w-18 rounded-full bg-primary/85" />
+            <p className="mt-2 text-muted-foreground">
+              Než si zapíšeš předmět, zjisti co od něj čekat.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
+            {FEATURES.map(({ Icon, title, desc, href }, idx) => (
+              <Link
+                key={title}
+                href={href}
+                className="glass-card hover-card block space-y-4 p-6 text-center animate-slide-up"
+                style={{ animationDelay: `${idx * 80}ms` }}
+              >
+                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl"
+                  style={{ background: "color-mix(in srgb, var(--accent-color) 14%, transparent)" }}>
+                  <Icon className="h-6 w-6" style={{ color: "var(--accent-color)" }} />
+                </div>
+                <h3 className="text-lg font-semibold text-foreground">
+                  {title}
+                </h3>
+                <p className="text-sm leading-relaxed text-muted-foreground">
+                  {desc}
+                </p>
+              </Link>
+            ))}
+          </div>
+
+          <p className="mt-10 text-center text-xs text-muted-foreground/60">
+            ZvládnuVýšku je neoficiální studentský web — není spojen s Ostravskou univerzitou ani jejími fakultami.
           </p>
         </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-          {FEATURES.map(({ Icon, title, desc, href }, idx) => (
-            <Link
-              key={title}
-              href={href}
-              className="glass-card hover-card p-6 text-center space-y-4 animate-slide-up block"
-              style={{ animationDelay: `${idx * 80}ms` }}
-            >
-              <div className="mx-auto w-12 h-12 rounded-2xl flex items-center justify-center"
-                style={{ background: "color-mix(in srgb, var(--accent-color) 14%, transparent)" }}>
-                <Icon className="w-6 h-6" style={{ color: "var(--accent-color)" }} />
-              </div>
-              <h3 className="text-lg font-semibold text-foreground">
-                {title}
-              </h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                {desc}
-              </p>
-            </Link>
-          ))}
-        </div>
-
-        {/* Unofficial disclaimer */}
-        <p className="mt-10 text-center text-xs text-muted-foreground/60">
-          ZvládnuVýšku je neoficiální studentský web — není spojen s Ostravskou univerzitou ani jejími fakultami.
-        </p>
       </section>
 
       <section className="container mx-auto max-w-5xl border-t border-white/5 px-4 py-16 sm:px-6 lg:px-8">

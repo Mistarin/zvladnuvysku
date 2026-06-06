@@ -2,13 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import {
-  Trophy,
-  BookOpen,
-  FileText,
-  FlipVertical,
-  UserRound,
-} from "lucide-react";
+import { Trophy, BookOpen, FileText, FlipVertical, UserRound } from "lucide-react";
 import { getPublicProfilePath } from "@/lib/public-profile";
 import { getFacultyColor } from "@/lib/faculties";
 import { getPublicProfileIdentity, hasPublicProfileIdentity } from "@/lib/public-profile-identity";
@@ -35,8 +29,6 @@ const PERIOD_LABELS: Record<HallOfFamePeriod, string> = {
   all: "Celkem",
 };
 
-const HALL_OF_FAME_COLOR = "var(--color-primary)";
-
 export function HallOfFameSection({
   leaderboard,
   isLoggedIn,
@@ -54,64 +46,27 @@ export function HallOfFameSection({
   return (
     <section
       id="hall-of-fame"
-      className="relative scroll-mt-24 border-y border-border bg-[var(--surface-soft)] py-16"
+      className="relative scroll-mt-24 border-y border-border bg-background py-16"
     >
       <div className="container mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-        <div
-          className="pointer-events-none absolute inset-x-0 top-0 h-52 sm:h-60"
-          style={{
-            background:
-              `radial-gradient(circle at top, color-mix(in srgb, ${HALL_OF_FAME_COLOR} 18%, transparent), transparent 70%)`,
-          }}
-          aria-hidden="true"
-        />
-
         <div className="relative flex flex-col gap-8">
-          <div className="flex flex-col gap-6 pb-8 sm:gap-7 sm:pb-10 lg:flex-row lg:items-end lg:justify-between lg:pb-12">
-            <div className="max-w-2xl space-y-4">
-              <div
-                className="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em]"
-                style={{
-                  borderColor: `color-mix(in srgb, ${HALL_OF_FAME_COLOR} 35%, transparent)`,
-                  background: `color-mix(in srgb, ${HALL_OF_FAME_COLOR} 10%, transparent)`,
-                  color: HALL_OF_FAME_COLOR,
-                }}
-              >
-                <Trophy className="size-3.5" />
-                Hall of Fame
-              </div>
+          <div className="pb-4 text-center sm:pb-6">
+            <div className="mx-auto max-w-2xl space-y-4">
               <div>
                 <h2 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
                   Nejaktivnější studenti komunity
                 </h2>
+                <div className="mx-auto mt-3 h-1 w-18 rounded-full bg-primary/85" />
                 <p className="mt-2 text-sm leading-6 text-muted-foreground sm:text-base">
                   Veřejný žebříček studentů, kteří nejvíc pomáhají ostatním sdílením
                   kartiček, studijních materiálů, vyučujících a návrhů předmětů.
                 </p>
               </div>
             </div>
-
-            <div className="inline-flex w-full max-w-sm rounded-[1.5rem] border border-border bg-[var(--surface-soft)] p-1 shadow-inner">
-              {(["week", "month", "all"] as HallOfFamePeriod[]).map((key) => (
-                <button
-                  key={key}
-                  type="button"
-                  onClick={() => setPeriod(key)}
-                  className={cn(
-                    "flex-1 rounded-xl px-4 py-2 text-sm font-medium transition-colors",
-                    period === key
-                      ? "bg-secondary text-foreground shadow-sm"
-                      : "text-muted-foreground hover:text-foreground"
-                  )}
-                >
-                  {PERIOD_LABELS[key]}
-                </button>
-              ))}
-            </div>
           </div>
 
           {entries.length === 0 ? (
-            <div className="rounded-[2rem] border-2 border-dashed border-border bg-[var(--surface-soft)] px-6 py-12 text-center">
+            <div className="rounded-[2rem] border-2 border-dashed border-border bg-background/80 px-6 py-12 text-center">
               <p className="text-lg font-semibold text-foreground">
                 Zatím tu nejsou žádní přispěvatelé za toto období.
               </p>
@@ -121,6 +76,25 @@ export function HallOfFameSection({
             </div>
           ) : (
             <div className="space-y-4">
+              <div className="flex justify-center pb-2">
+                <div className="inline-flex w-full max-w-sm rounded-[1.5rem] border border-border bg-background/80 p-1 shadow-inner">
+                  {(["week", "month", "all"] as HallOfFamePeriod[]).map((key) => (
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={() => setPeriod(key)}
+                      className={cn(
+                        "flex-1 rounded-xl px-4 py-2 text-sm font-medium transition-colors",
+                        period === key
+                          ? "bg-secondary text-foreground shadow-sm"
+                          : "text-muted-foreground hover:text-foreground"
+                      )}
+                    >
+                      {PERIOD_LABELS[key]}
+                    </button>
+                  ))}
+                </div>
+              </div>
               {/* Podium — top 3 */}
               {top3.length > 0 && (
                 <PodiumSection entries={top3} />
