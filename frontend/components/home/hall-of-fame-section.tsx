@@ -35,6 +35,8 @@ const PERIOD_LABELS: Record<HallOfFamePeriod, string> = {
   all: "Celkem",
 };
 
+const HALL_OF_FAME_COLOR = "#02BED6";
+
 export function HallOfFameSection({
   leaderboard,
   isLoggedIn,
@@ -55,12 +57,11 @@ export function HallOfFameSection({
       className="container mx-auto max-w-6xl scroll-mt-24 px-4 sm:px-6 lg:px-8 pb-16"
     >
       <div className="relative overflow-hidden rounded-[2.5rem] border border-white/5 bg-card/60 p-6 shadow-[0_30px_80px_-45px_rgba(15,23,42,0.45)] backdrop-blur-xl sm:p-8">
-        {/* Header glow — matches brand-sync-color */}
         <div
           className="pointer-events-none absolute inset-x-0 top-0 h-52 sm:h-60"
           style={{
             background:
-              "radial-gradient(circle at top, color-mix(in srgb, var(--brand-sync-color) 18%, transparent), transparent 70%)",
+              `radial-gradient(circle at top, color-mix(in srgb, ${HALL_OF_FAME_COLOR} 18%, transparent), transparent 70%)`,
           }}
           aria-hidden="true"
         />
@@ -68,13 +69,12 @@ export function HallOfFameSection({
         <div className="relative flex flex-col gap-8">
           <div className="flex flex-col gap-6 pb-8 sm:gap-7 sm:pb-10 lg:flex-row lg:items-end lg:justify-between lg:pb-12">
             <div className="max-w-2xl space-y-4">
-              {/* Badge — uses brand-sync-color */}
               <div
                 className="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em]"
                 style={{
-                  borderColor: "color-mix(in srgb, var(--brand-sync-color) 35%, transparent)",
-                  background: "color-mix(in srgb, var(--brand-sync-color) 10%, transparent)",
-                  color: "var(--brand-sync-color)",
+                  borderColor: `color-mix(in srgb, ${HALL_OF_FAME_COLOR} 35%, transparent)`,
+                  background: `color-mix(in srgb, ${HALL_OF_FAME_COLOR} 10%, transparent)`,
+                  color: HALL_OF_FAME_COLOR,
                 }}
               >
                 <Trophy className="size-3.5" />
