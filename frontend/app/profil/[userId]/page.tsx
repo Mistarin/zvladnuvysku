@@ -231,7 +231,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
         <span className="font-medium text-foreground">{visibleName}</span>
       </nav>
 
-      <div className="mb-8 p-0 sm:p-0 dark:bg-[linear-gradient(180deg,#0D1B2E,#07111F)] dark:p-2 sm:dark:p-4">
+      <div className="mb-8 pt-3 sm:pt-5">
         <div className="space-y-4">
           <div>
             <h1 className="text-4xl font-bold text-foreground sm:text-5xl">{visibleName}</h1>
@@ -257,9 +257,9 @@ export default async function PublicProfilePage({ params }: PageProps) {
               <span className="font-medium text-foreground">{stats.level_progress_xp}/{stats.next_level_xp} XP</span>
               <span className="text-muted-foreground">Zbývá {Math.max(stats.next_level_xp - stats.level_progress_xp, 0)} XP</span>
             </div>
-            <div className="mt-3 h-2 overflow-hidden rounded-full bg-muted dark:bg-[#13243A]">
+            <div className="mt-3 h-2 overflow-hidden rounded-full bg-muted dark:bg-[#2A2F36]">
               <div
-                className="h-full rounded-full bg-[#02BED6] shadow-[0_0_18px_rgba(2,190,214,0.35)] transition-all duration-700"
+                className="h-full rounded-full bg-primary shadow-[0_0_18px_rgba(2,175,198,0.25)] transition-all duration-700 dark:shadow-[0_0_18px_rgba(2,190,214,0.35)]"
                 style={{ width: `${progressPercent}%` }}
               />
             </div>

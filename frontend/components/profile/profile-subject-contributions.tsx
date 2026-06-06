@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { Check, ChevronDown, Search } from 'lucide-react'
 import { ShareLinkButton } from '@/components/share/share-link-button'
 import { MaterialGroupCard, type MaterialGroupData } from '@/components/subject/material-group-card'
 import { getSharePath } from '@/lib/share-links'
@@ -63,35 +64,90 @@ export function ProfileSubjectContributions({
 }: Props) {
   const [subjectSlug, setSubjectSlug] = useState('')
   const [activeTab, setActiveTab] = useState<'all' | 'decks' | 'materials' | 'groups' | 'subject-comments' | 'teacher-reviews'>('all')
+  const [filterOpen, setFilterOpen] = useState(false)
+  const [filterQuery, setFilterQuery] = useState('')
   const subjectOptions = getSubjectOptions(decks, materials, groups)
+  const visibleSubjectOptions = subjectOptions.filter((subject) =>
+    subject.label.toLocaleLowerCase('cs').includes(filterQuery.trim().toLocaleLowerCase('cs')),
+  )
   const filteredDecks = subjectSlug ? decks.filter((deck) => deck.subject?.slug === subjectSlug) : decks
   const filteredMaterials = subjectSlug ? materials.filter((material) => material.subject?.slug === subjectSlug) : materials
   const filteredGroups = subjectSlug ? groups.filter((group) => group.subject?.slug === subjectSlug) : groups
+  const activeSubjectLabel = subjectOptions.find((subject) => subject.slug === subjectSlug)?.label ?? 'Všechny předměty'
 
   return (
     <div className="space-y-5 xl:col-span-2">
       {subjectOptions.length > 1 ? (
-        <div className="flex flex-col gap-3 rounded-[24px] border border-border bg-card p-4 shadow-[0_8px_24px_rgba(17,24,39,0.06)] dark:border-[#22344D] dark:bg-[linear-gradient(180deg,#0D1B2E,#07111F)] dark:shadow-none sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <p className="text-sm font-semibold text-foreground dark:text-[#F4F8FB]">Filtrovat podle předmětu</p>
-            <p className="text-xs text-muted-foreground dark:text-[#8FA3B8]">Příspěvky rozdělené podle předmětů, do kterých uživatel něco přidal.</p>
+        <div className="flex flex-col gap-4 rounded-[24px] border border-border bg-card p-4 shadow-[0_8px_24px_rgba(17,24,39,0.06)]">
+          <div className="space-y-1">
+            <p className="text-sm font-semibold text-foreground">Filtrovat podle předmětu</p>
+            <p className="text-xs text-muted-foreground">Příspěvky rozdělené podle předmětů, do kterých uživatel něco přidal.</p>
           </div>
-          <select
-            value={subjectSlug}
-            onChange={(event) => setSubjectSlug(event.target.value)}
-            className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground outline-none transition-colors focus:border-primary/50 focus:ring-1 focus:ring-primary/30 dark:border-[#22344D] dark:bg-[#13243A] dark:text-[#F4F8FB] dark:focus:border-[#35D7E8]/50 dark:focus:ring-[#35D7E8]/30 sm:w-72"
-          >
-            <option value="">Všechny předměty</option>
-            {subjectOptions.map((subject) => (
-              <option key={subject.slug} value={subject.slug}>
-                {subject.label}
-              </option>
-            ))}
-          </select>
+          <div className="relative w-full max-w-md">
+            <button
+              type="button"
+              onClick={() => setFilterOpen((current) => !current)}
+              className="flex w-full items-center justify-between gap-3 rounded-xl border border-border bg-background px-3 py-2.5 text-left text-sm text-foreground transition-colors hover:border-primary/30 focus:border-primary/50 focus:outline-none focus:ring-1 focus:ring-primary/30"
+            >
+              <span className="truncate">{activeSubjectLabel}</span>
+              <ChevronDown className={`size-4 shrink-0 text-muted-foreground transition-transform ${filterOpen ? 'rotate-180' : ''}`} />
+            </button>
+
+            {filterOpen ? (
+              <div className="absolute left-0 top-[calc(100%+0.6rem)] z-20 w-full rounded-2xl border border-border bg-card p-2 shadow-[0_20px_48px_rgba(17,24,39,0.16)] dark:bg-[#202024]">
+                <div className="flex items-center gap-2 rounded-xl border border-border bg-background px-3 py-2">
+                  <Search className="size-4 text-muted-foreground" />
+                  <input
+                    value={filterQuery}
+                    onChange={(event) => setFilterQuery(event.target.value)}
+                    placeholder="Hledat předmět"
+                    className="w-full bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground"
+                  />
+                </div>
+
+                <div className="mt-2 max-h-72 overflow-y-auto">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSubjectSlug('')
+                      setFilterQuery('')
+                      setFilterOpen(false)
+                    }}
+                    className="flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm text-foreground transition-colors hover:bg-muted"
+                  >
+                    <span>Všechny předměty</span>
+                    {!subjectSlug ? <Check className="size-4 text-primary" /> : null}
+                  </button>
+
+                  {visibleSubjectOptions.length > 0 ? (
+                    visibleSubjectOptions.map((subject) => (
+                      <button
+                        key={subject.slug}
+                        type="button"
+                        onClick={() => {
+                          setSubjectSlug(subject.slug)
+                          setFilterQuery('')
+                          setFilterOpen(false)
+                        }}
+                        className="flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm text-foreground transition-colors hover:bg-muted"
+                      >
+                        <span className="truncate">{subject.label}</span>
+                        {subjectSlug === subject.slug ? <Check className="size-4 shrink-0 text-primary" /> : null}
+                      </button>
+                    ))
+                  ) : (
+                    <div className="px-3 py-3 text-sm text-muted-foreground">
+                      Žádný předmět neodpovídá hledání.
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : null}
+          </div>
         </div>
       ) : null}
 
-      <div className="flex flex-wrap gap-2 rounded-2xl border border-border bg-card p-2 dark:border-[#22344D] dark:bg-[#0D1B2E]">
+      <div className="flex flex-wrap gap-2 rounded-2xl border border-border bg-card p-2">
         {[
           { key: 'all', label: `Vše (${decks.length + materials.length + groups.length + subjectComments.length + teacherReviews.length})` },
           { key: 'decks', label: `Kartičky (${decks.length})` },
@@ -110,8 +166,8 @@ export function ProfileSubjectContributions({
               }
               className={`rounded-xl border px-3 py-2 text-sm font-medium transition-colors ${
                 active
-                  ? 'border-border bg-muted text-foreground dark:border-[#22344D] dark:bg-[#13243A] dark:text-[#F4F8FB]'
-                  : 'border-transparent bg-transparent text-muted-foreground hover:border-border hover:bg-muted/60 hover:text-foreground dark:text-[#8FA3B8] dark:hover:border-[#22344D] dark:hover:bg-white/[0.03] dark:hover:text-[#F4F8FB]'
+                  ? 'border-border bg-muted text-foreground'
+                  : 'border-transparent bg-transparent text-muted-foreground hover:border-border hover:bg-muted/60 hover:text-foreground'
               }`}
             >
               {tab.label}
@@ -126,10 +182,10 @@ export function ProfileSubjectContributions({
           {filteredDecks.map((deck) => (
             <div key={deck.id} className="flex items-start justify-between gap-3 px-1 py-3">
               <div>
-                <Link href={`/flashcardy/${deck.id}`} className="font-semibold text-foreground transition-colors hover:text-primary dark:text-[#F4F8FB] dark:hover:text-[#35D7E8]">
+                <Link href={`/flashcardy/${deck.id}`} className="font-semibold text-foreground transition-colors hover:text-primary">
                   {deck.title}
                 </Link>
-                <p className="mt-1 text-sm text-muted-foreground dark:text-[#8FA3B8]">{deck.card_count} karet</p>
+                <p className="mt-1 text-sm text-muted-foreground">{deck.card_count} karet</p>
                 {deck.subject && <SubjectLink subject={deck.subject} />}
               </div>
               <ShareLinkButton
@@ -151,14 +207,14 @@ export function ProfileSubjectContributions({
                     href={material.url}
                     target="_blank"
                     rel="noreferrer"
-                    className="font-semibold text-foreground transition-colors hover:text-primary dark:text-[#F4F8FB] dark:hover:text-[#35D7E8]"
+                    className="font-semibold text-foreground transition-colors hover:text-primary"
                   >
                     {material.title}
                   </a>
                 ) : (
-                  <p className="font-semibold text-foreground dark:text-[#F4F8FB]">{material.title}</p>
+                  <p className="font-semibold text-foreground">{material.title}</p>
                 )}
-                <p className="mt-1 text-sm text-muted-foreground dark:text-[#8FA3B8]">{material.sizeLabel}</p>
+                <p className="mt-1 text-sm text-muted-foreground">{material.sizeLabel}</p>
                 {material.subject && <SubjectLink subject={material.subject} />}
               </div>
               <ShareLinkButton
@@ -184,11 +240,11 @@ export function ProfileSubjectContributions({
               <div key={comment.id} className="space-y-2 px-1 py-3">
                 <div className="flex items-center justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold text-foreground dark:text-[#F4F8FB]">{comment.subject?.name ?? 'Předmět'}</p>
+                    <p className="truncate text-sm font-semibold text-foreground">{comment.subject?.name ?? 'Předmět'}</p>
                     {comment.subject ? (
                       <Link
                         href={`/predmety/${comment.subject.slug}`}
-                        className="mt-1 block text-xs text-muted-foreground transition-colors hover:text-foreground dark:text-[#8FA3B8] dark:hover:text-[#F4F8FB]"
+                        className="mt-1 block text-xs text-muted-foreground transition-colors hover:text-foreground"
                       >
                         {comment.subject.short_tag}
                       </Link>
@@ -196,12 +252,12 @@ export function ProfileSubjectContributions({
                   </div>
                   <div className="flex items-center gap-2">
                     {comment.is_anonymous && isOwnProfile ? (
-                      <span className="rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground dark:bg-[#13243A] dark:text-[#8FA3B8]">anon</span>
+                      <span className="rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">anon</span>
                     ) : null}
                     <span className="text-sm font-semibold text-[#F6B73C]">{comment.overall}/5</span>
                   </div>
                 </div>
-                <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground/80 dark:text-[#CBD7E6]">{comment.comment}</p>
+                <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground/80">{comment.comment}</p>
               </div>
             ))}
           </ProfileContributionSection>
@@ -213,11 +269,11 @@ export function ProfileSubjectContributions({
               <div key={review.id} className="space-y-2 px-1 py-3">
                 <div className="flex items-center justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold text-foreground dark:text-[#F4F8FB]">{review.teacher?.name ?? 'Vyučující'}</p>
+                    <p className="truncate text-sm font-semibold text-foreground">{review.teacher?.name ?? 'Vyučující'}</p>
                     {review.teacher ? (
                       <Link
                         href={getTeacherPath(review.teacher.slug)}
-                        className="mt-1 block text-xs text-muted-foreground transition-colors hover:text-foreground dark:text-[#8FA3B8] dark:hover:text-[#F4F8FB]"
+                        className="mt-1 block text-xs text-muted-foreground transition-colors hover:text-foreground"
                       >
                         Detail vyučujícího
                       </Link>
@@ -225,12 +281,12 @@ export function ProfileSubjectContributions({
                   </div>
                   <div className="flex items-center gap-2">
                     {review.is_anonymous && isOwnProfile ? (
-                      <span className="rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground dark:bg-[#13243A] dark:text-[#8FA3B8]">anon</span>
+                      <span className="rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">anon</span>
                     ) : null}
                     {review.rating ? <span className="text-sm font-semibold text-[#F6B73C]">{review.rating}/5</span> : null}
                   </div>
                 </div>
-                {review.review ? <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground/80 dark:text-[#CBD7E6]">{review.review}</p> : null}
+                {review.review ? <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground/80">{review.review}</p> : null}
               </div>
             ))}
           </ProfileContributionSection>
@@ -242,7 +298,7 @@ export function ProfileSubjectContributions({
 
 function SubjectLink({ subject }: { subject: NonNullable<SubjectRef> }) {
   return (
-    <Link href={`/predmety/${subject.slug}`} className="mt-1 block text-xs text-muted-foreground transition-colors hover:text-foreground dark:text-[#8FA3B8] dark:hover:text-[#F4F8FB]">
+    <Link href={`/predmety/${subject.slug}`} className="mt-1 block text-xs text-muted-foreground transition-colors hover:text-foreground">
       {subject.short_tag} · {subject.name}
     </Link>
   )
@@ -261,11 +317,11 @@ function ProfileContributionSection({
 
   return (
     <section className="space-y-4">
-      <h2 className="text-xl font-bold text-foreground dark:text-[#F4F8FB]">{title}</h2>
+      <h2 className="text-xl font-bold text-foreground">{title}</h2>
       {items.length > 0 ? (
-        <div className="divide-y divide-border rounded-2xl bg-card px-4 dark:divide-[#22344D] dark:bg-[#0D1B2E]">{items}</div>
+        <div className="divide-y divide-border rounded-2xl bg-card px-4">{items}</div>
       ) : (
-        <div className="rounded-[22px] border border-dashed border-border bg-background/50 px-4 py-8 text-center text-sm text-muted-foreground dark:border-[#22344D] dark:bg-white/[0.02] dark:text-[#8FA3B8]">
+        <div className="rounded-[22px] border border-dashed border-border bg-background/50 px-4 py-8 text-center text-sm text-muted-foreground">
           {empty}
         </div>
       )}
