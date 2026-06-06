@@ -281,6 +281,7 @@ export function HomePageClient({ siteStats }: HomePageClientProps) {
           <h2 className="text-2xl sm:text-3xl font-bold text-foreground">
             Vše, co potřebuješ vědět
           </h2>
+          <div className="mx-auto mt-3 h-1 w-18 rounded-full bg-primary/85" />
           <p className="text-muted-foreground mt-2">
             Než si zapíšeš předmět, zjisti co od něj čekat.
           </p>

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { Check, ChevronDown, FileText, FolderOpen, Layers3, MessageSquareText, Search, Star, SquareStack } from 'lucide-react'
 import { ShareLinkButton } from '@/components/share/share-link-button'
@@ -62,6 +62,7 @@ export function ProfileSubjectContributions({
   teacherReviews = [],
   isOwnProfile = false,
 }: Props) {
+  const filterRef = useRef<HTMLDivElement | null>(null)
   const [subjectSlug, setSubjectSlug] = useState('')
   const [activeTab, setActiveTab] = useState<'all' | 'decks' | 'materials' | 'groups' | 'subject-comments' | 'teacher-reviews'>('all')
   const [filterOpen, setFilterOpen] = useState(false)
@@ -83,6 +84,30 @@ export function ProfileSubjectContributions({
     { key: 'teacher-reviews', label: 'Hodnocení', count: teacherReviews.length, tone: 'community' as const, icon: Star },
   ]
 
+  useEffect(() => {
+    if (!filterOpen) return
+
+    const handlePointerDown = (event: PointerEvent) => {
+      if (!filterRef.current?.contains(event.target as Node)) {
+        setFilterOpen(false)
+      }
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setFilterOpen(false)
+      }
+    }
+
+    window.addEventListener('pointerdown', handlePointerDown)
+    window.addEventListener('keydown', handleKeyDown)
+
+    return () => {
+      window.removeEventListener('pointerdown', handlePointerDown)
+      window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [filterOpen])
+
   return (
     <div className="space-y-6 xl:col-span-2">
       {subjectOptions.length > 1 ? (
@@ -91,7 +116,7 @@ export function ProfileSubjectContributions({
             <p className="text-sm font-semibold text-foreground">Filtrovat podle předmětu</p>
             <p className="text-xs text-muted-foreground">Příspěvky rozdělené podle předmětů, do kterých uživatel něco přidal.</p>
           </div>
-          <div className="relative w-full max-w-md">
+          <div ref={filterRef} className="relative w-full max-w-md">
             <button
               type="button"
               onClick={() => setFilterOpen((current) => !current)}
@@ -102,7 +127,7 @@ export function ProfileSubjectContributions({
             </button>
 
             {filterOpen ? (
-              <div className="absolute left-0 top-[calc(100%+0.6rem)] z-20 w-full rounded-2xl border border-border bg-card p-2 shadow-[0_20px_48px_rgba(17,24,39,0.16)] dark:bg-[#202024]">
+              <div className="absolute left-0 top-[calc(100%+0.6rem)] z-20 w-full rounded-2xl border border-border bg-card p-2 shadow-[0_20px_48px_rgba(17,24,39,0.16)]">
                 <div className="flex items-center gap-2 rounded-xl border border-border bg-background px-3 py-2">
                   <Search className="size-4 text-muted-foreground" />
                   <input

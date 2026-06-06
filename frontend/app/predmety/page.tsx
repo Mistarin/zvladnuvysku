@@ -3,6 +3,7 @@ import { SubjectsFilterPanel } from "@/components/subject/subjects-filter-panel"
 import { SubjectsResultsPanel } from "@/components/subject/subjects-results-panel";
 import { SubjectsResultsSkeleton } from "@/components/subject/subjects-results-skeleton";
 import { ListPageHeader, ListPageShell } from "@/components/layout/list-page-shell";
+import { BookOpenText } from "lucide-react";
 import {
   getSubjectFiltersFromSearchParams,
   getSubjectPageFromSearchParams,
@@ -27,6 +28,7 @@ export default async function PredmetyPage({ searchParams }: PredmetyPageProps) 
           Procházej předměty Ostravské univerzity. Filtruj podle obtížnosti, semestru nebo katedry.
           </>
         }
+        icon={<BookOpenText className="ui-accent-text h-5 w-5" />}
       />
       <div className="space-y-6">
         <SubjectsFilterPanel />

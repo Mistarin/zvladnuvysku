@@ -35,7 +35,7 @@ const PERIOD_LABELS: Record<HallOfFamePeriod, string> = {
   all: "Celkem",
 };
 
-const HALL_OF_FAME_COLOR = "#F6B73C";
+const HALL_OF_FAME_COLOR = "var(--color-primary)";
 
 export function HallOfFameSection({
   leaderboard,
@@ -54,9 +54,9 @@ export function HallOfFameSection({
   return (
     <section
       id="hall-of-fame"
-      className="container mx-auto max-w-6xl scroll-mt-24 px-4 sm:px-6 lg:px-8 pb-16"
+      className="relative scroll-mt-24 border-y border-border bg-[var(--surface-soft)] py-16"
     >
-      <div className="relative overflow-hidden rounded-[2.5rem] border border-border bg-card p-6 shadow-[0_30px_80px_-45px_rgba(0,0,0,0.45)] backdrop-blur-xl sm:p-8">
+      <div className="container mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
         <div
           className="pointer-events-none absolute inset-x-0 top-0 h-52 sm:h-60"
           style={{
@@ -137,7 +137,7 @@ export function HallOfFameSection({
             </div>
           )}
 
-          <div className="rounded-[2rem] border border-border bg-[var(--surface-soft)] p-5 sm:p-6 shadow-sm">
+          <div className="rounded-[1.6rem] border border-border bg-background/80 p-5 shadow-sm sm:p-6">
             {isLoggedIn ? (
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
@@ -228,22 +228,33 @@ function PodiumColumn({
   sizeClass: string;
   isFirst: boolean;
 }) {
-  const medalColors: Record<number, string> = {
-    1: "from-yellow-400 to-amber-500",
-    2: "from-slate-300 to-slate-400",
-    3: "from-amber-600 to-amber-700",
+  const medalMeta: Record<number, { gradient: string; ring: string; pill: string; icon: React.ReactNode }> = {
+    1: {
+      gradient: "from-[#F0D48A] via-[#D9A93D] to-[#B9770E]",
+      ring: "ring-1 ring-[#D9A93D]/35",
+      pill: "bg-white/18 text-white",
+      icon: <Trophy className="size-5 text-white" />,
+    },
+    2: {
+      gradient: "from-[#E7ECF3] via-[#B9C4D3] to-[#8E9AAF]",
+      ring: "ring-1 ring-[#A9B4C4]/40",
+      pill: "bg-white/16 text-white/95",
+      icon: <Trophy className="size-4 text-white/95" />,
+    },
+    3: {
+      gradient: "from-[#D8A57D] via-[#B97845] to-[#8F522A]",
+      ring: "ring-1 ring-[#B97845]/35",
+      pill: "bg-white/14 text-white/95",
+      icon: <Trophy className="size-4 text-white/95" />,
+    },
   };
 
-  const medalIcons = {
-    1: <Trophy className="size-5 text-yellow-900" />,
-    2: <Trophy className="size-4 text-slate-700" />,
-    3: <Trophy className="size-4 text-amber-900" />,
-  };
+  const appearance = medalMeta[rank] ?? medalMeta[1];
 
   return (
     <Link
       href={getPublicProfilePath(entry.user_id)}
-      className={`flex flex-col items-center gap-2 group flex-1 max-w-[160px] sm:max-w-[200px]`}
+      className={`group flex max-w-[160px] flex-1 flex-col items-center gap-2 sm:max-w-[200px]`}
     >
       {/* Name */}
       <p className={`text-xs sm:text-sm font-semibold text-foreground text-center truncate w-full group-hover:text-primary transition-colors ${isFirst ? "font-bold" : ""}`}>
@@ -251,19 +262,19 @@ function PodiumColumn({
       </p>
       <FacultyPills faculties={[entry.faculty, entry.secondary_faculty].filter(Boolean)} />
       {/* Score */}
-      <p className={`${sizeClass} font-bold text-foreground`}>{entry.total_score}</p>
+      <p className={`${sizeClass} font-bold text-foreground dark:text-card-foreground`}>{entry.total_score}</p>
       {/* Podium block */}
       <div
-        className={`w-full ${heightClass} rounded-t-2xl bg-gradient-to-b ${medalColors[rank] ?? "from-muted to-muted/60"} flex flex-col items-center justify-start pt-3 gap-1 shadow-sm`}
+        className={`flex w-full ${heightClass} flex-col items-center justify-start gap-1 rounded-t-[1.4rem] bg-gradient-to-b ${appearance.gradient} pt-3 shadow-[0_18px_34px_-24px_rgba(15,23,42,0.65)] ${appearance.ring}`}
       >
         {/* Medal icon */}
         <div className="flex items-center justify-center">
-          {medalIcons[rank as 1 | 2 | 3]}
+          {appearance.icon}
         </div>
-        <span className="text-xs font-bold opacity-80 text-white">#{rank}</span>
+        <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold tracking-[0.14em] ${appearance.pill}`}>#{rank}</span>
       </div>
       {/* Pills */}
-      <div className="flex flex-wrap justify-center gap-1 mt-1">
+      <div className="mt-1 flex flex-wrap justify-center gap-1">
         <ScorePill icon={<FlipVertical className="size-3" />} value={entry.flashcard_count} label="K" />
         <ScorePill icon={<FileText className="size-3" />} value={entry.material_count} label="M" />
         <ScorePill icon={<UserRound className="size-3" />} value={entry.teacher_count} label="V" />
@@ -279,9 +290,9 @@ function LeaderboardRow({ entry, index }: { entry: HallOfFameRow; index: number 
   return (
     <Link
       href={getPublicProfilePath(entry.user_id)}
-      className="flex items-center gap-4 rounded-2xl border border-white/5 bg-background/50 px-4 py-3 shadow-sm transition-all hover:border-primary/40 hover:-translate-y-1 hover:shadow-md hover:bg-background/80"
+      className="flex items-center gap-4 rounded-2xl border border-border bg-background/50 px-4 py-3 shadow-sm transition-all hover:border-primary/40 hover:-translate-y-1 hover:shadow-md hover:bg-background/80"
     >
-      <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-muted text-sm font-semibold text-muted-foreground">
+      <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-sm font-semibold text-primary">
         #{index + 1}
       </div>
       <div className="flex-1 min-w-0">
@@ -294,16 +305,16 @@ function LeaderboardRow({ entry, index }: { entry: HallOfFameRow; index: number 
           <ScorePillInline icon={<BookOpen className="size-3" />} value={entry.subject_count} />
         </div>
       </div>
-      <p className="text-lg font-bold text-foreground">{entry.total_score}</p>
+      <p className="text-lg font-bold text-primary">{entry.total_score}</p>
     </Link>
   );
 }
 
 function ScorePill({ icon, value, label }: { icon: React.ReactNode; value: number; label: string }) {
   return (
-    <span className="inline-flex items-center gap-1 rounded-full border border-white/5 bg-card px-2 py-0.5 text-xs text-muted-foreground shadow-sm">
+    <span className="inline-flex items-center gap-1 rounded-full border border-border bg-card px-2 py-0.5 text-xs text-muted-foreground shadow-sm">
       {icon}
-      <span className="font-medium text-foreground">{value}</span>
+      <span className="font-medium text-primary">{value}</span>
       <span>{label}</span>
     </span>
   );
@@ -313,7 +324,7 @@ function ScorePillInline({ icon, value }: { icon: React.ReactNode; value: number
   return (
     <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
       {icon}
-      <span className="font-medium text-foreground">{value}</span>
+      <span className="font-medium text-primary">{value}</span>
     </span>
   );
 }

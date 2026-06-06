@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
+import { GraduationCap } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { ListPageHeader, ListPageShell } from "@/components/layout/list-page-shell";
 import { TeacherTable } from "@/components/teacher/teacher-table";
@@ -42,6 +43,7 @@ export default async function TeachersPage({ searchParams }: TeachersPageProps) 
       <ListPageHeader
         title="Vyučující"
         description="Prohlížej si profily vyučujících, hodnoť jejich přístup a filtruj podle fakulty, katedry nebo vyučovaného předmětu."
+        icon={<GraduationCap className="ui-accent-text h-5 w-5" />}
         actions={<TeacherProposalDialog
           hasPublicProfileIdentity={hasPublicIdentity}
           initialDisplayName={publicIdentity.displayName}

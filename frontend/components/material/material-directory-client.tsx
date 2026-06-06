@@ -115,7 +115,7 @@ export function MaterialDirectoryClient({
   }, [query, view]);
 
   return (
-    <div className="mb-8 space-y-4">
+    <div className="mb-8 space-y-6">
       <ListPageHeader
         title="Studijní materiály"
         description={
@@ -124,10 +124,9 @@ export function MaterialDirectoryClient({
             : "Schválené materiály a přehledné skupiny napříč předměty."
         }
         icon={<FileText className="h-5 w-5 text-primary" />}
-        className="mb-0"
       />
 
-      <div className="space-y-2">
+      <div className="space-y-3">
         <div>
           <SearchBar
             query={query}

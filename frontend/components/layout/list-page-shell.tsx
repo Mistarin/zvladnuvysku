@@ -30,8 +30,8 @@ export function ListPageHeader({
   className,
 }: ListPageHeaderProps) {
   return (
-    <div className={cn("mb-8 flex flex-col gap-4 sm:gap-5", className)}>
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+    <div className={cn("mb-10 flex flex-col gap-5 sm:gap-6", className)}>
+      <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
         <div className="min-w-0">
           <div className="flex items-start gap-3">
             {icon ? (
@@ -39,9 +39,10 @@ export function ListPageHeader({
                 {icon}
               </div>
             ) : null}
-            <div className="min-w-0 space-y-1.5">
+            <div className="min-w-0 space-y-2">
               <h1 className="text-3xl font-bold text-foreground sm:text-4xl">{title}</h1>
               <p className="max-w-3xl text-sm text-muted-foreground sm:text-base">{description}</p>
+              <div className="h-1 w-18 rounded-full bg-primary/85" />
             </div>
           </div>
         </div>
