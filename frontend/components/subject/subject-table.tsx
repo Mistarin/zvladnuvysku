@@ -194,7 +194,7 @@ export function SubjectTable({
                     <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
                       {subject.faculty && (
                         <span 
-                          className="inline-block px-1.5 py-0.5 text-[10px] font-semibold rounded uppercase tracking-wider"
+                          className="inline-flex items-center rounded-md px-2 py-1 text-[10px] font-semibold uppercase tracking-wider"
                           style={{ 
                             backgroundColor: `${facultyColor}20`,
                             color: facultyColor,
@@ -204,8 +204,8 @@ export function SubjectTable({
                         </span>
                       )}
                       {subject.exam_from_home && (
-                        <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
-                          <span className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-emerald-500 text-[9px] font-bold text-white">
+                        <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-md border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
+                          <span className="flex h-3.5 w-3.5 items-center justify-center rounded-sm bg-emerald-500 text-[9px] font-bold text-white">
                             ✓
                           </span>
                           Z domova

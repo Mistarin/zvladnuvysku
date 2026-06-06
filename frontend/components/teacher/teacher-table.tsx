@@ -66,7 +66,7 @@ export function TeacherTable({ teachers }: TeacherTableProps) {
                       </Link>
                       <div className="flex flex-wrap items-center gap-1.5 md:hidden">
                         <span
-                          className="inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider"
+                          className="inline-flex items-center rounded-md px-2 py-1 text-[10px] font-semibold uppercase tracking-wider"
                           style={{ backgroundColor: `${facultyColor}20`, color: facultyColor }}
                         >
                           {teacher.faculty}
@@ -107,7 +107,7 @@ export function TeacherTable({ teachers }: TeacherTableProps) {
                   </td>
                   <td className="hidden px-4 py-3 align-top md:table-cell">
                     <span
-                      className="inline-flex rounded-full px-2 py-0.5 text-xs font-semibold uppercase tracking-wider"
+                      className="inline-flex items-center rounded-md px-2.5 py-1 text-xs font-semibold uppercase tracking-wider"
                       style={{ backgroundColor: `${facultyColor}20`, color: facultyColor }}
                     >
                       {teacher.faculty}
