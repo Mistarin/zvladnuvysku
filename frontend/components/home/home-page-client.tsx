@@ -104,8 +104,13 @@ export function HomePageClient({ siteStats }: HomePageClientProps) {
     else if (mode === "materials") newQuery = `.m ${newQuery}`;
     else if (mode === "groups") newQuery = `.s ${newQuery}`;
     setQuery(newQuery);
-    setIsFocused(true);
-  }, [query, setQuery]);
+    if (isFocused) {
+      window.setTimeout(() => {
+        const input = document.getElementById("subject-search") as HTMLInputElement | null;
+        input?.focus();
+      }, 0);
+    }
+  }, [isFocused, query, setQuery]);
 
   const placeholder =
     searchMode === "flashcards"
@@ -261,14 +266,13 @@ export function HomePageClient({ siteStats }: HomePageClientProps) {
         </div>
       </section>
 
-      {/* Real stats row */}
-      <div className="home-stats animate-fade-in">
+      <div className="home-stats animate-fade-in relative z-10 -mt-24 sm:-mt-20">
         {stats.map((stat) => (
           <div key={stat.label} className="text-center">
             <div className="text-2xl sm:text-3xl font-bold text-foreground">
               {stat.value}
             </div>
-            <div className="text-xs text-muted-foreground mt-0.5">
+            <div className="mt-0.5 text-xs text-muted-foreground">
               {stat.label}
             </div>
           </div>
@@ -276,7 +280,7 @@ export function HomePageClient({ siteStats }: HomePageClientProps) {
       </div>
 
       {/* Features section */}
-      <section className="border-t border-border py-16">
+      <section className="border-t border-border bg-[var(--surface-soft)] py-16">
         <div className="container mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
           <div className="mb-10 text-center">
             <h2 className="text-2xl sm:text-3xl font-bold text-foreground">

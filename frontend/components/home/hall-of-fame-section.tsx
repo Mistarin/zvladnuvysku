@@ -46,7 +46,7 @@ export function HallOfFameSection({
   return (
     <section
       id="hall-of-fame"
-      className="relative scroll-mt-24 border-y border-border bg-background py-16"
+      className="relative scroll-mt-24 border-y border-border bg-[var(--surface-soft)] py-16"
     >
       <div className="container mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
         <div className="relative flex flex-col gap-8">
@@ -66,7 +66,7 @@ export function HallOfFameSection({
           </div>
 
           {entries.length === 0 ? (
-            <div className="rounded-[2rem] border-2 border-dashed border-border bg-background/80 px-6 py-12 text-center">
+            <div className="rounded-[2rem] border-2 border-dashed border-border bg-[var(--surface-soft)] px-6 py-12 text-center">
               <p className="text-lg font-semibold text-foreground">
                 Zatím tu nejsou žádní přispěvatelé za toto období.
               </p>

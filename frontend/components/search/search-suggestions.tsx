@@ -45,6 +45,11 @@ export function SearchSuggestions({
 }: SearchSuggestionsProps) {
   if (!query || query.trim().length < 1) return null;
 
+  const limitedDeckResults = deckResults.slice(0, 5);
+  const limitedMaterialResults = materialResults.slice(0, 5);
+  const limitedGroupResults = groupResults.slice(0, 5);
+  const limitedResults = results.slice(0, 5);
+
   // ── FLASHCARD MODE ──────────────────────────────────────────────────────
   if (mode === "flashcards") {
     return (
@@ -90,7 +95,7 @@ export function SearchSuggestions({
             </div>
           ) : (
             <>
-              {deckResults.map((deck, idx) => (
+              {limitedDeckResults.map((deck, idx) => (
                 <Link
                   key={deck.id}
                   href={`/flashcardy/${deck.id}`}
@@ -100,7 +105,7 @@ export function SearchSuggestions({
                   className={`
                     flex items-center justify-between px-4 py-3
                     hover:bg-muted transition-colors duration-100 cursor-pointer
-                    ${idx !== deckResults.length - 1 ? "border-b border-border/50" : ""}
+                    ${idx !== limitedDeckResults.length - 1 ? "border-b border-border/50" : ""}
                   `}
                 >
                   <div className="flex items-center gap-3 min-w-0">
@@ -191,7 +196,7 @@ export function SearchSuggestions({
             </div>
           ) : (
             <>
-              {materialResults.map((material, idx) => (
+              {limitedMaterialResults.map((material, idx) => (
                 <a
                   key={material.id}
                   href={material.public_url}
@@ -203,7 +208,7 @@ export function SearchSuggestions({
                   className={`
                     flex items-center justify-between px-4 py-3
                     hover:bg-muted transition-colors duration-100 cursor-pointer
-                    ${idx !== materialResults.length - 1 ? "border-b border-border/50" : ""}
+                    ${idx !== limitedMaterialResults.length - 1 ? "border-b border-border/50" : ""}
                   `}
                 >
                   <div className="flex items-center gap-3 min-w-0">
@@ -287,7 +292,7 @@ export function SearchSuggestions({
             </div>
           ) : (
             <>
-              {groupResults.map((group, idx) => (
+              {limitedGroupResults.map((group, idx) => (
                 group.kind === "group" ? (
                   <Link
                     key={`group-${group.id}`}
@@ -298,7 +303,7 @@ export function SearchSuggestions({
                     className={`
                       flex items-center justify-between px-4 py-3
                       hover:bg-muted transition-colors duration-100 cursor-pointer
-                      ${idx !== groupResults.length - 1 ? "border-b border-border/50" : ""}
+                      ${idx !== limitedGroupResults.length - 1 ? "border-b border-border/50" : ""}
                     `}
                   >
                     <div className="flex items-center gap-3 min-w-0">
@@ -342,7 +347,7 @@ export function SearchSuggestions({
                     className={`
                       flex items-center justify-between px-4 py-3
                       hover:bg-muted transition-colors duration-100 cursor-pointer
-                      ${idx !== groupResults.length - 1 ? "border-b border-border/50" : ""}
+                      ${idx !== limitedGroupResults.length - 1 ? "border-b border-border/50" : ""}
                     `}
                   >
                     <div className="flex items-center gap-3 min-w-0">
@@ -411,7 +416,7 @@ export function SearchSuggestions({
           </div>
         ) : (
           <>
-            {results.map((result, idx) => (
+            {limitedResults.map((result, idx) => (
               <Link
                 key={result.slug}
                 href={`/predmety/${result.slug}`}
@@ -421,7 +426,7 @@ export function SearchSuggestions({
                 className={`
                   flex items-center justify-between px-4 py-3 
                   hover:bg-muted transition-colors duration-100 cursor-pointer
-                  ${idx !== results.length - 1 ? "border-b border-border/50" : ""}
+                  ${idx !== limitedResults.length - 1 ? "border-b border-border/50" : ""}
                 `}
               >
                 <div className="flex items-center gap-3 min-w-0">
