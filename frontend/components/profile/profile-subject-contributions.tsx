@@ -46,17 +46,17 @@ export function ProfileSubjectContributions({ decks, materials, groups = [] }: P
   const filteredGroups = subjectSlug ? groups.filter((group) => group.subject?.slug === subjectSlug) : groups
 
   return (
-    <div className="space-y-4 xl:col-span-2">
+    <div className="space-y-5 xl:col-span-2">
       {subjectOptions.length > 1 ? (
-        <div className="flex flex-col gap-2 rounded-2xl border border-border bg-card p-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-3 rounded-[24px] border border-white/10 bg-[linear-gradient(180deg,rgba(11,17,32,0.98),rgba(6,10,22,0.96))] p-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-sm font-semibold text-foreground">Filtrovat podle předmětu</p>
-            <p className="text-xs text-muted-foreground">Příspěvky rozdělené podle předmětů, do kterých uživatel něco přidal.</p>
+            <p className="text-sm font-semibold text-slate-50">Filtrovat podle předmětu</p>
+            <p className="text-xs text-slate-400">Příspěvky rozdělené podle předmětů, do kterých uživatel něco přidal.</p>
           </div>
           <select
             value={subjectSlug}
             onChange={(event) => setSubjectSlug(event.target.value)}
-            className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary/40 focus:ring-1 focus:ring-primary/40 sm:w-72"
+            className="w-full rounded-xl border border-white/10 bg-[#1f2937] px-3 py-2 text-sm text-slate-100 outline-none transition-colors focus:border-[#02BED6]/40 focus:ring-1 focus:ring-[#02BED6]/30 sm:w-72"
           >
             <option value="">Všechny předměty</option>
             {subjectOptions.map((subject) => (
@@ -68,7 +68,7 @@ export function ProfileSubjectContributions({ decks, materials, groups = [] }: P
         </div>
       ) : null}
 
-      <div className="flex flex-wrap gap-2 rounded-2xl border border-border bg-card p-3">
+      <div className="flex flex-wrap gap-2 rounded-2xl border border-white/10 bg-[#0f1728] p-2">
         {[
           { key: 'all', label: 'Vše' },
           { key: 'decks', label: 'Kartičky' },
@@ -81,10 +81,10 @@ export function ProfileSubjectContributions({ decks, materials, groups = [] }: P
               key={tab.key}
               type="button"
               onClick={() => setActiveTab(tab.key as 'all' | 'decks' | 'materials' | 'groups')}
-              className={`rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${
+              className={`rounded-xl border px-3 py-2 text-sm font-medium transition-colors ${
                 active
-                  ? 'border-primary bg-primary/10 text-primary'
-                  : 'border-border bg-background text-muted-foreground hover:bg-muted hover:text-foreground'
+                  ? 'border-white/10 bg-[#2a3344] text-slate-50'
+                  : 'border-transparent bg-transparent text-slate-400 hover:border-white/5 hover:bg-white/[0.03] hover:text-slate-100'
               }`}
             >
               {tab.label}
@@ -97,9 +97,9 @@ export function ProfileSubjectContributions({ decks, materials, groups = [] }: P
         {(activeTab === 'all' || activeTab === 'decks') && (
           <ProfileContributionSection title="Veřejné balíčky kartiček" empty="Zatím žádné veřejné balíčky.">
           {filteredDecks.map((deck) => (
-            <div key={deck.id} className="rounded-2xl border border-border bg-card p-4">
+            <div key={deck.id} className="rounded-[22px] border border-white/10 bg-[rgba(255,255,255,0.03)] p-4">
               <div className="flex items-start justify-between gap-3">
-                <Link href={`/flashcardy/${deck.id}`} className="font-semibold text-foreground hover:text-primary">
+                <Link href={`/flashcardy/${deck.id}`} className="font-semibold text-slate-50 transition-colors hover:text-[#6dd9e8]">
                   {deck.title}
                 </Link>
                 <ShareLinkButton
@@ -107,7 +107,7 @@ export function ProfileSubjectContributions({ decks, materials, groups = [] }: P
                   className="px-2 py-1 text-[11px] sm:text-xs"
                 />
               </div>
-              <p className="mt-1 text-sm text-muted-foreground">{deck.card_count} karet</p>
+              <p className="mt-1 text-sm text-slate-400">{deck.card_count} karet</p>
               {deck.subject && <SubjectLink subject={deck.subject} />}
             </div>
           ))}
@@ -117,26 +117,26 @@ export function ProfileSubjectContributions({ decks, materials, groups = [] }: P
         {(activeTab === 'all' || activeTab === 'materials') && (
           <ProfileContributionSection title="Samostatné materiály" empty="Zatím žádné samostatné materiály.">
           {filteredMaterials.map((material) => (
-            <div key={material.id} className="rounded-2xl border border-border bg-card p-4">
+            <div key={material.id} className="rounded-[22px] border border-white/10 bg-[rgba(255,255,255,0.03)] p-4">
               <div className="flex items-start justify-between gap-3">
                 {material.url ? (
                   <a
                     href={material.url}
                     target="_blank"
                     rel="noreferrer"
-                    className="font-semibold text-foreground hover:text-primary"
+                    className="font-semibold text-slate-50 transition-colors hover:text-[#6dd9e8]"
                   >
                     {material.title}
                   </a>
                 ) : (
-                  <p className="font-semibold text-foreground">{material.title}</p>
+                  <p className="font-semibold text-slate-50">{material.title}</p>
                 )}
                 <ShareLinkButton
                   path={getSharePath('material', material.share_slug)}
                   className="px-2 py-1 text-[11px] sm:text-xs"
                 />
               </div>
-              <p className="mt-1 text-sm text-muted-foreground">{material.sizeLabel}</p>
+              <p className="mt-1 text-sm text-slate-400">{material.sizeLabel}</p>
               {material.subject && <SubjectLink subject={material.subject} />}
             </div>
           ))}
@@ -146,7 +146,7 @@ export function ProfileSubjectContributions({ decks, materials, groups = [] }: P
         {(activeTab === 'all' || activeTab === 'groups') && (
           <ProfileContributionSection title="Složky materiálů" empty="Zatím žádné veřejné složky materiálů.">
           {filteredGroups.map((group) => (
-            <MaterialGroupCard key={group.id} group={group} showSubject />
+            <MaterialGroupCard key={group.id} group={group} showSubject surface="dashboard" />
           ))}
           </ProfileContributionSection>
         )}
@@ -157,7 +157,7 @@ export function ProfileSubjectContributions({ decks, materials, groups = [] }: P
 
 function SubjectLink({ subject }: { subject: NonNullable<SubjectRef> }) {
   return (
-    <Link href={`/predmety/${subject.slug}`} className="mt-1 block text-xs text-muted-foreground hover:text-foreground">
+    <Link href={`/predmety/${subject.slug}`} className="mt-1 block text-xs text-slate-400 transition-colors hover:text-slate-100">
       {subject.short_tag} · {subject.name}
     </Link>
   )
@@ -176,11 +176,11 @@ function ProfileContributionSection({
 
   return (
     <section className="space-y-4">
-      <h2 className="text-xl font-bold text-foreground">{title}</h2>
+      <h2 className="text-xl font-bold text-slate-50">{title}</h2>
       {items.length > 0 ? (
         <div className="space-y-3">{items}</div>
       ) : (
-        <div className="rounded-2xl border border-dashed border-border bg-background/40 px-4 py-8 text-center text-sm text-muted-foreground">
+        <div className="rounded-[22px] border border-dashed border-white/10 bg-white/[0.02] px-4 py-8 text-center text-sm text-slate-400">
           {empty}
         </div>
       )}

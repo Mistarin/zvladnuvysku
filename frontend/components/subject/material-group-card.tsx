@@ -49,6 +49,7 @@ interface MaterialGroupCardProps {
   compact?: boolean
   defaultExpanded?: boolean
   onDeleted?: (groupId: string) => void
+  surface?: 'default' | 'dashboard'
 }
 
 export function MaterialGroupCard({
@@ -58,6 +59,7 @@ export function MaterialGroupCard({
   compact = false,
   defaultExpanded = true,
   onDeleted,
+  surface = 'default',
 }: MaterialGroupCardProps) {
   const router = useRouter()
   const [isExpanded, setIsExpanded] = useState(defaultExpanded)
@@ -70,6 +72,7 @@ export function MaterialGroupCard({
   const approvedCount = group.materials.filter(m => m.moderation_status === 'approved').length
   const pendingCount = group.materials.filter(m => m.moderation_status === 'pending').length
   const totalPages = group.materials.reduce((sum, m) => sum + (m.page_count ?? 0), 0)
+  const dashboardSurface = surface === 'dashboard'
 
   const handleRename = async () => {
     if (editTitle.trim() === currentTitle) { setIsEditing(false); return }
@@ -103,11 +106,17 @@ export function MaterialGroupCard({
   }
 
   return (
-    <div className="glass-card overflow-hidden">
+    <div
+      className={
+        dashboardSurface
+          ? 'overflow-hidden rounded-[24px] border border-white/10 bg-[rgba(255,255,255,0.03)] shadow-[inset_0_1px_0_rgba(255,255,255,0.02)]'
+          : 'glass-card overflow-hidden'
+      }
+    >
       {/* Header */}
       <div className={`${compact ? 'p-3.5' : 'p-4'} ${isExpanded ? 'border-b border-white/5' : ''}`}>
         {/* Uploader line */}
-        <div className={`flex items-center gap-1.5 text-xs text-muted-foreground ${compact ? 'mb-1.5' : 'mb-2'}`}>
+        <div className={`flex items-center gap-1.5 text-xs ${dashboardSurface ? 'text-slate-400' : 'text-muted-foreground'} ${compact ? 'mb-1.5' : 'mb-2'}`}>
           <User className="w-3 h-3" />
           <span>{group.uploader_display_name ?? 'Anonymní'}</span>
           {showSubject && group.subject && (
@@ -115,7 +124,9 @@ export function MaterialGroupCard({
               <span className="mx-1">·</span>
               <Link
                 href={`/predmety/${group.subject.slug}`}
-                className="font-mono font-semibold bg-primary/10 text-primary px-1.5 py-0.5 rounded hover:bg-primary/20 transition-colors"
+                className={dashboardSurface
+                  ? 'rounded-md border border-[#02BED6]/20 bg-[#02BED6]/10 px-1.5 py-0.5 font-mono font-semibold text-[#6dd9e8] transition-colors hover:bg-[#02BED6]/15'
+                  : 'font-mono font-semibold bg-primary/10 text-primary px-1.5 py-0.5 rounded hover:bg-primary/20 transition-colors'}
               >
                 {group.subject.short_tag}
               </Link>
@@ -159,7 +170,7 @@ export function MaterialGroupCard({
             </div>
           ) : (
             <div className="flex-1 min-w-0">
-              <h3 className={`${compact ? 'text-sm' : 'text-base'} font-semibold text-foreground leading-tight break-words`}>
+              <h3 className={`${compact ? 'text-sm' : 'text-base'} break-words font-semibold leading-tight ${dashboardSurface ? 'text-slate-50' : 'text-foreground'}`}>
                 {currentTitle}
               </h3>
             </div>
@@ -168,7 +179,7 @@ export function MaterialGroupCard({
 
         {/* Stats + controls */}
         <div className={`flex items-center gap-3 ${compact ? 'mt-1.5' : 'mt-2'} flex-wrap`}>
-          <span className="text-xs text-muted-foreground">
+          <span className={`text-xs ${dashboardSurface ? 'text-slate-400' : 'text-muted-foreground'}`}>
             {group.materials.length} {group.materials.length === 1 ? 'soubor' : group.materials.length < 5 ? 'soubory' : 'souborů'}
             {totalPages > 0 && ` · ${totalPages} stran`}
           </span>
@@ -220,24 +231,24 @@ export function MaterialGroupCard({
 
       {/* Materials list */}
       {isExpanded && (
-        <ul className="divide-y divide-white/5">
+        <ul className={`divide-y ${dashboardSurface ? 'divide-white/8' : 'divide-white/5'}`}>
           {group.materials.map(material => (
             <li key={material.id}>
-              <div className={`flex items-center gap-3 ${compact ? 'px-3.5 py-2.5' : 'px-4 py-3'} hover:bg-muted/50 transition-colors group`}>
+              <div className={`group flex items-center gap-3 ${compact ? 'px-3.5 py-2.5' : 'px-4 py-3'} transition-colors ${dashboardSurface ? 'hover:bg-white/[0.03]' : 'hover:bg-muted/50'}`}>
                 <a
                   href={material.public_url}
                   target="_blank"
                   rel="noreferrer"
                   className="flex min-w-0 flex-1 items-center gap-3"
                 >
-                  <div className="w-7 h-7 rounded-lg bg-sky-500/10 flex items-center justify-center shrink-0">
-                    <FileText className="w-3.5 h-3.5 text-sky-600" />
+                  <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${dashboardSurface ? 'bg-sky-500/10' : 'bg-sky-500/10'}`}>
+                    <FileText className={`w-3.5 h-3.5 ${dashboardSurface ? 'text-sky-300' : 'text-sky-600'}`} />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className={`${compact ? 'text-[13px]' : 'text-sm'} font-medium text-foreground truncate group-hover:text-primary transition-colors`}>
+                    <p className={`${compact ? 'text-[13px]' : 'text-sm'} truncate font-medium transition-colors ${dashboardSurface ? 'text-slate-100 group-hover:text-[#6dd9e8]' : 'text-foreground group-hover:text-primary'}`}>
                       {material.title}
                     </p>
-                    <p className="text-xs text-muted-foreground">
+                    <p className={`text-xs ${dashboardSurface ? 'text-slate-400' : 'text-muted-foreground'}`}>
                       {formatFileSize(material.size_bytes)}
                       {material.page_count != null && ` · ${material.page_count} stran`}
                     </p>

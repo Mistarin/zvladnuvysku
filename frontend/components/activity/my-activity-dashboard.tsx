@@ -168,7 +168,7 @@ export function MyActivityDashboard({ publicIdentity, sections: initialSections 
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
         {summaryCards.map((card) => (
           <SummaryCard key={card.id} card={card} />
@@ -176,15 +176,15 @@ export function MyActivityDashboard({ publicIdentity, sections: initialSections 
       </div>
 
       {error ? (
-        <div className="rounded-2xl border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm text-destructive">
+        <div className="rounded-2xl border border-destructive/25 bg-destructive/10 px-4 py-3 text-sm text-destructive">
           {error}
         </div>
       ) : null}
 
       {activeSection ? (
         <section className="space-y-4">
-          <div className="overflow-x-auto pb-4">
-            <div className="inline-flex min-w-full gap-2 rounded-[1.5rem] bg-card/60 backdrop-blur-xl p-2 sm:min-w-0 shadow-sm border border-white/10 dark:border-white/5">
+          <div className="overflow-x-auto pb-1">
+            <div className="inline-flex min-w-full gap-2 rounded-2xl border border-white/10 bg-[#0f1728] p-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] sm:min-w-0">
               {sections.map((section) => {
                 const isActive = section.id === activeSection.id
                 return (
@@ -193,14 +193,21 @@ export function MyActivityDashboard({ publicIdentity, sections: initialSections 
                     type="button"
                     onClick={() => setActiveSectionId(section.id)}
                     className={cn(
-                      'flex min-w-[10rem] flex-1 items-center justify-between gap-3 rounded-xl px-4 py-3 text-left transition-all',
+                      'flex min-w-[10rem] flex-1 items-center justify-between gap-3 rounded-xl border px-4 py-3 text-left transition-colors',
                       isActive
-                        ? 'bg-primary text-primary-foreground shadow-md shadow-primary/20'
-                        : 'bg-transparent text-muted-foreground hover:bg-muted/50 hover:text-foreground',
+                        ? 'border-white/10 bg-[#2a3344] text-foreground'
+                        : 'border-transparent bg-transparent text-slate-400 hover:border-white/5 hover:bg-white/[0.03] hover:text-slate-100',
                     )}
                   >
                     <span className="truncate text-sm font-semibold">{section.title}</span>
-                    <span className={cn("rounded-full px-2 py-0.5 text-xs font-semibold", isActive ? "bg-white/20 text-white" : "bg-background/80 text-foreground")}>
+                    <span
+                      className={cn(
+                        'rounded-md border px-2 py-0.5 text-xs font-semibold',
+                        isActive
+                          ? 'border-white/10 bg-white/[0.06] text-slate-100'
+                          : 'border-white/10 bg-[#111827] text-slate-300',
+                      )}
+                    >
                       {getSectionItemCount(section)}
                     </span>
                   </button>
@@ -276,19 +283,19 @@ function renderSectionContent({
     <>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h2 className="text-xl font-bold text-foreground">{section.title}</h2>
-          <p className="mt-1 text-sm text-muted-foreground">{section.description}</p>
+          <h2 className="text-xl font-bold text-slate-50">{section.title}</h2>
+          <p className="mt-1 text-sm text-slate-400">{section.description}</p>
         </div>
         {section.actionHref && section.actionLabel ? (
-          <Link href={section.actionHref} className="text-sm font-medium text-primary hover:underline">
+          <Link href={section.actionHref} className="text-sm font-medium text-[#02BED6] transition-colors hover:text-[#6dd9e8]">
             {section.actionLabel}
           </Link>
         ) : null}
       </div>
 
-      <div className="rounded-[2rem] bg-card/40 backdrop-blur-xl p-6 sm:p-8 shadow-sm border border-white/10 dark:border-white/5">
+      <div className="rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(11,17,32,0.98),rgba(6,10,22,0.96))] p-5 shadow-[0_18px_60px_rgba(0,0,0,0.28)] sm:p-6">
         <div
-          className="grid gap-3"
+          className="grid gap-2 rounded-2xl border border-white/8 bg-[#0f1728] p-2"
           style={{ gridTemplateColumns: `repeat(${section.tabs.length}, minmax(0, 1fr))` }}
         >
           {section.tabs.map((tab) => {
@@ -299,15 +306,22 @@ function renderSectionContent({
                 type="button"
                 onClick={() => setActiveTabs((current) => ({ ...current, [section.id]: tab.id }))}
                 className={cn(
-                  'rounded-2xl px-4 py-4 text-left transition-all border',
+                  'rounded-xl border px-4 py-3 text-left transition-colors',
                   isActive
-                    ? cn(getToneSurfaceClass(tab.tone), 'border-current/20 shadow-sm')
-                    : 'border-white/5 bg-card/30 text-muted-foreground hover:bg-muted/50 hover:text-foreground hover:border-white/10',
+                    ? 'border-white/10 bg-[#2a3344] text-slate-50'
+                    : 'border-transparent bg-transparent text-slate-400 hover:border-white/5 hover:bg-white/[0.03] hover:text-slate-100',
                 )}
               >
                 <div className="flex items-center justify-between gap-3">
                   <span className="truncate text-sm font-semibold">{tab.label}</span>
-                  <span className={cn("rounded-full px-2.5 py-0.5 text-xs font-bold", isActive ? "bg-current/10" : "bg-background/80")}>
+                  <span
+                    className={cn(
+                      'rounded-md border px-2.5 py-0.5 text-xs font-bold',
+                      isActive
+                        ? getToneCounterClass(tab.tone)
+                        : 'border-white/10 bg-[#111827] text-slate-300',
+                    )}
+                  >
                     {tab.items.length}
                   </span>
                 </div>
@@ -316,9 +330,9 @@ function renderSectionContent({
           })}
         </div>
 
-        <div className="mt-4 border-t border-border/70 pt-4">
+        <div className="mt-5 border-t border-white/10 pt-5">
           <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-sm text-muted-foreground">{activeTab.description}</p>
+            <p className="text-sm text-slate-400">{activeTab.description}</p>
             {subjectOptions.length > 1 ? (
               <select
                 value={selectedSubject}
@@ -328,7 +342,7 @@ function renderSectionContent({
                     [section.id]: event.target.value,
                   }))
                 }
-                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary/40 focus:ring-1 focus:ring-primary/40 sm:w-64"
+                className="w-full rounded-xl border border-white/10 bg-[#1f2937] px-3 py-2 text-sm text-slate-100 outline-none transition-colors focus:border-[#02BED6]/40 focus:ring-1 focus:ring-[#02BED6]/30 sm:w-64"
               >
                 <option value="">Všechny předměty</option>
                 {subjectOptions.map((subject) => (
@@ -353,7 +367,7 @@ function renderSectionContent({
               ))}
 
               {olderItems.length > 0 ? (
-                <div className="rounded-2xl border border-dashed border-border bg-background/60 p-3">
+                <div className="rounded-2xl border border-dashed border-white/10 bg-white/[0.02] p-3">
                   <button
                     type="button"
                     onClick={() =>
@@ -362,7 +376,7 @@ function renderSectionContent({
                         [expandKey]: !isExpanded,
                       }))
                     }
-                    className="flex w-full items-center justify-between gap-3 text-left text-sm font-medium text-foreground"
+                    className="flex w-full items-center justify-between gap-3 text-left text-sm font-medium text-slate-100"
                   >
                     <span>{isExpanded ? 'Skrýt starší položky' : `Zobrazit starší položky (${olderItems.length})`}</span>
                     {isExpanded ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
@@ -385,7 +399,7 @@ function renderSectionContent({
               ) : null}
             </div>
           ) : (
-            <div className="rounded-2xl border border-dashed border-border bg-background/40 px-4 py-8 text-center text-sm text-muted-foreground">
+            <div className="rounded-2xl border border-dashed border-white/10 bg-white/[0.02] px-4 py-8 text-center text-sm text-slate-400">
               {selectedSubject ? 'Pro vybraný předmět tu nic není.' : activeTab.empty}
             </div>
           )}
@@ -417,15 +431,15 @@ function getSectionItemCount(section: ActivitySectionData) {
 
 function SummaryCard({ card }: { card: SummaryCardData }) {
   return (
-    <div className="rounded-3xl bg-card/60 backdrop-blur-xl shadow-sm hover:shadow-md hover:-translate-y-1 transition-all p-6 border border-white/10 dark:border-white/5">
-      <div className="flex items-center gap-3 text-sm text-muted-foreground font-medium">
-        <span className={cn('inline-flex h-10 w-10 items-center justify-center rounded-2xl shadow-inner', getToneSurfaceClass(card.tone))}>
+    <div className="rounded-[24px] border border-white/10 bg-[rgba(255,255,255,0.03)] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
+      <div className="flex items-center gap-3 text-sm font-medium text-slate-400">
+        <span className={cn('inline-flex h-10 w-10 items-center justify-center rounded-xl border', getToneSurfaceClass(card.tone))}>
           {card.icon}
         </span>
         <span>{card.label}</span>
       </div>
-      <p className="mt-4 text-3xl font-bold text-foreground">{card.value}</p>
-      <p className="mt-2 text-xs text-muted-foreground/80 leading-relaxed">{card.meta}</p>
+      <p className="mt-4 text-3xl font-bold text-slate-50">{card.value}</p>
+      <p className="mt-2 text-xs leading-relaxed text-slate-400">{card.meta}</p>
     </div>
   )
 }
@@ -451,16 +465,22 @@ function ActivityCard({
         isOwner
         compact
         defaultExpanded={false}
+        surface="dashboard"
       />
     )
   }
 
   return (
-    <div className={cn('rounded-3xl bg-card/40 backdrop-blur-md shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all p-5 sm:p-6 border border-white/10 dark:border-white/5', item.attention?.acknowledged ? 'opacity-75' : null)}>
+    <div
+      className={cn(
+        'rounded-[24px] border border-white/10 bg-[rgba(255,255,255,0.03)] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.02)]',
+        item.attention?.acknowledged ? 'opacity-75' : null,
+      )}
+    >
       <div className="flex flex-col gap-4">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <p className="font-semibold text-foreground">{item.title}</p>
+            <p className="font-semibold text-slate-50">{item.title}</p>
             {item.badges.map((badge) => (
               <StatusBadge key={`${item.id}-${badge.label}`} tone={badge.tone}>
                 {badge.label}
@@ -468,29 +488,34 @@ function ActivityCard({
             ))}
           </div>
 
-          {item.subtitle ? <p className="mt-1 text-sm text-muted-foreground">{item.subtitle}</p> : null}
-          {item.supportingText ? <p className="mt-1 text-sm text-muted-foreground">{item.supportingText}</p> : null}
+          {item.subtitle ? <p className="mt-1 text-sm text-slate-400">{item.subtitle}</p> : null}
+          {item.supportingText ? <p className="mt-1 text-sm text-slate-400">{item.supportingText}</p> : null}
           {item.link ? (
             item.link.external ? (
-              <a href={item.link.href} target="_blank" rel="noreferrer" className="mt-2 inline-flex items-center gap-2 text-sm text-primary hover:underline">
+              <a
+                href={item.link.href}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-2 inline-flex items-center gap-2 text-sm text-[#02BED6] transition-colors hover:text-[#6dd9e8]"
+              >
                 {item.link.label}
               </a>
             ) : (
-              <Link href={item.link.href} className="mt-2 inline-flex items-center gap-2 text-sm text-primary hover:underline">
+              <Link href={item.link.href} className="mt-2 inline-flex items-center gap-2 text-sm text-[#02BED6] transition-colors hover:text-[#6dd9e8]">
                 {item.link.label}
               </Link>
             )
           ) : null}
         </div>
 
-        {item.body ? <p className="whitespace-pre-wrap text-sm text-foreground/90">{item.body}</p> : null}
+        {item.body ? <p className="whitespace-pre-wrap text-sm text-slate-200">{item.body}</p> : null}
 
         {item.meta.length > 0 ? (
-          <div className="grid gap-3 text-sm text-muted-foreground sm:grid-cols-2">
+          <div className="grid gap-3 sm:grid-cols-2">
             {item.meta.map((meta) => (
-              <div key={`${item.id}-${meta.label}`}>
-                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground/80">{meta.label}</p>
-                <p className="mt-1 text-sm text-foreground/90">{meta.value}</p>
+              <div key={`${item.id}-${meta.label}`} className="rounded-xl border border-white/8 bg-[#0f1728] px-3 py-2">
+                <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-slate-500">{meta.label}</p>
+                <p className="mt-1 text-sm text-slate-200">{meta.value}</p>
               </div>
             ))}
           </div>
@@ -504,10 +529,10 @@ function ActivityCard({
                 className={cn(
                   'rounded-xl border px-3 py-2',
                   panel.tone === 'danger'
-                    ? 'border-destructive/20 bg-destructive/5'
+                    ? 'border-destructive/25 bg-destructive/10'
                     : panel.tone === 'info'
-                      ? 'border-sky-500/20 bg-sky-500/5'
-                      : 'border-border/70 bg-card',
+                      ? 'border-sky-400/25 bg-sky-500/10'
+                      : 'border-white/10 bg-[#0f1728]',
                 )}
               >
                 <p
@@ -516,8 +541,8 @@ function ActivityCard({
                     panel.tone === 'danger'
                       ? 'text-destructive'
                       : panel.tone === 'info'
-                        ? 'text-sky-700 dark:text-sky-400'
-                        : 'text-muted-foreground',
+                        ? 'text-sky-300'
+                        : 'text-slate-400',
                   )}
                 >
                   {panel.label}
@@ -528,8 +553,8 @@ function ActivityCard({
                     panel.tone === 'danger'
                       ? 'text-destructive'
                       : panel.tone === 'info'
-                        ? 'text-sky-800 dark:text-sky-200'
-                        : 'text-foreground/90',
+                        ? 'text-sky-100'
+                        : 'text-slate-200',
                   )}
                 >
                   {panel.value}
@@ -547,7 +572,7 @@ function ActivityCard({
                   <Link
                     key={`${item.id}-${action.href}`}
                     href={action.href}
-                    className="inline-flex h-7 items-center justify-center rounded-lg border border-border bg-background px-2.5 text-[0.8rem] font-medium transition-colors hover:bg-muted hover:text-foreground"
+                    className="inline-flex h-8 items-center justify-center rounded-lg border border-white/10 bg-[#111827] px-3 text-[0.8rem] font-medium text-slate-100 transition-colors hover:bg-[#1f2937]"
                   >
                     {action.label}
                   </Link>
@@ -563,7 +588,7 @@ function ActivityCard({
                   size="sm"
                   disabled={deletePending}
                   onClick={() => onDeletePendingProposal(action.proposalId)}
-                  className="border-destructive/30 text-destructive hover:bg-destructive/10"
+                  className="border-destructive/30 bg-transparent text-destructive hover:bg-destructive/10"
                 >
                   {deletePending ? <Loader2 className="size-4 animate-spin" /> : null}
                   {action.label}
@@ -593,7 +618,7 @@ function ActivityCard({
 }
 
 function StatusBadge({ tone, children }: { tone: StatusTone; children: ReactNode }) {
-  return <span className={cn('inline-flex rounded-full px-2.5 py-1 text-xs font-semibold', getToneSurfaceClass(tone))}>{children}</span>
+  return <span className={cn('inline-flex rounded-md border px-2.5 py-1 text-xs font-semibold', getToneSurfaceClass(tone))}>{children}</span>
 }
 
 function buildSummaryCards(publicIdentity: PublicProfileIdentityDraft, sections: ActivitySectionData[]): SummaryCardData[] {
@@ -726,14 +751,29 @@ function getAttentionKey(attention: ActivityAttention) {
 function getToneSurfaceClass(tone: StatusTone) {
   switch (tone) {
     case 'success':
-      return 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400'
+      return 'border-emerald-400/20 bg-emerald-500/10 text-emerald-300'
     case 'warning':
-      return 'bg-amber-500/10 text-amber-700 dark:text-amber-400'
+      return 'border-amber-400/20 bg-amber-500/10 text-amber-300'
     case 'danger':
-      return 'bg-destructive/10 text-destructive'
+      return 'border-destructive/30 bg-destructive/10 text-destructive'
     case 'info':
-      return 'bg-sky-500/10 text-sky-700 dark:text-sky-400'
+      return 'border-sky-400/20 bg-sky-500/10 text-sky-300'
     default:
-      return 'bg-muted text-muted-foreground'
+      return 'border-white/10 bg-white/[0.04] text-slate-300'
+  }
+}
+
+function getToneCounterClass(tone: StatusTone) {
+  switch (tone) {
+    case 'success':
+      return 'border-emerald-400/20 bg-emerald-500/10 text-emerald-300'
+    case 'warning':
+      return 'border-amber-400/20 bg-amber-500/10 text-amber-300'
+    case 'danger':
+      return 'border-destructive/30 bg-destructive/10 text-destructive'
+    case 'info':
+      return 'border-sky-400/20 bg-sky-500/10 text-sky-300'
+    default:
+      return 'border-white/10 bg-white/[0.04] text-slate-200'
   }
 }

@@ -88,19 +88,27 @@ export default async function MyActivityPage() {
 
   return (
     <div className="container mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
-      <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Moje aktivita</h1>
-          <p className="mt-2 text-muted-foreground">
+      <div className="mb-3">
+        <span className="inline-flex rounded-md border border-[#f97316]/20 bg-[#f97316]/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#fb923c]">
+          Dashboard
+        </span>
+      </div>
+
+      <div className="mb-6 rounded-[30px] border border-white/10 bg-[linear-gradient(180deg,rgba(11,17,32,0.98),rgba(6,10,22,0.96))] p-6 shadow-[0_24px_80px_rgba(0,0,0,0.32)] sm:p-7">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-slate-50 sm:text-4xl">Moje aktivita</h1>
+            <p className="mt-3 max-w-2xl text-sm text-slate-400 sm:text-base">
             Všechny tvoje balíčky, návrhy, materiály i feedback na jednom místě.
-          </p>
+            </p>
+          </div>
+          <Link
+            href={hasPublicIdentity ? getPublicProfilePath(user.id) : "/#hall-of-fame"}
+            className="inline-flex items-center justify-center rounded-xl border border-white/10 bg-[#2a3344] px-5 py-2.5 text-sm font-medium text-slate-50 transition-colors hover:bg-[#344055]"
+          >
+            {hasPublicIdentity ? "Otevřít veřejný profil" : "Doplnit veřejný profil"}
+          </Link>
         </div>
-        <Link
-          href={hasPublicIdentity ? getPublicProfilePath(user.id) : "/#hall-of-fame"}
-          className="inline-flex items-center justify-center rounded-xl border border-white/5 bg-card/60 shadow-inner px-5 py-2.5 text-sm font-medium text-foreground transition-all hover:bg-muted/50 hover:shadow-md"
-        >
-          {hasPublicIdentity ? "Otevřít veřejný profil" : "Doplnit veřejný profil"}
-        </Link>
       </div>
 
       <Suspense fallback={<MyActivitySkeleton />}>

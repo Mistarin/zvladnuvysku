@@ -226,55 +226,56 @@ export default async function PublicProfilePage({ params }: PageProps) {
 
   return (
     <div className="container mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
-      <nav className="mb-6 flex items-center gap-2 text-sm text-muted-foreground">
-        <Link href="/" className="transition-colors hover:text-foreground">Domů</Link>
+      <nav className="mb-5 flex items-center gap-2 text-sm text-slate-500">
+        <Link href="/" className="transition-colors hover:text-slate-100">Domů</Link>
         <span>/</span>
-        <span className="font-medium text-foreground">{visibleName}</span>
+        <span className="font-medium text-slate-200">{visibleName}</span>
       </nav>
 
-      {/* Profile header */}
-      <div className="mb-8 glass-card rounded-[2rem] p-6 sm:p-8">
+      <div className="mb-8 rounded-[30px] border border-white/10 bg-[linear-gradient(180deg,rgba(11,17,32,0.98),rgba(6,10,22,0.96))] p-6 shadow-[0_24px_80px_rgba(0,0,0,0.32)] sm:p-8">
         <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-          <div className="space-y-3">
-            <span className="inline-flex rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-primary">
+          <div className="space-y-4">
+            <span className="inline-flex rounded-md border border-[#f97316]/20 bg-[#f97316]/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#fb923c]">
               Veřejný profil
             </span>
             <div>
-              <h1 className="text-3xl font-bold text-foreground sm:text-4xl">{visibleName}</h1>
-              <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-muted-foreground sm:text-base">
+              <h1 className="text-3xl font-bold text-slate-50 sm:text-4xl">{visibleName}</h1>
+              <div className="mt-3 flex flex-wrap items-center gap-2 text-sm text-slate-400 sm:text-base">
                 {faculties.map((faculty) => (
                   <span
                     key={faculty}
-                    className="rounded-full px-2.5 py-1 text-xs font-semibold"
+                    className="rounded-md border px-2.5 py-1 text-xs font-semibold"
                     style={{
-                      backgroundColor: `${getFacultyColor(faculty) ?? "var(--foreground)"}20`,
+                      borderColor: `${getFacultyColor(faculty) ?? "var(--foreground)"}30`,
+                      backgroundColor: `${getFacultyColor(faculty) ?? "var(--foreground)"}18`,
                       color: getFacultyColor(faculty) ?? "var(--foreground)",
                     }}
                   >
                     {faculty}
                   </span>
                 ))}
-                <span className="text-sm">Level {stats.level} · {stats.total_xp} XP</span>
+                <span className="text-sm">Level {stats.level}</span>
+                <span className="text-sm">{stats.total_xp} XP</span>
               </div>
             </div>
           </div>
 
-          {/* XP progress */}
-          <div className="w-full max-w-md rounded-[1.5rem] border border-white/5 bg-background/60 backdrop-blur-md p-5 space-y-3 shadow-inner">
+          <div className="w-full max-w-md rounded-[24px] border border-white/10 bg-[rgba(255,255,255,0.03)] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
             <div className="flex items-center justify-between text-sm">
-              <span className="font-medium text-foreground">Progress do dalšího levelu</span>
-              <span className="font-mono text-xs text-muted-foreground">{stats.level_progress_xp}<span className="text-muted-foreground/50">/{stats.next_level_xp}</span> XP</span>
+              <span className="font-medium text-slate-100">Progress do dalšího levelu</span>
+              <span className="font-mono text-xs text-slate-400">{stats.level_progress_xp}<span className="text-slate-500">/{stats.next_level_xp}</span> XP</span>
             </div>
-            <div className="h-2 overflow-hidden rounded-full bg-muted/70">
+            <div className="mt-4 h-2 overflow-hidden rounded-full bg-[#111827]">
               <div
-                className="h-full rounded-full bg-primary shadow-[0_0_12px_rgba(var(--primary-rgb,99,102,241),0.6)] transition-all duration-700"
+                className="h-full rounded-full bg-[#02BED6] shadow-[0_0_18px_rgba(2,190,214,0.45)] transition-all duration-700"
                 style={{ width: `${progressPercent}%` }}
               />
             </div>
+            <p className="mt-3 text-xs text-slate-400">Zbývá {Math.max(stats.next_level_xp - stats.level_progress_xp, 0)} XP do další úrovně.</p>
             {isOwnProfile && (
               <Link
                 href="/#hall-of-fame"
-                className="inline-flex text-xs font-medium text-muted-foreground hover:text-primary transition-colors"
+                className="mt-3 inline-flex text-xs font-medium text-slate-400 transition-colors hover:text-[#6dd9e8]"
               >
                 Body se převádějí na XP v poměru 1:10 →
               </Link>
@@ -283,11 +284,10 @@ export default async function PublicProfilePage({ params }: PageProps) {
         </div>
       </div>
 
-      {/* Stats grid */}
       <div className="mb-8 grid gap-4 sm:grid-cols-2 md:grid-cols-4">
         <SummaryCard icon="⚡" label="XP" value={String(stats.total_xp)} accent="primary" />
-        <SummaryCard icon="🃏" label="Kartičky" value={String(stats.flashcard_count)} />
-        <SummaryCard icon="📄" label="Materiály" value={String(stats.material_count)} />
+        <SummaryCard icon="🃏" label="Kartičky" value={String(stats.flashcard_count)} subLabel={`${stats.subject_count} předmětů`} />
+        <SummaryCard icon="📄" label="Materiály" value={String(stats.material_count)} subLabel={`${stats.teacher_count} vyučujících`} />
         <SummaryCard
           icon="💬"
           label="Komentáře"
@@ -296,51 +296,50 @@ export default async function PublicProfilePage({ params }: PageProps) {
         />
       </div>
 
-      {/* Content sections */}
       <div className="space-y-8">
         <ProfileSubjectContributions decks={profileDecks} materials={profileMaterials} groups={profileGroups} />
 
         <div className="grid gap-8 lg:grid-cols-2">
           <ProfileSection title="💬 Komentáře k předmětům" empty="Zatím žádné schválené komentáře k předmětům.">
             {subjectComments.map((comment) => (
-              <div key={comment.id} className="glass-card p-4 space-y-2">
+              <div key={comment.id} className="rounded-[24px] border border-white/10 bg-[rgba(255,255,255,0.03)] p-4 space-y-3">
                 <div className="flex items-center justify-between gap-3">
-                  <div className="font-semibold text-foreground text-sm">{comment.subject?.name ?? "Předmět"}</div>
+                  <div className="text-sm font-semibold text-slate-50">{comment.subject?.name ?? "Předmět"}</div>
                   <div className="flex items-center gap-2">
                     {comment.is_anonymous && isOwnProfile && (
-                      <span className="text-[10px] font-medium bg-muted px-1.5 py-0.5 rounded text-muted-foreground">anon</span>
+                      <span className="rounded-md border border-white/10 bg-[#111827] px-1.5 py-0.5 text-[10px] font-medium text-slate-400">anon</span>
                     )}
-                    <span className="text-sm font-bold text-amber-500">{comment.overall}/5 ★</span>
+                    <span className="text-sm font-bold text-amber-300">{comment.overall}/5 ★</span>
                   </div>
                 </div>
                 {comment.subject && (
-                  <Link href={`/predmety/${comment.subject.slug}`} className="block text-xs text-primary/70 hover:text-primary transition-colors font-mono">
+                  <Link href={`/predmety/${comment.subject.slug}`} className="block text-xs font-mono text-[#6dd9e8] transition-colors hover:text-[#9be5ef]">
                     {comment.subject.short_tag} →
                   </Link>
                 )}
-                <p className="whitespace-pre-wrap text-sm text-foreground/80 italic leading-relaxed">&ldquo;{comment.comment}&rdquo;</p>
+                <p className="whitespace-pre-wrap text-sm italic leading-relaxed text-slate-200">&ldquo;{comment.comment}&rdquo;</p>
               </div>
             ))}
           </ProfileSection>
 
           <ProfileSection title="⭐ Hodnocení učitelů" empty="Zatím žádná schválená hodnocení učitelů.">
             {teacherReviews.map((review) => (
-              <div key={review.id} className="glass-card p-4 space-y-2">
+              <div key={review.id} className="rounded-[24px] border border-white/10 bg-[rgba(255,255,255,0.03)] p-4 space-y-3">
                 <div className="flex items-center justify-between gap-3">
-                  <div className="font-semibold text-foreground text-sm">{review.teacher?.name ?? "Vyučující"}</div>
+                  <div className="text-sm font-semibold text-slate-50">{review.teacher?.name ?? "Vyučující"}</div>
                   <div className="flex items-center gap-2">
                     {review.is_anonymous && isOwnProfile && (
-                      <span className="text-[10px] font-medium bg-muted px-1.5 py-0.5 rounded text-muted-foreground">anon</span>
+                      <span className="rounded-md border border-white/10 bg-[#111827] px-1.5 py-0.5 text-[10px] font-medium text-slate-400">anon</span>
                     )}
-                    {review.rating ? <span className="text-sm font-bold text-amber-500">{review.rating}/5 ★</span> : null}
+                    {review.rating ? <span className="text-sm font-bold text-amber-300">{review.rating}/5 ★</span> : null}
                   </div>
                 </div>
                 {review.teacher && (
-                  <Link href={getTeacherPath(review.teacher.slug)} className="block text-xs text-primary/70 hover:text-primary transition-colors">
+                  <Link href={getTeacherPath(review.teacher.slug)} className="block text-xs text-[#6dd9e8] transition-colors hover:text-[#9be5ef]">
                     Detail vyučujícího →
                   </Link>
                 )}
-                {review.review && <p className="whitespace-pre-wrap text-sm text-foreground/80 italic leading-relaxed">&ldquo;{review.review}&rdquo;</p>}
+                {review.review && <p className="whitespace-pre-wrap text-sm italic leading-relaxed text-slate-200">&ldquo;{review.review}&rdquo;</p>}
               </div>
             ))}
           </ProfileSection>
@@ -352,14 +351,14 @@ export default async function PublicProfilePage({ params }: PageProps) {
 
 function SummaryCard({ icon, label, value, subLabel, accent }: { icon?: string; label: string; value: string; subLabel?: string; accent?: string }) {
   return (
-    <div className="glass-card p-4 space-y-2 hover:-translate-y-0.5 transition-transform">
+    <div className="rounded-[24px] border border-white/10 bg-[rgba(255,255,255,0.03)] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
       <div className="flex items-center gap-2">
         {icon && <span className="text-lg">{icon}</span>}
-        <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{label}</p>
+        <p className="text-xs font-medium uppercase tracking-[0.14em] text-slate-400">{label}</p>
       </div>
       <div className="flex flex-col">
-        <span className={`text-2xl font-bold ${accent === 'primary' ? 'text-primary' : 'text-foreground'}`}>{value}</span>
-        {subLabel && <span className="text-[11px] text-muted-foreground/70 mt-1 leading-tight">{subLabel}</span>}
+        <span className={`mt-3 text-3xl font-bold ${accent === 'primary' ? 'text-[#02BED6]' : 'text-slate-50'}`}>{value}</span>
+        {subLabel && <span className="mt-1 text-[11px] leading-tight text-slate-400">{subLabel}</span>}
       </div>
     </div>
   );
@@ -378,11 +377,15 @@ function ProfileSection({
 
   return (
     <section className="space-y-4">
-      <h2 className="text-lg font-bold text-foreground">{title}</h2>
+      <div className="rounded-2xl border border-white/10 bg-[#0f1728] p-2">
+        <div className="rounded-xl border border-white/10 bg-[#2a3344] px-4 py-3 text-sm font-semibold text-slate-50">
+          {title}
+        </div>
+      </div>
       {items.length > 0 ? (
         <div className="space-y-3">{items}</div>
       ) : (
-        <div className="rounded-[1.5rem] border-2 border-dashed border-white/10 bg-background/30 px-4 py-8 text-center text-sm text-muted-foreground">
+        <div className="rounded-[24px] border border-dashed border-white/10 bg-white/[0.02] px-4 py-8 text-center text-sm text-slate-400">
           {empty}
         </div>
       )}
