@@ -34,7 +34,7 @@ export default async function AdminDepartmentsPage() {
 
   const { data: departments, error } = await supabase
     .from("departments")
-    .select("id, name, slug, faculty, created_at, updated_at, subjects(count), teachers(count)")
+    .select("id, name, slug, faculty, created_at, updated_at")
     .order("faculty")
     .order("name");
 
@@ -42,24 +42,50 @@ export default async function AdminDepartmentsPage() {
     console.error("Error fetching departments:", error);
   }
 
-  const typedDepartments = ((departments ?? []) as Array<{
+  const baseDepartments = (departments ?? []) as Array<{
     id: string;
     name: string;
     slug: string;
     faculty: string;
     created_at: string;
     updated_at: string;
-    subjects?: Array<{ count: number | null }> | null;
-    teachers?: Array<{ count: number | null }> | null;
-  }>).map((department) => ({
+  }>;
+
+  const subjectCounts = new Map<string, number>();
+  const teacherCounts = new Map<string, number>();
+
+  const [subjectsResult, teachersResult] = await Promise.all([
+    supabase.from("subjects").select("department_id").not("department_id", "is", null),
+    supabase.from("teachers").select("department_id").not("department_id", "is", null),
+  ]);
+
+  if (subjectsResult.error) {
+    console.error("Error fetching subject department usage:", subjectsResult.error);
+  } else {
+    for (const row of (subjectsResult.data ?? []) as Array<{ department_id: string | null }>) {
+      if (!row.department_id) continue;
+      subjectCounts.set(row.department_id, (subjectCounts.get(row.department_id) ?? 0) + 1);
+    }
+  }
+
+  if (teachersResult.error) {
+    console.error("Error fetching teacher department usage:", teachersResult.error);
+  } else {
+    for (const row of (teachersResult.data ?? []) as Array<{ department_id: string | null }>) {
+      if (!row.department_id) continue;
+      teacherCounts.set(row.department_id, (teacherCounts.get(row.department_id) ?? 0) + 1);
+    }
+  }
+
+  const typedDepartments = baseDepartments.map((department) => ({
     id: department.id,
     name: department.name,
     slug: department.slug,
     faculty: department.faculty,
     created_at: department.created_at,
     updated_at: department.updated_at,
-    subject_count: department.subjects?.[0]?.count ?? 0,
-    teacher_count: department.teachers?.[0]?.count ?? 0,
+    subject_count: subjectCounts.get(department.id) ?? 0,
+    teacher_count: teacherCounts.get(department.id) ?? 0,
   }));
 
   return (

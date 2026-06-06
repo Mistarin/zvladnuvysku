@@ -35,22 +35,26 @@ function DepartmentFormDialog({
     setError(null);
 
     startTransition(async () => {
-      if (isEditing && !department) {
-        setError("Chybí katedra k úpravě.");
-        return;
+      try {
+        if (isEditing && !department) {
+          setError("Chybí katedra k úpravě.");
+          return;
+        }
+
+        const result = isEditing
+          ? await updateDepartment(department!.id, formData)
+          : await createDepartment(formData);
+
+        if ("error" in result && result.error) {
+          setError(result.error);
+          return;
+        }
+
+        setOpen(false);
+        router.refresh();
+      } catch (error) {
+        setError(error instanceof Error ? error.message : "Nepodařilo se uložit katedru.");
       }
-
-      const result = isEditing
-        ? await updateDepartment(department!.id, formData)
-        : await createDepartment(formData);
-
-      if ("error" in result && result.error) {
-        setError(result.error);
-        return;
-      }
-
-      setOpen(false);
-      router.refresh();
     });
   };
 
@@ -155,13 +159,17 @@ export function DepartmentList({ initialDepartments }: { initialDepartments: Dep
     }
 
     startTransition(async () => {
-      const result = await deleteDepartment(department.id);
-      if ("error" in result && result.error) {
-        window.alert(result.error);
-        return;
-      }
+      try {
+        const result = await deleteDepartment(department.id);
+        if ("error" in result && result.error) {
+          window.alert(result.error);
+          return;
+        }
 
-      router.refresh();
+        router.refresh();
+      } catch (error) {
+        window.alert(error instanceof Error ? error.message : "Nepodařilo se smazat katedru.");
+      }
     });
   };
 

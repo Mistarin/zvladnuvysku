@@ -53,6 +53,7 @@ export async function createDepartment(data: DepartmentInsert) {
     revalidateDepartmentSurfaces();
     return { success: true };
   } catch (error) {
+    console.error("Error creating department:", error);
     return { error: error instanceof Error ? error.message : "Nepodařilo se vytvořit katedru." };
   }
 }
@@ -84,6 +85,7 @@ export async function updateDepartment(id: string, data: Partial<DepartmentInser
     revalidateDepartmentSurfaces();
     return { success: true };
   } catch (error) {
+    console.error("Error updating department:", error);
     return { error: error instanceof Error ? error.message : "Nepodařilo se upravit katedru." };
   }
 }
@@ -112,6 +114,7 @@ export async function deleteDepartment(id: string) {
     revalidateDepartmentSurfaces();
     return { success: true };
   } catch (error) {
+    console.error("Error deleting department:", error);
     return { error: error instanceof Error ? error.message : "Nepodařilo se smazat katedru." };
   }
 }
