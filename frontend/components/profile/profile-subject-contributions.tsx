@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { ShareLinkButton } from '@/components/share/share-link-button'
 import { MaterialGroupCard, type MaterialGroupData } from '@/components/subject/material-group-card'
 import { getSharePath } from '@/lib/share-links'
+import { getTeacherPath } from '@/lib/teacher-slug'
 
 type SubjectRef = {
   slug: string
@@ -35,11 +36,33 @@ type Props = {
   decks: ProfileDeckContribution[]
   materials: ProfileMaterialContribution[]
   groups?: ProfileMaterialGroupContribution[]
+  subjectComments?: Array<{
+    id: string
+    overall: number
+    comment: string
+    is_anonymous: boolean
+    subject: SubjectRef
+  }>
+  teacherReviews?: Array<{
+    id: string
+    rating: number | null
+    review: string
+    is_anonymous: boolean
+    teacher: { slug: string; name: string } | null
+  }>
+  isOwnProfile?: boolean
 }
 
-export function ProfileSubjectContributions({ decks, materials, groups = [] }: Props) {
+export function ProfileSubjectContributions({
+  decks,
+  materials,
+  groups = [],
+  subjectComments = [],
+  teacherReviews = [],
+  isOwnProfile = false,
+}: Props) {
   const [subjectSlug, setSubjectSlug] = useState('')
-  const [activeTab, setActiveTab] = useState<'all' | 'decks' | 'materials' | 'groups'>('all')
+  const [activeTab, setActiveTab] = useState<'all' | 'decks' | 'materials' | 'groups' | 'subject-comments' | 'teacher-reviews'>('all')
   const subjectOptions = getSubjectOptions(decks, materials, groups)
   const filteredDecks = subjectSlug ? decks.filter((deck) => deck.subject?.slug === subjectSlug) : decks
   const filteredMaterials = subjectSlug ? materials.filter((material) => material.subject?.slug === subjectSlug) : materials
@@ -70,17 +93,21 @@ export function ProfileSubjectContributions({ decks, materials, groups = [] }: P
 
       <div className="flex flex-wrap gap-2 rounded-2xl border border-white/10 bg-[#0f1728] p-2">
         {[
-          { key: 'all', label: 'Vše' },
-          { key: 'decks', label: 'Kartičky' },
-          { key: 'materials', label: 'Materiály' },
-          { key: 'groups', label: 'Složky' },
+          { key: 'all', label: `Vše (${decks.length + materials.length + groups.length + subjectComments.length + teacherReviews.length})` },
+          { key: 'decks', label: `Kartičky (${decks.length})` },
+          { key: 'materials', label: `Materiály (${materials.length})` },
+          { key: 'groups', label: `Složky (${groups.length})` },
+          { key: 'subject-comments', label: `Komentáře (${subjectComments.length})` },
+          { key: 'teacher-reviews', label: `Hodnocení (${teacherReviews.length})` },
         ].map((tab) => {
           const active = activeTab === tab.key
           return (
             <button
               key={tab.key}
               type="button"
-              onClick={() => setActiveTab(tab.key as 'all' | 'decks' | 'materials' | 'groups')}
+              onClick={() =>
+                setActiveTab(tab.key as 'all' | 'decks' | 'materials' | 'groups' | 'subject-comments' | 'teacher-reviews')
+              }
               className={`rounded-xl border px-3 py-2 text-sm font-medium transition-colors ${
                 active
                   ? 'border-white/10 bg-[#2a3344] text-slate-50'
@@ -93,22 +120,22 @@ export function ProfileSubjectContributions({ decks, materials, groups = [] }: P
         })}
       </div>
 
-      <div className="grid gap-8 xl:grid-cols-2">
+      <div className="space-y-8">
         {(activeTab === 'all' || activeTab === 'decks') && (
           <ProfileContributionSection title="Veřejné balíčky kartiček" empty="Zatím žádné veřejné balíčky.">
           {filteredDecks.map((deck) => (
-            <div key={deck.id} className="rounded-[22px] border border-white/10 bg-[rgba(255,255,255,0.03)] p-4">
-              <div className="flex items-start justify-between gap-3">
+            <div key={deck.id} className="flex items-start justify-between gap-3 px-1 py-3">
+              <div>
                 <Link href={`/flashcardy/${deck.id}`} className="font-semibold text-slate-50 transition-colors hover:text-[#6dd9e8]">
                   {deck.title}
                 </Link>
-                <ShareLinkButton
-                  path={getSharePath('deck', deck.share_slug)}
-                  className="px-2 py-1 text-[11px] sm:text-xs"
-                />
+                <p className="mt-1 text-sm text-slate-400">{deck.card_count} karet</p>
+                {deck.subject && <SubjectLink subject={deck.subject} />}
               </div>
-              <p className="mt-1 text-sm text-slate-400">{deck.card_count} karet</p>
-              {deck.subject && <SubjectLink subject={deck.subject} />}
+              <ShareLinkButton
+                path={getSharePath('deck', deck.share_slug)}
+                className="px-2 py-1 text-[11px] sm:text-xs"
+              />
             </div>
           ))}
           </ProfileContributionSection>
@@ -117,8 +144,8 @@ export function ProfileSubjectContributions({ decks, materials, groups = [] }: P
         {(activeTab === 'all' || activeTab === 'materials') && (
           <ProfileContributionSection title="Samostatné materiály" empty="Zatím žádné samostatné materiály.">
           {filteredMaterials.map((material) => (
-            <div key={material.id} className="rounded-[22px] border border-white/10 bg-[rgba(255,255,255,0.03)] p-4">
-              <div className="flex items-start justify-between gap-3">
+            <div key={material.id} className="flex items-start justify-between gap-3 px-1 py-3">
+              <div>
                 {material.url ? (
                   <a
                     href={material.url}
@@ -131,13 +158,13 @@ export function ProfileSubjectContributions({ decks, materials, groups = [] }: P
                 ) : (
                   <p className="font-semibold text-slate-50">{material.title}</p>
                 )}
-                <ShareLinkButton
-                  path={getSharePath('material', material.share_slug)}
-                  className="px-2 py-1 text-[11px] sm:text-xs"
-                />
+                <p className="mt-1 text-sm text-slate-400">{material.sizeLabel}</p>
+                {material.subject && <SubjectLink subject={material.subject} />}
               </div>
-              <p className="mt-1 text-sm text-slate-400">{material.sizeLabel}</p>
-              {material.subject && <SubjectLink subject={material.subject} />}
+              <ShareLinkButton
+                path={getSharePath('material', material.share_slug)}
+                className="px-2 py-1 text-[11px] sm:text-xs"
+              />
             </div>
           ))}
           </ProfileContributionSection>
@@ -148,6 +175,64 @@ export function ProfileSubjectContributions({ decks, materials, groups = [] }: P
           {filteredGroups.map((group) => (
             <MaterialGroupCard key={group.id} group={group} showSubject surface="dashboard" />
           ))}
+          </ProfileContributionSection>
+        )}
+
+        {(activeTab === 'all' || activeTab === 'subject-comments') && (
+          <ProfileContributionSection title="Komentáře k předmětům" empty="Zatím žádné schválené komentáře k předmětům.">
+            {subjectComments.map((comment) => (
+              <div key={comment.id} className="space-y-2 px-1 py-3">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold text-slate-50">{comment.subject?.name ?? 'Předmět'}</p>
+                    {comment.subject ? (
+                      <Link
+                        href={`/predmety/${comment.subject.slug}`}
+                        className="mt-1 block text-xs text-slate-400 transition-colors hover:text-slate-100"
+                      >
+                        {comment.subject.short_tag}
+                      </Link>
+                    ) : null}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {comment.is_anonymous && isOwnProfile ? (
+                      <span className="rounded-md bg-[#111827] px-1.5 py-0.5 text-[10px] font-medium text-slate-400">anon</span>
+                    ) : null}
+                    <span className="text-sm font-semibold text-amber-300">{comment.overall}/5</span>
+                  </div>
+                </div>
+                <p className="whitespace-pre-wrap text-sm leading-relaxed text-slate-200">{comment.comment}</p>
+              </div>
+            ))}
+          </ProfileContributionSection>
+        )}
+
+        {(activeTab === 'all' || activeTab === 'teacher-reviews') && (
+          <ProfileContributionSection title="Hodnocení učitelů" empty="Zatím žádná schválená hodnocení učitelů.">
+            {teacherReviews.map((review) => (
+              <div key={review.id} className="space-y-2 px-1 py-3">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold text-slate-50">{review.teacher?.name ?? 'Vyučující'}</p>
+                    {review.teacher ? (
+                      <Link
+                        href={getTeacherPath(review.teacher.slug)}
+                        className="mt-1 block text-xs text-slate-400 transition-colors hover:text-slate-100"
+                      >
+                        Detail vyučujícího
+                      </Link>
+                    ) : null}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {review.is_anonymous && isOwnProfile ? (
+                      <span className="rounded-md bg-[#111827] px-1.5 py-0.5 text-[10px] font-medium text-slate-400">anon</span>
+                    ) : null}
+                    {review.rating ? <span className="text-sm font-semibold text-amber-300">{review.rating}/5</span> : null}
+                  </div>
+                </div>
+                {review.review ? <p className="whitespace-pre-wrap text-sm leading-relaxed text-slate-200">{review.review}</p> : null}
+              </div>
+            ))}
           </ProfileContributionSection>
         )}
       </div>
@@ -178,7 +263,7 @@ function ProfileContributionSection({
     <section className="space-y-4">
       <h2 className="text-xl font-bold text-slate-50">{title}</h2>
       {items.length > 0 ? (
-        <div className="space-y-3">{items}</div>
+        <div className="divide-y divide-white/8 rounded-2xl bg-[#0b1120] px-4">{items}</div>
       ) : (
         <div className="rounded-[22px] border border-dashed border-white/10 bg-white/[0.02] px-4 py-8 text-center text-sm text-slate-400">
           {empty}
