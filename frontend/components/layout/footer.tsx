@@ -93,6 +93,26 @@ export function Footer() {
                   Proč ne Primát?
                 </Link>
               </div>
+              <div className="flex flex-wrap items-center gap-4 text-xs sm:text-sm">
+                <Link href="/privacy" className="hover:text-foreground transition-colors">
+                  Soukromí
+                </Link>
+                <Link href="/cookies" className="hover:text-foreground transition-colors">
+                  Cookies
+                </Link>
+                <Link href="/terms" className="hover:text-foreground transition-colors">
+                  Podmínky
+                </Link>
+                <Link href="/community-guidelines" className="hover:text-foreground transition-colors">
+                  Pravidla komunity
+                </Link>
+                <Link href="/copyright" className="hover:text-foreground transition-colors">
+                  Autorská práva
+                </Link>
+                <Link href="/legal" className="hover:text-foreground transition-colors">
+                  Kontakt
+                </Link>
+              </div>
 
               <Link
                 href="https://github.com/Mistarin/zvladnuvysku"
