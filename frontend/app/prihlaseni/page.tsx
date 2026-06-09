@@ -4,6 +4,8 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { EmailLoginForm } from '@/components/auth/email-login-form'
+import { resolvePostAuthRedirect } from '@/lib/auth/post-auth'
+import { getRequestOrigin } from '@/lib/server-origin'
 
 export const metadata: Metadata = {
   title: 'Přihlášení',
@@ -19,7 +21,10 @@ export default async function PrihlaseniPage({ searchParams }: PageProps) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   const { redirect_to } = await searchParams
-  if (user) redirect(redirect_to || '/')
+  if (user) {
+    const origin = await getRequestOrigin()
+    redirect(resolvePostAuthRedirect(redirect_to ?? null, origin))
+  }
 
   return (
     <div className="min-h-[calc(100dvh-56px)] flex items-center justify-center px-4">
