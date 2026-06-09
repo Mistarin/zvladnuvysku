@@ -24,6 +24,7 @@ export function EmailLoginForm({ redirectTo }: EmailLoginFormProps) {
     const { error } = await supabase.auth.signInWithOtp({
       email: emailToSend,
       options: {
+        shouldCreateUser: false,
         emailRedirectTo: confirmUrl,
       },
     })
