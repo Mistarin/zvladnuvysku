@@ -114,6 +114,7 @@ type SubjectDetailsResult =
 
 const MAX_PDF_FILE_SIZE = 2 * 1024 * 1024
 const MAX_PROPOSAL_MATERIALS = 8
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 
 function revalidateReviewSurfaces(userId: string, path: string) {
   revalidatePath('/')
@@ -121,9 +122,8 @@ function revalidateReviewSurfaces(userId: string, path: string) {
   revalidatePath(path)
 }
 
-function sanitizeProposalFilename(filename: string, fallbackExtension = 'pdf') {
+function sanitizeProposalFilename(filename: string, extension = 'pdf') {
   const trimmed = filename.trim()
-  const extension = trimmed.split('.').pop() || fallbackExtension
   const baseName = trimmed.replace(/\.[^/.]+$/, '') || 'soubor'
   const safeBaseName = baseName
     .normalize('NFKD')
@@ -134,6 +134,18 @@ function sanitizeProposalFilename(filename: string, fallbackExtension = 'pdf') {
     .toLowerCase() || 'soubor'
 
   return `${safeBaseName}.${extension.toLowerCase()}`
+}
+
+function getValidatedSubjectStoragePrefix(subjectId: string) {
+  if (!UUID_PATTERN.test(subjectId)) {
+    return null
+  }
+
+  return subjectId.toLowerCase()
+}
+
+function getPdfStorageExtension(file: File) {
+  return file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf') ? 'pdf' : null
 }
 
 function getFileEntry(formData: FormData, key: string) {
@@ -393,12 +405,18 @@ export async function submitSubjectProposal(formData: FormData): Promise<ActionR
         return { success: false, error: `Soubor ${materialMeta.name} přesahuje limit 2 MB.` }
       }
 
-      const safeFilename = sanitizeProposalFilename(file.name)
+      const extension = getPdfStorageExtension(file)
+      if (!extension) {
+        await cleanupUploadedPaths()
+        return { success: false, error: `Soubor ${materialMeta.name} není PDF.` }
+      }
+
+      const safeFilename = sanitizeProposalFilename(file.name, extension)
       const filePath = `proposals/${proposalFilesKey}/${index}-${safeFilename}`
 
       const { error: uploadError } = await supabase.storage
         .from('study_materials')
-        .upload(filePath, file, { upsert: true })
+        .upload(filePath, file, { contentType: 'application/pdf', upsert: true })
 
       if (uploadError) {
         await cleanupUploadedPaths()
@@ -584,6 +602,11 @@ export async function uploadSubjectMaterial(formData: FormData): Promise<ActionR
     return { success: false, error: 'Chybí předmět pro nahrání materiálu.' }
   }
 
+  const subjectStoragePrefix = getValidatedSubjectStoragePrefix(subjectId)
+  if (!subjectStoragePrefix) {
+    return { success: false, error: 'Neplatný identifikátor předmětu.' }
+  }
+
   if (typeof title !== 'string' || !title.trim()) {
     return { success: false, error: 'Zadejte název materiálu.' }
   }
@@ -610,12 +633,16 @@ export async function uploadSubjectMaterial(formData: FormData): Promise<ActionR
       return { success: false, error: 'Pro nahrávání musíte být přihlášeni.' }
     }
 
-    const fileExtension = file.name.split('.').pop() || 'pdf'
-    const filePath = `${subjectId}/${Date.now()}-${Math.random().toString(36).substring(2, 9)}.${fileExtension}`
+    const fileExtension = getPdfStorageExtension(file)
+    if (!fileExtension) {
+      return { success: false, error: 'Povolene jsou pouze PDF soubory.' }
+    }
+
+    const filePath = `${subjectStoragePrefix}/${Date.now()}-${Math.random().toString(36).substring(2, 9)}.${fileExtension}`
 
     const { error: uploadError, data: uploadData } = await supabase.storage
       .from('study_materials')
-      .upload(filePath, file, { cacheControl: '3600', upsert: false })
+      .upload(filePath, file, { cacheControl: '3600', contentType: 'application/pdf', upsert: false })
 
     if (uploadError || !uploadData) {
       return { success: false, error: `Chyba při nahrávání souboru: ${uploadError?.message ?? 'Soubor se nepodařilo uložit.'}` }

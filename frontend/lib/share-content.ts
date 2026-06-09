@@ -1,7 +1,7 @@
 import "server-only";
 
 import { createPublicServerClient } from "@/lib/supabase/public-server";
-import { getStoragePublicUrl } from "@/lib/storage";
+import { createStorageSignedUrl } from "@/lib/storage";
 
 export async function findPublicMaterialByShareSlug(shareSlug: string) {
   const supabase = createPublicServerClient();
@@ -25,7 +25,7 @@ export async function findPublicMaterialByShareSlug(shareSlug: string) {
     id: material.id,
     title: material.title,
     share_slug: material.share_slug,
-    publicUrl: getStoragePublicUrl("study_materials", material.file_path),
+    publicUrl: await createStorageSignedUrl(supabase, "study_materials", material.file_path),
   };
 }
 

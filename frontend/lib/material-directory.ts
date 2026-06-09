@@ -1,7 +1,7 @@
 import "server-only";
 
 import { unstable_cache } from "next/cache";
-import { getStoragePublicUrl } from "@/lib/storage";
+import { createStorageSignedUrlMap } from "@/lib/storage";
 import {
   filterMaterialDirectoryGroups,
   filterMaterialDirectoryStandaloneMaterials,
@@ -230,16 +230,25 @@ async function loadPublicMaterialDirectorySnapshot() {
         .map((material) => ({
           ...material,
           moderation_status: "approved" as const,
-          public_url: getStoragePublicUrl("study_materials", material.file_path) ?? "",
+          public_url: "",
         })),
     }))
     .filter((group) => group.materials.length > 0);
+
+  const signedUrls = await createStorageSignedUrlMap(supabase, "study_materials", [
+    ...approvedGroups.flatMap((group) => group.materials.map((material) => material.file_path)),
+    ...((rawMaterials ?? []) as Array<{ file_path: string }>).map((material) => material.file_path),
+  ]);
 
   const uploaderMap = await loadUploaderMap([...new Set(approvedGroups.map((group) => group.uploader_id))]);
 
   const hydratedGroups: PublicMaterialGroupData[] = approvedGroups.map((group) => ({
     ...group,
     uploader_display_name: uploaderMap[group.uploader_id] ?? null,
+    materials: group.materials.map((material) => ({
+      ...material,
+      public_url: signedUrls.get(material.file_path) ?? "",
+    })),
   }));
 
   const standaloneMaterials: PublicStandaloneMaterial[] = ((rawMaterials ?? []) as Array<{
@@ -255,7 +264,7 @@ async function loadPublicMaterialDirectorySnapshot() {
   }>).map((material) => ({
     ...material,
     subject: hydrateSubject(material.subject),
-    public_url: getStoragePublicUrl("study_materials", material.file_path) ?? "",
+    public_url: signedUrls.get(material.file_path) ?? "",
   }));
 
   return {

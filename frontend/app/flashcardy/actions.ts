@@ -50,6 +50,12 @@ type SaveDeckValidatedQuestion = SaveDeckQuestion & {
 
 const IMAGE_STORAGE_MAX_FILE_SIZE = 50 * 1024
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/avif']
+const IMAGE_TYPE_EXTENSIONS: Record<string, string> = {
+  'image/jpeg': 'jpg',
+  'image/png': 'png',
+  'image/webp': 'webp',
+  'image/avif': 'avif',
+}
 
 function isFlashcardQuestionType(value: string): value is FlashcardQuestionType {
   return value === 'classic_flashcard' || value === 'multiple_choice' || value === 'yes_no' || value === 'open_answer'
@@ -140,6 +146,14 @@ function validateDeckQuestions(questions: SaveDeckQuestion[]): { valid: SaveDeck
   }
 
   return { valid }
+}
+
+function getFlashcardImageExtension(type: string) {
+  return IMAGE_TYPE_EXTENSIONS[type] ?? null
+}
+
+function isOwnedFlashcardMediaPath(path: string, userId: string) {
+  return path.startsWith(`${FLASHCARD_MEDIA_PREFIX}/${userId}/`) && !path.includes('..') && !path.includes('//')
 }
 
 async function getOwnedDeck(deckId: string) {
@@ -483,21 +497,35 @@ export async function saveOwnDeck(formData: FormData): Promise<SaveDeckResult> {
       const mediaEntry = formData.get(`media:${question.clientKey}`)
       const mediaFile = mediaEntry instanceof File && mediaEntry.size > 0 ? mediaEntry : null
       let mediaPath = question.mediaPath
+      const existingMediaPath = question.id ? existingCardsMap.get(question.id)?.media_path ?? null : null
+
+      if (question.mediaPath) {
+        if (!isOwnedFlashcardMediaPath(question.mediaPath, user.id)) {
+          throw new Error(`Otázka ${index + 1}: obrázek nepatří k vašemu účtu.`)
+        }
+
+        if (question.mediaPath !== existingMediaPath) {
+          throw new Error(`Otázka ${index + 1}: obrázek nepatří k této otázce.`)
+        }
+      }
 
       if (mediaFile) {
         if (!ALLOWED_IMAGE_TYPES.includes(mediaFile.type) || mediaFile.size > IMAGE_STORAGE_MAX_FILE_SIZE) {
           throw new Error(`Otázka ${index + 1}: finální obrázek musí mít do 50 KB a být ve formátu JPG, PNG, WEBP nebo AVIF.`)
+        }
+        const extension = getFlashcardImageExtension(mediaFile.type)
+        if (!extension) {
+          throw new Error(`Otázka ${index + 1}: nepodporovaný formát obrázku.`)
         }
 
         if (question.mediaPath) {
           removedPaths.push(question.mediaPath)
         }
 
-        const extension = mediaFile.name.split('.').pop() || 'png'
         mediaPath = `${FLASHCARD_MEDIA_PREFIX}/${user.id}/${Date.now()}-${index}-${crypto.randomUUID()}.${extension}`
         const { error: uploadError } = await supabase.storage
           .from(FLASHCARD_MEDIA_BUCKET)
-          .upload(mediaPath, mediaFile, { cacheControl: '3600', upsert: false })
+          .upload(mediaPath, mediaFile, { cacheControl: '3600', contentType: mediaFile.type, upsert: false })
 
         if (uploadError) {
           throw new Error(`Nepodařilo se nahrát obrázek: ${uploadError.message}`)

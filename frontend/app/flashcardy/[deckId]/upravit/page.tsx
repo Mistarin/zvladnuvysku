@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { NewDeckForm } from '@/components/flashcard/new-deck-form'
-import type { DeckSubjectRef } from '@/lib/flashcards'
+import { withFlashcardMediaUrls, type DeckSubjectRef } from '@/lib/flashcards'
 import type { Flashcard, FlashcardDeck } from '@/lib/types/database'
 
 interface PageProps {
@@ -44,7 +44,7 @@ export default async function UpravitBalicekPage({ params }: PageProps) {
     .eq('deck_id', deckId)
     .order('position')
 
-  const flashcards = (cards ?? []) as Flashcard[]
+  const flashcards = await withFlashcardMediaUrls(supabase, (cards ?? []) as Flashcard[])
 
   let initialSubject: DeckSubjectRef | null = null
   if (flashcardDeck.subject_id) {

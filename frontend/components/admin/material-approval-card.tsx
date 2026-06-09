@@ -6,22 +6,21 @@ import { approveMaterial, rejectMaterial } from "@/app/admin/actions";
 import { PublicUserLink } from "@/components/profile/public-user-link";
 import type { PublicUserSummary } from "@/lib/public-user-summaries";
 import type { SubjectMaterial } from "@/lib/types/database";
-import { getStoragePublicUrl } from "@/lib/storage";
 
 interface MaterialApprovalCardProps {
   material: SubjectMaterial;
   subjectName?: string;
   subjectSlug?: string;
   author?: PublicUserSummary | null;
+  signedUrl?: string | null;
 }
 
-export function MaterialApprovalCard({ material, subjectName, subjectSlug, author }: MaterialApprovalCardProps) {
+export function MaterialApprovalCard({ material, subjectName, subjectSlug, author, signedUrl }: MaterialApprovalCardProps) {
   const [isApproving, setIsApproving] = useState(false);
   const [isRejecting, setIsRejecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState("");
   const [showReject, setShowReject] = useState(false);
-  const publicUrl = getStoragePublicUrl("study_materials", material.file_path);
 
   const handleApprove = async () => {
     setIsApproving(true);
@@ -75,7 +74,7 @@ export function MaterialApprovalCard({ material, subjectName, subjectSlug, autho
         </div>
         <div className="flex flex-col items-end gap-2">
           <a 
-            href={publicUrl ?? "#"}
+            href={signedUrl ?? "#"}
             target="_blank"
             rel="noopener noreferrer"
             className="text-sm font-medium px-3 py-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-colors"

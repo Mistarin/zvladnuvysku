@@ -5,6 +5,7 @@ import { ShieldAlert } from "lucide-react";
 import { MaterialManagementCard } from "@/components/admin/material-management-card";
 import { AdminAutoRefresh } from "@/components/admin/admin-auto-refresh";
 import { getPublicUserSummaryMap } from "@/lib/public-user-summaries";
+import { createStorageSignedUrlMap } from "@/lib/storage";
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/types/database";
 
@@ -78,6 +79,14 @@ export default async function AdminMaterialsPage(props: {
         .some((value) => value?.toLowerCase().includes(query)),
     );
   }
+
+  const signedMaterialUrls = Object.fromEntries(
+    await createStorageSignedUrlMap(
+      supabase,
+      "study_materials",
+      materials.map((material) => material.file_path),
+    ),
+  );
 
   const materialsWithMissingScoring = materials.filter(
     (material) => material.page_count === null && material.points_override === null,
@@ -178,6 +187,7 @@ export default async function AdminMaterialsPage(props: {
               subjectName={material.subject?.name}
               subjectSlug={material.subject?.slug}
               author={userSummaries[material.uploader_id] ?? null}
+              signedUrl={signedMaterialUrls[material.file_path] ?? null}
             />
           ))}
         </div>

@@ -7,7 +7,7 @@ import { getPublicProfilePath } from "@/lib/public-profile";
 import { getPublicProfileIdentity, hasPublicProfileIdentity } from "@/lib/public-profile-identity";
 import { createClient } from "@/lib/supabase/server";
 import { normalizeDepartmentName } from "@/lib/department-name";
-import { getStoragePublicUrl } from "@/lib/storage";
+import { createStorageSignedUrlMap } from "@/lib/storage";
 import type { ActivityAcknowledgement, Feedback, FlashcardDeck, Profile, Subject, SubjectMaterial, SubjectProposalRecord } from "@/lib/types/database";
 import { formatFileSize } from "@/lib/utils";
 
@@ -168,6 +168,12 @@ async function MyActivitySections({ userId }: { userId: string }) {
   const publicIdentity = getPublicProfileIdentity(typedProfile);
   const myDecks = (decks ?? []) as DeckWithSubject[];
   const myMaterials = (materials ?? []) as MaterialWithSubject[];
+  const materialSignedUrls = await createStorageSignedUrlMap(supabase, "study_materials", [
+    ...myMaterials.map((material) => material.file_path),
+    ...((groups ?? []) as MaterialGroupWithSubject[]).flatMap((group) =>
+      (group.materials ?? []).map((material) => material.file_path),
+    ),
+  ]);
   const myGroups = ((groups ?? []) as MaterialGroupWithSubject[]).map((group) => ({
     id: group.id,
     title: group.title,
@@ -179,7 +185,7 @@ async function MyActivitySections({ userId }: { userId: string }) {
     materials: (group.materials ?? []).map((material) => ({
       ...material,
       created_at: material.created_at,
-      public_url: getStoragePublicUrl("study_materials", material.file_path) ?? "",
+      public_url: materialSignedUrls.get(material.file_path) ?? "",
     })),
   })) satisfies MaterialGroupData[];
   const myProposals = (proposals ?? []) as SubjectProposalRecord[];
@@ -278,7 +284,7 @@ async function MyActivitySections({ userId }: { userId: string }) {
           description: "Materiály, které ještě neprošly moderací.",
           empty: "V čekajících materiálech teď nic není.",
           tone: "warning",
-          items: myMaterials.filter((material) => material.moderation_status === "pending").map((material) => buildMaterialCard(material, acknowledgementSet)),
+          items: myMaterials.filter((material) => material.moderation_status === "pending").map((material) => buildMaterialCard(material, acknowledgementSet, materialSignedUrls)),
         },
         {
           id: "approved",
@@ -286,7 +292,7 @@ async function MyActivitySections({ userId }: { userId: string }) {
           description: "Materiály dostupné ostatním uživatelům.",
           empty: "Ve schválených materiálech teď nic není.",
           tone: "success",
-          items: myMaterials.filter((material) => material.moderation_status === "approved").map((material) => buildMaterialCard(material, acknowledgementSet)),
+          items: myMaterials.filter((material) => material.moderation_status === "approved").map((material) => buildMaterialCard(material, acknowledgementSet, materialSignedUrls)),
         },
         {
           id: "rejected",
@@ -294,7 +300,7 @@ async function MyActivitySections({ userId }: { userId: string }) {
           description: "Materiály vrácené k doplnění nebo opravě.",
           empty: "V zamítnutých materiálech teď nic není.",
           tone: "danger",
-          items: myMaterials.filter((material) => material.moderation_status === "rejected").map((material) => buildMaterialCard(material, acknowledgementSet)),
+          items: myMaterials.filter((material) => material.moderation_status === "rejected").map((material) => buildMaterialCard(material, acknowledgementSet, materialSignedUrls)),
         },
       ],
     },
@@ -500,10 +506,14 @@ function formatProposalMaterials(materials: ProposalData["materials"]) {
     .join(", ");
 }
 
-function buildMaterialCard(material: MaterialWithSubject, acknowledgementSet: Set<string>): ActivityCardData {
+function buildMaterialCard(
+  material: MaterialWithSubject,
+  acknowledgementSet: Set<string>,
+  signedUrls: Map<string, string>,
+): ActivityCardData {
   const attention = getMaterialAttention(material, acknowledgementSet);
   const subjectLabel = material.subject ? `${material.subject.short_tag} · ${material.subject.name}` : undefined;
-  const fileUrl = getStoragePublicUrl("study_materials", material.file_path);
+  const fileUrl = signedUrls.get(material.file_path) ?? null;
   const panels = material.rejection_reason
     ? [
         {

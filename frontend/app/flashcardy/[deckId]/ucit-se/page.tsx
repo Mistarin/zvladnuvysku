@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { FlashcardStudySession } from '@/components/flashcard/flashcard-study-session'
+import { withFlashcardMediaUrls } from '@/lib/flashcards'
 import type { FlashcardDeck, Flashcard, CardProgress } from '@/lib/types/database'
 
 interface PageProps {
@@ -44,7 +45,7 @@ export default async function UcitSePage({ params }: PageProps) {
     .eq('deck_id', deckId)
     .order('position')
 
-  const allCards = (cards ?? []) as Flashcard[]
+  const allCards = await withFlashcardMediaUrls(supabase, (cards ?? []) as Flashcard[])
 
   // Fetch user's progress to sort: due first, then new
   const today = new Date().toISOString()

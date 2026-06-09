@@ -20,7 +20,7 @@ import { getSharePath } from "@/lib/share-links";
 import type { Database, Subject, SubjectRatingStats } from "@/lib/types/database";
 import { BookOpen, Target, MessageSquare, Star, Users, Layers, FileText, CheckCircle2, XCircle, Calendar, Diamond } from "lucide-react";
 import { formatCredits } from "@/lib/utils";
-import { getStoragePublicUrl } from "@/lib/storage";
+import { createStorageSignedUrlMap } from "@/lib/storage";
 import { TeacherRateToggle } from "@/components/teacher/teacher-rate-toggle";
 
 interface PageProps {
@@ -490,6 +490,11 @@ async function SubjectMaterialsSection({
   }
 
   const materials = (materialsData ?? []) as SubjectMaterialListItem[];
+  const signedMaterialUrls = await createStorageSignedUrlMap(
+    supabase,
+    "study_materials",
+    materials.map((material) => material.file_path),
+  );
 
   return (
     <div className="space-y-4">
@@ -502,7 +507,7 @@ async function SubjectMaterialsSection({
           {materials.map((material) => (
             <div key={material.id} className="glass-card p-4 transition-all hover:-translate-y-1 hover:shadow-md hover:border-primary/40">
               <div className="flex items-start gap-3">
-                <a href={getStoragePublicUrl("study_materials", material.file_path) ?? ""} target="_blank" rel="noopener noreferrer" className="group flex min-w-0 flex-1 items-center gap-3">
+                <a href={signedMaterialUrls.get(material.file_path) ?? "#"} target="_blank" rel="noopener noreferrer" className="group flex min-w-0 flex-1 items-center gap-3">
                   <div className="flex-shrink-0">
                     <FileText className="h-8 w-8 text-sky-500/80 transition-colors group-hover:text-sky-500" />
                   </div>

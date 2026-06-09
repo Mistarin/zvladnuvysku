@@ -8,6 +8,7 @@ import { DeleteDeckButton } from '@/components/flashcard/delete-deck-button'
 import { DeckOwnerToolbar } from '@/components/flashcard/deck-owner-toolbar'
 import { ShareLinkButton } from '@/components/share/share-link-button'
 import { getSharePath } from '@/lib/share-links'
+import { withFlashcardMediaUrls } from '@/lib/flashcards'
 
 interface PageProps {
   params: Promise<{ deckId: string }>
@@ -40,7 +41,7 @@ export default async function DeckDetailPage({ params }: PageProps) {
     .eq('deck_id', deckId)
     .order('position')
 
-  const flashcards = (cards ?? []) as Flashcard[]
+  const flashcards = await withFlashcardMediaUrls(supabase, (cards ?? []) as Flashcard[])
 
   const {
     data: { user },
