@@ -28,6 +28,10 @@ export async function proposeTeacher(data: {
       data: { user },
     } = await supabase.auth.getUser();
 
+    if (!user) {
+      return { error: "Pro návrh vyučujícího se musíš přihlásit." };
+    }
+
     const baseSlug = generateTeacherSlug(data.slug?.trim() || data.name);
     let lastError: { code?: string; message?: string } | null = null;
 
@@ -39,7 +43,7 @@ export async function proposeTeacher(data: {
         faculty: data.faculty,
         department: normalizeDepartmentName(data.department),
         is_approved: false,
-        proposed_by: user?.id ?? null,
+        proposed_by: user.id,
       };
       const { error } = await supabase.from("teachers").insert(teacherInsert as never);
 
