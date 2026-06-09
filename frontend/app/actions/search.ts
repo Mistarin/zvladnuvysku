@@ -8,6 +8,7 @@ import {
   type MaterialDirectorySearchResult,
   type PublicStandaloneMaterial,
 } from '@/lib/material-directory'
+import { sanitizePostgrestSearchValue } from '@/lib/postgrest-sanitize'
 
 export interface FlashcardDeckSearchResult {
   id: string
@@ -59,16 +60,16 @@ const getCachedMaterialDirectorySearch = unstable_cache(
 )
 
 export async function searchFlashcardDecks(query: string): Promise<FlashcardDeckSearchResult[]> {
-  const normalizedQuery = query.trim()
+  const normalizedQuery = sanitizePostgrestSearchValue(query)
   return getCachedFlashcardDeckSearch(normalizedQuery)
 }
 
 export async function searchMaterials(query: string): Promise<MaterialQuickSearchResult[]> {
-  const normalizedQuery = query.trim()
+  const normalizedQuery = sanitizePostgrestSearchValue(query)
   return getCachedMaterialSearch(normalizedQuery)
 }
 
 export async function searchMaterialGroups(query: string): Promise<MaterialGroupSearchResult[]> {
-  const normalizedQuery = query.trim()
+  const normalizedQuery = sanitizePostgrestSearchValue(query)
   return getCachedMaterialDirectorySearch(normalizedQuery)
 }

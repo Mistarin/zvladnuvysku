@@ -2,6 +2,7 @@ import "server-only";
 
 import { unstable_cache } from "next/cache";
 import type { SubjectWithStats } from "@/lib/types/database";
+import { sanitizePostgrestSearchValue } from "@/lib/postgrest-sanitize";
 import {
   SUBJECTS_PAGE_SIZE,
   type SortConfig,
@@ -65,8 +66,10 @@ const getCachedSubjectsPage = unstable_cache(
       .select("*", { count: "exact" });
 
     if (filters.query?.trim()) {
-      const normalizedQuery = filters.query.trim();
-      query = query.or(`name.ilike.%${normalizedQuery}%,short_tag.ilike.%${normalizedQuery}%`);
+      const normalizedQuery = sanitizePostgrestSearchValue(filters.query);
+      if (normalizedQuery) {
+        query = query.or(`name.ilike.%${normalizedQuery}%,short_tag.ilike.%${normalizedQuery}%`);
+      }
     }
     if (filters.difficulty?.length) {
       query = query.in("difficulty", filters.difficulty);

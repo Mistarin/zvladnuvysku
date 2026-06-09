@@ -7,6 +7,7 @@ import { getPublicProfilePath } from '@/lib/public-profile'
 import { createClient } from '@/lib/supabase/server'
 import type { Database, SubjectRating, TeacherRating } from '@/lib/types/database'
 import { containsProfanity } from '@/lib/profanity'
+import { sanitizePostgrestSearchValue } from '@/lib/postgrest-sanitize'
 
 type ActionResult = { success: true } | { success: false; error: string }
 type ReviewSaveResult = { success: true; moderationPending: boolean } | { success: false; error: string }
@@ -923,7 +924,7 @@ export async function deleteOwnTeacherRating(teacherId: string): Promise<ActionR
 }
 
 export async function searchSubjectsForProposal(query: string): Promise<{ success: true; data: SubjectSearchItem[] } | { success: false; error: string }> {
-  const normalizedQuery = query.trim()
+  const normalizedQuery = sanitizePostgrestSearchValue(query)
   if (normalizedQuery.length < 2) {
     return { success: true, data: [] }
   }
@@ -971,7 +972,7 @@ export async function getSubjectSearchCache(): Promise<{ success: true; data: Su
 }
 
 export async function searchTeachersForProposal(query: string): Promise<{ success: true; data: TeacherSearchItem[] } | { success: false; error: string }> {
-  const normalizedQuery = query.trim()
+  const normalizedQuery = sanitizePostgrestSearchValue(query)
   if (normalizedQuery.length < 2) {
     return { success: true, data: [] }
   }

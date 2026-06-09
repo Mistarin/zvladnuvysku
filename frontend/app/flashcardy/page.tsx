@@ -9,6 +9,7 @@ import { BookOpen, Layers } from "lucide-react";
 import { DeleteDeckButton } from "@/components/flashcard/delete-deck-button";
 import { DeckOwnerToolbar } from "@/components/flashcard/deck-owner-toolbar";
 import { getSharePath } from "@/lib/share-links";
+import { sanitizePostgrestSearchValue } from "@/lib/postgrest-sanitize";
 
 interface PageProps {
   searchParams: Promise<{
@@ -36,8 +37,8 @@ export const metadata: Metadata = {
 
 export default async function FlashcardDeckListPage({ searchParams }: PageProps) {
   const { q, mine_q, mine_visibility, mine_sort } = await searchParams;
-  const query = q?.trim() ?? "";
-  const mineQuery = mine_q?.trim() ?? "";
+  const query = sanitizePostgrestSearchValue(q ?? "");
+  const mineQuery = sanitizePostgrestSearchValue(mine_q ?? "");
   const mineVisibility = mine_visibility ?? "all";
   const mineSort = mine_sort ?? "updated";
   const supabase = await createClient();
