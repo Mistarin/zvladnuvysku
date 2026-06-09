@@ -20,6 +20,18 @@ async function checkAdmin() {
   return supabase;
 }
 
+async function checkAdminOnly() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  const role = user?.app_metadata?.role as string | undefined;
+  if (role !== "admin") {
+    throw new Error("Nedostatečná oprávnění");
+  }
+
+  return supabase;
+}
+
 export async function createTeacher(data: TeacherInsert) {
   try {
     if (!isFacultyCode(data.faculty)) {
@@ -94,7 +106,7 @@ export async function updateTeacher(id: string, data: Partial<TeacherInsert>) {
 
 export async function deleteTeacher(id: string) {
   try {
-    const supabase = await checkAdmin();
+    const supabase = await checkAdminOnly();
 
     const { error } = await supabase
       .from("teachers")

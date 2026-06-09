@@ -20,6 +20,20 @@ async function checkAdmin() {
   return supabase;
 }
 
+async function checkAdminOnly() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const role = user?.app_metadata?.role as string | undefined;
+  if (role !== "admin") {
+    throw new Error("Nedostatečná oprávnění");
+  }
+
+  return supabase;
+}
+
 function revalidateDepartmentSurfaces() {
   revalidatePath("/admin");
   revalidatePath("/admin/katedry");
@@ -92,7 +106,7 @@ export async function updateDepartment(id: string, data: Partial<DepartmentInser
 
 export async function deleteDepartment(id: string) {
   try {
-    const supabase = await checkAdmin();
+    const supabase = await checkAdminOnly();
     const [{ count: subjectCount, error: subjectError }, { count: teacherCount, error: teacherError }] = await Promise.all([
       supabase.from("subjects").select("*", { count: "exact", head: true }).eq("department_id", id),
       supabase.from("teachers").select("*", { count: "exact", head: true }).eq("department_id", id),
