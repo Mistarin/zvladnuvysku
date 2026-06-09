@@ -14,12 +14,8 @@ export function resolvePostAuthRedirect(rawRedirectTo: string | null, origin: st
     return '/'
   }
 
-  if (rawRedirectTo.startsWith('/')) {
-    return rawRedirectTo
-  }
-
   try {
-    const redirectUrl = new URL(rawRedirectTo)
+    const redirectUrl = new URL(rawRedirectTo, origin)
 
     if (redirectUrl.origin !== origin) {
       return '/'
