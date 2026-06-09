@@ -5,7 +5,6 @@ import Link from "next/link";
 import { updateMaterialScoring } from "@/app/admin/actions";
 import { PublicUserLink } from "@/components/profile/public-user-link";
 import type { PublicUserSummary } from "@/lib/public-user-summaries";
-import { getStoragePublicUrl } from "@/lib/storage";
 
 type ManagedMaterial = {
   id: string;
@@ -24,6 +23,7 @@ interface MaterialManagementCardProps {
   subjectName?: string;
   subjectSlug?: string;
   author?: PublicUserSummary | null;
+  signedUrl?: string | null;
 }
 
 function getAutomaticPoints(pageCount: number | null) {
@@ -43,6 +43,7 @@ export function MaterialManagementCard({
   subjectName,
   subjectSlug,
   author,
+  signedUrl,
 }: MaterialManagementCardProps) {
   const [pageCount, setPageCount] = useState(material.page_count?.toString() ?? "");
   const [pointsMode, setPointsMode] = useState<"auto" | "1" | "2" | "3" | "4">(
@@ -60,7 +61,6 @@ export function MaterialManagementCard({
     : null;
   const previewOverride = pointsMode === "auto" ? null : Number(pointsMode) as 1 | 2 | 3 | 4;
   const previewPoints = getEffectivePoints(previewPageCount, previewOverride);
-  const publicUrl = getStoragePublicUrl("study_materials", material.file_path);
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -186,8 +186,8 @@ export function MaterialManagementCard({
       )}
 
       <div className="flex flex-wrap items-center gap-3 text-sm">
-        <a
-          href={publicUrl ?? "#"}
+          <a
+            href={signedUrl ?? "#"}
           target="_blank"
           rel="noreferrer"
           className="font-medium text-primary hover:underline"

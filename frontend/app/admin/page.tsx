@@ -13,6 +13,7 @@ import { TeacherApprovalCard } from "@/components/admin/teacher-approval-card";
 import { MaterialStorageAudit } from "@/components/admin/material-storage-audit";
 import { AdminAutoRefresh } from "@/components/admin/admin-auto-refresh";
 import { getPublicUserSummaryMap } from "@/lib/public-user-summaries";
+import { createStorageSignedUrlMap } from "@/lib/storage";
 import type { Database } from "@/lib/types/database";
 
 export const metadata: Metadata = {
@@ -21,6 +22,19 @@ export const metadata: Metadata = {
 };
 
 type QueueKey = "all" | "proposals" | "materials" | "comments" | "feedback" | "teachers" | "history";
+
+function getProposalMaterialPaths(proposals: SubjectProposal[]) {
+  return proposals.flatMap((proposal) => {
+    const materials = proposal.data.materials;
+    if (!Array.isArray(materials)) return [];
+
+    return materials.flatMap((material) => {
+      if (!material || typeof material !== "object") return [];
+      const filePath = (material as { file_path?: unknown }).file_path;
+      return typeof filePath === "string" ? [filePath] : [];
+    });
+  });
+}
 
 export default async function AdminPage(props: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
@@ -299,6 +313,12 @@ async function AdminQueuesSection({
   ));
   unapprovedTeachers = unapprovedTeachers.filter((teacher) => matchesQuery(teacher.name, teacher.slug, teacher.department, teacher.faculty, teacher.proposed_by ? userSummaries[teacher.proposed_by]?.displayName : undefined));
   const filteredFeedback = unresolvedFeedback.filter((feedback) => matchesQuery(feedback.message, feedback.source_label, feedback.source_type, feedback.type, feedback.user_id ? userSummaries[feedback.user_id]?.displayName : undefined));
+  const signedMaterialUrlMap = await createStorageSignedUrlMap(supabase, "study_materials", [
+    ...unapprovedMaterials.map((material) => material.file_path),
+    ...getProposalMaterialPaths(proposals),
+    ...getProposalMaterialPaths(proposalHistory),
+  ]);
+  const signedMaterialUrls = Object.fromEntries(signedMaterialUrlMap);
 
   const unapprovedComments = [
     ...unapprovedSubjectRatings.map((r) => ({
@@ -372,9 +392,10 @@ async function AdminQueuesSection({
                 {proposalsWithEmail.map((proposal) => (
                   <ProposalCard
                     key={proposal.id}
-                    proposal={proposal}
-                    currentSubjectData={proposal.type === "edit" && proposal.subject_id ? subjectsMap[proposal.subject_id] ?? null : null}
-                  />
+	                    proposal={proposal}
+	                    currentSubjectData={proposal.type === "edit" && proposal.subject_id ? subjectsMap[proposal.subject_id] ?? null : null}
+	                    materialUrls={signedMaterialUrls}
+	                  />
                 ))}
               </div>
             </QueueSection>
@@ -385,10 +406,11 @@ async function AdminQueuesSection({
                 {proposalHistoryWithEmail.map((proposal) => (
                   <ProposalCard
                     key={proposal.id}
-                    proposal={proposal}
-                    currentSubjectData={proposal.type === "edit" && proposal.subject_id ? subjectsMap[proposal.subject_id] ?? null : null}
-                    readonly
-                  />
+	                    proposal={proposal}
+	                    currentSubjectData={proposal.type === "edit" && proposal.subject_id ? subjectsMap[proposal.subject_id] ?? null : null}
+	                    readonly
+	                    materialUrls={signedMaterialUrls}
+	                  />
                 ))}
               </div>
             </QueueSection>
@@ -400,10 +422,11 @@ async function AdminQueuesSection({
                   <MaterialApprovalCard
                     key={material.id}
                     material={material}
-                    subjectName={material.subject?.name}
-                    subjectSlug={material.subject?.slug}
-                    author={userSummaries[material.uploader_id] ?? null}
-                  />
+	                    subjectName={material.subject?.name}
+	                    subjectSlug={material.subject?.slug}
+	                    author={userSummaries[material.uploader_id] ?? null}
+	                    signedUrl={signedMaterialUrls[material.file_path] ?? null}
+	                  />
                 ))}
               </div>
             </QueueSection>

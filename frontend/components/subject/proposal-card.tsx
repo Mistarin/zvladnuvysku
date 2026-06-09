@@ -5,7 +5,6 @@ import { CheckCircle, XCircle, User, Calendar, Tag, FileEdit, FilePlus, FileText
 import { approveProposal, rejectProposal } from '@/app/admin/actions'
 import { PublicUserLink } from '@/components/profile/public-user-link'
 import type { PublicUserSummary } from '@/lib/public-user-summaries'
-import { getStoragePublicUrl } from '@/lib/storage'
 
 // Inline type until subject_proposals is in generated types
 export interface SubjectProposal {
@@ -59,6 +58,7 @@ interface ProposalCardProps {
   proposal: SubjectProposal
   currentSubjectData?: Record<string, unknown> | null
   readonly?: boolean
+  materialUrls?: Record<string, string>
 }
 
 type ProposalMaterial = {
@@ -95,7 +95,7 @@ function getMaterialGroupTitle(value: unknown) {
   return typeof value === 'string' ? value : ''
 }
 
-export function ProposalCard({ proposal, currentSubjectData, readonly = false }: ProposalCardProps) {
+export function ProposalCard({ proposal, currentSubjectData, readonly = false, materialUrls = {} }: ProposalCardProps) {
   const proposalDataRecord = proposal.data as Record<string, unknown>
   const [isPending, setIsPending] = useState(false)
   const [rejectReason, setRejectReason] = useState('')
@@ -243,7 +243,7 @@ export function ProposalCard({ proposal, currentSubjectData, readonly = false }:
 
           <div className="space-y-3">
             {proposalMaterials.map((material, index) => {
-              const publicUrl = getStoragePublicUrl('study_materials', material.file_path) ?? '#'
+              const publicUrl = materialUrls[material.file_path] ?? '#'
 
               return (
                 <div key={`${material.file_path}-${index}`} className="rounded-xl border border-border bg-card p-4 shadow-sm">

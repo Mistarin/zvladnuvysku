@@ -1,3 +1,5 @@
+import { createStorageSignedUrlMap } from "@/lib/storage";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Flashcard, Json } from "@/lib/types/database";
 
 export const FLASHCARD_MEDIA_BUCKET = "flashcard_media";
@@ -26,6 +28,10 @@ export type EditableFlashcardQuestion = FlashcardQuestion & {
   media_url: string | null;
 }
 
+export type FlashcardWithMediaUrl = Flashcard & {
+  media_url?: string | null;
+}
+
 export interface ClassicFlashcardAnswerData {
   answerText: string;
 }
@@ -49,7 +55,7 @@ export type FlashcardAnswerData =
   | YesNoAnswerData
   | OpenAnswerData;
 
-interface FlashcardQuestionBase extends Omit<Flashcard, "question_type" | "prompt" | "answer_data" | "media_path"> {
+interface FlashcardQuestionBase extends Omit<FlashcardWithMediaUrl, "question_type" | "prompt" | "answer_data" | "media_path"> {
   prompt: string;
   media_path: string | null;
 }
@@ -84,7 +90,7 @@ export function isQuestionType(value: string | null | undefined): value is Flash
   return value === "classic_flashcard" || value === "multiple_choice" || value === "yes_no" || value === "open_answer";
 }
 
-export function normalizeFlashcard(card: Flashcard): FlashcardQuestion {
+export function normalizeFlashcard(card: FlashcardWithMediaUrl): FlashcardQuestion {
   const questionType: FlashcardQuestionType = isQuestionType(card.question_type)
     ? card.question_type
     : "classic_flashcard";
@@ -184,14 +190,9 @@ export function areOptionSetsEqual(left: string[], right: string[]): boolean {
   return leftSorted.every((value, index) => value === rightSorted[index]);
 }
 
-export function getFlashcardMediaUrl(mediaPath: string | null): string | null {
-  if (!mediaPath) return null;
-  if (typeof mediaPath === "string" && mediaPath.startsWith("http")) {
-    return mediaPath;
-  }
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  if (!supabaseUrl) return null;
-  return `${supabaseUrl}/storage/v1/object/public/${getFlashcardMediaBucket(mediaPath)}/${mediaPath}`;
+export function getFlashcardMediaUrl(card: Pick<FlashcardWithMediaUrl, "media_path" | "media_url"> | null): string | null {
+  if (!card) return null;
+  return card.media_url ?? null;
 }
 
 export function getFlashcardMediaBucket(mediaPath: string | null | undefined): string {
@@ -217,5 +218,21 @@ export function groupFlashcardMediaPaths(
   return Array.from(grouped.entries(), ([bucket, bucketPaths]) => ({
     bucket,
     paths: bucketPaths,
+  }));
+}
+
+export async function withFlashcardMediaUrls<T extends FlashcardWithMediaUrl>(
+  supabase: Pick<SupabaseClient, "storage">,
+  cards: T[],
+): Promise<Array<T & { media_url: string | null }>> {
+  const signedUrls = await createStorageSignedUrlMap(
+    supabase,
+    FLASHCARD_MEDIA_BUCKET,
+    cards.map((card) => card.media_path),
+  );
+
+  return cards.map((card) => ({
+    ...card,
+    media_url: card.media_path ? signedUrls.get(card.media_path) ?? null : null,
   }));
 }

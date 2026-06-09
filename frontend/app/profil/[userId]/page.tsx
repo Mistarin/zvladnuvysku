@@ -8,7 +8,7 @@ import { getFacultyColor } from "@/lib/faculties";
 import { normalizeFacultyList } from "@/lib/public-profile-identity";
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/types/database";
-import { getStoragePublicUrl } from "@/lib/storage";
+import { createStorageSignedUrlMap } from "@/lib/storage";
 
 type PageProps = {
   params: Promise<{ userId: string }>;
@@ -160,6 +160,13 @@ export default async function PublicProfilePage({ params }: PageProps) {
   const stats = ((statsData ?? [])[0] ?? null) as PublicProfileStats | null;
   const decks = (decksData ?? []) as PublicDeck[];
   const materials = (materialsData ?? []) as ApprovedMaterial[];
+  const materialSignedUrls = await createStorageSignedUrlMap(supabase, "study_materials", [
+    ...((materialsData ?? []) as Array<{ file_path: string }>).map((material) => material.file_path),
+    ...((groupsData ?? []) as Array<{ materials?: Array<{ file_path: string }> | null }>).flatMap((group) =>
+      (group.materials ?? []).map((material) => material.file_path),
+    ),
+  ]);
+
   const approvedGroups = ((groupsData ?? []) as Array<{
     id: string;
     title: string;
@@ -184,7 +191,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
       .map((material) => ({
         ...material,
         moderation_status: "approved" as const,
-        public_url: getStoragePublicUrl("study_materials", material.file_path) ?? "",
+        public_url: materialSignedUrls.get(material.file_path) ?? "",
       })),
   })).filter((group) => group.materials.length > 0);
   const profileDecks: ProfileDeckContribution[] = decks.map((deck) => ({
@@ -198,7 +205,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
     id: material.id,
     title: material.title,
     share_slug: material.share_slug,
-    url: getStoragePublicUrl("study_materials", material.file_path),
+    url: materialSignedUrls.get(material.file_path) ?? null,
     sizeLabel: `${(material.size_bytes / 1024 / 1024).toFixed(1)} MB`,
     subject: material.subject,
   }));

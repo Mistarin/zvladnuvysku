@@ -7,12 +7,12 @@ import {
   getFlashcardAnswerText,
   getFlashcardMediaUrl,
   normalizeFlashcard,
+  type FlashcardWithMediaUrl,
   type FlashcardQuestion,
 } from '@/lib/flashcards'
-import type { Flashcard } from '@/lib/types/database'
 
 interface FlashcardViewerProps {
-  card: Flashcard
+  card: FlashcardWithMediaUrl
   currentIndex: number
   totalCards: number
   onRate: (quality: 0 | 1 | 2 | 3 | 4 | 5) => void
@@ -60,7 +60,7 @@ export function FlashcardViewer({
   }, [onRate, question.question_type, stage])
 
   const progress = ((currentIndex + 1) / totalCards) * 100
-  const mediaUrl = getFlashcardMediaUrl(question.media_path)
+  const mediaUrl = getFlashcardMediaUrl(question)
 
   const multipleChoiceCorrect = question.question_type === 'multiple_choice'
     ? areOptionSetsEqual(selectedOptionIds, question.answer_data.correctOptionIds)

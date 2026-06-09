@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { normalizeDepartmentName } from '@/lib/department-name'
 import { getPublicProfilePath } from '@/lib/public-profile'
+import { createStorageSignedUrl } from '@/lib/storage'
 import { createClient } from '@/lib/supabase/server'
 import { generateTeacherSlug } from '@/lib/teacher-slug'
 import type { Database } from '@/lib/types/database'
@@ -765,12 +766,23 @@ export async function auditApprovedMaterials(): Promise<AuditActionResult<Broken
 
     const brokenItems = await Promise.all(
       materials.map(async (material) => {
-        const { data: publicUrlData } = supabase.storage
-          .from('study_materials')
-          .getPublicUrl(material.file_path)
+        const signedUrl = await createStorageSignedUrl(supabase, 'study_materials', material.file_path)
+
+        if (!signedUrl) {
+          return {
+            id: material.id,
+            title: material.title,
+            file_path: material.file_path,
+            created_at: material.created_at,
+            subject_name: material.subject?.name ?? null,
+            subject_slug: material.subject?.slug ?? null,
+            status_code: null,
+            error_message: 'Signed URL could not be created',
+          } satisfies BrokenMaterialAuditItem
+        }
 
         try {
-          const response = await fetch(publicUrlData.publicUrl, {
+          const response = await fetch(signedUrl, {
             method: 'HEAD',
             cache: 'no-store',
           })

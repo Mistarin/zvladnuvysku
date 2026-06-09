@@ -7,18 +7,18 @@ import {
   getFlashcardMediaUrl,
   getQuestionTypeLabel,
   normalizeFlashcard,
+  type FlashcardWithMediaUrl,
 } from '@/lib/flashcards'
-import type { Flashcard } from '@/lib/types/database'
 
 interface CardListItemProps {
-  card: Flashcard
+  card: FlashcardWithMediaUrl
   index: number
 }
 
 export function CardListItem({ card, index }: CardListItemProps) {
   const [expanded, setExpanded] = useState(false)
   const question = normalizeFlashcard(card)
-  const mediaUrl = getFlashcardMediaUrl(question.media_path)
+  const mediaUrl = getFlashcardMediaUrl(question)
 
   return (
     <div className="glass-card rounded-xl overflow-hidden">

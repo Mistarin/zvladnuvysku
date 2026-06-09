@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useCallback } from 'react'
-import type { Flashcard } from '@/lib/types/database'
+import type { FlashcardWithMediaUrl } from '@/lib/flashcards'
 import { saveCardReview } from '@/app/flashcardy/[deckId]/ucit-se/actions'
 
 interface SessionResult {
@@ -10,7 +10,7 @@ interface SessionResult {
 }
 
 interface UseFlashcardSessionOptions {
-  cards: Flashcard[]
+  cards: FlashcardWithMediaUrl[]
   canSaveProgress: boolean
 }
 

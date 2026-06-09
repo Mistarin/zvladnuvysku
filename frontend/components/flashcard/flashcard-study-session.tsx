@@ -1,13 +1,13 @@
 'use client'
 
 import { useState } from 'react'
-import type { Flashcard } from '@/lib/types/database'
+import type { FlashcardWithMediaUrl } from '@/lib/flashcards'
 import { useFlashcardSession } from '@/hooks/use-flashcard-session'
 import { FlashcardViewer } from './flashcard-viewer'
 import { SessionSummary } from './session-summary'
 
 interface FlashcardStudySessionProps {
-  cards: Flashcard[]
+  cards: FlashcardWithMediaUrl[]
   subjectSlug?: string
   canSaveProgress?: boolean
 }

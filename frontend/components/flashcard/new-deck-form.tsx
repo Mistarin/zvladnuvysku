@@ -9,13 +9,13 @@ import { saveOwnDeck } from '@/app/flashcardy/actions'
 import { analyticsEvents, trackEvent } from '@/lib/analytics'
 import {
   type DeckSubjectRef,
-  getFlashcardMediaUrl,
+  type FlashcardWithMediaUrl,
   normalizeFlashcard,
   type FlashcardQuestionType,
   type MultipleChoiceOption,
 } from '@/lib/flashcards'
 import { getSubjectCache, searchInCache, type SubjectCacheEntry } from '@/lib/subject-cache'
-import type { Flashcard, FlashcardDeck } from '@/lib/types/database'
+import type { FlashcardDeck } from '@/lib/types/database'
 
 interface QuestionDraft {
   id?: string
@@ -33,7 +33,7 @@ interface QuestionDraft {
 
 interface InitialDeckData {
   deck: FlashcardDeck
-  cards: Flashcard[]
+  cards: FlashcardWithMediaUrl[]
 }
 
 interface NewDeckFormProps {
@@ -131,9 +131,9 @@ function createEmptyQuestion(type: FlashcardQuestionType = 'classic_flashcard'):
   }
 }
 
-function createQuestionFromCard(card: Flashcard): QuestionDraft {
+function createQuestionFromCard(card: FlashcardWithMediaUrl): QuestionDraft {
   const question = normalizeFlashcard(card)
-  const mediaPreviewUrl = getFlashcardMediaUrl(question.media_path)
+  const mediaPreviewUrl = question.media_url ?? null
 
   if (question.question_type === 'multiple_choice') {
     return {
