@@ -23,6 +23,7 @@ interface SubjectProposal {
 }
 
 type SubjectInsert = Database['public']['Tables']['subjects']['Insert']
+type SubjectUpdate = Database['public']['Tables']['subjects']['Update']
 type MaterialGroupInsert = Database['public']['Tables']['material_groups']['Insert']
 type SubjectMaterialInsert = Database['public']['Tables']['subject_materials']['Insert']
 type TeacherInsert = Database['public']['Tables']['teachers']['Insert']
@@ -142,7 +143,16 @@ async function getAdminClient() {
     throw new Error('Nedostatečná oprávnění')
   }
 
-  return { supabase, userId: user.id }
+  return { supabase, userId: user.id, role }
+}
+
+async function getAdminOnlyClient() {
+  const context = await getAdminClient()
+  if (context.role !== 'admin') {
+    throw new Error('Nedostatečná oprávnění')
+  }
+
+  return context
 }
 
 async function createProposalMaterialGroup(
@@ -390,7 +400,7 @@ export async function rejectProposal(proposalId: string, reason?: string): Promi
 
 export async function deleteSubject(subjectId: string): Promise<ActionResult> {
   try {
-    const { supabase } = await getAdminClient()
+    const { supabase } = await getAdminOnlyClient()
     const { error } = await supabase.from('subjects').delete().eq('id', subjectId)
     if (error) return { success: false, error: `Chyba při mazání: ${error.message}` }
     revalidatePath('/admin')
@@ -405,12 +415,29 @@ export async function deleteSubject(subjectId: string): Promise<ActionResult> {
 export async function updateSubject(subjectId: string, data: Record<string, unknown>): Promise<ActionResult> {
   try {
     const { supabase } = await getAdminClient()
-    const payload = {
-      ...data,
-      ...(data.department !== undefined
-        ? { department: normalizeDepartmentName(typeof data.department === 'string' ? data.department : null) }
-        : {}),
+    const payload: SubjectUpdate = {}
+
+    if (typeof data.slug === 'string') payload.slug = data.slug
+    if (typeof data.name === 'string') payload.name = data.name
+    if (typeof data.short_tag === 'string') payload.short_tag = data.short_tag
+    if (data.description === null || typeof data.description === 'string') payload.description = data.description
+    if (data.target_audience === null || typeof data.target_audience === 'string') payload.target_audience = data.target_audience
+    if (data.real_requirements === null || typeof data.real_requirements === 'string') payload.real_requirements = data.real_requirements
+    if (data.difficulty === null || typeof data.difficulty === 'number') payload.difficulty = data.difficulty
+    if (data.time_intensity === null || typeof data.time_intensity === 'number') payload.time_intensity = data.time_intensity
+    if (data.attendance_type === null || typeof data.attendance_type === 'string') payload.attendance_type = data.attendance_type
+    if (data.credits === null || typeof data.credits === 'number') payload.credits = data.credits
+    if (data.exam_from_home === null || typeof data.exam_from_home === 'boolean') payload.exam_from_home = data.exam_from_home
+    if (data.semester === null || data.semester === 'zimní' || data.semester === 'letní' || data.semester === 'oba') {
+      payload.semester = data.semester
     }
+    if (data.faculty === null || typeof data.faculty === 'string') payload.faculty = data.faculty
+    if (data.department !== undefined) {
+      payload.department = normalizeDepartmentName(typeof data.department === 'string' ? data.department : null)
+    }
+    if (data.department_id === null || typeof data.department_id === 'string') payload.department_id = data.department_id
+    if (data.year === null || typeof data.year === 'number') payload.year = data.year
+
     const { error } = await supabase.from('subjects').update(payload as never).eq('id', subjectId)
     if (error) return { success: false, error: `Chyba při ukládání: ${error.message}` }
     revalidatePath('/admin')
@@ -818,7 +845,7 @@ export async function auditApprovedMaterials(): Promise<AuditActionResult<Broken
 
 export async function removeBrokenMaterialRecord(materialId: string): Promise<ActionResult> {
   try {
-    const { supabase } = await getAdminClient()
+    const { supabase } = await getAdminOnlyClient()
     const { data: material } = await supabase
       .from('subject_materials')
       .select('subject:subject_id(slug)')

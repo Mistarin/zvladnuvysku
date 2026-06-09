@@ -10,6 +10,7 @@ const PROFANITY = new Set([
 ])
 
 export function containsProfanity(text: string): boolean {
+  // Best-effort UX filter only; security and moderation decisions must use the approval flow.
   const normalized = text
     .toLowerCase()
     .normalize('NFD')
