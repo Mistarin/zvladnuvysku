@@ -489,8 +489,8 @@
   bottom: -12%;
   width: 53%;
   pointer-events: none;
-  background: color-mix(in srgb, var(--color-background) 86%, var(--color-primary) 14%);
-  border: 1px solid color-mix(in srgb, var(--color-primary) 22%, transparent);
+  background: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.25);
   filter: blur(9px);
   opacity: 0.96;
 }
