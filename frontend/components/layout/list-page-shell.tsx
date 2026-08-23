@@ -15,7 +15,7 @@ interface ListPageHeaderProps {
 }
 
 export function ListPageShell({ children, className }: ListPageShellProps) {
-  return <main className={cn("mx-auto w-full max-w-6xl px-4 py-10 sm:px-6 sm:py-12 lg:px-8", className)}>{children}</main>;
+  return <main className={cn("mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8", className)}>{children}</main>;
 }
 
 export function ListPageHeader({
@@ -26,19 +26,18 @@ export function ListPageHeader({
   className,
 }: ListPageHeaderProps) {
   return (
-    <header className={cn("mb-8 flex flex-col gap-5 sm:mb-10 sm:gap-6", className)}>
-      <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+    <header className={cn("mb-7 flex flex-col gap-4 sm:mb-8 sm:gap-5", className)}>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="min-w-0">
           <div className="flex items-start gap-3">
             {icon ? (
-              <div className="mt-0.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-border bg-card/80">
+              <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-border bg-card">
                 {icon}
               </div>
             ) : null}
-            <div className="min-w-0 space-y-2">
-              <h1 className="text-3xl font-bold text-foreground sm:text-4xl">{title}</h1>
+            <div className="min-w-0 space-y-1.5">
+              <h1 className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">{title}</h1>
               <p className="max-w-[65ch] text-sm leading-6 text-muted-foreground sm:text-base">{description}</p>
-              <div className="h-1 w-12 rounded-sm bg-primary/85" />
             </div>
           </div>
         </div>

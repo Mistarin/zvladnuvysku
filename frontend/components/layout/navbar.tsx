@@ -91,7 +91,7 @@ export function Navbar({ initialUser }: NavbarProps) {
     : "";
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border/60 bg-background">
+    <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95">
       <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8">
         <nav className="flex h-14 items-center justify-between">
           {/* Logo */}
@@ -121,7 +121,7 @@ export function Navbar({ initialUser }: NavbarProps) {
                 key={link.href}
                 href={link.href}
                 prefetch={link.prefetch}
-                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors duration-150 ${
+                className={`px-2.5 py-1.5 rounded-md text-sm font-medium transition-colors duration-150 ${
                   linkIsActive(link.href) ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-muted"
                 }`}
               >
