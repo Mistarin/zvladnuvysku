@@ -22,6 +22,7 @@ export interface Database {
           slug?: string
         }
         Update: Partial<Database['public']['Tables']['departments']['Insert']>
+        Relationships: []
       }
       subjects: {
         Row: {
@@ -49,6 +50,7 @@ export interface Database {
           department_id?: string | null
         }
         Update: Partial<Database['public']['Tables']['subjects']['Insert']>
+        Relationships: []
       }
       subject_tags: {
         Row: {
@@ -58,6 +60,7 @@ export interface Database {
         }
         Insert: Omit<Database['public']['Tables']['subject_tags']['Row'], 'id'>
         Update: Partial<Database['public']['Tables']['subject_tags']['Insert']>
+        Relationships: []
       }
       flashcard_decks: {
         Row: {
@@ -76,6 +79,15 @@ export interface Database {
           share_slug?: string
         }
         Update: Partial<Database['public']['Tables']['flashcard_decks']['Insert']>
+        Relationships: [
+          {
+            foreignKeyName: 'flashcard_decks_subject_id_fkey'
+            columns: ['subject_id']
+            isOneToOne: false
+            referencedRelation: 'subjects'
+            referencedColumns: ['id']
+          },
+        ]
       }
       flashcards: {
         Row: {
@@ -92,6 +104,15 @@ export interface Database {
         }
         Insert: Omit<Database['public']['Tables']['flashcards']['Row'], 'id' | 'created_at'>
         Update: Partial<Database['public']['Tables']['flashcards']['Insert']>
+        Relationships: [
+          {
+            foreignKeyName: 'flashcards_deck_id_fkey'
+            columns: ['deck_id']
+            isOneToOne: false
+            referencedRelation: 'flashcard_decks'
+            referencedColumns: ['id']
+          },
+        ]
       }
       card_progress: {
         Row: {
@@ -107,6 +128,7 @@ export interface Database {
         }
         Insert: Omit<Database['public']['Tables']['card_progress']['Row'], 'id'>
         Update: Partial<Database['public']['Tables']['card_progress']['Insert']>
+        Relationships: []
       }
       subject_ratings: {
         Row: {
@@ -129,6 +151,15 @@ export interface Database {
           overall_rating?: number | null
         }
         Update: Partial<Database['public']['Tables']['subject_ratings']['Insert']>
+        Relationships: [
+          {
+            foreignKeyName: 'subject_ratings_subject_id_fkey'
+            columns: ['subject_id']
+            isOneToOne: false
+            referencedRelation: 'subjects'
+            referencedColumns: ['id']
+          },
+        ]
       }
       subject_rating_stats: {
         Row: {
@@ -142,6 +173,7 @@ export interface Database {
         }
         Insert: Omit<Database['public']['Tables']['subject_rating_stats']['Row'], 'updated_at'>
         Update: Partial<Database['public']['Tables']['subject_rating_stats']['Insert']>
+        Relationships: []
       }
       teachers: {
         Row: {
@@ -161,6 +193,15 @@ export interface Database {
           proposed_by?: string | null
         }
         Update: Partial<Database['public']['Tables']['teachers']['Insert']>
+        Relationships: [
+          {
+            foreignKeyName: 'teacher_rating_stats_teacher_id_fkey'
+            columns: ['id']
+            isOneToOne: true
+            referencedRelation: 'teacher_rating_stats'
+            referencedColumns: ['teacher_id']
+          },
+        ]
       }
       teacher_ratings: {
         Row: {
@@ -178,6 +219,15 @@ export interface Database {
           is_anonymous?: boolean
         }
         Update: Partial<Database['public']['Tables']['teacher_ratings']['Insert']>
+        Relationships: [
+          {
+            foreignKeyName: 'teacher_ratings_teacher_id_fkey'
+            columns: ['teacher_id']
+            isOneToOne: false
+            referencedRelation: 'teachers'
+            referencedColumns: ['id']
+          },
+        ]
       }
       public_subject_reviews: {
         Row: {
@@ -191,6 +241,15 @@ export interface Database {
         }
         Insert: Database['public']['Tables']['public_subject_reviews']['Row']
         Update: Partial<Database['public']['Tables']['public_subject_reviews']['Insert']>
+        Relationships: [
+          {
+            foreignKeyName: 'public_subject_reviews_subject_id_fkey'
+            columns: ['subject_id']
+            isOneToOne: false
+            referencedRelation: 'subjects'
+            referencedColumns: ['id']
+          },
+        ]
       }
       public_teacher_reviews: {
         Row: {
@@ -204,6 +263,15 @@ export interface Database {
         }
         Insert: Database['public']['Tables']['public_teacher_reviews']['Row']
         Update: Partial<Database['public']['Tables']['public_teacher_reviews']['Insert']>
+        Relationships: [
+          {
+            foreignKeyName: 'public_teacher_reviews_teacher_id_fkey'
+            columns: ['teacher_id']
+            isOneToOne: false
+            referencedRelation: 'teachers'
+            referencedColumns: ['id']
+          },
+        ]
       }
       subject_teachers: {
         Row: {
@@ -212,6 +280,22 @@ export interface Database {
         }
         Insert: Database['public']['Tables']['subject_teachers']['Row']
         Update: Partial<Database['public']['Tables']['subject_teachers']['Insert']>
+        Relationships: [
+          {
+            foreignKeyName: 'subject_teachers_subject_id_fkey'
+            columns: ['subject_id']
+            isOneToOne: false
+            referencedRelation: 'subjects'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'subject_teachers_teacher_id_fkey'
+            columns: ['teacher_id']
+            isOneToOne: false
+            referencedRelation: 'teachers'
+            referencedColumns: ['id']
+          },
+        ]
       }
       subject_materials: {
         Row: {
@@ -240,6 +324,22 @@ export interface Database {
           points_override?: number | null
         }
         Update: Partial<Database['public']['Tables']['subject_materials']['Insert']>
+        Relationships: [
+          {
+            foreignKeyName: 'subject_materials_subject_id_fkey'
+            columns: ['subject_id']
+            isOneToOne: false
+            referencedRelation: 'subjects'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'subject_materials_group_id_fkey'
+            columns: ['group_id']
+            isOneToOne: false
+            referencedRelation: 'material_groups'
+            referencedColumns: ['id']
+          },
+        ]
       }
       material_groups: {
         Row: {
@@ -254,6 +354,22 @@ export interface Database {
           share_slug?: string
         }
         Update: Partial<Database['public']['Tables']['material_groups']['Insert']>
+        Relationships: [
+          {
+            foreignKeyName: 'material_groups_subject_id_fkey'
+            columns: ['subject_id']
+            isOneToOne: false
+            referencedRelation: 'subjects'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'subject_materials_group_id_fkey'
+            columns: ['id']
+            isOneToOne: false
+            referencedRelation: 'subject_materials'
+            referencedColumns: ['group_id']
+          },
+        ]
       }
       subject_proposals: {
         Row: {
@@ -278,6 +394,7 @@ export interface Database {
           reviewed_at?: string | null
         }
         Update: Partial<Database['public']['Tables']['subject_proposals']['Insert']>
+        Relationships: []
       }
       profiles: {
         Row: {
@@ -298,6 +415,7 @@ export interface Database {
           legal_accepted_version?: string | null
         }
         Update: Partial<Database['public']['Tables']['profiles']['Insert']>
+        Relationships: []
       }
       feedback: {
         Row: {
@@ -321,6 +439,7 @@ export interface Database {
           source_label?: string | null
         }
         Update: Partial<Database['public']['Tables']['feedback']['Insert']>
+        Relationships: []
       }
       activity_acknowledgements: {
         Row: {
@@ -335,6 +454,7 @@ export interface Database {
           created_at?: string
         }
         Update: Partial<Database['public']['Tables']['activity_acknowledgements']['Insert']>
+        Relationships: []
       }
       teacher_rating_stats: {
         Row: {
@@ -345,6 +465,15 @@ export interface Database {
         }
         Insert: Omit<Database['public']['Tables']['teacher_rating_stats']['Row'], 'updated_at'>
         Update: Partial<Database['public']['Tables']['teacher_rating_stats']['Insert']>
+        Relationships: [
+          {
+            foreignKeyName: 'teacher_rating_stats_teacher_id_fkey'
+            columns: ['teacher_id']
+            isOneToOne: true
+            referencedRelation: 'teachers'
+            referencedColumns: ['id']
+          },
+        ]
       }
     }
     Views: {
@@ -353,6 +482,7 @@ export interface Database {
           avg_subject_rating: number
           avg_teacher_rating: number
         }
+        Relationships: []
       }
     }
     Functions: {

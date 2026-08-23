@@ -115,31 +115,31 @@ export default async function PublicProfilePage({ params }: PageProps) {
     typedSupabase.rpc("get_public_profile_stats", { profile_user_id: userId }),
     supabase
       .from("flashcard_decks")
-      .select("id, title, share_slug, card_count, updated_at, subject:subject_id(slug, short_tag, name)")
+      .select("id, title, share_slug, card_count, updated_at, subject:subjects!flashcard_decks_subject_id_fkey(slug, short_tag, name)")
       .eq("creator_id", userId)
       .eq("is_public", true)
       .order("updated_at", { ascending: false }),
     supabase
       .from("subject_materials")
-      .select("id, title, share_slug, file_path, size_bytes, created_at, subject:subject_id(slug, short_tag, name)")
+      .select("id, title, share_slug, file_path, size_bytes, created_at, subject:subjects!subject_materials_subject_id_fkey(slug, short_tag, name)")
       .eq("uploader_id", userId)
       .eq("moderation_status", "approved")
       .is("group_id", null)
       .order("created_at", { ascending: false }),
     supabase
       .from("material_groups")
-      .select("id, title, share_slug, uploader_id, created_at, subject:subject_id(id, slug, short_tag, name), materials:subject_materials(id, title, share_slug, file_path, size_bytes, page_count, moderation_status)")
+      .select("id, title, share_slug, uploader_id, created_at, subject:subjects!material_groups_subject_id_fkey(id, slug, short_tag, name), materials:subject_materials!subject_materials_group_id_fkey(id, title, share_slug, file_path, size_bytes, page_count, moderation_status)")
       .eq("uploader_id", userId)
       .order("created_at", { ascending: false }),
     supabase
       .from("public_subject_reviews")
-      .select("id, overall, comment, created_at, is_anonymous, subject:subject_id(slug, short_tag, name)")
+      .select("id, overall, comment, created_at, is_anonymous, subject:subjects!public_subject_reviews_subject_id_fkey(slug, short_tag, name)")
       .eq("author_user_id", userId)
       .order("created_at", { ascending: false })
       .limit(20),
     supabase
       .from("public_teacher_reviews")
-      .select("id, rating, review, created_at, is_anonymous, teacher:teacher_id(slug, name)")
+      .select("id, rating, review, created_at, is_anonymous, teacher:teachers!public_teacher_reviews_teacher_id_fkey(slug, name)")
       .eq("author_user_id", userId)
       .order("created_at", { ascending: false })
       .limit(20),
@@ -160,7 +160,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
   const stats = ((statsData ?? [])[0] ?? null) as PublicProfileStats | null;
   const decks = (decksData ?? []) as PublicDeck[];
   const materials = (materialsData ?? []) as ApprovedMaterial[];
-  const approvedGroups = ((groupsData ?? []) as Array<{
+  const approvedGroups = ((groupsData ?? []) as unknown as Array<{
     id: string;
     title: string;
     share_slug: string;

@@ -74,7 +74,7 @@ export default async function TeacherDetailPage({ params }: PageProps) {
   // Fetch subjects taught by teacher
   const { data: stData } = await supabase
     .from("subject_teachers")
-    .select("subjects(slug, name, short_tag)")
+    .select("subjects:subjects!subject_teachers_subject_id_fkey(slug, name, short_tag)")
     .eq("teacher_id", t.id);
 
   // Parse subjects safely since it's nested

@@ -110,7 +110,7 @@ async function loadTeacherSubjectsAndOptions() {
   const [{ data: rawTeacherSubjects, error: subjectsError }, { data: rawSubjectOptions, error: subjectOptionsError }] = await Promise.all([
     supabase
       .from("subject_teachers")
-      .select("teacher_id, subject:subject_id(id, slug, name, short_tag)"),
+      .select("teacher_id, subject:subjects!subject_teachers_subject_id_fkey(id, slug, name, short_tag)"),
     supabase
       .from("subject_search_view")
       .select("id, slug, name, short_tag")
@@ -152,7 +152,7 @@ const getTeacherDirectorySnapshot = unstable_cache(
       const [{ data: rawTeachers, error: teachersError }, { data: rawDepartments, error: departmentsError }] = await Promise.all([
         supabase
           .from("teachers")
-          .select("id, slug, name, faculty, department, department_id, teacher_rating_stats(avg_rating, total_ratings)")
+          .select("id, slug, name, faculty, department, department_id, teacher_rating_stats!teacher_rating_stats_teacher_id_fkey(avg_rating, total_ratings)")
           .eq("is_approved", true)
           .order("name", { ascending: true }),
         supabase
@@ -173,7 +173,7 @@ const getTeacherDirectorySnapshot = unstable_cache(
 
       const { data: rawTeachers, error: teachersError } = await supabase
         .from("teachers")
-        .select("id, slug, name, faculty, department, teacher_rating_stats(avg_rating, total_ratings)")
+        .select("id, slug, name, faculty, department, teacher_rating_stats!teacher_rating_stats_teacher_id_fkey(avg_rating, total_ratings)")
         .eq("is_approved", true)
         .order("name", { ascending: true });
 

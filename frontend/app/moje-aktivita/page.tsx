@@ -144,11 +144,11 @@ async function MyActivitySections({ userId }: { userId: string }) {
     { data: acknowledgements },
   ] = await Promise.all([
     supabase.from("profiles").select("*").eq("user_id", userId).maybeSingle(),
-    supabase.from("flashcard_decks").select("*, subject:subject_id(name, slug, short_tag)").eq("creator_id", userId).order("updated_at", { ascending: false }),
-    supabase.from("subject_materials").select("*, subject:subject_id(name, slug, short_tag)").eq("uploader_id", userId).order("created_at", { ascending: false }),
+    supabase.from("flashcard_decks").select("*, subject:subjects!flashcard_decks_subject_id_fkey(name, slug, short_tag)").eq("creator_id", userId).order("updated_at", { ascending: false }),
+    supabase.from("subject_materials").select("*, subject:subjects!subject_materials_subject_id_fkey(name, slug, short_tag)").eq("uploader_id", userId).order("created_at", { ascending: false }),
     supabase
       .from("material_groups")
-      .select("id, title, share_slug, uploader_id, created_at, subject:subject_id(id, name, slug, short_tag), materials:subject_materials(id, title, share_slug, file_path, size_bytes, page_count, moderation_status)")
+      .select("id, title, share_slug, uploader_id, created_at, subject:subjects!material_groups_subject_id_fkey(id, name, slug, short_tag), materials:subject_materials!subject_materials_group_id_fkey(id, title, share_slug, file_path, size_bytes, page_count, moderation_status)")
       .eq("uploader_id", userId)
       .order("created_at", { ascending: false }),
     (supabase as unknown as {
@@ -168,7 +168,7 @@ async function MyActivitySections({ userId }: { userId: string }) {
   const publicIdentity = getPublicProfileIdentity(typedProfile);
   const myDecks = (decks ?? []) as DeckWithSubject[];
   const myMaterials = (materials ?? []) as MaterialWithSubject[];
-  const myGroups = ((groups ?? []) as MaterialGroupWithSubject[]).map((group) => ({
+  const myGroups = ((groups ?? []) as unknown as MaterialGroupWithSubject[]).map((group) => ({
     id: group.id,
     title: group.title,
     share_slug: group.share_slug,

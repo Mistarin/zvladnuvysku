@@ -207,7 +207,7 @@ async function AdminQueuesSection({
 
   const { data: rawMaterials } = await supabase
     .from("subject_materials")
-    .select("*, subject:subject_id(name, faculty, slug)")
+    .select("*, subject:subjects!subject_materials_subject_id_fkey(name, faculty, slug)")
     .eq("moderation_status" as never, "pending")
     .order("created_at", { ascending: true })
     .limit(queueItemLimit);
@@ -215,7 +215,7 @@ async function AdminQueuesSection({
 
   const { data: rawSubjectRatings } = await supabase
     .from("subject_ratings")
-    .select("*, subject:subject_id(name, faculty)")
+    .select("*, subject:subjects!subject_ratings_subject_id_fkey(name, faculty)")
     .not("comment", "is", null)
     .eq("comment_is_approved" as never, false)
     .order("created_at", { ascending: true })
@@ -224,7 +224,7 @@ async function AdminQueuesSection({
 
   const { data: rawTeacherRatings } = await supabase
     .from("teacher_ratings")
-    .select("*, teacher:teacher_id(name, faculty)")
+    .select("*, teacher:teachers!teacher_ratings_teacher_id_fkey(name, faculty)")
     .not("review", "is", null)
     .eq("comment_is_approved" as never, false)
     .order("created_at", { ascending: true })

@@ -55,7 +55,7 @@ export default async function AdminMaterialsPage(props: {
 
   let request = supabase
     .from("subject_materials")
-    .select("*, subject:subject_id(name, slug)")
+    .select("*, subject:subjects!subject_materials_subject_id_fkey(name, slug)")
     .order("created_at", { ascending: false })
     .limit(200);
 

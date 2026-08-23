@@ -170,19 +170,19 @@ async function loadPublicMaterialDirectorySnapshot() {
   const [{ data: rawGroups }, { data: rawMaterials }] = await Promise.all([
     supabase
       .from("material_groups")
-      .select("id, title, share_slug, uploader_id, created_at, subject:subject_id(id, name, slug, short_tag), materials:subject_materials(id, title, share_slug, file_path, size_bytes, page_count, created_at, moderation_status)")
+      .select("id, title, share_slug, uploader_id, created_at, subject:subjects!material_groups_subject_id_fkey(id, name, slug, short_tag), materials:subject_materials!subject_materials_group_id_fkey(id, title, share_slug, file_path, size_bytes, page_count, created_at, moderation_status)")
       .order("created_at", { ascending: false })
       .limit(80),
     supabase
       .from("subject_materials")
-      .select("id, title, share_slug, file_path, size_bytes, page_count, group_id, created_at, subject:subject_id(id, name, slug, short_tag)")
+      .select("id, title, share_slug, file_path, size_bytes, page_count, group_id, created_at, subject:subjects!subject_materials_subject_id_fkey(id, name, slug, short_tag)")
       .eq("moderation_status", "approved")
       .is("group_id", null)
       .order("created_at", { ascending: false })
       .limit(80),
   ]);
 
-  const groups = (rawGroups ?? []) as RawGroup[];
+  const groups = (rawGroups ?? []) as unknown as RawGroup[];
   const subjectIds = [...new Set([
     ...groups.map((group) => group.subject?.id).filter(Boolean),
     ...((rawMaterials ?? []) as Array<{ subject: { id: string } | null }>).map((material) => material.subject?.id).filter(Boolean),

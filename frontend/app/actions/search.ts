@@ -27,7 +27,7 @@ const getCachedFlashcardDeckSearch = unstable_cache(
 
     let request = supabase
       .from('flashcard_decks')
-      .select('id, title, description, card_count, subject:subject_id(name, short_tag, faculty)')
+      .select('id, title, description, card_count, subject:subjects!flashcard_decks_subject_id_fkey(name, short_tag, faculty)')
       .eq('is_public', true)
       .order('card_count', { ascending: false })
       .limit(8)

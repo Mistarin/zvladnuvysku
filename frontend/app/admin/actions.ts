@@ -505,7 +505,7 @@ export async function updateMaterialScoring(
 
     const { data: material, error: loadError } = await supabase
       .from('subject_materials')
-      .select('id, uploader_id, subject:subject_id(slug)')
+      .select('id, uploader_id, subject:subjects!subject_materials_subject_id_fkey(slug)')
       .eq('id' as never, materialId)
       .maybeSingle()
 
@@ -553,7 +553,7 @@ export async function approveMaterial(materialId: string): Promise<ActionResult>
     const { supabase } = await getAdminClient()
     const { data: material, error: loadError } = await supabase
       .from('subject_materials')
-      .select('id, uploader_id, subject:subject_id(slug)')
+      .select('id, uploader_id, subject:subjects!subject_materials_subject_id_fkey(slug)')
       .eq('id' as never, materialId)
       .maybeSingle()
     const typedMaterial = material as { id: string; uploader_id: string; subject: { slug: string } | null } | null
@@ -595,7 +595,7 @@ export async function rejectMaterial(materialId: string, reason?: string): Promi
 
     const { data: material } = await supabase
       .from('subject_materials')
-      .select('subject:subject_id(slug)')
+      .select('subject:subjects!subject_ratings_subject_id_fkey(slug)')
       .eq('id' as never, materialId)
       .maybeSingle()
     const typedMaterial = material as { subject: { slug: string } | null } | null
@@ -631,7 +631,7 @@ export async function approveRatingComment(ratingId: string, type: "subject" | "
     const table = type === "subject" ? "subject_ratings" : "teacher_ratings"
     const { data: existingRowData } = await supabase
       .from(table)
-      .select(`user_id, ${type === 'subject' ? 'subject:subject_id(slug)' : 'teacher:teacher_id(slug)'}`)
+      .select(`user_id, ${type === 'subject' ? 'subject:subjects!subject_ratings_subject_id_fkey(slug)' : 'teacher:teachers!teacher_ratings_teacher_id_fkey(slug)'}`)
       .eq('id' as never, ratingId)
       .maybeSingle()
     const existingRow = existingRowData as {
@@ -671,7 +671,7 @@ export async function rejectRatingComment(ratingId: string, type: "subject" | "t
     const table = type === "subject" ? "subject_ratings" : "teacher_ratings"
     const { data: existingRowData } = await supabase
       .from(table)
-      .select(`user_id, ${type === 'subject' ? 'subject:subject_id(slug)' : 'teacher:teacher_id(slug)'}`)
+      .select(`user_id, ${type === 'subject' ? 'subject:subjects!subject_ratings_subject_id_fkey(slug)' : 'teacher:teachers!teacher_ratings_teacher_id_fkey(slug)'}`)
       .eq('id' as never, ratingId)
       .maybeSingle()
     const existingRow = existingRowData as {
@@ -752,7 +752,7 @@ export async function auditApprovedMaterials(): Promise<AuditActionResult<Broken
     const { supabase } = await getAdminClient()
     const { data, error } = await supabase
       .from('subject_materials')
-      .select('id, title, file_path, created_at, subject:subject_id(name, slug)')
+      .select('id, title, file_path, created_at, subject:subjects!subject_materials_subject_id_fkey(name, slug)')
       .eq('moderation_status' as never, 'approved')
       .order('created_at', { ascending: false })
 
@@ -826,7 +826,7 @@ export async function removeBrokenMaterialRecord(materialId: string): Promise<Ac
     const { supabase } = await getAdminClient()
     const { data: material } = await supabase
       .from('subject_materials')
-      .select('subject:subject_id(slug)')
+      .select('subject:subjects!subject_ratings_subject_id_fkey(slug)')
       .eq('id' as never, materialId)
       .maybeSingle()
     const typedMaterial = material as { subject: { slug: string } | null } | null

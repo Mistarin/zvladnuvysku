@@ -91,7 +91,7 @@ async function PublicDeckListSection({ query }: { query: string }) {
   const supabase = await createClient();
   let decksQuery = supabase
     .from("flashcard_decks")
-    .select("id, title, description, share_slug, card_count, subject:subject_id(name, slug, short_tag, faculty)")
+    .select("id, title, description, share_slug, card_count, subject:subjects!flashcard_decks_subject_id_fkey(name, slug, short_tag, faculty)")
     .eq("is_public", true)
     .order("card_count", { ascending: false })
     .order("created_at", { ascending: false })
@@ -194,7 +194,7 @@ async function MyDecksSection({
   const supabase = await createClient();
   let myDecksQuery = supabase
     .from("flashcard_decks")
-    .select("id, title, description, share_slug, card_count, is_public, subject:subject_id(name, slug, short_tag, faculty)")
+    .select("id, title, description, share_slug, card_count, is_public, subject:subjects!flashcard_decks_subject_id_fkey(name, slug, short_tag, faculty)")
     .eq("creator_id", userId);
 
   if (mineQuery) {

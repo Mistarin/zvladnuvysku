@@ -375,7 +375,7 @@ async function SubjectSidebarSection({
   const [{ data: stData }, { count: deckCount }] = await Promise.all([
     supabase
       .from("subject_teachers")
-      .select("teachers(id, slug, name, faculty, teacher_rating_stats(avg_rating, total_ratings))")
+      .select("teachers:teachers!subject_teachers_teacher_id_fkey(id, slug, name, faculty, teacher_rating_stats!teacher_rating_stats_teacher_id_fkey(avg_rating, total_ratings))")
       .eq("subject_id", subjectId),
     supabase.from("flashcard_decks").select("*", { count: "exact", head: true }).eq("subject_id", subjectId).eq("is_public", true),
   ]);

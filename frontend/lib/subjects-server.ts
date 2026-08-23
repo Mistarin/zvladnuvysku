@@ -86,7 +86,7 @@ const getCachedSubjectsPage = unstable_cache(
       query = query.in("attendance_type", filters.attendanceType);
     }
     if (filters.semester?.length) {
-      query = query.in("semester", filters.semester);
+      query = query.in("semester" as never, filters.semester as readonly ('zimní' | 'letní' | 'oba' | null)[]);
     }
     if (filters.creditsMin !== undefined) {
       query = query.gte("credits", filters.creditsMin);
@@ -135,7 +135,7 @@ const getCachedSubjectsPage = unstable_cache(
     if (subjectIds.length > 0) {
       const { data: teacherPreviewRows, error: teacherPreviewError } = await supabase
         .from("subject_teachers")
-        .select("subject_id, teacher:teacher_id(id, slug, name, teacher_rating_stats(avg_rating, total_ratings))")
+        .select("subject_id, teacher:teachers!subject_teachers_teacher_id_fkey(id, slug, name, teacher_rating_stats!teacher_rating_stats_teacher_id_fkey(avg_rating, total_ratings))")
         .in("subject_id", subjectIds);
 
       if (teacherPreviewError) {
