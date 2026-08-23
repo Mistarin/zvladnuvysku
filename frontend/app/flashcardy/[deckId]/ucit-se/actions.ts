@@ -23,8 +23,8 @@ export async function saveCardReview(
   const { data: existingRaw } = await supabase
     .from('card_progress')
     .select('*')
-    .eq('user_id', user.id)
-    .eq('card_id', cardId)
+    .eq('user_id' as never, user.id)
+    .eq('card_id' as never, cardId)
     .single()
 
   const existing = existingRaw as CardProgress | null
