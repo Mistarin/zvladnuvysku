@@ -30,7 +30,7 @@ export default async function PredmetyPage({ searchParams }: PredmetyPageProps) 
         }
         icon={<BookOpenText className="ui-accent-text h-5 w-5" />}
       />
-      <div className="space-y-6">
+      <div className="space-y-8">
         <SubjectsFilterPanel />
         <Suspense key={key} fallback={<SubjectsResultsSkeleton />}>
           <SubjectsResultsSection searchParams={resolvedSearchParams} />

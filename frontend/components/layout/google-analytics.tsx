@@ -37,10 +37,16 @@ export function GoogleAnalytics({ initialConsent }: GoogleAnalyticsProps) {
     return null;
   }
 
+  if (!/^G-[A-Z0-9]+$/.test(measurementId)) {
+    return null;
+  }
+
+  const safeMeasurementId = JSON.stringify(measurementId);
+
   return (
     <>
       <Script
-        src={`https://www.googletagmanager.com/gtag/js?id=${measurementId}`}
+        src={`https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(measurementId)}`}
         strategy="afterInteractive"
       />
       <Script id="google-analytics-init" strategy="afterInteractive">
@@ -50,7 +56,7 @@ export function GoogleAnalytics({ initialConsent }: GoogleAnalyticsProps) {
           window.gtag = gtag;
           gtag('js', new Date());
           gtag('consent', 'default', { analytics_storage: 'granted' });
-          gtag('config', '${measurementId}', { anonymize_ip: true });
+          gtag('config', ${safeMeasurementId}, { anonymize_ip: true });
         `}
       </Script>
     </>

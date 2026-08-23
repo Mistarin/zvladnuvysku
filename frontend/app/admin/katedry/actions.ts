@@ -6,7 +6,7 @@ import { isFacultyCode } from "@/lib/faculties";
 import { createClient } from "@/lib/supabase/server";
 import type { DepartmentInsert } from "@/lib/types/database";
 
-async function checkAdmin() {
+async function checkAdmin(requireAdmin = false) {
   const supabase = await createClient();
   const {
     data: { user },
@@ -15,6 +15,9 @@ async function checkAdmin() {
   const role = user?.app_metadata?.role as string | undefined;
   if (role !== "admin" && role !== "moderator") {
     throw new Error("Nedostatečná oprávnění");
+  }
+  if (requireAdmin && role !== "admin") {
+    throw new Error("Tuto operaci může provést pouze administrátor");
   }
 
   return supabase;
@@ -77,7 +80,7 @@ export async function updateDepartment(id: string, data: Partial<DepartmentInser
     }
 
     const supabase = await checkAdmin();
-    const { error } = await supabase.from("departments").update(payload as never).eq("id", id);
+    const { error } = await supabase.from("departments").update(payload as never).eq("id" as never, id);
     if (error) {
       throw error;
     }
@@ -92,10 +95,10 @@ export async function updateDepartment(id: string, data: Partial<DepartmentInser
 
 export async function deleteDepartment(id: string) {
   try {
-    const supabase = await checkAdmin();
+    const supabase = await checkAdmin(true);
     const [{ count: subjectCount, error: subjectError }, { count: teacherCount, error: teacherError }] = await Promise.all([
-      supabase.from("subjects").select("*", { count: "exact", head: true }).eq("department_id", id),
-      supabase.from("teachers").select("*", { count: "exact", head: true }).eq("department_id", id),
+      supabase.from("subjects").select("*", { count: "exact", head: true }).eq("department_id" as never, id),
+      supabase.from("teachers").select("*", { count: "exact", head: true }).eq("department_id" as never, id),
     ]);
 
     if (subjectError || teacherError) {
@@ -106,7 +109,7 @@ export async function deleteDepartment(id: string) {
       return { error: "Katedru nelze smazat, dokud je navázaná na předměty nebo vyučující." };
     }
 
-    const { error } = await supabase.from("departments").delete().eq("id", id);
+    const { error } = await supabase.from("departments").delete().eq("id" as never, id);
     if (error) {
       throw error;
     }

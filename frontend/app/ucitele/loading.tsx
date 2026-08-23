@@ -12,7 +12,7 @@ export default function TeachersPageLoading() {
         {Array.from({ length: 2 }).map((_, sectionIndex) => (
           <div key={sectionIndex} className="space-y-4">
             <div className="flex items-center gap-3 border-b border-border pb-2">
-              <div className="h-4 w-4 animate-pulse rounded-full bg-muted" />
+              <div className="h-4 w-4 animate-pulse rounded-md bg-muted" />
               <div className="h-8 w-24 animate-pulse rounded bg-muted" />
             </div>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">

@@ -269,9 +269,9 @@ export default async function PublicProfilePage({ params }: PageProps) {
                 Zbývá <span className="font-semibold text-foreground">{Math.max(stats.next_level_xp - stats.level_progress_xp, 0)}</span> XP
               </span>
             </div>
-            <div className="mt-3 h-2 overflow-hidden rounded-full bg-muted dark:bg-[#2A2F36]">
+            <div className="mt-3 h-2 overflow-hidden rounded-md bg-muted">
               <div
-                className="h-full rounded-full bg-primary shadow-[0_0_18px_rgba(2,175,198,0.25)] transition-all duration-700 dark:shadow-[0_0_18px_rgba(2,190,214,0.35)]"
+                className="h-full rounded-md bg-primary transition-colors duration-700"
                 style={{ width: `${progressPercent}%` }}
               />
             </div>
@@ -280,7 +280,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
                 href="/#hall-of-fame"
                 className="mt-3 inline-flex text-xs font-medium text-muted-foreground transition-colors hover:text-primary"
               >
-                Body se převádějí na XP v poměru 1:10 →
+                Body se převádějí na XP v poměru 1:10
               </Link>
             )}
           </div>

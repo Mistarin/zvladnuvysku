@@ -4,6 +4,8 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { EmailLoginForm } from '@/components/auth/email-login-form'
+import { getRequestOrigin } from '@/lib/server-origin'
+import { resolvePostAuthRedirect } from '@/lib/auth/post-auth'
 
 export const metadata: Metadata = {
   title: 'Přihlášení',
@@ -15,11 +17,12 @@ interface PageProps {
 }
 
 export default async function PrihlaseniPage({ searchParams }: PageProps) {
-  // Pokud je už přihlášen — přesměruj
+  // Pokud je už přihlášen … přesměruj
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   const { redirect_to } = await searchParams
-  if (user) redirect(redirect_to || '/')
+  const safeRedirectTo = resolvePostAuthRedirect(redirect_to ?? null, await getRequestOrigin())
+  if (user) redirect(safeRedirectTo)
 
   return (
     <div className="min-h-[calc(100dvh-56px)] flex items-center justify-center px-4">
@@ -50,8 +53,8 @@ export default async function PrihlaseniPage({ searchParams }: PageProps) {
         </div>
 
         {/* Login card */}
-        <div className="glass-card p-6 space-y-5">
-          <EmailLoginForm redirectTo={redirect_to} />
+        <div className="surface-card p-6 space-y-5">
+          <EmailLoginForm redirectTo={safeRedirectTo} />
 
           <div className="flex items-center gap-3">
             <div className="flex-1 h-px bg-border" />
@@ -60,7 +63,7 @@ export default async function PrihlaseniPage({ searchParams }: PageProps) {
           </div>
 
           <p className="text-xs text-center text-muted-foreground leading-relaxed">
-            Zadej svůj školní email. Zašleme ti jednorázový odkaz pro přihlášení, nepotřebuješ žádné heslo.
+            Zadej svůj školní email. Pošleme ti jednorázový kód, který platí 10 minut.
           </p>
         </div>
 

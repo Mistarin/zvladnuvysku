@@ -2,38 +2,54 @@
 
 import { useState, useTransition } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { getSitePathUrl } from '@/lib/site-url'
 
 interface EmailLoginFormProps {
   redirectTo?: string
 }
 
+type FormStatus = 'idle' | 'loading' | 'code' | 'verifying' | 'error'
+
+function getSafeRedirect(rawRedirectTo?: string) {
+  if (!rawRedirectTo || !rawRedirectTo.startsWith('/') || rawRedirectTo.startsWith('//')) {
+    return '/'
+  }
+
+  return rawRedirectTo
+}
+
 export function EmailLoginForm({ redirectTo }: EmailLoginFormProps) {
   const [email, setEmail] = useState('')
-  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
+  const [code, setCode] = useState('')
+  const [status, setStatus] = useState<FormStatus>('idle')
   const [errorMessage, setErrorMessage] = useState('')
   const [cooldown, setCooldown] = useState(0)
   const [isPendingResend, startResendTransition] = useTransition()
 
-  const sendMagicLink = async (emailToSend: string) => {
-    const supabase = createClient()
-    // Pass redirect_to as query param so the confirm page knows where to send the user
-    const confirmUrl = getSitePathUrl(
-      redirectTo ? `/auth/confirm?redirect_to=${encodeURIComponent(redirectTo)}` : '/auth/confirm'
-    )
-    const { error } = await supabase.auth.signInWithOtp({
-      email: emailToSend,
-      options: {
-        emailRedirectTo: confirmUrl,
-      },
-    })
-    return error
+  const startCooldown = () => {
+    setCooldown(60)
+    const interval = window.setInterval(() => {
+      setCooldown((current) => {
+        if (current <= 1) {
+          window.clearInterval(interval)
+          return 0
+        }
+        return current - 1
+      })
+    }, 1000)
   }
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const sendCode = async (emailToSend: string) => {
+    const supabase = createClient()
+    return supabase.auth.signInWithOtp({
+      email: emailToSend,
+      options: { shouldCreateUser: true },
+    })
+  }
 
-    const trimmedEmail = email.trim()
+  const handleLogin = async (event: React.FormEvent) => {
+    event.preventDefault()
+
+    const trimmedEmail = email.trim().toLowerCase()
     if (!trimmedEmail) return
 
     if (!trimmedEmail.endsWith('@osu.cz')) {
@@ -43,79 +59,132 @@ export function EmailLoginForm({ redirectTo }: EmailLoginFormProps) {
     }
 
     setStatus('loading')
-    const error = await sendMagicLink(trimmedEmail)
+    setErrorMessage('')
+    const { error } = await sendCode(trimmedEmail)
 
     if (error) {
       console.error(error)
       setStatus('error')
       setErrorMessage(error.message.includes('rate_limit')
         ? 'Příliš mnoho pokusů. Zkus to prosím znovu za chvíli.'
-        : 'Nepodařilo se odeslat email. Zkus to znovu.')
-    } else {
-      setStatus('success')
-      // Start 60s cooldown for resend
-      setCooldown(60)
-      const interval = setInterval(() => {
-        setCooldown((c) => {
-          if (c <= 1) { clearInterval(interval); return 0; }
-          return c - 1
-        })
-      }, 1000)
+        : 'Nepodařilo se odeslat kód. Zkus to znovu.')
+      return
     }
+
+    setEmail(trimmedEmail)
+    setStatus('code')
+    startCooldown()
+  }
+
+  const handleVerify = async (event: React.FormEvent) => {
+    event.preventDefault()
+
+    const normalizedCode = code.replace(/\D/g, '').slice(0, 6)
+    if (normalizedCode.length !== 6) {
+      setStatus('error')
+      setErrorMessage('Zadej šestimístný kód z emailu.')
+      return
+    }
+
+    setStatus('verifying')
+    setErrorMessage('')
+    const supabase = createClient()
+    const { error } = await supabase.auth.verifyOtp({
+      email,
+      token: normalizedCode,
+      type: 'email',
+    })
+
+    if (error) {
+      setStatus('error')
+      setErrorMessage(error.message.includes('expired')
+        ? 'Kód vypršel. Pošli si nový kód.'
+        : 'Kód není platný. Zkontroluj ho a zkus to znovu.')
+      return
+    }
+
+    window.location.assign(getSafeRedirect(redirectTo))
   }
 
   const handleResend = () => {
     if (cooldown > 0 || isPendingResend) return
+
     startResendTransition(async () => {
-      const trimmedEmail = email.trim()
-      const error = await sendMagicLink(trimmedEmail)
-      if (!error) {
-        setCooldown(60)
-        const interval = setInterval(() => {
-          setCooldown((c) => {
-            if (c <= 1) { clearInterval(interval); return 0; }
-            return c - 1
-          })
-        }, 1000)
+      const { error } = await sendCode(email)
+      if (error) {
+        setStatus('error')
+        setErrorMessage(error.message.includes('rate_limit')
+          ? 'Příliš mnoho pokusů. Zkus to prosím znovu za chvíli.'
+          : 'Nepodařilo se odeslat kód. Zkus to znovu.')
+        return
       }
+
+      setStatus('code')
+      setCode('')
+      startCooldown()
     })
   }
 
-  if (status === 'success') {
+  if (status === 'code' || status === 'verifying' || (status === 'error' && email && code)) {
     return (
-      <div className="text-center py-4 space-y-4">
-        <div className="w-12 h-12 rounded-full bg-emerald-500/10 text-emerald-500 flex items-center justify-center text-2xl mx-auto mb-2">
-          ✉️
+      <form onSubmit={handleVerify} className="space-y-4">
+        <div className="space-y-2">
+          <label htmlFor="otp-code" className="text-sm font-medium text-foreground">
+            Přihlašovací kód
+          </label>
+          <input
+            id="otp-code"
+            type="text"
+            inputMode="numeric"
+            autoComplete="one-time-code"
+            pattern="[0-9]{6}"
+            maxLength={6}
+            value={code}
+            onChange={(event) => {
+              setCode(event.target.value.replace(/\D/g, '').slice(0, 6))
+              if (status === 'error') setStatus('code')
+            }}
+            placeholder="123456"
+            className="w-full rounded-xl border border-border bg-background px-4 py-3 text-center font-mono text-xl tracking-[0.35em] text-foreground placeholder:text-muted-foreground/50 outline-none transition-colors focus:border-primary/40 focus:ring-2 focus:ring-primary/40"
+            disabled={status === 'verifying'}
+            autoFocus
+            aria-describedby="otp-hint"
+          />
+          <p id="otp-hint" className="text-xs leading-5 text-muted-foreground">
+            Kód jsme poslali na <span className="font-medium text-foreground">{email}</span>. Platí 10 minut.
+          </p>
         </div>
-        <p className="font-medium text-foreground">Odkaz odeslán!</p>
-        <p className="text-sm text-muted-foreground leading-relaxed">
-          Zkontroluj svou schránku{' '}
-          <span className="font-mono text-foreground">{email}</span>{' '}
-          a klikni na přihlašovací odkaz.
-        </p>
-        <p className="text-xs text-muted-foreground">
-          Někdy může email spadnout do spamu.
-        </p>
-        <div className="flex flex-col gap-2 pt-2">
+
+        {status === 'error' && errorMessage ? (
+          <p className="text-sm text-destructive" role="alert" aria-live="polite">{errorMessage}</p>
+        ) : null}
+
+        <button
+          type="submit"
+          disabled={status === 'verifying' || code.length !== 6}
+          className="w-full rounded-xl px-6 py-3.5 text-sm font-medium primary-action text-white transition-opacity duration-150 hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {status === 'verifying' ? 'Ověřuji kód…' : 'Potvrdit kód'}
+        </button>
+
+        <div className="flex flex-col gap-2 pt-1">
           <button
+            type="button"
             onClick={handleResend}
-            disabled={cooldown > 0 || isPendingResend}
-            className="w-full py-2 rounded-lg text-sm font-medium border border-border hover:bg-muted transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={cooldown > 0 || isPendingResend || status === 'verifying'}
+            className="w-full rounded-lg border border-border px-3 py-2 text-sm font-medium transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {isPendingResend
-              ? 'Odesílám...'
-              : cooldown > 0
-                ? `Znovu za ${cooldown}s`
-                : 'Nepřišel mi email — odeslat znovu'}
+            {isPendingResend ? 'Odesílám…' : cooldown > 0 ? `Nový kód za ${cooldown}s` : 'Poslat nový kód'}
           </button>
           <button
-            onClick={() => { setStatus('idle'); setEmail('') }}
-            className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+            type="button"
+            onClick={() => { setStatus('idle'); setEmail(''); setCode(''); setErrorMessage('') }}
+            className="text-xs text-muted-foreground transition-colors hover:text-foreground"
           >
             Zadat jiný email
           </button>
         </div>
-      </div>
+      </form>
     )
   }
 
@@ -125,42 +194,33 @@ export function EmailLoginForm({ redirectTo }: EmailLoginFormProps) {
         <label htmlFor="email" className="text-sm font-medium text-foreground">
           Školní email
         </label>
-        <div className="relative">
-          <input
-            id="email"
-            type="email"
-            required
-            autoComplete="email"
-            inputMode="email"
-            value={email}
-            onChange={(e) => {
-              setEmail(e.target.value)
-              if (status === 'error') setStatus('idle')
-            }}
-            placeholder="jmeno.prijmeni@osu.cz"
-            className="w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/40 focus:border-primary/40 outline-none transition-all"
-            disabled={status === 'loading'}
-          />
-        </div>
+        <input
+          id="email"
+          type="email"
+          required
+          autoComplete="email"
+          inputMode="email"
+          value={email}
+          onChange={(event) => {
+            setEmail(event.target.value)
+            if (status === 'error') setStatus('idle')
+          }}
+          placeholder="jmeno.prijmeni@osu.cz"
+          className="w-full rounded-xl border border-border bg-background px-4 py-3 text-foreground placeholder:text-muted-foreground outline-none transition-colors focus:border-primary/40 focus:ring-2 focus:ring-primary/40"
+          disabled={status === 'loading'}
+        />
       </div>
 
-      {status === 'error' && (
+      {status === 'error' && errorMessage ? (
         <p className="text-sm text-destructive" role="alert" aria-live="polite">{errorMessage}</p>
-      )}
+      ) : null}
 
       <button
         type="submit"
         disabled={status === 'loading' || !email.trim()}
-        className="w-full flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl font-medium text-sm accent-gradient text-white hover:opacity-90 transition-all duration-150 disabled:opacity-60 disabled:cursor-not-allowed"
+        className="flex w-full items-center justify-center gap-2 rounded-xl px-6 py-3.5 text-sm font-medium primary-action text-white transition-opacity duration-150 hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
       >
-        {status === 'loading' ? (
-          <>
-            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-            <span>Odesílám...</span>
-          </>
-        ) : (
-          <span>Odeslat přihlašovací odkaz</span>
-        )}
+        {status === 'loading' ? 'Odesílám kód…' : 'Odeslat přihlašovací kód'}
       </button>
     </form>
   )

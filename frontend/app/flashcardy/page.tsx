@@ -9,6 +9,7 @@ import { BookOpen, Layers } from "lucide-react";
 import { DeleteDeckButton } from "@/components/flashcard/delete-deck-button";
 import { DeckOwnerToolbar } from "@/components/flashcard/deck-owner-toolbar";
 import { getSharePath } from "@/lib/share-links";
+import { escapePostgrestText } from "@/lib/safe-query";
 
 interface PageProps {
   searchParams: Promise<{
@@ -105,8 +106,8 @@ async function PublicDeckListSection({ query }: { query: string }) {
 
   if (decks.length === 0) {
     return (
-      <div className="glass-card rounded-2xl p-10 text-center space-y-3">
-        <p className="text-4xl">🃏</p>
+      <div className="surface-card rounded-2xl p-10 text-center space-y-3">
+        <p className="text-4xl"></p>
         <p className="text-lg font-semibold text-foreground">Žádné balíčky</p>
         <p className="text-sm text-muted-foreground">
           {query ? "Pro zadaný dotaz jsme nic nenašli." : "Zatím tu nejsou žádné veřejné balíčky."}
@@ -123,7 +124,7 @@ async function PublicDeckListSection({ query }: { query: string }) {
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
       {decks.map((deck) => (
-        <div key={deck.id} className="group block rounded-xl p-5 transition-all glass-card hover-card">
+        <div key={deck.id} className="group block rounded-xl p-5 transition-colors surface-card interactive-surface">
           <div className="flex items-start justify-between gap-3">
             <Link href={`/flashcardy/${deck.id}`} className="min-w-0 flex-1 space-y-1">
               <h2 className="font-semibold leading-snug text-foreground transition-colors group-hover:text-[var(--accent-color)]">
@@ -162,7 +163,7 @@ async function PublicDeckListSection({ query }: { query: string }) {
 
             <div className="flex items-center justify-between pt-3 text-xs text-muted-foreground">
               <span>
-                🃏 {deck.card_count} {deck.card_count === 1 ? "karta" : deck.card_count >= 2 && deck.card_count <= 4 ? "karty" : "karet"}
+                 {deck.card_count} {deck.card_count === 1 ? "karta" : deck.card_count >= 2 && deck.card_count <= 4 ? "karty" : "karet"}
               </span>
               {deck.subject && (
                 <span className="ui-accent-badge rounded px-1.5 py-0.5 font-mono">
@@ -197,7 +198,8 @@ async function MyDecksSection({
     .eq("creator_id", userId);
 
   if (mineQuery) {
-    myDecksQuery = myDecksQuery.or(`title.ilike.%${mineQuery}%,description.ilike.%${mineQuery}%`);
+    const safeQuery = escapePostgrestText(mineQuery);
+    myDecksQuery = myDecksQuery.or(`title.ilike.%${safeQuery}%,description.ilike.%${safeQuery}%`);
   }
   if (mineVisibility === "public") {
     myDecksQuery = myDecksQuery.eq("is_public", true);
@@ -222,7 +224,7 @@ async function MyDecksSection({
   const totalCardCount = myDecks.reduce((sum, deck) => sum + deck.card_count, 0);
 
   return (
-    <section id="moje-balicky" className="mb-10 space-y-4 rounded-[2rem] border border-white/5 bg-card/40 backdrop-blur-md p-6 shadow-sm scroll-mt-24">
+    <section id="moje-balicky" className="mb-10 space-y-4 rounded-lg border border-white/5 bg-card/40  p-6  scroll-mt-24">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h2 className="text-xl font-bold text-foreground">Moje balíčky</h2>
@@ -245,19 +247,19 @@ async function MyDecksSection({
       </div>
 
       <form className="grid gap-3 rounded-2xl border border-white/5 bg-background/50 p-4 md:grid-cols-[minmax(0,1fr)_180px_180px_auto]">
-        <input type="text" name="mine_q" defaultValue={mineQuery} placeholder="Hledat v mých balíčcích..." className="w-full rounded-xl border border-white/5 bg-background shadow-inner px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20" />
-        <select name="mine_visibility" defaultValue={mineVisibility} className="w-full rounded-xl border border-white/5 bg-background shadow-inner px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20">
+        <input type="text" name="mine_q" defaultValue={mineQuery} placeholder="Hledat v mých balíčcích..." className="w-full rounded-xl border border-white/5 bg-background  px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20" />
+        <select name="mine_visibility" defaultValue={mineVisibility} className="w-full rounded-xl border border-white/5 bg-background  px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20">
           <option value="all">Všechny</option>
           <option value="public">Jen veřejné</option>
           <option value="private">Jen soukromé</option>
         </select>
-        <select name="mine_sort" defaultValue={mineSort} className="w-full rounded-xl border border-white/5 bg-background shadow-inner px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20">
+        <select name="mine_sort" defaultValue={mineSort} className="w-full rounded-xl border border-white/5 bg-background  px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20">
           <option value="updated">Naposledy upravené</option>
           <option value="created">Nejnovější</option>
           <option value="cards">Nejvíc karet</option>
           <option value="title">A-Z</option>
         </select>
-        <button type="submit" className="rounded-xl border border-white/5 bg-card/60 shadow-inner px-5 py-3 text-sm font-medium text-foreground hover:bg-muted/50 transition-all">
+        <button type="submit" className="rounded-xl border border-white/5 bg-card/60  px-5 py-3 text-sm font-medium text-foreground hover:bg-muted/50 transition-colors">
           Filtrovat
         </button>
         {query && <input type="hidden" name="q" value={query} />}
@@ -266,7 +268,7 @@ async function MyDecksSection({
       {myDecks.length > 0 ? (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           {myDecks.map((deck) => (
-            <div key={deck.id} className="rounded-2xl border border-white/5 bg-background/50 p-6 shadow-sm transition-all hover:-translate-y-1 hover:shadow-md hover:border-primary/40 hover:bg-muted/30 group">
+            <div key={deck.id} className="rounded-2xl border border-white/5 bg-background/50 p-6  transition-colors  hover: hover:border-primary/40 hover:bg-muted/30 group">
               <div className="flex items-start justify-between gap-3">
                 <Link href={`/flashcardy/${deck.id}`} className="min-w-0 flex-1">
                   <h3 className="font-semibold text-foreground">{deck.title}</h3>
@@ -283,7 +285,7 @@ async function MyDecksSection({
                       className="px-2 py-1 text-[11px] sm:text-xs"
                     />
                   )}
-                  <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${deck.is_public ? "bg-emerald-500/10 text-emerald-600" : "bg-muted text-muted-foreground"}`}>
+                  <span className={`rounded-md px-2 py-0.5 text-[11px] font-semibold ${deck.is_public ? "bg-emerald-500/10 text-emerald-600" : "bg-muted text-muted-foreground"}`}>
                     {deck.is_public ? "Veřejný" : "Soukromý"}
                   </span>
                 </div>
@@ -291,8 +293,8 @@ async function MyDecksSection({
               <Link href={`/flashcardy/${deck.id}`} className="mt-3 block">
                 {deck.description && <p className="line-clamp-2 text-sm text-muted-foreground">{deck.description}</p>}
                 <div className="mt-4 flex items-center justify-between text-xs text-muted-foreground">
-                  <span>🃏 {deck.card_count} {deck.card_count === 1 ? "karta" : deck.card_count >= 2 && deck.card_count <= 4 ? "karty" : "karet"}</span>
-                  <span>Otevřít →</span>
+                  <span> {deck.card_count} {deck.card_count === 1 ? "karta" : deck.card_count >= 2 && deck.card_count <= 4 ? "karty" : "karet"}</span>
+                  <span>Otevřít </span>
                 </div>
               </Link>
               <div className="mt-4 space-y-3 border-t border-white/5 pt-4">
@@ -303,7 +305,7 @@ async function MyDecksSection({
           ))}
         </div>
       ) : (
-        <div className="rounded-[1.5rem] border-2 border-dashed border-white/10 px-4 py-8 text-center text-sm text-muted-foreground">
+        <div className="rounded-lg border-2 border-dashed border-white/10 px-4 py-8 text-center text-sm text-muted-foreground">
           V tomto filtru nemáš žádné balíčky.
         </div>
       )}
@@ -313,7 +315,7 @@ async function MyDecksSection({
 
 function StatCard({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-2xl border border-white/5 bg-background/50 shadow-sm px-5 py-4">
+    <div className="rounded-2xl border border-white/5 bg-background/50  px-5 py-4">
       <p className="text-xs uppercase tracking-wide text-muted-foreground">{label}</p>
       <p className="mt-1 text-2xl font-bold text-foreground">{value}</p>
     </div>
@@ -322,7 +324,7 @@ function StatCard({ label, value }: { label: string; value: string }) {
 
 function DeckDashboardSkeleton() {
   return (
-    <section className="mb-10 space-y-4 rounded-[2rem] border border-white/5 bg-card/40 backdrop-blur-md p-6 shadow-sm">
+    <section className="mb-10 space-y-4 rounded-lg border border-white/5 bg-card/40  p-6 ">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div className="space-y-2">
           <div className="h-6 w-40 animate-pulse rounded bg-muted" />
@@ -332,7 +334,7 @@ function DeckDashboardSkeleton() {
       </div>
       <div className="grid gap-3 sm:grid-cols-3">
         {Array.from({ length: 3 }).map((_, index) => (
-          <div key={index} className="rounded-2xl border border-white/5 bg-background/50 shadow-sm px-5 py-4">
+          <div key={index} className="rounded-2xl border border-white/5 bg-background/50  px-5 py-4">
             <div className="h-4 w-24 animate-pulse rounded bg-muted" />
             <div className="mt-2 h-8 w-16 animate-pulse rounded bg-muted" />
           </div>
@@ -346,7 +348,7 @@ function PublicDeckListSkeleton() {
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
       {Array.from({ length: 6 }).map((_, index) => (
-        <div key={index} className="glass-card rounded-xl p-5">
+        <div key={index} className="surface-card rounded-xl p-5">
           <div className="h-5 w-2/3 animate-pulse rounded bg-muted" />
           <div className="mt-2 h-4 w-1/2 animate-pulse rounded bg-muted" />
           <div className="mt-3 h-4 w-full animate-pulse rounded bg-muted" />

@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { headers } from 'next/headers'
 import { createClient } from '@/lib/supabase/server'
 import type { Feedback } from '@/lib/types/database'
+import { escapeEmailHtml, sendBrevoEmail } from '@/lib/brevo'
 
 type SubmitFeedbackInput = {
   type: Feedback['type']
@@ -54,7 +55,7 @@ export async function submitFeedback(input: SubmitFeedbackInput): Promise<Action
       data: { user },
     } = await supabase.auth.getUser()
 
-    // Rate limiting — check before hitting the database
+    // Rate limiting … check before hitting the database
     if (user) {
       // Authenticated: 10 per hour per user
       if (!checkRateLimit(`user:${user.id}`, 10, 60 * 60 * 1000)) {
@@ -81,6 +82,27 @@ export async function submitFeedback(input: SubmitFeedbackInput): Promise<Action
 
     if (error) {
       return { success: false, error: `Nepodařilo se odeslat zprávu: ${error.message}` }
+    }
+
+    const senderLabel = user?.email ?? 'anonymní návštěvník'
+    const sourceLabel = input.sourceLabel?.trim() || 'Obecný feedback'
+    const safeMessage = escapeEmailHtml(message).replace(/\n/g, '<br>')
+    const safeSender = escapeEmailHtml(senderLabel)
+    const safeSource = escapeEmailHtml(sourceLabel)
+
+    try {
+      await sendBrevoEmail({
+        subject: `[ZvládnuVýšku] Nový feedback: ${sourceLabel}`,
+        htmlContent: `
+          <h2>Nový feedback</h2>
+          <p><strong>Zdroj:</strong> ${safeSource}</p>
+          <p><strong>Odesílatel:</strong> ${safeSender}</p>
+          <p>${safeMessage}</p>
+        `,
+        textContent: `Nový feedback\n\nZdroj: ${sourceLabel}\nOdesílatel: ${senderLabel}\n\n${message}`,
+      })
+    } catch (notificationError) {
+      console.error('Brevo feedback notification failed:', notificationError)
     }
 
     revalidatePath('/admin')

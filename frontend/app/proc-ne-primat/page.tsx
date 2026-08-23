@@ -2,71 +2,61 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Proč ne Primát? | ZvládnuVýšku",
+  title: "Co nabízí ZvládnuVýšku? | ZvládnuVýšku",
   description:
-    "Proč je ZvládnuVýšku lepší volba pro studenty Ostravské univerzity než staré materiálové portály.",
+    "Přehled funkcí ZvládnuVýšku pro studenty Ostravské univerzity.",
 };
 
 const PILLARS = [
   {
     title: "Od pasivního stahování k aktivnímu učení",
-    text: "Místo pouhého sběru PDF dává ZvládnuVýšku studentům i interaktivní kartičky se spaced repetition. Od materiálu se tak během pár vteřin dostaneš rovnou k procvičování.",
+    text: "Ke každému materiálu můžeš navázat interaktivní kartičky se spaced repetition a procvičovat látku hned po čtení.",
   },
   {
-    title: "Důvěra a čistota místo komerce",
-    text: "Žádné bannery, žádné prémiové účty, žádný spam. Díky přihlášení přes školní e-mail @osu.cz a moderaci obsahu víš, že se pohybuješ mezi reálnými studenty OU.",
+    title: "Obsah s jasnými pravidly",
+    text: "Přihlášení přes školní e-mail @osu.cz a moderace obsahu pomáhají udržet komunitu spojenou s OU.",
   },
   {
     title: "Šité na míru Ostravské univerzitě",
-    text: "Platforma respektuje fakulty, vyučující i studijní realitu Ostravské univerzity. Není to anonymní skladiště všeho pro všechny, ale konkrétní studentský hub pro OU.",
+    text: "Obsah je uspořádaný podle fakult, vyučujících a předmětů Ostravské univerzity.",
   },
 ];
 
-const DRAWBACKS = [
-  "Paywally, virtuální měny nebo jiné třecí plochy mezi studentem a jedním souborem.",
-  "Přetížené rozhraní plné reklam, trackerů a rušivých prvků, které na mobilu jen překážejí.",
-  "Staré nebo duplicitní materiály bez jasné vazby na aktuální výuku a bez kvalitativního filtru.",
-  "Pouze pasivní archiv: stáhneš PDF a všechno další učení už je čistě na tobě.",
-];
-
-const ADVANTAGES = [
-  "100 % zdarma a bez podmínek. Žádné body za klikání, žádné skryté tarify.",
-  "Rychlý a čistý web bez reklam, navržený tak, aby fungoval i na mobilu bez kompromisů.",
-  "Ověřená komunita Ostravské univerzity díky přístupu přes @osu.cz a moderovaným příspěvkům.",
-  "Recenze, schválené materiály a chytré kartičky se SM-2 na jednom místě.",
+const DETAILS = [
+  "Přehledy předmětů s obtížností, docházkou, kredity a zkušenostmi studentů.",
+  "Materiály přiřazené ke konkrétním předmětům a vyučujícím.",
+  "Veřejné kartičky se spaced repetition pro průběžné procvičování.",
+  "Moderovaný obsah a přihlášení přes školní e-mail @osu.cz.",
 ];
 
 export default function ProcNePrimatPage() {
   return (
     <main className="container mx-auto max-w-5xl space-y-10 px-4 py-12 sm:px-6 lg:px-8">
-      <section className="glass-card rounded-[2rem] p-8 sm:p-12">
+      <section className="surface-card rounded-lg p-8 sm:p-12">
         <div className="max-w-3xl space-y-5">
-          <span className="inline-flex rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-primary">
-            Studentský hub OU
+          <span className="inline-flex rounded-md border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-primary">
+            Studentský hub Ostravské univerzity
           </span>
           <h1 className="text-3xl font-bold text-foreground sm:text-5xl">
-            Proč raději ZvládnuVýšku než staré materiálové portály
+            Informace, které se hodí před zápisem předmětu
           </h1>
           <p className="text-base leading-relaxed text-muted-foreground sm:text-lg">
-            ZvládnuVýšku není další pasivní archiv souborů. Je to moderní, rychlý a bezreklamní
-            studijní hub vytvořený studenty Ostravské univerzity pro studenty Ostravské univerzity.
-            Spojuje důvěryhodné recenze, schválené studijní materiály a interaktivní kartičky na
-            jednom místě.
+            ZvládnuVýšku spojuje recenze, schválené studijní materiály a interaktivní kartičky pro studenty Ostravské univerzity.
           </p>
         </div>
       </section>
 
       <section className="space-y-5">
         <div className="space-y-2">
-          <h2 className="text-2xl font-bold text-foreground sm:text-3xl">Tři pilíře, proč je ZvládnuVýšku lepší</h2>
+          <h2 className="text-2xl font-bold text-foreground sm:text-3xl">Jak web pomáhá při studiu</h2>
           <p className="text-muted-foreground">
-            Cíl není jen stáhnout si soubor, ale dostat se rychleji k pochopení látky.
+            Vyber si předmět, projdi zkušenosti ostatních a začni procvičovat.
           </p>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-2">
           {PILLARS.map((pillar, index) => (
-            <article key={pillar.title} className="glass-card rounded-[1.5rem] p-6">
+            <article key={pillar.title} className="surface-card rounded-lg p-6">
               <div className="mb-4 inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/10 text-sm font-bold text-primary">
                 0{index + 1}
               </div>
@@ -77,51 +67,26 @@ export default function ProcNePrimatPage() {
         </div>
       </section>
 
-      <section className="grid gap-5 lg:grid-cols-2">
-        <article className="rounded-[1.75rem] border border-destructive/15 bg-destructive/5 p-7">
-          <div className="space-y-3">
-            <h2 className="text-2xl font-bold text-foreground">Proč ne staré portály</h2>
-            <p className="text-sm text-muted-foreground">
-              Materiálové portály starého typu často znamenají víc tření, víc chaosu a míň skutečné hodnoty.
-            </p>
-          </div>
-          <ul className="mt-5 space-y-3">
-            {DRAWBACKS.map((item) => (
-              <li key={item} className="rounded-xl border border-destructive/10 bg-background/70 px-4 py-3 text-sm text-foreground">
-                {item}
-              </li>
-            ))}
-          </ul>
-        </article>
-
-        <article className="rounded-[1.75rem] border border-emerald-500/20 bg-emerald-500/10 p-7">
-          <div className="space-y-3">
-            <h2 className="text-2xl font-bold text-foreground">Proč raději ZvládnuVýšku</h2>
-            <p className="text-sm text-muted-foreground">
-              Všechno důležité pro studium OU na jednom místě, bez podmínek a bez rušení.
-            </p>
-          </div>
-          <ul className="mt-5 space-y-3">
-            {ADVANTAGES.map((item) => (
-              <li key={item} className="rounded-xl border border-emerald-500/15 bg-background/70 px-4 py-3 text-sm text-foreground">
-                {item}
-              </li>
-            ))}
-          </ul>
-        </article>
+      <section className="surface-card rounded-lg p-7">
+        <h2 className="text-2xl font-bold text-foreground">Co tu najdeš</h2>
+        <ul className="mt-5 grid gap-3 md:grid-cols-2">
+          {DETAILS.map((item) => (
+            <li key={item} className="border-l-2 border-primary px-4 py-3 text-sm text-foreground">
+              {item}
+            </li>
+          ))}
+        </ul>
       </section>
 
-      <section className="glass-card rounded-[1.75rem] p-8 text-center">
-        <h2 className="text-2xl font-bold text-foreground sm:text-3xl">Sečteno a podtrženo</h2>
+      <section className="surface-card rounded-lg p-8 text-center">
+        <h2 className="text-2xl font-bold text-foreground sm:text-3xl">Začni u předmětů, které řešíš</h2>
         <p className="mx-auto mt-4 max-w-3xl text-base leading-relaxed text-muted-foreground">
-          Na starých portálech ztrácíš čas i peníze. Na ZvládnuVýšku získáš obojí zpět: reálné recenze,
-          schválené studijní materiály a chytré kartičky pro Ostravskou univerzitu na jednom místě,
-          bez reklam a bez zbytečných bariér.
+          Projdi si reálné recenze, schválené materiály a kartičky pro Ostravskou univerzitu.
         </p>
         <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
           <Link
             href="/predmety"
-            className="inline-flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-semibold text-white accent-gradient hover:opacity-90"
+            className="inline-flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-semibold text-white primary-action hover:opacity-90"
           >
             Procházet předměty
           </Link>

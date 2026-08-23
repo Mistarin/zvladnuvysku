@@ -99,8 +99,8 @@ const FIELD_LABELS: Record<string, string> = {
 const SUBMIT_TIMEOUT_MS = 30000
 const MAX_PROPOSAL_MATERIALS = 8
 const sectionBodyClass = 'border-t border-border px-7 pb-7 pt-5'
-const primaryButtonClass = 'rounded-xl bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:-translate-y-0.5 hover:opacity-90'
-const secondaryButtonClass = 'rounded-xl border border-border bg-card px-6 py-2.5 text-sm font-medium text-foreground shadow-inner transition-all hover:bg-muted/50'
+const primaryButtonClass = 'rounded-xl bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground   transition-colors  hover:opacity-90'
+const secondaryButtonClass = 'rounded-xl border border-border bg-card px-6 py-2.5 text-sm font-medium text-foreground  transition-colors hover:bg-muted/50'
 const subtleButtonClass = 'rounded-lg px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground'
 const smallPrimaryButtonClass = 'rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-50'
 
@@ -130,7 +130,7 @@ function Input({ ...props }: React.InputHTMLAttributes<HTMLInputElement>) {
   return (
     <input
       {...props}
-      className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground shadow-inner outline-none transition-all placeholder:text-muted-foreground focus:border-primary/40 focus:ring-1 focus:ring-primary/40"
+      className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground  outline-none transition-colors placeholder:text-muted-foreground focus:border-primary/40 focus:ring-1 focus:ring-primary/40"
     />
   )
 }
@@ -139,7 +139,7 @@ function Select({ ...props }: React.SelectHTMLAttributes<HTMLSelectElement>) {
   return (
     <select
       {...props}
-      className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground shadow-inner outline-none transition-all focus:border-primary/40 focus:ring-1 focus:ring-primary/40"
+      className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground  outline-none transition-colors focus:border-primary/40 focus:ring-1 focus:ring-primary/40"
     />
   )
 }
@@ -149,7 +149,7 @@ function Textarea({ hint, ...props }: React.TextareaHTMLAttributes<HTMLTextAreaE
     <div>
       <textarea
         {...props}
-        className="w-full resize-none rounded-xl border border-border bg-background px-3 py-2 font-mono text-sm text-foreground shadow-inner outline-none transition-all placeholder:text-muted-foreground focus:border-primary/40 focus:ring-1 focus:ring-primary/40"
+        className="w-full resize-none rounded-xl border border-border bg-background px-3 py-2 font-mono text-sm text-foreground  outline-none transition-colors placeholder:text-muted-foreground focus:border-primary/40 focus:ring-1 focus:ring-primary/40"
       />
       {hint && <p className="text-xs text-muted-foreground mt-1">{hint}</p>}
     </div>
@@ -165,7 +165,7 @@ function normalizeDiffValue(value: string | number | boolean | null | undefined)
 
 function formatDiffValue(value: string | number | boolean | null | undefined) {
   if (typeof value === 'boolean') return value ? 'Ano' : 'Ne'
-  if (value === null || value === undefined || value === '') return '—'
+  if (value === null || value === undefined || value === '') return '…'
   return String(value)
 }
 
@@ -486,12 +486,12 @@ export function SubjectProposalForm({
     {/* WIZARD PROGRESS */}
     <div className="flex items-center justify-center mb-8 mt-2">
       <div className="flex w-full max-w-lg items-center px-4 relative">
-        <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 font-bold transition-all shadow-sm ${step >= 1 ? 'border-primary bg-primary text-primary-foreground shadow-primary/20' : 'border-white/10 bg-background text-muted-foreground'}`}>1</div>
-        <div className={`h-1.5 w-full transition-all rounded-full mx-2 ${step >= 2 ? 'bg-primary shadow-sm shadow-primary/20' : 'bg-muted'}`} />
-        <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 font-bold transition-all shadow-sm ${step >= 2 ? 'border-primary bg-primary text-primary-foreground shadow-primary/20' : 'border-white/10 bg-background text-muted-foreground'}`}>2</div>
-        <div className={`h-1.5 w-full transition-all rounded-full mx-2 ${step >= 3 ? 'bg-primary shadow-sm shadow-primary/20' : 'bg-muted'}`} />
-        <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 font-bold transition-all shadow-sm ${step >= 3 ? 'border-primary bg-primary text-primary-foreground shadow-primary/20' : 'border-white/10 bg-background text-muted-foreground'}`}>3</div>
-        
+        <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-md border-2 font-bold transition-colors  ${step >= 1 ? 'border-primary bg-primary text-primary-foreground ' : 'border-white/10 bg-background text-muted-foreground'}`}>1</div>
+        <div className={`h-1.5 w-full transition-colors rounded-md mx-2 ${step >= 2 ? 'bg-primary  ' : 'bg-muted'}`} />
+        <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-md border-2 font-bold transition-colors  ${step >= 2 ? 'border-primary bg-primary text-primary-foreground ' : 'border-white/10 bg-background text-muted-foreground'}`}>2</div>
+        <div className={`h-1.5 w-full transition-colors rounded-md mx-2 ${step >= 3 ? 'bg-primary  ' : 'bg-muted'}`} />
+        <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-md border-2 font-bold transition-colors  ${step >= 3 ? 'border-primary bg-primary text-primary-foreground ' : 'border-white/10 bg-background text-muted-foreground'}`}>3</div>
+
         <div className="absolute -bottom-6 w-full left-0 px-2 flex justify-between text-xs font-semibold text-muted-foreground">
           <span className={`w-14 text-center ${step >= 1 ? 'text-primary' : ''}`}>Základ</span>
           <span className={`w-14 text-center ${step >= 2 ? 'text-primary' : ''}`}>Detaily</span>
@@ -504,7 +504,7 @@ export function SubjectProposalForm({
       {/* STEP 1 */}
       <div className={step === 1 ? 'space-y-8 animate-fade-in' : 'hidden'}>
       {/* Typ návrhu */}
-      <div className="glass-card rounded-[1.75rem] p-7 sm:p-8 space-y-5">
+      <div className="surface-card rounded-lg p-7 sm:p-8 space-y-5">
         <div>
           <h2 className="font-semibold text-foreground">Typ návrhu</h2>
           {initialProposal ? (
@@ -532,7 +532,7 @@ export function SubjectProposalForm({
               setError(null)
               setForm(DEFAULT_FORM)
             }}
-              className={`flex-1 py-2.5 rounded-xl text-sm font-medium border transition-all ${type === v ? 'accent-gradient text-white border-transparent' : 'border-white/5 text-muted-foreground hover:text-foreground hover:bg-muted'}`}>
+              className={`flex-1 py-2.5 rounded-xl text-sm font-medium border transition-colors ${type === v ? 'primary-action text-white border-transparent' : 'border-white/5 text-muted-foreground hover:text-foreground hover:bg-muted'}`}>
               {label}
             </button>
           ))}
@@ -544,7 +544,7 @@ export function SubjectProposalForm({
             <Input placeholder="Hledej podle názvu nebo zkratky..." value={subjectId ? searchResults.find(s => s.id === subjectId)?.name ?? subjectSearch : subjectSearch}
               onChange={(e) => { setSubjectId(null); searchSubjects(e.target.value) }} />
             {searchResults.length > 0 && !subjectId && (
-              <div className="absolute z-10 w-full mt-1 rounded-xl border border-white/5 bg-popover shadow-xl overflow-hidden">
+              <div className="absolute z-10 w-full mt-1 rounded-xl border border-white/5 bg-popover  overflow-hidden">
                 {searchResults.map((s) => (
                   <button key={s.id} type="button" onClick={async () => {
                     setSubjectId(s.id)
@@ -569,7 +569,7 @@ export function SubjectProposalForm({
       </div>
 
       {/* Data předmětu */}
-      <div className="glass-card rounded-[1.75rem] p-7 sm:p-8 space-y-5">
+      <div className="surface-card rounded-lg p-7 sm:p-8 space-y-5">
         <div>
           <h2 className="font-semibold text-foreground">
             {type === 'new' ? 'Informace o předmětu' : 'Nové/opravené informace'}
@@ -611,7 +611,7 @@ export function SubjectProposalForm({
 
 
         {/* --- SEKCE: Obsah --- */}
-        <div className="glass-card rounded-[1.75rem] overflow-hidden">
+        <div className="surface-card rounded-lg overflow-hidden">
           <button
             type="button"
             onClick={() => toggleSection('obsah')}
@@ -624,7 +624,7 @@ export function SubjectProposalForm({
               </h2>
               <p className="text-xs text-muted-foreground mt-0.5">Popis, cílová skupina, reálné požadavky</p>
             </div>
-            <ChevronDown className={`h-5 w-5 shrink-0 text-muted-foreground transition-transform duration-200 ${openSections.obsah ? 'rotate-180' : ''}`} />
+            <ChevronDown className={`h-5 w-5 shrink-0 text-muted-foreground transition-colors duration-200 ${openSections.obsah ? 'rotate-180' : ''}`} />
           </button>
           {openSections.obsah && (
             <div className={`${sectionBodyClass} space-y-5`}>
@@ -652,7 +652,7 @@ export function SubjectProposalForm({
                   rows={3}
                   value={form.real_requirements}
                   onChange={(e) => set('real_requirements', e.target.value)}
-                  hint="Co ve skutečnosti potřebuješ — ne co píše syllabus."
+                  hint="Co ve skutečnosti potřebuješ … ne co píše syllabus."
                 />
               </div>
             </div>
@@ -660,7 +660,7 @@ export function SubjectProposalForm({
         </div>
 
         {/* --- SEKCE: Parametry --- */}
-        <div className="glass-card rounded-[1.75rem] overflow-hidden">
+        <div className="surface-card rounded-lg overflow-hidden">
           <button
             type="button"
             onClick={() => toggleSection('parametry')}
@@ -673,7 +673,7 @@ export function SubjectProposalForm({
               </h2>
               <p className="text-xs text-muted-foreground mt-0.5">Obtížnost, kredity, semestr, docházka</p>
             </div>
-            <ChevronDown className={`h-5 w-5 shrink-0 text-muted-foreground transition-transform duration-200 ${openSections.parametry ? 'rotate-180' : ''}`} />
+            <ChevronDown className={`h-5 w-5 shrink-0 text-muted-foreground transition-colors duration-200 ${openSections.parametry ? 'rotate-180' : ''}`} />
           </button>
           {openSections.parametry && (
             <div className={`${sectionBodyClass} space-y-5`}>
@@ -716,7 +716,7 @@ export function SubjectProposalForm({
                       onChange={(e) => set('exam_from_home', e.target.checked)}
                       className="peer sr-only"
                     />
-                    <span className="flex h-10 w-full items-center rounded-xl border border-white/5 bg-background px-3 text-sm text-foreground shadow-inner transition-all hover:bg-muted/50 peer-checked:border-emerald-500/40 peer-checked:bg-emerald-500/10 peer-checked:text-emerald-700 dark:peer-checked:text-emerald-400">
+                    <span className="flex h-10 w-full items-center rounded-xl border border-white/5 bg-background px-3 text-sm text-foreground  transition-colors hover:bg-muted/50 peer-checked:border-emerald-500/40 peer-checked:bg-emerald-500/10 peer-checked:text-emerald-700 dark:peer-checked:text-emerald-400">
                       Povolit zkoušku z domova
                     </span>
                   </label>
@@ -748,7 +748,7 @@ export function SubjectProposalForm({
         </div>
 
         {/* --- SEKCE: Vyučující --- */}
-        <div className="glass-card rounded-[1.75rem] overflow-hidden">
+        <div className="surface-card rounded-lg overflow-hidden">
           <button
             type="button"
             onClick={() => toggleSection('ucitele')}
@@ -760,7 +760,7 @@ export function SubjectProposalForm({
                   <Users className="h-4 w-4 text-primary" />
                   Vyučující
                   {selectedTeachers.length > 0 && (
-                    <span className="ml-1 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-primary/15 px-1.5 text-[11px] font-bold text-primary">
+                    <span className="ml-1 inline-flex h-5 min-w-5 items-center justify-center rounded-md bg-primary/15 px-1.5 text-[11px] font-bold text-primary">
                       {selectedTeachers.length}
                     </span>
                   )}
@@ -768,7 +768,7 @@ export function SubjectProposalForm({
                 <p className="text-xs text-muted-foreground mt-0.5">Vyučující předmětu</p>
               </div>
             </div>
-            <ChevronDown className={`h-5 w-5 shrink-0 text-muted-foreground transition-transform duration-200 ${openSections.ucitele ? 'rotate-180' : ''}`} />
+            <ChevronDown className={`h-5 w-5 shrink-0 text-muted-foreground transition-colors duration-200 ${openSections.ucitele ? 'rotate-180' : ''}`} />
           </button>
           {openSections.ucitele && (
             <div className={`${sectionBodyClass} space-y-3`}>
@@ -796,7 +796,7 @@ export function SubjectProposalForm({
                   onChange={(e) => searchTeachers(e.target.value)}
                 />
                 {teacherSearchResults.length > 0 && !isAddingNewTeacher && (
-                  <div className="absolute z-10 w-full mt-1 rounded-xl border border-white/5 bg-popover shadow-xl overflow-hidden">
+                  <div className="absolute z-10 w-full mt-1 rounded-xl border border-white/5 bg-popover  overflow-hidden">
                     {teacherSearchResults.map((t) => (
                       <button
                         key={t.id}
@@ -882,7 +882,7 @@ export function SubjectProposalForm({
                       />
                       {/* Custom dropdown instead of native datalist (datalist + React = unreliable) */}
                       {showDeptDropdown && teacherDepartmentOptions.length > 0 && (
-                        <div className="absolute left-0 right-0 top-full mt-1 z-20 rounded-xl border border-white/5 bg-popover shadow-xl max-h-44 overflow-y-auto">
+                        <div className="absolute left-0 right-0 top-full mt-1 z-20 rounded-xl border border-white/5 bg-popover  max-h-44 overflow-y-auto">
                           {teacherDepartmentOptions
                             .filter((d) => !newTeacherDepartment || d.toLowerCase().includes(newTeacherDepartment.toLowerCase()))
                             .map((dept) => (
@@ -959,7 +959,7 @@ export function SubjectProposalForm({
       <div className={step === 3 ? 'space-y-8 animate-fade-in' : 'hidden'}>
       {/* Materiály a Odeslání */}
       {type === 'edit' && subjectId && (
-        <div className="glass-card p-6 space-y-4">
+        <div className="surface-card p-6 space-y-4">
           <div>
             <h2 className="font-semibold text-foreground">Náhled změn</h2>
             <p className="text-xs text-muted-foreground mt-0.5">
@@ -1006,12 +1006,12 @@ export function SubjectProposalForm({
       )}
 
       {/* Materiály */}
-      <div className="glass-card p-6 space-y-4">
+      <div className="surface-card p-6 space-y-4">
         <div>
           <h2 className="font-semibold text-foreground">Studijní materiály</h2>
           <p className="text-xs text-muted-foreground mt-0.5">Volitelně nahraj PDF materiály (výpisky, testy) pro tento předmět.</p>
         </div>
-        
+
         <div className="space-y-3">
           <input
             type="file"
@@ -1049,9 +1049,9 @@ export function SubjectProposalForm({
               }
             }}
           />
-          <label 
+          <label
             htmlFor="proposal-materials-upload"
-            className="inline-flex items-center justify-center w-full px-4 py-6 border-2 border-dashed border-white/10 rounded-[1.5rem] bg-card/30 cursor-pointer hover:bg-muted/50 hover:border-primary/50 transition-colors"
+            className="inline-flex items-center justify-center w-full px-4 py-6 border-2 border-dashed border-white/10 rounded-lg bg-card/30 cursor-pointer hover:bg-muted/50 hover:border-primary/50 transition-colors"
           >
             <div className="text-center">
               <FileText className="mx-auto h-8 w-8 text-muted-foreground" />
@@ -1078,14 +1078,14 @@ export function SubjectProposalForm({
           {materials.length > 0 && (
             <div className="space-y-2 mt-4">
               {materials.map((item) => (
-                <div key={item.id} className="rounded-xl bg-card/60 backdrop-blur-md border border-white/5 p-4 text-sm space-y-3 shadow-sm">
+                <div key={item.id} className="rounded-xl bg-card/60  border border-white/5 p-4 text-sm space-y-3 ">
                   <div className="flex items-center justify-between gap-3">
                     <div className="flex items-center gap-2 truncate">
                       <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
                       <span className="truncate">{item.file.name}</span>
                       <span className="text-muted-foreground text-xs">({(item.file.size / 1024 / 1024).toFixed(1)} MB)</span>
                     </div>
-                    <button 
+                    <button
                       type="button"
                       onClick={() => setMaterials(prev => prev.filter((current) => current.id !== item.id))}
                       className="text-muted-foreground hover:text-destructive p-1"
@@ -1117,7 +1117,7 @@ export function SubjectProposalForm({
       </div>
 
       {/* Poznámka moderátorovi */}
-      <div className="glass-card p-6 space-y-3">
+      <div className="surface-card p-6 space-y-3">
         <h2 className="font-semibold text-foreground">Poznámka pro moderátora</h2>
         <Textarea placeholder="Proč navrhuješ tuto změnu, kde jsi informace zjistil/a..." rows={3}
           value={form.note} onChange={(e) => set('note', e.target.value)} />
@@ -1145,9 +1145,9 @@ export function SubjectProposalForm({
           setStep(2)
           window.scrollTo({ top: 0, behavior: 'smooth' })
         }} className={secondaryButtonClass}>Zpět</button>
-        
+
         <button type="submit" disabled={isSubmitting}
-          className="flex-1 py-3 rounded-xl font-bold text-sm accent-gradient text-white shadow-lg shadow-primary/20 hover:opacity-90 hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+          className="flex-1 py-3 rounded-xl font-bold text-sm primary-action text-white   hover:opacity-90  transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
           {isSubmitting ? 'Odesílám...' : 'Odeslat návrh'}
         </button>
       </div>

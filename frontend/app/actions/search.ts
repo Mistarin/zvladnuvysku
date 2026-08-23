@@ -2,6 +2,7 @@
 
 import { unstable_cache } from 'next/cache'
 import { createPublicServerClient } from '@/lib/supabase/public-server'
+import { escapePostgrestText } from '@/lib/safe-query'
 import {
   searchApprovedMaterials,
   searchMaterialDirectory,
@@ -32,7 +33,7 @@ const getCachedFlashcardDeckSearch = unstable_cache(
       .limit(8)
 
     if (normalizedQuery.length >= 1) {
-      request = request.ilike('title', `%${normalizedQuery}%`)
+      request = request.ilike('title', `%${escapePostgrestText(normalizedQuery)}%`)
     }
 
     const { data } = await request

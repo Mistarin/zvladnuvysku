@@ -48,19 +48,19 @@ export function RatingApprovalCard({ rating }: RatingApprovalCardProps) {
   const isWorking = isApproving || isRejecting;
 
   return (
-    <div className="glass-card p-5 space-y-4">
+    <div className="surface-card p-5 space-y-4">
       <div className="flex justify-between items-start gap-4">
         <div>
           <div className="flex items-center gap-2">
             <span className="text-xl">
-              {rating.type === "subject" ? "📚" : "👨‍🏫"}
+              {rating.type === "subject" ? "" : "‍"}
             </span>
             <h3 className="font-bold text-lg text-foreground">
               {rating.targetName}
             </h3>
             {rating.overall_rating && (
               <span className="text-amber-500 font-bold ml-2">
-                {rating.overall_rating}/5 ★
+                {rating.overall_rating}/5
               </span>
             )}
           </div>

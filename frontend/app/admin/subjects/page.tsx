@@ -7,7 +7,7 @@ import { ShieldAlert } from 'lucide-react'
 import Link from 'next/link'
 
 export const metadata: Metadata = {
-  title: 'Správa předmětů — Admin',
+  title: 'Správa předmětů … Admin',
 }
 
 export default async function AdminSubjectsPage() {

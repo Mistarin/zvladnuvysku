@@ -107,13 +107,13 @@ export function MaterialManagementCard({
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+          <span className="rounded-md bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
             {previewPoints} body
           </span>
-          <span className="rounded-full bg-muted px-3 py-1 text-xs text-muted-foreground">
+          <span className="rounded-md bg-muted px-3 py-1 text-xs text-muted-foreground">
             {pointsMode === "auto" ? "automaticky podle stran" : "ručně přepsáno"}
           </span>
-          <span className="rounded-full bg-muted px-3 py-1 text-xs text-muted-foreground">
+          <span className="rounded-md bg-muted px-3 py-1 text-xs text-muted-foreground">
             {material.moderation_status === "approved"
               ? "schváleno"
               : material.moderation_status === "rejected"
@@ -153,7 +153,7 @@ export function MaterialManagementCard({
                   key={option.value}
                   type="button"
                   onClick={() => setPointsMode(option.value as "auto" | "1" | "2" | "3" | "4")}
-                  className={`rounded-full border px-3 py-2 text-sm transition-colors ${
+                  className={`rounded-md border px-3 py-2 text-sm transition-colors ${
                     active
                       ? "border-primary bg-primary/10 text-primary"
                       : "border-border bg-background text-muted-foreground hover:bg-muted hover:text-foreground"
@@ -192,11 +192,11 @@ export function MaterialManagementCard({
           rel="noreferrer"
           className="font-medium text-primary hover:underline"
         >
-          Otevřít PDF ↗
+          Otevřít PDF
         </a>
         {subjectSlug && (
           <Link href={`/predmety/${subjectSlug}`} className="text-muted-foreground hover:text-foreground">
-            Detail předmětu →
+            Detail předmětu
           </Link>
         )}
       </div>

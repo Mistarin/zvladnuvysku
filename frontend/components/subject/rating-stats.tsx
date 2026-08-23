@@ -15,7 +15,7 @@ function StarDisplay({ value }: { value: number | null | undefined }) {
           key={star}
           className={`text-lg ${star <= filled ? 'text-yellow-400' : 'text-muted-foreground/30'}`}
         >
-          ★
+
         </span>
       ))}
     </div>
@@ -41,13 +41,13 @@ function SubMetricBar({
       <div className="flex justify-between items-center text-xs">
         <span className="text-muted-foreground font-medium">{label}</span>
         <span className="font-bold text-foreground">
-          {hasValue ? safeValue.toFixed(1) : '—'}
+          {hasValue ? safeValue.toFixed(1) : '…'}
         </span>
       </div>
-      <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+      <div className="h-1.5 rounded-md bg-muted overflow-hidden">
         <div
-          className={`h-full rounded-full transition-all ${
-            hasValue ? 'accent-gradient' : 'bg-muted-foreground/10'
+          className={`h-full rounded-md transition-colors ${
+            hasValue ? 'primary-action' : 'bg-muted-foreground/10'
           }`}
           style={{ width: `${pct}%` }}
         />
@@ -63,8 +63,8 @@ function SubMetricBar({
 export function RatingStats({ stats, totalRatings }: RatingStatsProps) {
   if (!stats || totalRatings === 0) {
     return (
-      <div className="glass-card p-8 text-center space-y-3">
-        <div className="text-4xl animate-pulse">🌟</div>
+      <div className="surface-card p-8 text-center space-y-3">
+        <div className="text-4xl animate-pulse"></div>
         <h3 className="text-lg font-bold text-foreground">Zatím nehodnoceno</h3>
         <p className="text-muted-foreground text-sm max-w-sm mx-auto leading-relaxed">
           Staň se průkopníkem! Tvé hodnocení může zachránit (nebo uklidnit) další studenty. Zabere to jen minutku.
@@ -76,7 +76,7 @@ export function RatingStats({ stats, totalRatings }: RatingStatsProps) {
   const avgOverall = stats.avg_overall ?? 0
 
   return (
-    <div className="glass-card p-6 space-y-5">
+    <div className="surface-card p-6 space-y-5">
       {/* Overall */}
       <div className="flex flex-wrap items-center gap-4">
         <div className="text-4xl font-bold text-foreground">

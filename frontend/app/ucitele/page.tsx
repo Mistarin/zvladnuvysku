@@ -107,7 +107,7 @@ async function TeachersListSection({
 function TeachersListSkeleton() {
   return (
     <div className="space-y-6">
-      <div className="rounded-2xl border border-border bg-card/90 p-4 shadow-sm">
+      <div className="rounded-2xl border border-border bg-card/90 p-4 ">
         <div className="h-11 animate-pulse rounded-2xl bg-muted" />
       </div>
       <div className="rounded-xl border border-border">

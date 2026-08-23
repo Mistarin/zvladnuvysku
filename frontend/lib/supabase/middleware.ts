@@ -12,6 +12,10 @@ export async function updateSession(request: NextRequest) {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
+        cookieOptions: {
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax',
+        },
         getAll() {
           return request.cookies.getAll()
         },
@@ -41,7 +45,7 @@ export async function updateSession(request: NextRequest) {
     !request.nextUrl.pathname.startsWith('/prihlaseni') &&
     !request.nextUrl.pathname.startsWith('/auth')
   ) {
-    // Chráněné stránky přesměrujeme na login (zatím žádné — vše veřejné pro čtení)
+    // Chráněné stránky přesměrujeme na login. Zatím jsou všechny veřejné pro čtení.
     // Uncomment pro chráněné routy:
     // const url = request.nextUrl.clone()
     // url.pathname = '/prihlaseni'

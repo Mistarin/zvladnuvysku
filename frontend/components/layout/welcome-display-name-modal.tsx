@@ -4,7 +4,7 @@ import { useEffect, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import * as Dialog from '@radix-ui/react-dialog'
-import { AlertTriangle, ArrowLeft, Check, Loader2, ShieldCheck, Sparkles } from 'lucide-react'
+import { AlertTriangle, ArrowLeft, Check, Loader2, ShieldCheck } from 'lucide-react'
 import { upsertPublicProfileIdentity } from '@/app/actions/hall-of-fame'
 import { FACULTIES } from '@/lib/faculties'
 import { hasAcceptedCurrentLegalVersion } from '@/lib/legal-consent'
@@ -197,12 +197,12 @@ export function WelcomeDisplayNameModal({
   return (
     <Dialog.Root open={isOpen} onOpenChange={setOpen}>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm animate-in fade-in" />
-        <Dialog.Content className="fixed left-[50%] top-[50%] z-50 w-[calc(100vw-2rem)] max-w-xl translate-x-[-50%] translate-y-[-50%] rounded-2xl border border-border bg-card p-6 shadow-xl animate-in fade-in zoom-in-95">
+        <Dialog.Overlay className="fixed inset-0 z-50 bg-background/80  animate-in fade-in" />
+        <Dialog.Content className="fixed left-[50%] top-[50%] z-50 w-[calc(100vw-2rem)] max-w-xl translate-x-[-50%] translate-y-[-50%] rounded-2xl border border-border bg-card p-6  animate-in fade-in zoom-in-95">
           <div className="space-y-5">
             <div className="flex items-center justify-between gap-4">
               <div className="inline-flex size-11 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-                <Sparkles className="size-5" />
+                <ShieldCheck className="size-5" />
               </div>
               <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                 <span className={step === 1 ? 'text-primary' : undefined}>1. Jméno</span>
@@ -247,7 +247,7 @@ export function WelcomeDisplayNameModal({
                     placeholder="Např. Jana z FSS"
                     maxLength={40}
                     autoFocus
-                    className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none transition-all focus:border-primary/40 focus:ring-2 focus:ring-primary/30"
+                    className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none transition-colors focus:border-primary/40 focus:ring-2 focus:ring-primary/30"
                   />
                   <p className="text-xs text-muted-foreground">
                     2 až 40 znaků. Nemusí být unikátní.
@@ -276,7 +276,7 @@ export function WelcomeDisplayNameModal({
                         }
                         setError(null)
                       }}
-                      className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none transition-all focus:border-primary/40 focus:ring-2 focus:ring-primary/30"
+                      className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none transition-colors focus:border-primary/40 focus:ring-2 focus:ring-primary/30"
                     >
                       <option value="">Vyber fakultu</option>
                       {FACULTIES.map((item) => (
@@ -299,7 +299,7 @@ export function WelcomeDisplayNameModal({
                         setSecondaryFaculty(event.target.value as typeof secondaryFaculty)
                         setError(null)
                       }}
-                      className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none transition-all focus:border-primary/40 focus:ring-2 focus:ring-primary/30"
+                      className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none transition-colors focus:border-primary/40 focus:ring-2 focus:ring-primary/30"
                     >
                       <option value="">Bez druhé fakulty</option>
                       {FACULTIES.filter((item) => item.value !== faculty).map((item) => (
@@ -317,7 +317,7 @@ export function WelcomeDisplayNameModal({
               ) : (
                 <div className="space-y-4">
                   <div className="rounded-2xl border border-border bg-background/70 p-4 text-sm leading-6 text-muted-foreground">
-                    V kostce: na web nepatří osobní útoky, falešné recenze, doxxing ani materiály, ke
+                    Na web nepatří osobní útoky, falešné recenze, doxxing ani materiály, ke
                     kterým nemáš právo sdílení. Tvoje anonymní recenze zůstávají anonymní vůči veřejnosti,
                     ale při řešení zneužití je umíme interně dohledat.
                   </div>

@@ -31,7 +31,7 @@ export function PublicProfileActivityTabs({ subjectComments, teacherReviews, isO
 
   return (
     <section className="space-y-4">
-      <div className="flex flex-wrap gap-2 rounded-2xl bg-[#0f1728] p-2">
+      <div className="flex flex-wrap gap-2 rounded-lg border border-border bg-card p-2">
         <TabButton
           active={activeTab === 'subject-comments'}
           label={`Komentáře k předmětům (${subjectComments.length})`}
@@ -45,17 +45,17 @@ export function PublicProfileActivityTabs({ subjectComments, teacherReviews, isO
       </div>
 
       {activeTab === 'subject-comments' ? (
-        <div className="divide-y divide-white/8 rounded-2xl bg-[#0b1120]">
+        <div className="divide-y divide-border rounded-lg border border-border bg-card">
           {subjectComments.length > 0 ? (
             subjectComments.map((comment) => (
               <div key={comment.id} className="space-y-2 px-4 py-4 sm:px-5">
                 <div className="flex items-center justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold text-slate-50">{comment.subject?.name ?? 'Předmět'}</p>
+                    <p className="truncate text-sm font-semibold text-foreground">{comment.subject?.name ?? 'Předmět'}</p>
                     {comment.subject ? (
                       <Link
                         href={`/predmety/${comment.subject.slug}`}
-                        className="mt-1 block text-xs text-slate-400 transition-colors hover:text-slate-100"
+                        className="mt-1 block text-xs text-muted-foreground transition-colors hover:text-foreground"
                       >
                         {comment.subject.short_tag}
                       </Link>
@@ -63,12 +63,12 @@ export function PublicProfileActivityTabs({ subjectComments, teacherReviews, isO
                   </div>
                   <div className="flex items-center gap-2">
                     {comment.is_anonymous && isOwnProfile ? (
-                      <span className="rounded-md bg-[#111827] px-1.5 py-0.5 text-[10px] font-medium text-slate-400">anon</span>
+                      <span className="rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">anon</span>
                     ) : null}
-                    <span className="text-sm font-semibold text-amber-300">{comment.overall}/5</span>
+                    <span className="text-sm font-semibold text-primary">{comment.overall}/5</span>
                   </div>
                 </div>
-                <p className="whitespace-pre-wrap text-sm leading-relaxed text-slate-200">{comment.comment}</p>
+                <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground/80">{comment.comment}</p>
               </div>
             ))
           ) : (
@@ -76,17 +76,17 @@ export function PublicProfileActivityTabs({ subjectComments, teacherReviews, isO
           )}
         </div>
       ) : (
-        <div className="divide-y divide-white/8 rounded-2xl bg-[#0b1120]">
+        <div className="divide-y divide-border rounded-lg border border-border bg-card">
           {teacherReviews.length > 0 ? (
             teacherReviews.map((review) => (
               <div key={review.id} className="space-y-2 px-4 py-4 sm:px-5">
                 <div className="flex items-center justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold text-slate-50">{review.teacher?.name ?? 'Vyučující'}</p>
+                    <p className="truncate text-sm font-semibold text-foreground">{review.teacher?.name ?? 'Vyučující'}</p>
                     {review.teacher ? (
                       <Link
                         href={getTeacherPath(review.teacher.slug)}
-                        className="mt-1 block text-xs text-slate-400 transition-colors hover:text-slate-100"
+                        className="mt-1 block text-xs text-muted-foreground transition-colors hover:text-foreground"
                       >
                         Detail vyučujícího
                       </Link>
@@ -94,12 +94,12 @@ export function PublicProfileActivityTabs({ subjectComments, teacherReviews, isO
                   </div>
                   <div className="flex items-center gap-2">
                     {review.is_anonymous && isOwnProfile ? (
-                      <span className="rounded-md bg-[#111827] px-1.5 py-0.5 text-[10px] font-medium text-slate-400">anon</span>
+                      <span className="rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">anon</span>
                     ) : null}
-                    {review.rating ? <span className="text-sm font-semibold text-amber-300">{review.rating}/5</span> : null}
+                    {review.rating ? <span className="text-sm font-semibold text-primary">{review.rating}/5</span> : null}
                   </div>
                 </div>
-                {review.review ? <p className="whitespace-pre-wrap text-sm leading-relaxed text-slate-200">{review.review}</p> : null}
+                {review.review ? <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground/80">{review.review}</p> : null}
               </div>
             ))
           ) : (
@@ -118,8 +118,8 @@ function TabButton({ active, label, onClick }: { active: boolean; label: string;
       onClick={onClick}
       className={
         active
-          ? 'rounded-xl bg-[#2a3344] px-4 py-2 text-sm font-medium text-slate-50'
-          : 'rounded-xl px-4 py-2 text-sm font-medium text-slate-400 transition-colors hover:bg-white/[0.03] hover:text-slate-100'
+          ? 'rounded-lg bg-muted px-4 py-2 text-sm font-medium text-foreground'
+          : 'rounded-lg px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground'
       }
     >
       {label}
@@ -128,5 +128,5 @@ function TabButton({ active, label, onClick }: { active: boolean; label: string;
 }
 
 function EmptyState({ text }: { text: string }) {
-  return <div className="px-4 py-8 text-center text-sm text-slate-400 sm:px-5">{text}</div>
+  return <div className="px-4 py-8 text-center text-sm text-muted-foreground sm:px-5">{text}</div>
 }

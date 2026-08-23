@@ -37,7 +37,7 @@ NEXT_PUBLIC_GA_MEASUREMENT_ID
 
 `NEXT_PUBLIC_SITE_URL` nastav v produkci na hlavní adresu webu, například `https://zvladnuvysku.cz`. Hodnota `NEXT_PUBLIC_VERCEL_URL` slouží jako fallback pro preview deploymenty.
 
-Po vytvoření Vercel projektu nastav v Supabase Dashboard → Authentication → URL Configuration:
+Po vytvoření Vercel projektu nastav v Supabase Dashboard  Authentication  URL Configuration:
 
 - **Site URL:** produkční adresa webu
 - **Redirect URLs:** `http://localhost:3000/**`, produkční adresa s `/**` a preview vzor pro Vercel, například `https://*-team-slug.vercel.app/**`

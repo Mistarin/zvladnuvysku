@@ -48,10 +48,10 @@ export function FeedbackButton() {
 
   return (
     <>
-      {/* FAB — safe-area-inset-bottom for iPhones with gesture bar */}
+      {/* FAB … safe-area-inset-bottom for iPhones with gesture bar */}
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed z-50 flex items-center justify-center w-12 h-12 rounded-full accent-gradient text-white shadow-xl hover:scale-105 transition-transform"
+        className="fixed z-50 flex items-center justify-center w-12 h-12 rounded-md primary-action text-white   transition-colors"
         style={{
           bottom: "calc(1.5rem + env(safe-area-inset-bottom, 0px))",
           right: "1.5rem",
@@ -64,13 +64,13 @@ export function FeedbackButton() {
       </button>
 
       {isOpen && (
-        /* Modal — flex-start so keyboard doesn't cover textarea on mobile */
+        /* Modal … flex-start so keyboard doesn't cover textarea on mobile */
         <div
-          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-background/80 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-background/80 "
           onClick={(e) => { if (e.target === e.currentTarget) handleClose(); }}
         >
-          <div className="w-full sm:max-w-md bg-card border border-border rounded-t-2xl sm:rounded-xl shadow-2xl p-6 animate-slide-up sm:animate-scale-in relative max-h-[90dvh] overflow-y-auto">
-            {/* Close button — proper touch target */}
+          <div className="w-full sm:max-w-md bg-card border border-border rounded-t-2xl sm:rounded-xl  p-6  sm: relative max-h-[90dvh] overflow-y-auto">
+            {/* Close button … proper touch target */}
             <button
               onClick={handleClose}
               className="absolute top-3 right-3 p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
@@ -83,7 +83,7 @@ export function FeedbackButton() {
 
             {success ? (
               <div className="text-center py-8 text-emerald-500 space-y-2">
-                <div className="text-4xl">✨</div>
+                <div className="text-4xl"></div>
                 <p className="font-medium">Díky za zprávu!</p>
               </div>
             ) : (
@@ -116,7 +116,7 @@ export function FeedbackButton() {
                 <button
                   type="submit"
                   disabled={isPending || !message.trim()}
-                  className="w-full py-2.5 rounded-xl font-medium text-sm accent-gradient text-white hover:opacity-90 disabled:opacity-50 transition-all"
+                  className="w-full py-2.5 rounded-xl font-medium text-sm primary-action text-white hover:opacity-90 disabled:opacity-50 transition-colors"
                 >
                   {isPending ? "Odesílám..." : "Odeslat administrátorovi"}
                 </button>

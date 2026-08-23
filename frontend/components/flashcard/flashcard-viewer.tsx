@@ -80,15 +80,15 @@ export function FlashcardViewer({
           <span>Otázka {currentIndex + 1} z {totalCards}</span>
           <span>{Math.round(progress)}%</span>
         </div>
-        <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
+        <div className="w-full h-1.5 bg-muted rounded-md overflow-hidden">
           <div
-            className="h-full accent-gradient rounded-full transition-all duration-500"
+            className="h-full primary-action rounded-md transition-colors duration-500"
             style={{ width: `${progress}%` }}
           />
         </div>
       </div>
 
-      <div className="w-full glass-card rounded-2xl shadow-lg p-6 sm:p-8 space-y-6">
+      <div className="w-full surface-card rounded-2xl  p-6 sm:p-8 space-y-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <span className="text-xs font-semibold text-primary/70 uppercase tracking-wider">
             {getQuestionTypeTitle(question)}
@@ -121,7 +121,7 @@ export function FlashcardViewer({
               <div className="text-center space-y-4">
                 <button
                   onClick={revealClassic}
-                  className="px-6 py-3 rounded-xl font-medium accent-gradient text-white hover:opacity-90 transition-all"
+                  className="px-6 py-3 rounded-xl font-medium primary-action text-white hover:opacity-90 transition-colors"
                 >
                   Otočit kartičku
                 </button>
@@ -156,7 +156,7 @@ export function FlashcardViewer({
                           : [...prev, option.id]
                       )
                     }}
-                    className={`w-full text-left px-4 py-3 rounded-xl border transition-all ${
+                    className={`w-full text-left px-4 py-3 rounded-xl border transition-colors ${
                       isCorrectOption
                         ? 'border-primary bg-primary/10 text-primary'
                         : isWrongSelected
@@ -178,7 +178,7 @@ export function FlashcardViewer({
                   type="button"
                   disabled={selectedOptionIds.length === 0}
                   onClick={() => setStage('revealed')}
-                  className="px-5 py-2.5 rounded-xl font-medium accent-gradient text-white disabled:opacity-50"
+                  className="px-5 py-2.5 rounded-xl font-medium primary-action text-white disabled:opacity-50"
                 >
                   Zkontrolovat odpověď
                 </button>
@@ -204,7 +204,7 @@ export function FlashcardViewer({
                   setYesNoSelection(true)
                   setStage('revealed')
                 }}
-                className={`px-4 py-4 rounded-xl border text-sm font-medium transition-all ${
+                className={`px-4 py-4 rounded-xl border text-sm font-medium transition-colors ${
                   yesNoSelection === true ? 'border-primary bg-primary/10 text-primary' : 'border-border bg-background hover:bg-muted'
                 }`}
               >
@@ -217,7 +217,7 @@ export function FlashcardViewer({
                   setYesNoSelection(false)
                   setStage('revealed')
                 }}
-                className={`px-4 py-4 rounded-xl border text-sm font-medium transition-all ${
+                className={`px-4 py-4 rounded-xl border text-sm font-medium transition-colors ${
                   yesNoSelection === false ? 'border-primary bg-primary/10 text-primary' : 'border-border bg-background hover:bg-muted'
                 }`}
               >
@@ -252,7 +252,7 @@ export function FlashcardViewer({
                   <button
                     type="button"
                     onClick={() => setStage('revealed')}
-                    className="px-5 py-2.5 rounded-xl font-medium accent-gradient text-white"
+                    className="px-5 py-2.5 rounded-xl font-medium primary-action text-white"
                   >
                     Zobrazit řešení
                   </button>
@@ -269,12 +269,12 @@ export function FlashcardViewer({
       </div>
 
       {(stage === 'rating' || (question.question_type === 'classic_flashcard' && stage === 'revealed')) && (
-        <div className="w-full animate-slide-up">
+        <div className="w-full ">
           <p className="text-center text-sm text-muted-foreground mb-3">Jak ti to šlo?</p>
           <div className="grid grid-cols-3 gap-3">
-            <RatingButton emoji="😕" label="Nevím" shortcut="1" onClick={() => onRate(1)} tone="danger" />
-            <RatingButton emoji="🤔" label="Skoro" shortcut="2" onClick={() => onRate(3)} tone="warning" />
-            <RatingButton emoji="✅" label="Znám" shortcut="3" onClick={() => onRate(5)} tone="success" />
+            <RatingButton emoji="" label="Nevím" shortcut="1" onClick={() => onRate(1)} tone="danger" />
+            <RatingButton emoji="" label="Skoro" shortcut="2" onClick={() => onRate(3)} tone="warning" />
+            <RatingButton emoji="" label="Znám" shortcut="3" onClick={() => onRate(5)} tone="success" />
           </div>
         </div>
       )}
@@ -370,7 +370,7 @@ function RatingButton({
   return (
     <button
       onClick={onClick}
-      className={`flex flex-col items-center gap-1 px-4 py-3 rounded-xl border-2 transition-all active:scale-95 font-medium ${toneClasses}`}
+      className={`flex flex-col items-center gap-1 px-4 py-3 rounded-xl border-2 transition-colors active:scale-95 font-medium ${toneClasses}`}
     >
       <span className="text-lg">{emoji}</span>
       <span className="text-sm">{label}</span>

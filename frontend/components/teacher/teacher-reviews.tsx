@@ -21,7 +21,7 @@ export async function TeacherReviews({ teacherId }: { teacherId: string }) {
 
   if (!reviews || reviews.length === 0) {
     return (
-      <div className="text-center py-8 glass-card">
+      <div className="text-center py-8 surface-card">
         <p className="text-muted-foreground">Tento vyučující zatím nemá žádné recenze.</p>
         <p className="text-sm text-muted-foreground mt-1">Buďte první!</p>
       </div>
@@ -37,7 +37,7 @@ export async function TeacherReviews({ teacherId }: { teacherId: string }) {
   return (
     <div className="space-y-4">
       {typedReviews.map((review) => (
-        <div key={review.id} className="glass-card p-5">
+        <div key={review.id} className="surface-card p-5">
           <div className="flex justify-between items-start mb-3">
             <div className="space-y-2 min-w-0">
               <div className="flex gap-1">
@@ -46,7 +46,7 @@ export async function TeacherReviews({ teacherId }: { teacherId: string }) {
                     key={star}
                     className={star <= review.rating ? "text-yellow-400" : "text-muted opacity-40 grayscale"}
                   >
-                    ⭐
+
                   </span>
                 ))}
               </div>

@@ -9,7 +9,7 @@ import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/types/database";
 
 export const metadata: Metadata = {
-  title: "Správa materiálů — Admin",
+  title: "Správa materiálů … Admin",
 };
 
 type ManagedMaterial = Database["public"]["Tables"]["subject_materials"]["Row"] & {
@@ -60,11 +60,11 @@ export default async function AdminMaterialsPage(props: {
     .limit(200);
 
   if (status !== "all") {
-    request = request.eq("moderation_status", status);
+    request = request.eq("moderation_status" as never, status);
   }
 
   const { data } = await request;
-  let materials = (data ?? []) as ManagedMaterial[];
+  let materials = (data ?? []) as unknown as ManagedMaterial[];
 
   const userSummaries = await getPublicUserSummaryMap(
     materials.map((material) => material.uploader_id),
@@ -110,15 +110,15 @@ export default async function AdminMaterialsPage(props: {
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">
-        <div className="rounded-2xl border border-white/5 bg-card/40 backdrop-blur-md p-5 shadow-sm">
+        <div className="rounded-2xl border border-white/5 bg-card/40  p-5 ">
           <p className="text-sm text-muted-foreground">Zobrazené materiály</p>
           <p className="mt-2 text-2xl font-semibold text-foreground">{materials.length}</p>
         </div>
-        <div className="rounded-2xl border border-white/5 bg-card/40 backdrop-blur-md p-5 shadow-sm">
+        <div className="rounded-2xl border border-white/5 bg-card/40  p-5 ">
           <p className="text-sm text-muted-foreground">Bez bodů</p>
           <p className="mt-2 text-2xl font-semibold text-foreground">{materialsWithMissingScoring}</p>
         </div>
-        <div className="rounded-2xl border border-white/5 bg-card/40 backdrop-blur-md p-5 shadow-sm">
+        <div className="rounded-2xl border border-white/5 bg-card/40  p-5 ">
           <p className="text-sm text-muted-foreground">Aktivní filtr</p>
           <p className="mt-2 text-lg font-semibold text-foreground">
             {STATUS_FILTERS.find((item) => item.key === status)?.label ?? "Schválené"}
@@ -126,7 +126,7 @@ export default async function AdminMaterialsPage(props: {
         </div>
       </div>
 
-      <div className="space-y-4 rounded-[2rem] border border-white/5 bg-card/40 backdrop-blur-md p-6 shadow-sm">
+      <div className="space-y-4 rounded-lg border border-white/5 bg-card/40  p-6 ">
         <div className="flex flex-wrap gap-2">
           {STATUS_FILTERS.map((item) => {
             const params = new URLSearchParams();
@@ -139,10 +139,10 @@ export default async function AdminMaterialsPage(props: {
               <Link
                 key={item.key}
                 href={href}
-                className={`inline-flex items-center rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${
+                className={`inline-flex items-center rounded-md border px-3 py-1.5 text-sm font-medium transition-colors ${
                   active
                     ? "border-primary bg-primary/10 text-primary"
-                    : "border-white/5 bg-background shadow-inner text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+                    : "border-white/5 bg-background  text-muted-foreground hover:bg-muted/50 hover:text-foreground"
                 }`}
               >
                 {item.label}
@@ -157,12 +157,12 @@ export default async function AdminMaterialsPage(props: {
             name="q"
             defaultValue={query}
             placeholder="Hledat podle názvu materiálu, předmětu nebo uživatele..."
-            className="w-full rounded-xl border border-white/5 bg-background shadow-inner px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+            className="w-full rounded-xl border border-white/5 bg-background  px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20"
           />
           {status !== "approved" && <input type="hidden" name="status" value={status} />}
           <button
             type="submit"
-            className="rounded-xl border border-white/5 bg-card/60 shadow-inner px-5 py-3 text-sm font-medium text-foreground hover:bg-muted/50 transition-all"
+            className="rounded-xl border border-white/5 bg-card/60  px-5 py-3 text-sm font-medium text-foreground hover:bg-muted/50 transition-colors"
           >
             Filtrovat
           </button>
@@ -182,7 +182,7 @@ export default async function AdminMaterialsPage(props: {
           ))}
         </div>
       ) : (
-        <div className="rounded-[1.5rem] border-2 border-dashed border-white/10 bg-background/40 px-4 py-10 text-center text-sm text-muted-foreground">
+        <div className="rounded-lg border-2 border-dashed border-white/10 bg-background/40 px-4 py-10 text-center text-sm text-muted-foreground">
           Pro tenhle filtr jsme nenašli žádné materiály.
         </div>
       )}

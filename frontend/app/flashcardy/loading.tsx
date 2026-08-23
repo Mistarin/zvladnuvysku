@@ -16,7 +16,7 @@ export default function FlashcardsPageLoading() {
         </div>
         <div className="h-12 w-full animate-pulse rounded-2xl bg-muted" />
       </div>
-      <div className="mb-10 rounded-[2rem] border border-white/5 bg-card/40 backdrop-blur-md p-6">
+      <div className="mb-10 rounded-lg border border-white/5 bg-card/40  p-6">
         <div className="grid gap-3 sm:grid-cols-3">
           {Array.from({ length: 3 }).map((_, index) => (
             <div key={index} className="h-24 animate-pulse rounded-xl bg-muted" />

@@ -109,8 +109,8 @@ export function MaterialGroupCard({
     <div
       className={
         dashboardSurface
-          ? 'overflow-hidden rounded-[24px] border border-border bg-card shadow-[0_8px_24px_rgba(17,24,39,0.06)]'
-          : 'glass-card overflow-hidden'
+          ? 'overflow-hidden rounded-lg border border-border bg-card '
+          : 'surface-card overflow-hidden'
       }
     >
       {/* Header */}
@@ -139,13 +139,13 @@ export function MaterialGroupCard({
           <div className="mb-2 flex flex-wrap items-center gap-1.5 sm:hidden">
             {group.subject.difficulty ? <DifficultyBadge difficulty={group.subject.difficulty} size="sm" /> : null}
             {group.subject.avg_subject_rating ? (
-              <span className="rounded-full border border-[#F6B73C]/25 bg-[#F6B73C]/12 px-2 py-0.5 text-[10px] font-medium text-[#F6B73C]">
-                Předmět {group.subject.avg_subject_rating.toFixed(1)} ★
+              <span className="rounded-md border border-[#F6B73C]/25 bg-[#F6B73C]/12 px-2 py-0.5 text-[10px] font-medium text-[#F6B73C]">
+                Předmět {group.subject.avg_subject_rating.toFixed(1)}
               </span>
             ) : null}
             {group.subject.avg_teacher_rating ? (
-              <span className="rounded-full border border-primary/15 bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
-                Učitel {group.subject.avg_teacher_rating.toFixed(1)} ★
+              <span className="rounded-md border border-primary/15 bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
+                Učitel {group.subject.avg_teacher_rating.toFixed(1)}
               </span>
             ) : null}
           </div>
@@ -160,7 +160,7 @@ export function MaterialGroupCard({
                 value={editTitle}
                 onChange={e => setEditTitle(e.target.value)}
                 onKeyDown={e => { if (e.key === 'Enter') handleRename(); if (e.key === 'Escape') setIsEditing(false) }}
-                className="flex-1 rounded-lg border border-border bg-background px-2 py-1 text-sm text-foreground shadow-inner outline-none focus:ring-2 focus:ring-primary/20"
+                className="flex-1 rounded-lg border border-border bg-background px-2 py-1 text-sm text-foreground  outline-none focus:ring-2 focus:ring-primary/20"
                 autoFocus
                 disabled={isPending}
                 maxLength={120}
@@ -256,20 +256,20 @@ export function MaterialGroupCard({
                       <div className="mt-1 flex flex-wrap items-center gap-1.5 sm:hidden">
                         {group.subject.difficulty ? <DifficultyBadge difficulty={group.subject.difficulty} size="sm" /> : null}
                         {group.subject.avg_subject_rating ? (
-                          <span className="rounded-full border border-[#F6B73C]/25 bg-[#F6B73C]/12 px-2 py-0.5 text-[10px] font-medium text-[#F6B73C]">
-                            Předmět {group.subject.avg_subject_rating.toFixed(1)} ★
+                          <span className="rounded-md border border-[#F6B73C]/25 bg-[#F6B73C]/12 px-2 py-0.5 text-[10px] font-medium text-[#F6B73C]">
+                            Předmět {group.subject.avg_subject_rating.toFixed(1)}
                           </span>
                         ) : null}
                         {group.subject.avg_teacher_rating ? (
-                          <span className="rounded-full border border-primary/15 bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
-                            Učitel {group.subject.avg_teacher_rating.toFixed(1)} ★
+                          <span className="rounded-md border border-primary/15 bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
+                            Učitel {group.subject.avg_teacher_rating.toFixed(1)}
                           </span>
                         ) : null}
                       </div>
                     ) : null}
                   </div>
                 </a>
-                <span className={`text-xs px-2 py-0.5 rounded-full shrink-0 ${
+                <span className={`text-xs px-2 py-0.5 rounded-md shrink-0 ${
                   material.moderation_status === 'approved'
                     ? 'bg-[#70C96B]/12 text-[#70C96B]'
                     : material.moderation_status === 'rejected'

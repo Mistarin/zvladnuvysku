@@ -1,5 +1,5 @@
 /**
- * Subject cache — singleton, jeden fetch na celou browser session.
+ * Subject cache: singleton, jeden fetch na celou browser session.
  */
 
 import { getSubjectSearchCache } from '@/app/actions/contributions'
@@ -13,7 +13,7 @@ export interface SubjectCacheEntry {
   difficulty: number | null
   credits: number | null
   semester: string | null
-  /** Předpočítané lowercase pro rychlé porovnání — bez síťové zátěže */
+  /** Předpočítané lowercase pro rychlé porovnání bez síťové zátěže */
   _nameLower: string
   _tagLower: string
 }
@@ -68,12 +68,12 @@ export function invalidateSubjectCache() {
  * Volej jen pokud je cache již načtena (viz getSubjectCache()).
  *
  * Scoring (nižší = lepší):
- *   0 — přesná shoda zkratky
- *   1 — zkratka začíná dotazem
- *   2 — název začíná dotazem
- *   3 — zkratka obsahuje dotaz
- *   4 — název obsahuje dotaz
- *   jinak — vyřazen
+ *   0: přesná shoda zkratky
+ *   1: zkratka začíná dotazem
+ *   2: název začíná dotazem
+ *   3: zkratka obsahuje dotaz
+ *   4: název obsahuje dotaz
+ *   jinak: vyřazen
  */
 export function searchInCache(
   entries: SubjectCacheEntry[],

@@ -111,7 +111,7 @@ export function ProfileSubjectContributions({
   return (
     <div className="space-y-6 xl:col-span-2">
       {subjectOptions.length > 1 ? (
-        <div className="flex flex-col gap-4 rounded-[24px] border border-border bg-card p-4 shadow-[0_8px_24px_rgba(17,24,39,0.06)]">
+        <div className="flex flex-col gap-4 rounded-lg border border-border bg-card p-4 ">
           <div className="space-y-1">
             <p className="text-sm font-semibold text-foreground">Filtrovat podle předmětu</p>
             <p className="text-xs text-muted-foreground">Příspěvky rozdělené podle předmětů, do kterých uživatel něco přidal.</p>
@@ -123,11 +123,11 @@ export function ProfileSubjectContributions({
               className="flex w-full items-center justify-between gap-3 rounded-xl border border-border bg-background px-3 py-2.5 text-left text-sm text-foreground transition-colors hover:border-primary/30 focus:border-primary/50 focus:outline-none focus:ring-1 focus:ring-primary/30"
             >
               <span className="truncate">{activeSubjectLabel}</span>
-              <ChevronDown className={`size-4 shrink-0 text-muted-foreground transition-transform ${filterOpen ? 'rotate-180' : ''}`} />
+              <ChevronDown className={`size-4 shrink-0 text-muted-foreground transition-colors ${filterOpen ? 'rotate-180' : ''}`} />
             </button>
 
             {filterOpen ? (
-              <div className="absolute left-0 top-[calc(100%+0.6rem)] z-20 w-full rounded-2xl border border-border bg-card p-2 shadow-[0_20px_48px_rgba(17,24,39,0.16)]">
+              <div className="absolute left-0 top-[calc(100%+0.6rem)] z-20 w-full rounded-2xl border border-border bg-card p-2 ">
                 <div className="flex items-center gap-2 rounded-xl border border-border bg-background px-3 py-2">
                   <Search className="size-4 text-muted-foreground" />
                   <input
@@ -358,7 +358,7 @@ function ProfileContributionSection({
       {items.length > 0 ? (
         <div className="divide-y divide-border rounded-2xl bg-card px-5">{items}</div>
       ) : (
-        <div className="rounded-[22px] border border-dashed border-border bg-background/50 px-4 py-8 text-center text-sm text-muted-foreground">
+        <div className="rounded-lg border border-dashed border-border bg-background/50 px-4 py-8 text-center text-sm text-muted-foreground">
           {empty}
         </div>
       )}

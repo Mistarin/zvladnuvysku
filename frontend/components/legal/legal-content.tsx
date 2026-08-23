@@ -43,7 +43,7 @@ export function LegalCard({
   children: ReactNode;
 }) {
   return (
-    <section className="glass-card rounded-[1.5rem] p-6 sm:p-8">
+    <section className="surface-card rounded-lg p-6 sm:p-8">
       <div className="space-y-4">
         <h2 className="text-xl font-semibold text-foreground">{title}</h2>
         <div className="space-y-4 text-sm leading-7 text-[color:var(--text-normal)] sm:text-[15px]">
@@ -85,7 +85,7 @@ export function LegalTable({
   rows: ReactNode[][];
 }) {
   return (
-    <div className="overflow-x-auto rounded-[1.25rem] border border-border">
+    <div className="overflow-x-auto rounded-lg border border-border">
       <table className="min-w-full divide-y divide-border text-left text-sm">
         <thead className="bg-muted/70">
           <tr>

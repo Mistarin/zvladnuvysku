@@ -41,7 +41,7 @@ export function SearchBar({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  
+
   const handleFocus = () => {
     if (isSoundEnabled) {
       const audio = new Audio('/sounds/swipe-confirm2.mp3');
@@ -57,11 +57,11 @@ export function SearchBar({
   return (
     <div
       className={`
-        search-bar-container relative flex w-full items-center rounded-2xl border border-border/80 bg-card/90 shadow-sm
+        search-bar-container relative flex w-full items-center rounded-2xl border border-border/80 bg-card/90
         transition-[border-color,box-shadow,background-color] duration-200
         ${
           isFocused
-            ? "ring-1 shadow-md search-bar-focused"
+            ? "ring-1  search-bar-focused"
             : "hover:border-border hover:bg-card"
         }
         ${className ?? ""}

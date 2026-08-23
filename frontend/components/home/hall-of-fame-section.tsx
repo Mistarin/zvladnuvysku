@@ -60,7 +60,7 @@ export function HallOfFameSection({
                 <h2 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
                   Nejaktivnější studenti komunity
                 </h2>
-                <div className="mx-auto mt-3 h-1 w-18 rounded-full bg-primary/85" />
+                <div className="mx-auto mt-3 h-1 w-18 rounded-md bg-primary/85" />
                 <p className="mt-2 text-sm leading-6 text-muted-foreground sm:text-base">
                   Veřejný žebříček studentů, kteří nejvíc pomáhají ostatním sdílením
                   kartiček, studijních materiálů, vyučujících a návrhů předmětů.
@@ -70,7 +70,7 @@ export function HallOfFameSection({
           </div>
 
           {entries.length === 0 ? (
-            <div className="rounded-[2rem] border-2 border-dashed border-border bg-[var(--surface-soft)] px-6 py-12 text-center">
+            <div className="rounded-lg border-2 border-dashed border-border bg-[var(--surface-soft)] px-6 py-12 text-center">
               <p className="text-lg font-semibold text-foreground">
                 Zatím tu nejsou žádní přispěvatelé za toto období.
               </p>
@@ -81,7 +81,7 @@ export function HallOfFameSection({
           ) : (
             <div className="space-y-4">
               <div className="flex justify-center pb-2">
-                <div className="inline-flex w-full max-w-sm rounded-[1.5rem] border border-border bg-background/80 p-1 shadow-inner">
+                <div className="inline-flex w-full max-w-sm rounded-lg border border-border bg-background/80 p-1 ">
                   {(["week", "month", "all"] as HallOfFamePeriod[]).map((key) => (
                     <button
                       key={key}
@@ -90,7 +90,7 @@ export function HallOfFameSection({
                       className={cn(
                         "flex-1 rounded-xl px-4 py-2 text-sm font-medium transition-colors",
                         period === key
-                          ? "bg-secondary text-foreground shadow-sm"
+                          ? "bg-secondary text-foreground "
                           : "text-muted-foreground hover:text-foreground"
                       )}
                     >
@@ -99,7 +99,7 @@ export function HallOfFameSection({
                   ))}
                 </div>
               </div>
-              {/* Podium — top 3 */}
+              {/* Podium … top 3 */}
               {top3.length > 0 && (
                 <PodiumSection entries={top3} />
               )}
@@ -115,7 +115,7 @@ export function HallOfFameSection({
             </div>
           )}
 
-          <div className="rounded-[1.6rem] border border-border bg-background/80 p-5 shadow-sm sm:p-6">
+          <div className="rounded-lg border border-border bg-background/80 p-5  sm:p-6">
             {isLoggedIn ? (
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
@@ -209,21 +209,18 @@ function PodiumColumn({
   sizeClass: string;
   isFirst: boolean;
 }) {
-  const medalMeta: Record<number, { gradient: string; ring: string; pill: string; icon: React.ReactNode }> = {
+  const medalMeta: Record<number, { ring: string; pill: string; icon: React.ReactNode }> = {
     1: {
-      gradient: "from-[#F0D48A] via-[#D9A93D] to-[#B9770E]",
       ring: "ring-1 ring-[#D9A93D]/35",
       pill: "bg-white/18 text-white",
       icon: <Trophy className="size-5 text-white" />,
     },
     2: {
-      gradient: "from-[#E7ECF3] via-[#B9C4D3] to-[#8E9AAF]",
       ring: "ring-1 ring-[#A9B4C4]/40",
       pill: "bg-white/16 text-white/95",
       icon: <Trophy className="size-4 text-white/95" />,
     },
     3: {
-      gradient: "from-[#D8A57D] via-[#B97845] to-[#8F522A]",
       ring: "ring-1 ring-[#B97845]/35",
       pill: "bg-white/14 text-white/95",
       icon: <Trophy className="size-4 text-white/95" />,
@@ -246,13 +243,13 @@ function PodiumColumn({
       <p className={`${sizeClass} font-bold text-foreground dark:text-card-foreground`}>{entry.total_score}</p>
       {/* Podium block */}
       <div
-        className={`flex w-full ${heightClass} flex-col items-center justify-start gap-1 rounded-t-[1.4rem] bg-gradient-to-b ${appearance.gradient} pt-3 shadow-[0_18px_34px_-24px_rgba(15,23,42,0.65)] ${appearance.ring}`}
+        className={`flex w-full ${heightClass} flex-col items-center justify-start gap-1 rounded-t-lg bg-card pt-3 ${appearance.ring}`}
       >
         {/* Medal icon */}
         <div className="flex items-center justify-center">
           {appearance.icon}
         </div>
-        <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold tracking-[0.14em] ${appearance.pill}`}>#{rank}</span>
+        <span className={`rounded-md px-2 py-0.5 text-[10px] font-bold tracking-[0.14em] ${appearance.pill}`}>#{rank}</span>
       </div>
       {/* Pills */}
       <div className="mt-1 flex flex-wrap justify-center gap-1">
@@ -271,7 +268,7 @@ function LeaderboardRow({ entry, index }: { entry: HallOfFameRow; index: number 
   return (
     <Link
       href={getPublicProfilePath(entry.user_id)}
-      className="flex items-center gap-4 rounded-2xl border border-border bg-background/50 px-4 py-3 shadow-sm transition-all hover:border-primary/40 hover:-translate-y-1 hover:shadow-md hover:bg-background/80"
+      className="flex items-center gap-4 rounded-2xl border border-border bg-background/50 px-4 py-3  transition-colors hover:border-primary/40  hover: hover:bg-background/80"
     >
       <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-sm font-semibold text-primary">
         #{index + 1}
@@ -293,7 +290,7 @@ function LeaderboardRow({ entry, index }: { entry: HallOfFameRow; index: number 
 
 function ScorePill({ icon, value, label }: { icon: React.ReactNode; value: number; label: string }) {
   return (
-    <span className="inline-flex items-center gap-1 rounded-full border border-border bg-card px-2 py-0.5 text-xs text-muted-foreground shadow-sm">
+    <span className="inline-flex items-center gap-1 rounded-md border border-border bg-card px-2 py-0.5 text-xs text-muted-foreground ">
       {icon}
       <span className="font-medium text-primary">{value}</span>
       <span>{label}</span>
@@ -315,7 +312,7 @@ function FacultyPill({ faculty, compact = false }: { faculty: string; compact?: 
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded-full font-semibold",
+        "inline-flex items-center rounded-md font-semibold",
         compact ? "px-1.5 py-0.5 text-[10px]" : "px-2 py-0.5 text-[11px]",
       )}
       style={{

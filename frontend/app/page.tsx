@@ -64,11 +64,11 @@ async function HallOfFameSectionServer() {
 function HallOfFameSkeleton() {
   return (
     <section className="container mx-auto max-w-6xl scroll-mt-24 px-4 pb-16 sm:px-6 lg:px-8">
-      <div className="rounded-[2rem] border border-border/60 bg-card/80 p-6 shadow-[0_30px_80px_-45px_rgba(15,23,42,0.45)] backdrop-blur sm:p-8">
+      <div className="rounded-lg border border-border/60 bg-card/80 p-6   sm:p-8">
         <div className="space-y-6">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div className="space-y-3">
-              <div className="h-7 w-32 animate-pulse rounded-full bg-muted" />
+              <div className="h-7 w-32 animate-pulse rounded-md bg-muted" />
               <div className="h-8 w-80 animate-pulse rounded bg-muted" />
               <div className="h-4 w-[32rem] max-w-full animate-pulse rounded bg-muted" />
             </div>

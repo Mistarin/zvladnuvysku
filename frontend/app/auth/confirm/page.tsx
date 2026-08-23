@@ -29,7 +29,7 @@ export default async function ConfirmAuthPage({ searchParams }: PageProps) {
 
   return (
     <div className="flex min-h-[calc(100vh-56px)] items-center justify-center px-4">
-      <div className="w-full max-w-md rounded-3xl border border-border bg-card p-8 text-center shadow-sm">
+      <div className="w-full max-w-md rounded-3xl border border-border bg-card p-8 text-center ">
         <Image
           src="/logo-v2.png"
           alt="ZvládnuVýšku"

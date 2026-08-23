@@ -8,6 +8,7 @@ import {
   type SubjectFilters,
 } from "@/lib/subjects";
 import { createPublicServerClient } from "@/lib/supabase/public-server";
+import { escapePostgrestText } from "@/lib/safe-query";
 
 export interface SubjectsPageResult {
   subjects: SubjectWithStats[];
@@ -66,7 +67,8 @@ const getCachedSubjectsPage = unstable_cache(
 
     if (filters.query?.trim()) {
       const normalizedQuery = filters.query.trim();
-      query = query.or(`name.ilike.%${normalizedQuery}%,short_tag.ilike.%${normalizedQuery}%`);
+      const safeQuery = escapePostgrestText(normalizedQuery);
+      query = query.or(`name.ilike.%${safeQuery}%,short_tag.ilike.%${safeQuery}%`);
     }
     if (filters.difficulty?.length) {
       query = query.in("difficulty", filters.difficulty);

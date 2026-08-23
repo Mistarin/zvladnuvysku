@@ -14,7 +14,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { deckId } = await params
   const supabase = await createClient()
   const { data } = await supabase.from('flashcard_decks').select('title').eq('id', deckId).single()
-  return { title: `Upravit — ${(data as { title: string } | null)?.title ?? 'Balíček'}` }
+  return { title: `Upravit … ${(data as { title: string } | null)?.title ?? 'Balíček'}` }
 }
 
 export default async function UpravitBalicekPage({ params }: PageProps) {
@@ -69,7 +69,7 @@ export default async function UpravitBalicekPage({ params }: PageProps) {
       </nav>
 
       <div className="mb-8">
-        <h1 className="text-2xl sm:text-3xl font-bold text-foreground">✏️ Upravit balíček</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-foreground"> Upravit balíček</h1>
         <p className="text-muted-foreground mt-1">
           Uprav otázky, správné odpovědi a obrázky bez vytváření nového balíčku.
         </p>

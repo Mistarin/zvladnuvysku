@@ -21,7 +21,7 @@ const eslintConfig = defineConfig([
       "@typescript-eslint/no-unused-vars": "warn",
       // aria-expanded na input není blokující chyba
       "jsx-a11y/role-supports-aria-props": "warn",
-      // exhaustive-deps — warned, ale ne error (existující pattern)
+      // exhaustive-deps is warned, but is not an error (existing pattern)
       "react-hooks/exhaustive-deps": "warn",
     },
   },

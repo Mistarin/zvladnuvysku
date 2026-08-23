@@ -81,7 +81,7 @@ export function TeacherRatingForm({
       setShowDisplayNameModal(true);
       return;
     }
-    
+
     setIsSubmitting(true);
     setError(null);
     setSuccessMessage(null);
@@ -148,7 +148,7 @@ export function TeacherRatingForm({
         <p className="text-muted-foreground mb-4">
           Pro přidání hodnocení se musíte přihlásit.
         </p>
-        <Link 
+        <Link
           href="/prihlaseni"
           className="inline-flex px-4 py-2 bg-primary text-primary-foreground rounded-lg font-medium text-sm transition-opacity hover:opacity-90"
         >
@@ -165,7 +165,7 @@ export function TeacherRatingForm({
           <label className="block text-sm font-medium text-foreground mb-2">
             Celkové hodnocení
           </label>
-          <div 
+          <div
             className="flex gap-1"
             onMouseLeave={() => setHoverRating(0)}
           >
@@ -173,12 +173,12 @@ export function TeacherRatingForm({
               <button
                 key={star}
                 type="button"
-                className="text-2xl transition-transform hover:scale-110 focus:outline-none"
+            className="text-2xl transition-colors focus:outline-none"
                 onMouseEnter={() => setHoverRating(star)}
                 onClick={() => setRating(star)}
               >
                 <span className={(hoverRating || rating) >= star ? "text-yellow-400" : "text-muted opacity-40 grayscale"}>
-                  ⭐
+
                 </span>
               </button>
             ))}
@@ -194,7 +194,7 @@ export function TeacherRatingForm({
             value={review}
             onChange={(e) => setReview(e.target.value)}
             placeholder="Jaké má učitel nároky? Jaký je jeho styl výuky? Zde se můžete rozepsat..."
-            className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-1 focus:ring-primary/50 transition-all resize-y"
+            className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-1 focus:ring-primary/50 transition-colors resize-y"
           />
         </div>
 
@@ -217,7 +217,7 @@ export function TeacherRatingForm({
           <button
             type="submit"
             disabled={isSubmitting || isDeleting || !rating}
-            className="w-full sm:w-auto px-6 py-2.5 bg-primary text-primary-foreground rounded-lg font-medium text-sm transition-all hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full sm:w-auto px-6 py-2.5 bg-primary text-primary-foreground rounded-lg font-medium text-sm transition-colors hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isSubmitting ? "Ukládám..." : hasExistingRating ? "Uložit změny" : "Odeslat hodnocení"}
           </button>

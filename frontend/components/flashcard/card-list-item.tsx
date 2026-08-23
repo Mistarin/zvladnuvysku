@@ -21,7 +21,7 @@ export function CardListItem({ card, index }: CardListItemProps) {
   const mediaUrl = getFlashcardMediaUrl(question.media_path)
 
   return (
-    <div className="glass-card rounded-xl overflow-hidden">
+    <div className="surface-card rounded-xl overflow-hidden">
       <button
         onClick={() => setExpanded((v) => !v)}
         className="w-full text-left px-5 py-4 flex items-center justify-between gap-4 hover:bg-muted/40 transition-colors"

@@ -1,12 +1,12 @@
 export function SubjectsResultsSkeleton() {
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between text-sm text-muted-foreground">
+      <div className="flex items-center justify-between rounded-lg border border-border bg-card px-4 py-3 text-sm text-muted-foreground">
         <div className="h-4 w-40 animate-pulse rounded bg-muted" />
         <div className="h-4 w-24 animate-pulse rounded bg-muted" />
       </div>
 
-      <div className="overflow-x-auto rounded-xl border border-border">
+      <div className="overflow-x-auto rounded-lg border border-border bg-card">
         <div className="border-b border-border bg-muted/50 px-4 py-3">
           <div className="grid grid-cols-4 gap-4">
             {Array.from({ length: 4 }).map((_, index) => (

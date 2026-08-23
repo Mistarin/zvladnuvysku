@@ -29,7 +29,7 @@ export function FlashcardStudySession({
   if (cards.length === 0) {
     return (
       <div className="text-center py-16 space-y-3">
-        <p className="text-2xl">🃏</p>
+        <p className="text-2xl"></p>
         <p className="text-muted-foreground">Tento balíček neobsahuje žádné karty.</p>
       </div>
     )

@@ -301,7 +301,7 @@ async function SubjectRatingsSection({
           <Star className="h-6 w-6 text-amber-500" /> Hodnocení předmětu
         </h2>
         <RatingStats stats={ratingStats} totalRatings={totalRatings} />
-        <div className="rounded-[2rem] border border-white/5 bg-card/40 backdrop-blur-md p-5 shadow-sm sm:p-8">
+        <div className="rounded-lg border border-white/5 bg-card/40  p-5  sm:p-8">
           <RatingForm
             key={subject.id}
             subjectId={subject.id}
@@ -322,7 +322,7 @@ async function SubjectRatingsSection({
           </h3>
           <div className="space-y-4">
             {ratingsWithComments.map((rating) => (
-              <div key={rating.id} className="glass-card space-y-2 p-4">
+              <div key={rating.id} className="surface-card space-y-2 p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     {rating.author_user_id ? (
@@ -337,7 +337,7 @@ async function SubjectRatingsSection({
                     <span className="text-xs text-muted-foreground">•</span>
                     <span className="text-xs text-muted-foreground">{new Date(rating.created_at).toLocaleDateString("cs-CZ")}</span>
                   </div>
-                  {rating.overall && <div className="text-sm font-bold text-amber-500">{rating.overall}/5 ★</div>}
+                  {rating.overall && <div className="text-sm font-bold text-amber-500">{rating.overall}/5 </div>}
                 </div>
                 <p className="text-sm italic leading-relaxed text-foreground/90">&ldquo;{rating.comment}&rdquo;</p>
                 <div className="pt-2">
@@ -396,14 +396,14 @@ async function SubjectSidebarSection({
               const avgRating = stats?.avg_rating;
               const ratingCount = stats?.total_ratings ?? 0;
               return (
-                <div key={teacher.id} className="flex flex-col gap-2 glass-card p-5 hover:shadow-md transition-shadow group/card">
+                <div key={teacher.id} className="flex flex-col gap-2 surface-card p-5 hover:  group/card">
                   <Link href={getTeacherPath(teacher.slug)} className="group flex flex-col">
                     <span className="font-medium text-foreground transition-colors group-hover:text-primary">{teacher.name}</span>
                     <div className="mt-1 flex items-center justify-between">
                       <span className="text-xs uppercase tracking-wider text-muted-foreground">{teacher.faculty}</span>
                       {avgRating ? (
                         <span className="flex items-center gap-1 text-sm font-bold text-amber-500">
-                          {avgRating.toFixed(1)} ★
+                          {avgRating.toFixed(1)}
                           <span className="ml-0.5 text-[10px] font-normal text-muted-foreground">({ratingCount})</span>
                         </span>
                       ) : (
@@ -431,17 +431,17 @@ async function SubjectSidebarSection({
         <h2 className="flex items-center gap-2 text-lg font-bold text-foreground">
           <Layers className="h-5 w-5 text-rose-500" /> Kartičky
         </h2>
-        <div className="space-y-4 glass-card p-5">
+        <div className="space-y-4 surface-card p-5">
           {isLoggedIn ? (
             <>
               <p className="text-sm text-muted-foreground">
                 {deckCount ? `K dispozici: ${deckCount} balíčků` : "Zatím žádné kartičky. Buďte první!"}
               </p>
               <div className="flex flex-col gap-2">
-                <Link href={`/predmety/${slug}/flashcardy`} className="w-full rounded-lg accent-gradient py-2 text-center text-sm font-medium text-white transition-all hover:opacity-90">
+                <Link href={`/predmety/${slug}/flashcardy`} className="w-full rounded-lg primary-action py-2 text-center text-sm font-medium text-white transition-colors hover:opacity-90">
                   Procházet kartičky
                 </Link>
-                <Link href={`/flashcardy/novy?subject=${slug}`} className="w-full rounded-xl border border-white/5 bg-background/50 shadow-inner py-2.5 text-center text-sm font-medium text-muted-foreground transition-all hover:bg-muted/50 hover:text-foreground">
+                <Link href={`/flashcardy/novy?subject=${slug}`} className="w-full rounded-xl border border-white/5 bg-background/50  py-2.5 text-center text-sm font-medium text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground">
                   + Vytvořit balíček
                 </Link>
               </div>
@@ -449,7 +449,7 @@ async function SubjectSidebarSection({
           ) : (
             <>
               <p className="text-sm text-muted-foreground">Přihlaste se pro přístup k flashkartám.</p>
-              <Link href="/prihlaseni" className="block w-full rounded-lg accent-gradient py-2 text-center text-sm font-medium text-white transition-all hover:opacity-90">
+              <Link href="/prihlaseni" className="block w-full rounded-lg primary-action py-2 text-center text-sm font-medium text-white transition-colors hover:opacity-90">
                 Přihlásit se
               </Link>
             </>
@@ -500,7 +500,7 @@ async function SubjectMaterialsSection({
       {materials.length > 0 ? (
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {materials.map((material) => (
-            <div key={material.id} className="glass-card p-4 transition-all hover:-translate-y-1 hover:shadow-md hover:border-primary/40">
+            <div key={material.id} className="surface-card p-4 transition-colors  hover: hover:border-primary/40">
               <div className="flex items-start gap-3">
                 <a href={getStoragePublicUrl("study_materials", material.file_path) ?? ""} target="_blank" rel="noopener noreferrer" className="group flex min-w-0 flex-1 items-center gap-3">
                   <div className="flex-shrink-0">
@@ -542,7 +542,7 @@ async function SubjectMaterialsSection({
             initialLegalAcceptedVersion={initialLegalAcceptedVersion}
           />
         ) : (
-          <div className="rounded-[1.5rem] border-2 border-dashed border-white/10 bg-background/40 p-6 text-center">
+          <div className="rounded-lg border-2 border-dashed border-white/10 bg-background/40 p-6 text-center">
             <p className="text-sm text-muted-foreground">Pro nahrání materiálu se musíš přihlásit.</p>
             <Link href="/prihlaseni" className="mt-3 inline-flex rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90">
               Přihlásit se
@@ -567,7 +567,7 @@ function SubjectMeta({
       {(subject.faculty || subject.department) && <span className="rounded-lg border border-border bg-card px-2 py-1 text-sm text-muted-foreground">{[subject.faculty, subject.department].filter(Boolean).join(" · ")}</span>}
       {subject.credits && <span className="flex items-center gap-1.5 rounded-lg border border-border bg-card px-2.5 py-1 text-sm font-medium text-foreground"><Diamond className="h-3.5 w-3.5 text-primary" /> {formatCredits(subject.credits)}</span>}
       {averageDifficulty && (
-        <div className="inline-flex items-center gap-1 rounded-lg border border-border bg-card px-2.5 py-1 text-sm shadow-inner">
+        <div className="inline-flex items-center gap-1 rounded-lg border border-border bg-card px-2.5 py-1 text-sm ">
           <span className="font-medium text-muted-foreground">Obtížnost</span>
           <span className="font-bold text-foreground">{averageDifficulty.toFixed(1)}</span>
         </div>
@@ -575,7 +575,7 @@ function SubjectMeta({
       {renderAttendance(subject.attendance_type)}
       {subject.semester && <span className="rounded-lg border border-border bg-card px-2.5 py-1 text-sm font-medium text-muted-foreground">{SEMESTER_LABELS[subject.semester] || subject.semester}</span>}
       {subject.year && <span className="flex items-center gap-1.5 rounded-lg border border-border bg-card px-2.5 py-1 text-sm font-medium text-foreground"><Calendar className="h-3.5 w-3.5 text-primary" /> {subject.year}. ročník</span>}
-      {subject.exam_from_home && <span className="flex items-center gap-1.5 rounded-lg border border-[#70C96B]/25 bg-[#70C96B]/10 px-2.5 py-1 text-sm font-medium text-[#70C96B]">🏠 Z domova</span>}
+      {subject.exam_from_home && <span className="flex items-center gap-1.5 rounded-lg border border-[#70C96B]/25 bg-[#70C96B]/10 px-2.5 py-1 text-sm font-medium text-[#70C96B]"> Z domova</span>}
     </div>
   );
 }
@@ -610,12 +610,12 @@ function RatingsSectionSkeleton() {
   return (
     <div className="space-y-6">
       <div className="h-7 w-56 animate-pulse rounded bg-muted" />
-      <div className="glass-card p-6">
+      <div className="surface-card p-6">
         <div className="grid gap-4 sm:grid-cols-3">
           {Array.from({ length: 3 }).map((_, index) => <div key={index} className="h-20 animate-pulse rounded bg-muted" />)}
         </div>
       </div>
-      <div className="glass-card p-6">
+      <div className="surface-card p-6">
         <div className="h-32 animate-pulse rounded bg-muted" />
       </div>
     </div>
@@ -628,7 +628,7 @@ function SidebarSkeleton() {
       {Array.from({ length: 2 }).map((_, index) => (
         <div key={index} className="space-y-3">
           <div className="h-6 w-28 animate-pulse rounded bg-muted" />
-          <div className="glass-card p-5">
+          <div className="surface-card p-5">
             <div className="h-20 animate-pulse rounded bg-muted" />
           </div>
         </div>
@@ -643,13 +643,13 @@ function MaterialsSectionSkeleton({ isLoggedIn }: { isLoggedIn: boolean }) {
       <div className="h-8 w-72 animate-pulse rounded bg-muted" />
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {Array.from({ length: 3 }).map((_, index) => (
-          <div key={index} className="glass-card p-4">
+          <div key={index} className="surface-card p-4">
             <div className="h-16 animate-pulse rounded bg-muted" />
           </div>
         ))}
       </div>
       <div className="max-w-xl pt-4">
-        <div className={isLoggedIn ? "glass-card p-5" : "rounded-[1.5rem] border-2 border-dashed border-white/10 bg-background/40 p-5"}>
+        <div className={isLoggedIn ? "surface-card p-5" : "rounded-lg border-2 border-dashed border-white/10 bg-background/40 p-5"}>
           <div className="h-20 animate-pulse rounded bg-muted" />
         </div>
       </div>

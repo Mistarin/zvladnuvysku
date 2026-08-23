@@ -8,15 +8,18 @@ import { revalidatePath } from "next/cache";
 import type { TeacherInsert } from "@/lib/types/database";
 
 // Pomocná funkce pro ověření admina
-async function checkAdmin() {
+async function checkAdmin(requireAdmin = false) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  
+
   const role = user?.app_metadata?.role as string | undefined;
   if (role !== "admin" && role !== "moderator") {
     throw new Error("Nedostatečná oprávnění");
   }
-  
+  if (requireAdmin && role !== "admin") {
+    throw new Error("Tuto operaci může provést pouze administrátor");
+  }
+
   return supabase;
 }
 
@@ -40,11 +43,11 @@ export async function createTeacher(data: TeacherInsert) {
       } as never);
 
     if (error) throw error;
-    
+
     revalidatePath("/admin/ucitele");
     revalidatePath("/admin/katedry");
     revalidatePath("/ucitele");
-    
+
     return { success: true };
   } catch (error) {
     console.error("Error creating teacher:", error);
@@ -73,10 +76,10 @@ export async function updateTeacher(id: string, data: Partial<TeacherInsert>) {
         ...(data.department !== undefined && { department: normalizeDepartmentName(data.department) }),
         ...(data.is_approved !== undefined && { is_approved: data.is_approved }),
       } as never)
-      .eq("id", id);
+      .eq("id" as never, id);
 
     if (error) throw error;
-    
+
     revalidatePath("/admin");
     revalidatePath("/admin/ucitele");
     revalidatePath("/admin/katedry");
@@ -84,7 +87,7 @@ export async function updateTeacher(id: string, data: Partial<TeacherInsert>) {
     if (normalizedSlug) {
       revalidatePath(getTeacherPath(normalizedSlug));
     }
-    
+
     return { success: true };
   } catch (error) {
     console.error("Error updating teacher:", error);
@@ -94,20 +97,20 @@ export async function updateTeacher(id: string, data: Partial<TeacherInsert>) {
 
 export async function deleteTeacher(id: string) {
   try {
-    const supabase = await checkAdmin();
+    const supabase = await checkAdmin(true);
 
     const { error } = await supabase
       .from("teachers")
       .delete()
-      .eq("id", id);
+      .eq("id" as never, id);
 
     if (error) throw error;
-    
+
     revalidatePath("/admin");
     revalidatePath("/admin/ucitele");
     revalidatePath("/admin/katedry");
     revalidatePath("/ucitele");
-    
+
     return { success: true };
   } catch (error) {
     console.error("Error deleting teacher:", error);

@@ -75,13 +75,13 @@ export function TeacherProposalDialog({
   return (
     <Dialog.Root open={isOpen} onOpenChange={setIsOpen}>
       <Dialog.Trigger asChild>
-        <button className="flex items-center gap-1.5 px-4 py-2 bg-primary text-primary-foreground rounded-xl font-medium text-sm hover:opacity-90 shadow-lg shadow-primary/20 hover:-translate-y-0.5 transition-all">
+        <button className="flex items-center gap-1.5 px-4 py-2 bg-primary text-primary-foreground rounded-xl font-medium text-sm hover:opacity-90    transition-colors">
           <span>+</span> Přidat vyučujícího
         </button>
       </Dialog.Trigger>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 animate-in fade-in" />
-        <Dialog.Content className="fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-card p-6 shadow-lg sm:rounded-xl animate-in fade-in zoom-in-95">
+        <Dialog.Overlay className="fixed inset-0 bg-background/80  z-50 animate-in fade-in" />
+        <Dialog.Content className="fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-card p-6  sm:rounded-xl animate-in fade-in zoom-in-95">
           <div className="flex flex-col space-y-1.5 text-center sm:text-left">
             <Dialog.Title className="text-lg font-semibold leading-none tracking-tight">
               Navrhnout vyučujícího
@@ -93,8 +93,8 @@ export function TeacherProposalDialog({
 
           {success ? (
             <div className="py-8 flex flex-col items-center justify-center text-center space-y-3 animate-in zoom-in">
-              <div className="w-12 h-12 bg-primary/20 text-primary rounded-full flex items-center justify-center text-xl">
-                ✓
+              <div className="w-12 h-12 bg-primary/20 text-primary rounded-md flex items-center justify-center text-xl">
+
               </div>
               <div>
                 <p className="font-semibold">Děkujeme za návrh!</p>
@@ -108,7 +108,7 @@ export function TeacherProposalDialog({
                   {error}
                 </div>
               )}
-              
+
               <div className="space-y-2">
                 <label htmlFor="name" className="text-sm font-medium">Jméno s tituly</label>
                 <input

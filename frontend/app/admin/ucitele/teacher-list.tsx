@@ -18,8 +18,8 @@ export function TeacherList({
   const [search, setSearch] = useState("");
   const [isPending, startTransition] = useTransition();
 
-  const filteredTeachers = initialTeachers.filter(t => 
-    t.name.toLowerCase().includes(search.toLowerCase()) || 
+  const filteredTeachers = initialTeachers.filter(t =>
+    t.name.toLowerCase().includes(search.toLowerCase()) ||
     normalizeDepartmentName(t.department)?.toLowerCase().includes(search.toLowerCase()) ||
     t.faculty.toLowerCase().includes(search.toLowerCase())
   );
@@ -49,8 +49,8 @@ export function TeacherList({
             className="w-full pl-9 pr-4 py-2 bg-card border border-border rounded-lg text-sm outline-none focus:ring-1 focus:ring-primary/50 focus:border-primary/50"
           />
         </div>
-        
-        <TeacherFormDialog 
+
+        <TeacherFormDialog
           trigger={
             <button className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground text-sm font-medium rounded-lg hover:opacity-90 transition-opacity whitespace-nowrap">
               <Plus className="w-4 h-4" />
@@ -74,7 +74,7 @@ export function TeacherList({
             </thead>
             <tbody className="divide-y divide-border relative">
               {isPending && (
-                <div className="absolute inset-0 bg-background/50 backdrop-blur-[1px] flex items-center justify-center z-10">
+                <div className="absolute inset-0 bg-background/50 -[1px] flex items-center justify-center z-10">
                   <Loader2 className="w-6 h-6 animate-spin text-primary" />
                 </div>
               )}
@@ -101,7 +101,7 @@ export function TeacherList({
                     </td>
                     <td className="px-4 py-3 text-right">
                       <div className="flex items-center justify-end gap-2">
-                        <TeacherFormDialog 
+                        <TeacherFormDialog
                           teacher={teacher}
                           departments={departments}
                           trigger={
@@ -110,9 +110,9 @@ export function TeacherList({
                             </button>
                           }
                         />
-                        <button 
+                        <button
                           onClick={() => handleDelete(teacher.id, teacher.name)}
-                          className="p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-md transition-colors" 
+                          className="p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-md transition-colors"
                           title="Smazat"
                         >
                           <Trash2 className="w-4 h-4" />

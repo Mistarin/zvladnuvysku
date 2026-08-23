@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { ChevronDown } from "lucide-react";
 import { SearchBar } from "@/components/search/search-bar";
 import type { FilterConfig } from "@/hooks/use-subject-filters";
 import type { SubjectFilters } from "@/lib/subjects";
@@ -85,7 +86,7 @@ export function SearchFilters({
   }
 
   return (
-    <div className="space-y-3">
+    <section className="space-y-5 rounded-lg border border-border bg-card p-4 sm:p-5">
       <div className="space-y-2">
         <SearchBar
           inputId="predmety-search"
@@ -120,22 +121,22 @@ export function SearchFilters({
         </p>
       </div>
 
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <button
           id="filter-toggle"
           onClick={() => setIsOpen(!isOpen)}
           className={`
-            flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-medium transition-all duration-150
+            flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium transition-colors duration-150
             ${isOpen || activeFilterCount > 0
               ? "bg-primary/10 text-primary border-primary/30"
               : "bg-card text-muted-foreground border-border hover:text-foreground hover:bg-muted"
             }
           `}
         >
-          <span>{isOpen ? "▲" : "▼"}</span>
+          <ChevronDown className={`size-4 transition-transform ${isOpen ? "rotate-180" : ""}`} />
           <span>Filtry</span>
           {activeFilterCount > 0 && (
-            <span className="w-5 h-5 rounded-full bg-primary text-primary-foreground text-xs flex items-center justify-center font-bold">
+            <span className="flex size-5 items-center justify-center rounded-md bg-primary text-xs font-bold text-primary-foreground">
               {activeFilterCount}
             </span>
           )}
@@ -154,8 +155,8 @@ export function SearchFilters({
       </div>
 
       {isOpen && (
-        <div className="rounded-2xl border border-border bg-card/90 p-4 shadow-sm animate-slide-down">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <div className="rounded-lg border border-border bg-background p-4 sm:p-5">
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {filterConfig.map((config) => (
               <div key={config.key} className="space-y-2">
                 {config.type !== "boolean" && (
@@ -178,7 +179,7 @@ export function SearchFilters({
                             handleMultiSelect(filterKey, option.value)
                           }
                           className={`
-                            rounded-lg border px-2.5 py-1 text-xs transition-all duration-100
+                            rounded-lg border px-2.5 py-1 text-xs transition-colors duration-100
                             ${isSelected
                               ? "bg-primary text-primary-foreground border-primary"
                               : "bg-background text-foreground border-border hover:border-primary/50 hover:bg-primary/5"
@@ -235,7 +236,7 @@ export function SearchFilters({
                 {config.type === "select" && config.options && (() => {
                   const filterVal = filters[config.key as keyof SubjectFilters];
                   const selectedValue = Array.isArray(filterVal) ? filterVal[0] : filterVal;
-                  
+
                   return (
                     <select
                       value={(selectedValue as string | number) ?? ""}
@@ -248,7 +249,7 @@ export function SearchFilters({
                         const isNumber = typeof config.options![0].value === "number";
                         const newVal = isNumber ? Number(val) : val;
                         const isArrayType = ["attendanceType", "semester", "year"].includes(config.key);
-                        
+
                         const filterKey = config.key as keyof SubjectFilters;
                         const nextValue = isArrayType ? [newVal] : newVal;
                         setFilter(filterKey, nextValue as SubjectFilters[typeof filterKey]);
@@ -257,8 +258,8 @@ export function SearchFilters({
                     >
                       <option value="">Všechny</option>
                       {config.options.map((opt) => (
-                        <option 
-                          key={opt.value} 
+                        <option
+                          key={opt.value}
                           value={opt.value}
                           style={{ color: opt.color, fontWeight: opt.color ? "bold" : "normal" }}
                         >
@@ -278,7 +279,7 @@ export function SearchFilters({
                         onChange={(e) => setFilter(config.key as keyof SubjectFilters, e.target.checked ? true : undefined)}
                         className="sr-only"
                       />
-                      <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all ${
+                      <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-colors ${
                         getBooleanFilterValue(config.key as keyof SubjectFilters)
                           ? "bg-primary border-primary"
                           : "bg-background border-border group-hover:border-primary/50"
@@ -298,6 +299,6 @@ export function SearchFilters({
           </div>
         </div>
       )}
-    </div>
+    </section>
   );
 }

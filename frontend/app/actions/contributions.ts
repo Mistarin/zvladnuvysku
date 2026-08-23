@@ -5,6 +5,7 @@ import { normalizeDepartmentName } from '@/lib/department-name'
 import { isFacultyCode } from '@/lib/faculties'
 import { getPublicProfilePath } from '@/lib/public-profile'
 import { createClient } from '@/lib/supabase/server'
+import { escapePostgrestText } from '@/lib/safe-query'
 import type { Database, SubjectRating, TeacherRating } from '@/lib/types/database'
 import { containsProfanity } from '@/lib/profanity'
 
@@ -349,9 +350,9 @@ export async function submitSubjectProposal(formData: FormData): Promise<ActionR
       const { data: pendingProposal, error: proposalError } = await supabase
         .from('subject_proposals')
         .select('data, submission_token')
-        .eq('id', proposalId)
-        .eq('proposed_by', user.id)
-        .eq('status', 'pending')
+        .eq('id' as never, proposalId)
+        .eq('proposed_by' as never, user.id)
+        .eq('status' as never, 'pending')
         .maybeSingle()
 
       if (proposalError) {
@@ -422,7 +423,7 @@ export async function submitSubjectProposal(formData: FormData): Promise<ActionR
       payload.form.real_requirements,
     ].filter(Boolean).join(' ')
     if (containsProfanity(textToCheck)) {
-      return { success: false, error: 'Návrh obsahuje nevhodný jazyk. Přepiš ho prosím konstruktivně — chceme pomáhat studentům, ne je urážet.' }
+      return { success: false, error: 'Návrh obsahuje nevhodný jazyk. Přepiš ho prosím konstruktivně … chceme pomáhat studentům, ne je urážet.' }
     }
 
     const normalizedTeachers = payload.teachers.map((teacher) => ({
@@ -467,9 +468,9 @@ export async function submitSubjectProposal(formData: FormData): Promise<ActionR
       ? await supabase
           .from('subject_proposals')
           .update(proposalRow as never)
-          .eq('id', proposalId)
-          .eq('proposed_by', user.id)
-          .eq('status', 'pending')
+          .eq('id' as never, proposalId)
+          .eq('proposed_by' as never, user.id)
+          .eq('status' as never, 'pending')
       : await supabase.from('subject_proposals').insert({
           ...proposalRow,
           proposed_by: user.id,
@@ -480,8 +481,8 @@ export async function submitSubjectProposal(formData: FormData): Promise<ActionR
         const { data: existingRow, error: duplicateLookupError } = await supabase
           .from('subject_proposals')
           .select('id')
-          .eq('submission_token', proposalFilesKey)
-          .eq('proposed_by', user.id)
+          .eq('submission_token' as never, proposalFilesKey)
+          .eq('proposed_by' as never, user.id)
           .maybeSingle()
 
         if (!duplicateLookupError && existingRow) {
@@ -531,9 +532,9 @@ export async function deletePendingSubjectProposal(proposalId: string): Promise<
     const { data: proposal, error: loadError } = await supabase
       .from('subject_proposals')
       .select('id, data')
-      .eq('id', proposalId)
-      .eq('proposed_by', user.id)
-      .eq('status', 'pending')
+      .eq('id' as never, proposalId)
+      .eq('proposed_by' as never, user.id)
+      .eq('status' as never, 'pending')
       .maybeSingle()
 
     if (loadError) {
@@ -547,9 +548,9 @@ export async function deletePendingSubjectProposal(proposalId: string): Promise<
     const { error: deleteError } = await supabase
       .from('subject_proposals')
       .delete()
-      .eq('id', proposalId)
-      .eq('proposed_by', user.id)
-      .eq('status', 'pending')
+      .eq('id' as never, proposalId)
+      .eq('proposed_by' as never, user.id)
+      .eq('status' as never, 'pending')
 
     if (deleteError) {
       return { success: false, error: `Nepodařilo se smazat návrh: ${deleteError.message}` }
@@ -610,8 +611,7 @@ export async function uploadSubjectMaterial(formData: FormData): Promise<ActionR
       return { success: false, error: 'Pro nahrávání musíte být přihlášeni.' }
     }
 
-    const fileExtension = file.name.split('.').pop() || 'pdf'
-    const filePath = `${subjectId}/${Date.now()}-${Math.random().toString(36).substring(2, 9)}.${fileExtension}`
+    const filePath = `materials/${user.id}/${crypto.randomUUID()}.pdf`
 
     const { error: uploadError, data: uploadData } = await supabase.storage
       .from('study_materials')
@@ -647,7 +647,7 @@ export async function uploadSubjectMaterial(formData: FormData): Promise<ActionR
     const { data: subjectData } = await supabase
       .from('subjects')
       .select('slug')
-      .eq('id', subjectId)
+      .eq('id' as never, subjectId)
       .single()
     const typedSubject = subjectData as { slug: string } | null
     if (typedSubject?.slug) {
@@ -677,8 +677,8 @@ export async function getMySubjectRating(subjectId: string): Promise<ExistingSub
     const { data, error } = await supabase
       .from('subject_ratings')
       .select('*')
-      .eq('subject_id', subjectId)
-      .eq('user_id', user.id)
+      .eq('subject_id' as never, subjectId)
+      .eq('user_id' as never, user.id)
       .single()
 
     if (error && error.code !== 'PGRST116') {
@@ -727,8 +727,8 @@ export async function saveSubjectRating(input: SubjectRatingInput): Promise<Revi
     const { data: moderationState, error: moderationError } = await supabase
       .from('subject_ratings')
       .select('comment_is_approved')
-      .eq('subject_id', input.subjectId)
-      .eq('user_id', user.id)
+      .eq('subject_id' as never, input.subjectId)
+      .eq('user_id' as never, user.id)
       .single()
 
     if (moderationError) {
@@ -738,7 +738,7 @@ export async function saveSubjectRating(input: SubjectRatingInput): Promise<Revi
     const { data: subjectData } = await supabase
       .from('subjects')
       .select('slug')
-      .eq('id', input.subjectId)
+      .eq('id' as never, input.subjectId)
       .single()
     const typedSubject = subjectData as { slug: string } | null
     const path = typedSubject?.slug ? `/predmety/${typedSubject.slug}` : '/predmety'
@@ -770,8 +770,8 @@ export async function getMyTeacherRating(teacherId: string): Promise<ExistingTea
     const { data, error } = await supabase
       .from('teacher_ratings')
       .select('*')
-      .eq('teacher_id', teacherId)
-      .eq('user_id', user.id)
+      .eq('teacher_id' as never, teacherId)
+      .eq('user_id' as never, user.id)
       .single()
 
     if (error && error.code !== 'PGRST116') {
@@ -817,8 +817,8 @@ export async function saveTeacherRating(input: TeacherRatingInput): Promise<Revi
     const { data: moderationState, error: moderationError } = await supabase
       .from('teacher_ratings')
       .select('comment_is_approved')
-      .eq('teacher_id', input.teacherId)
-      .eq('user_id', user.id)
+      .eq('teacher_id' as never, input.teacherId)
+      .eq('user_id' as never, user.id)
       .single()
 
     if (moderationError) {
@@ -828,7 +828,7 @@ export async function saveTeacherRating(input: TeacherRatingInput): Promise<Revi
     const { data: teacherData } = await supabase
       .from('teachers')
       .select('slug')
-      .eq('id', input.teacherId)
+      .eq('id' as never, input.teacherId)
       .single()
     const typedTeacher = teacherData as { slug: string } | null
     const path = typedTeacher?.slug ? `/ucitele/${typedTeacher.slug}` : '/ucitele'
@@ -860,8 +860,8 @@ export async function deleteOwnSubjectRating(subjectId: string): Promise<ActionR
     const { error } = await supabase
       .from('subject_ratings')
       .delete()
-      .eq('subject_id', subjectId)
-      .eq('user_id', user.id)
+      .eq('subject_id' as never, subjectId)
+      .eq('user_id' as never, user.id)
 
     if (error) {
       return { success: false, error: `Nepodařilo se smazat hodnocení: ${error.message}` }
@@ -870,7 +870,7 @@ export async function deleteOwnSubjectRating(subjectId: string): Promise<ActionR
     const { data: subjectData } = await supabase
       .from('subjects')
       .select('slug')
-      .eq('id', subjectId)
+      .eq('id' as never, subjectId)
       .single()
     const typedSubject = subjectData as { slug: string } | null
     const path = typedSubject?.slug ? `/predmety/${typedSubject.slug}` : '/predmety'
@@ -898,8 +898,8 @@ export async function deleteOwnTeacherRating(teacherId: string): Promise<ActionR
     const { error } = await supabase
       .from('teacher_ratings')
       .delete()
-      .eq('teacher_id', teacherId)
-      .eq('user_id', user.id)
+      .eq('teacher_id' as never, teacherId)
+      .eq('user_id' as never, user.id)
 
     if (error) {
       return { success: false, error: `Nepodařilo se smazat hodnocení: ${error.message}` }
@@ -908,7 +908,7 @@ export async function deleteOwnTeacherRating(teacherId: string): Promise<ActionR
     const { data: teacherData } = await supabase
       .from('teachers')
       .select('slug')
-      .eq('id', teacherId)
+      .eq('id' as never, teacherId)
       .single()
     const typedTeacher = teacherData as { slug: string } | null
     const path = typedTeacher?.slug ? `/ucitele/${typedTeacher.slug}` : '/ucitele'
@@ -933,7 +933,7 @@ export async function searchSubjectsForProposal(query: string): Promise<{ succes
     const { data, error } = await supabase
       .from('subject_search_view')
       .select('id, slug, name, short_tag, faculty, difficulty, credits, semester')
-      .or(`name.ilike.%${normalizedQuery}%,short_tag.ilike.%${normalizedQuery}%`)
+      .or(`name.ilike.%${escapePostgrestText(normalizedQuery)}%,short_tag.ilike.%${escapePostgrestText(normalizedQuery)}%`)
       .limit(6)
 
     if (error) {
@@ -1009,7 +1009,7 @@ export async function getTeacherSearchCache(): Promise<{ success: true; data: Te
     const { data, error } = await supabase
       .from('teachers')
       .select('id, name, faculty, department')
-      .eq('is_approved', true)
+      .eq('is_approved' as never, true)
       .order('name')
 
     if (error) {
@@ -1037,14 +1037,17 @@ export async function getSubjectDetailsForProposal(subjectId: string): Promise<S
     const { data, error } = await supabase
       .from('subjects')
       .select('name, short_tag, description, target_audience, real_requirements, difficulty, time_intensity, attendance_type, exam_from_home, credits, semester, faculty, year')
-      .eq('id', subjectId)
+      .eq('id' as never, subjectId)
       .single()
 
     if (error) {
       return { success: false, error: `Nepodařilo se načíst data předmětu: ${error.message}` }
     }
 
-    return { success: true, data: data ?? null }
+    return {
+      success: true,
+      data: (data as Extract<SubjectDetailsResult, { success: true }>['data'] | null) ?? null,
+    }
   } catch (error) {
     return {
       success: false,
@@ -1066,7 +1069,7 @@ export async function createMaterialGroup(input: {
     if (!title) return { success: false, error: 'Zadejte název skupiny.' }
     if (title.length > 120) return { success: false, error: 'Název skupiny může mít maximálně 120 znaků.' }
 
-    const { data, error } = await (supabase as unknown as ReturnType<typeof supabase.from>)
+    const { data, error } = await supabase
       .from('material_groups')
       .insert({ title, subject_id: input.subjectId, uploader_id: user.id } as never)
       .select('id')
@@ -1087,19 +1090,19 @@ export async function deleteMaterialGroup(groupId: string): Promise<ActionResult
     if (!user) return { success: false, error: 'Musíte být přihlášeni.' }
 
     // Only owner or admin can delete
-    const { data: group } = await (supabase as unknown as ReturnType<typeof supabase.from>)
+    const { data: group } = await supabase
       .from('material_groups')
       .select('uploader_id')
-      .eq('id', groupId)
+      .eq('id' as never, groupId)
       .single() as unknown as { data: { uploader_id: string } | null; error: unknown }
 
     if (!group) return { success: false, error: 'Skupina nenalezena.' }
     if ((group as unknown as { uploader_id: string }).uploader_id !== user.id) return { success: false, error: 'Nemáte oprávnění smazat tuto skupinu.' }
 
-    await supabase.from('subject_materials').update({ group_id: null } as never).eq('group_id', groupId)
+    await supabase.from('subject_materials').update({ group_id: null } as never).eq('group_id' as never, groupId)
 
-    const { error } = await (supabase as unknown as ReturnType<typeof supabase.from>)
-      .from('material_groups').delete().eq('id', groupId) as unknown as { error: { message: string } | null }
+    const { error } = await supabase
+      .from('material_groups').delete().eq('id' as never, groupId) as unknown as { error: { message: string } | null }
     if (error) return { success: false, error: `Nepodařilo se smazat skupinu: ${error.message}` }
 
     try { revalidatePath('/moje-aktivita') } catch { /* ignore */ }
@@ -1119,11 +1122,11 @@ export async function renameMaterialGroup(groupId: string, newTitle: string): Pr
     if (!title) return { success: false, error: 'Zadejte název skupiny.' }
     if (title.length > 120) return { success: false, error: 'Název skupiny může mít maximálně 120 znaků.' }
 
-    const { error } = await (supabase as unknown as ReturnType<typeof supabase.from>)
+    const { error } = await supabase
       .from('material_groups')
       .update({ title } as never)
-      .eq('id', groupId)
-      .eq('uploader_id', user.id) as unknown as { error: { message: string } | null }
+      .eq('id' as never, groupId)
+      .eq('uploader_id' as never, user.id) as unknown as { error: { message: string } | null }
 
     if (error) return { success: false, error: `Nepodařilo se přejmenovat skupinu: ${error.message}` }
 

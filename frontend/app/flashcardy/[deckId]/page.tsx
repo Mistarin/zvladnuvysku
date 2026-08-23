@@ -16,7 +16,7 @@ interface PageProps {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { deckId } = await params
   const supabase = await createClient()
-  const { data } = await supabase.from('flashcard_decks').select('title').eq('id', deckId).single()
+  const { data } = await supabase.from('flashcard_decks').select('title').eq('id' as never, deckId).single()
   return { title: (data as { title: string } | null)?.title ?? 'Balíček flashkaret' }
 }
 
@@ -27,20 +27,20 @@ export default async function DeckDetailPage({ params }: PageProps) {
   const { data: deck, error } = await supabase
     .from('flashcard_decks')
     .select('*')
-    .eq('id', deckId)
+    .eq('id' as never, deckId)
     .single()
 
   if (error || !deck) notFound()
 
-  const flashcardDeck = deck as FlashcardDeck
+  const flashcardDeck = deck as unknown as FlashcardDeck
 
   const { data: cards } = await supabase
     .from('flashcards')
     .select('*')
-    .eq('deck_id', deckId)
+    .eq('deck_id' as never, deckId)
     .order('position')
 
-  const flashcards = (cards ?? []) as Flashcard[]
+  const flashcards = (cards ?? []) as unknown as Flashcard[]
 
   const {
     data: { user },
@@ -67,7 +67,7 @@ export default async function DeckDetailPage({ params }: PageProps) {
       </nav>
 
       {/* Header */}
-      <div className="glass-card rounded-2xl p-6 mb-6 space-y-3">
+      <div className="surface-card rounded-2xl p-6 mb-6 space-y-3">
         <div className="flex items-start justify-between gap-4">
           <div className="space-y-1 flex-1">
             <h1 className="text-2xl sm:text-3xl font-bold text-foreground">{flashcardDeck.title}</h1>
@@ -104,10 +104,10 @@ export default async function DeckDetailPage({ params }: PageProps) {
 
         <div className="flex flex-wrap items-center gap-3 pt-1">
           <span className="text-sm text-muted-foreground">
-            🃏 {flashcardDeck.card_count} {flashcardDeck.card_count === 1 ? 'karta' : flashcardDeck.card_count >= 2 && flashcardDeck.card_count <= 4 ? 'karty' : 'karet'}
+             {flashcardDeck.card_count} {flashcardDeck.card_count === 1 ? 'karta' : flashcardDeck.card_count >= 2 && flashcardDeck.card_count <= 4 ? 'karty' : 'karet'}
           </span>
           {!flashcardDeck.is_public && (
-            <span className="text-sm text-muted-foreground">🔒 Soukromý</span>
+            <span className="text-sm text-muted-foreground"> Soukromý</span>
           )}
           {flashcardDeck.is_public && (
             <ShareLinkButton
@@ -117,7 +117,7 @@ export default async function DeckDetailPage({ params }: PageProps) {
             />
           )}
           {isCreator && (
-            <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
+            <span className="text-xs px-2 py-0.5 rounded-md bg-primary/10 text-primary font-medium">
               Váš balíček
             </span>
           )}
@@ -127,9 +127,9 @@ export default async function DeckDetailPage({ params }: PageProps) {
         {flashcards.length > 0 && (
           <Link
             href={`/flashcardy/${deckId}/ucit-se`}
-            className="inline-flex items-center gap-2 mt-2 px-6 py-3 rounded-xl font-medium accent-gradient text-white hover:opacity-90 transition-all"
+            className="inline-flex items-center gap-2 mt-2 px-6 py-3 rounded-xl font-medium primary-action text-white hover:opacity-90 transition-colors"
           >
-            ▶ Začít procvičovat
+             Začít procvičovat
           </Link>
         )}
       </div>

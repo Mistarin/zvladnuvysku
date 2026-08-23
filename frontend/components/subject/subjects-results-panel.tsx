@@ -21,13 +21,13 @@ export function SubjectsResultsPanel({
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between text-sm text-muted-foreground">
-        <span>
+      <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border bg-card px-4 py-3 text-sm text-muted-foreground">
+        <span className="leading-5">
           <span className="font-medium text-foreground">{totalCount}</span>{" "}
           {totalCount === 1 ? "předmět" : totalCount < 5 ? "předměty" : "předmětů"}
         </span>
         {totalPages > 1 && (
-          <span>
+          <span className="leading-5">
             Strana {page} z {totalPages}
           </span>
         )}
@@ -62,7 +62,7 @@ export function SubjectsResultsPanel({
                 <button
                   key={pageNum}
                   onClick={() => setPage(pageNum)}
-                  className={`h-9 w-9 rounded-lg text-sm font-medium transition-all ${
+                  className={`h-9 w-9 rounded-lg text-sm font-medium transition-colors ${
                     pageNum === page
                       ? "bg-primary text-primary-foreground"
                       : "border border-border bg-card hover:bg-muted"
@@ -79,7 +79,7 @@ export function SubjectsResultsPanel({
             disabled={page >= totalPages}
             className="rounded-lg border border-border bg-card px-4 py-2 text-sm transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
           >
-            Další →
+            Další
           </button>
         </div>
       )}

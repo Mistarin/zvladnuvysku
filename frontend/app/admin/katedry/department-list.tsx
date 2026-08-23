@@ -64,8 +64,8 @@ function DepartmentFormDialog({
         {trigger}
       </button>
       {open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 px-4 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 px-4 ">
+          <div className="w-full max-w-md rounded-2xl border border-border bg-card p-6 ">
             <div className="space-y-1">
               <h2 className="text-lg font-semibold text-foreground">
                 {isEditing ? "Upravit katedru" : "Přidat katedru"}

@@ -12,11 +12,7 @@ import { getPublicProfileIdentity } from "@/lib/public-profile-identity";
 import { parseCookieConsent } from "@/lib/cookie-consent";
 import { hasAcceptedCurrentLegalVersion, hasCompletedPublicProfileSetup } from "@/lib/legal-consent";
 import { createClient } from "@/lib/supabase/server";
-import { Inter, Outfit } from "next/font/google";
 import { cookies } from "next/headers";
-
-const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
-const outfit = Outfit({ subsets: ["latin"], variable: "--font-outfit" });
 
 type LayoutProfile = {
   display_name?: string | null;
@@ -29,7 +25,7 @@ type LayoutProfile = {
 export const metadata: Metadata = {
   title: {
     template: "%s | Zvládnu Výšku",
-    default: "Zvládnu Výšku — Studentský hub Ostravské univerzity",
+    default: "Zvládnu Výšku … Studentský hub Ostravské univerzity",
   },
   description:
     "Najdi předmět na Ostravské univerzitě. Hodnocení obtížnosti, kartičky, reálné zkušenosti studentů.",
@@ -76,7 +72,7 @@ export default async function RootLayout({
 
   return (
     <html lang="cs" suppressHydrationWarning>
-      <body className={`${inter.variable} ${outfit.variable} font-sans min-h-screen flex flex-col antialiased`}>
+      <body className="font-sans min-h-screen flex flex-col antialiased">
         <ThemeProvider
           attribute="class"
           defaultTheme="system"

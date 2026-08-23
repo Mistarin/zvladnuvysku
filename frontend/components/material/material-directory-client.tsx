@@ -172,7 +172,7 @@ export function MaterialDirectoryClient({
           href="/jak-to-funguje"
           className="ml-auto self-center text-xs text-muted-foreground transition-colors hover:text-foreground"
         >
-          Jak fungují body? →
+          Jak fungují body?
         </Link>
       </div>
 
@@ -279,7 +279,7 @@ function EmptyState({
   onClearQuery: () => void;
 }) {
   return (
-    <div className="glass-card space-y-3 rounded-2xl p-10 text-center">
+    <div className="surface-card space-y-3 rounded-2xl p-10 text-center">
       <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
         <FileText className="h-6 w-6" />
       </div>
@@ -302,7 +302,7 @@ function EmptyState({
 
 function SingleMaterialRow({ material }: { material: FlattenedMaterial }) {
   return (
-    <div className="glass-card flex flex-col gap-3 rounded-lg p-3 sm:flex-row sm:items-center sm:justify-between sm:p-3.5">
+    <div className="surface-card flex flex-col gap-3 rounded-lg p-3 sm:flex-row sm:items-center sm:justify-between sm:p-3.5">
       <div className="min-w-0 space-y-1">
         <div className="flex min-w-0 items-start gap-2">
           <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/10">
@@ -373,13 +373,13 @@ function MaterialSubjectMeta({ subject }: { subject: NonNullable<FlattenedMateri
     <div className="mt-2 flex flex-wrap items-center gap-1.5 sm:hidden">
       {subject.difficulty ? <DifficultyBadge difficulty={subject.difficulty} size="sm" /> : null}
       {subject.avg_subject_rating ? (
-        <span className="rounded-full border border-[#F6B73C]/25 bg-[#F6B73C]/10 px-2 py-0.5 text-[10px] font-medium text-[#F6B73C]">
-          Předmět {subject.avg_subject_rating.toFixed(1)} ★
+        <span className="rounded-md border border-[#F6B73C]/25 bg-[#F6B73C]/10 px-2 py-0.5 text-[10px] font-medium text-[#F6B73C]">
+          Předmět {subject.avg_subject_rating.toFixed(1)}
         </span>
       ) : null}
       {subject.avg_teacher_rating ? (
-        <span className="rounded-full border border-primary/15 bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
-          Učitel {subject.avg_teacher_rating.toFixed(1)} ★
+        <span className="rounded-md border border-primary/15 bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
+          Učitel {subject.avg_teacher_rating.toFixed(1)}
         </span>
       ) : null}
     </div>

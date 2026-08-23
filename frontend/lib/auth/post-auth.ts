@@ -14,7 +14,7 @@ export function resolvePostAuthRedirect(rawRedirectTo: string | null, origin: st
     return '/'
   }
 
-  if (rawRedirectTo.startsWith('/')) {
+  if (rawRedirectTo.startsWith('/') && !rawRedirectTo.startsWith('//') && !rawRedirectTo.includes('\\')) {
     return rawRedirectTo
   }
 

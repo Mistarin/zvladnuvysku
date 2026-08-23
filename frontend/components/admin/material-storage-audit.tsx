@@ -46,7 +46,7 @@ export function MaterialStorageAudit() {
   };
 
   return (
-    <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-4">
+    <div className="rounded-2xl border border-border bg-card p-5  space-y-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h2 className="text-lg font-bold text-foreground">Audit uložiště materiálů</h2>

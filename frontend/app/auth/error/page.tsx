@@ -17,15 +17,15 @@ const REASONS: Record<string, { title: string; desc: string }> = {
   },
   verify_failed: {
     title: 'Přihlášení selhalo',
-    desc: 'Přihlašovací odkaz je neplatný, už byl použit nebo vypršel. Zkus si poslat nový.',
+    desc: 'Přihlašovací kód je neplatný, už byl použit nebo vypršel. Zkus si poslat nový.',
   },
   no_code: {
-    title: 'Neplatný odkaz',
-    desc: 'Přihlašovací odkaz je neplatný nebo vypršel. Zkus se přihlásit znovu.',
+    title: 'Neplatný kód',
+    desc: 'Přihlašovací kód je neplatný nebo vypršel. Zkus se přihlásit znovu.',
   },
   invalid_link: {
-    title: 'Neplatný odkaz',
-    desc: 'Přihlašovací odkaz je poškozený nebo neúplný. Zkus si poslat nový.',
+    title: 'Neplatný kód',
+    desc: 'Přihlašovací kód je poškozený nebo neúplný. Zkus si poslat nový.',
   },
 }
 
@@ -42,7 +42,7 @@ export default async function AuthErrorPage({ searchParams }: PageProps) {
       <div className="max-w-md w-full text-center space-y-6">
         {/* Icon */}
         <div className="w-16 h-16 rounded-2xl bg-destructive/10 border border-destructive/20 flex items-center justify-center mx-auto text-3xl">
-          ⚠️
+
         </div>
 
         {/* Text */}
@@ -72,7 +72,7 @@ export default async function AuthErrorPage({ searchParams }: PageProps) {
         {/* CTA */}
         <Link
           href="/prihlaseni"
-          className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl font-medium text-sm accent-gradient text-white hover:opacity-90 transition-all"
+          className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl font-medium text-sm primary-action text-white hover:opacity-90 transition-colors"
         >
           Zkusit znovu
         </Link>

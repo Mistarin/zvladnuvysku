@@ -113,7 +113,7 @@ export function ProposalCard({ proposal, currentSubjectData, readonly = false }:
       materialGroupTitle: materialGroupTitle.trim() || null,
     })
     if (result.success) {
-      setFeedback({ type: 'success', message: 'Návrh byl schválen ✓' })
+      setFeedback({ type: 'success', message: 'Návrh byl schválen ' })
       setDone(true)
     } else {
       setFeedback({ type: 'error', message: result.error })
@@ -158,25 +158,25 @@ export function ProposalCard({ proposal, currentSubjectData, readonly = false }:
 
   if (done && feedback?.type === 'success') {
     return (
-      <div className="glass-card flex items-center gap-3 p-4 text-sm text-muted-foreground opacity-60">
+      <div className="surface-card flex items-center gap-3 p-4 text-sm text-muted-foreground opacity-60">
         <CheckCircle className="h-4 w-4 shrink-0 text-[#70C96B]" />
-        <span>{feedback.message} — <span className="font-medium">{String(proposalDataRecord.name ?? proposal.id)}</span></span>
+        <span>{feedback.message} … <span className="font-medium">{String(proposalDataRecord.name ?? proposal.id)}</span></span>
       </div>
     )
   }
 
   return (
-    <div className="glass-card space-y-5 p-6">
+    <div className="surface-card space-y-5 p-6">
       {/* Header */}
       <div className="flex flex-wrap items-center gap-3">
-        <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${proposal.type === 'new' ? 'bg-[#70C96B]/15 text-[#70C96B]' : 'bg-primary/15 text-primary'}`}>
+        <span className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium ${proposal.type === 'new' ? 'bg-[#70C96B]/15 text-[#70C96B]' : 'bg-primary/15 text-primary'}`}>
           {proposal.type === 'new' ? <FilePlus className="w-3 h-3" /> : <FileEdit className="w-3 h-3" />}
           {proposal.type === 'new' ? 'Nový předmět' : 'Úprava'}
         </span>
         <span className="flex items-center gap-1 text-xs text-muted-foreground">
           <Calendar className="w-3 h-3" /> {formattedDate}
         </span>
-        <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${statusTone}`}>
+        <span className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium ${statusTone}`}>
           {proposal.status === 'approved' ? <CheckCircle className="w-3 h-3" /> : proposal.status === 'rejected' ? <XCircle className="w-3 h-3" /> : <FileText className="w-3 h-3" />}
           {statusLabel}
         </span>
@@ -219,7 +219,7 @@ export function ProposalCard({ proposal, currentSubjectData, readonly = false }:
       </div>
 
       {proposalMaterials.length > 0 && (
-        <div className="space-y-4 rounded-[1.5rem] border border-border bg-background/50 p-5 shadow-sm">
+        <div className="space-y-4 rounded-lg border border-border bg-background/50 p-5 ">
           <div className="flex items-center gap-2">
             <FileText className="h-4 w-4 text-primary" />
             <p className="text-sm font-semibold text-foreground">Navržené PDF materiály</p>
@@ -235,7 +235,7 @@ export function ProposalCard({ proposal, currentSubjectData, readonly = false }:
                 value={materialGroupTitle}
                 onChange={(e) => setMaterialGroupTitle(e.target.value)}
                 placeholder="např. Vše ke zkoušce"
-                className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm shadow-inner outline-none focus:bg-background focus:ring-1 focus:ring-primary/40"
+                className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm  outline-none focus:bg-background focus:ring-1 focus:ring-primary/40"
                 maxLength={120}
               />
             </div>
@@ -246,7 +246,7 @@ export function ProposalCard({ proposal, currentSubjectData, readonly = false }:
               const publicUrl = getStoragePublicUrl('study_materials', material.file_path) ?? '#'
 
               return (
-                <div key={`${material.file_path}-${index}`} className="rounded-xl border border-border bg-card p-4 shadow-sm">
+                <div key={`${material.file_path}-${index}`} className="rounded-xl border border-border bg-card p-4 ">
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                     <div className="min-w-0">
                       <a
@@ -278,7 +278,7 @@ export function ProposalCard({ proposal, currentSubjectData, readonly = false }:
                               : item
                           )))
                         }}
-                        className="w-full rounded-xl border border-white/5 bg-muted/30 shadow-inner px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-primary/40 focus:bg-background transition-all"
+                        className="w-full rounded-xl border border-white/5 bg-muted/30  px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-primary/40 focus:bg-background transition-colors"
                         placeholder="např. 18"
                       />
                     </div>
@@ -292,14 +292,14 @@ export function ProposalCard({ proposal, currentSubjectData, readonly = false }:
 
       {/* Moderator note */}
       {proposal.note && (
-        <div className="rounded-xl border border-white/5 bg-background/50 px-4 py-3 text-sm shadow-sm">
+        <div className="rounded-xl border border-white/5 bg-background/50 px-4 py-3 text-sm ">
           <p className="text-xs text-muted-foreground mb-1 font-medium">Poznámka od studenta:</p>
           <p className="text-foreground">{proposal.note}</p>
         </div>
       )}
 
       {(formattedReviewedDate || proposal.rejection_reason) && (
-        <div className="space-y-2 rounded-xl border border-white/5 bg-background/50 px-4 py-3 text-sm shadow-sm">
+        <div className="space-y-2 rounded-xl border border-white/5 bg-background/50 px-4 py-3 text-sm ">
           {formattedReviewedDate && (
             <div>
               <p className="mb-1 text-xs font-medium text-muted-foreground">Vyřízeno</p>
@@ -330,7 +330,7 @@ export function ProposalCard({ proposal, currentSubjectData, readonly = false }:
       {!readonly && proposal.status === 'pending' && (
         <div className="flex flex-wrap gap-3 pt-4 mt-2 border-t border-white/5">
         <button onClick={handleApprove} disabled={isPending}
-          className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium accent-gradient text-white hover:opacity-90 transition-all disabled:opacity-50">
+          className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium primary-action text-white hover:opacity-90 transition-colors disabled:opacity-50">
           <CheckCircle className="w-4 h-4" /> {isPending ? 'Zpracovávám…' : 'Schválit'}
         </button>
 
@@ -340,17 +340,17 @@ export function ProposalCard({ proposal, currentSubjectData, readonly = false }:
               placeholder="Důvod zamítnutí (volitelné)"
               value={rejectReason}
               onChange={(e) => setRejectReason(e.target.value)}
-              className="flex-1 rounded-xl border border-destructive/20 bg-destructive/5 px-4 py-3 shadow-inner text-sm outline-none focus:ring-1 focus:ring-destructive/40 focus:bg-background transition-all"
+              className="flex-1 rounded-xl border border-destructive/20 bg-destructive/5 px-4 py-3  text-sm outline-none focus:ring-1 focus:ring-destructive/40 focus:bg-background transition-colors"
             />
             <button onClick={handleReject} disabled={isPending}
-              className="px-4 py-2 rounded-xl text-sm font-medium bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-all disabled:opacity-50">
+              className="px-4 py-2 rounded-xl text-sm font-medium bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-colors disabled:opacity-50">
               Potvrdit
             </button>
             <button onClick={() => setShowReject(false)} className="text-xs text-muted-foreground hover:text-foreground">Zrušit</button>
           </div>
         ) : (
           <button onClick={() => setShowReject(true)} disabled={isPending}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium border border-destructive/50 text-destructive hover:bg-destructive/10 transition-all">
+            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium border border-destructive/50 text-destructive hover:bg-destructive/10 transition-colors">
             <XCircle className="w-4 h-4" /> Zamítnout
           </button>
         )}

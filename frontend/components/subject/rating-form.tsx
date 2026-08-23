@@ -43,11 +43,11 @@ function StarPicker({
             onClick={() => onChange(star)}
             onMouseEnter={() => setHovered(star)}
             onMouseLeave={() => setHovered(0)}
-            className="text-xl transition-transform hover:scale-110"
+            className="text-xl transition-colors"
             aria-label={`${star} z 5`}
           >
             <span className={active >= star ? 'text-[#F6B73C]' : 'text-muted/60'}>
-              ★
+
             </span>
           </button>
         ))}
@@ -125,9 +125,9 @@ export function RatingForm({
         </p>
         <Link
           href="/prihlaseni"
-          className="inline-flex items-center gap-2 rounded-lg bg-primary px-5 py-2 text-sm font-medium text-primary-foreground transition-all hover:bg-[#35D7E8]"
+          className="inline-flex items-center gap-2 rounded-lg bg-primary px-5 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-[#35D7E8]"
         >
-          Přihlásit se →
+          Přihlásit se
         </Link>
       </div>
     )
@@ -202,7 +202,7 @@ export function RatingForm({
   return (
     <>
       <form onSubmit={handleSubmit} className="space-y-5">
-        {/* Celkové hodnocení — povinné */}
+        {/* Celkové hodnocení … povinné */}
         <div>
           <StarPicker
             label="Celkové hodnocení *"
@@ -242,7 +242,7 @@ export function RatingForm({
             maxLength={2000}
             rows={3}
             placeholder="Sdílej svou zkušenost s předmětem..."
-            className="w-full resize-none rounded-xl border border-border bg-input px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground outline-none transition-all focus:border-transparent focus:bg-background focus:ring-1 focus:ring-primary/40"
+            className="w-full resize-none rounded-xl border border-border bg-input px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground outline-none transition-colors focus:border-transparent focus:bg-background focus:ring-1 focus:ring-primary/40"
           />
           <p className="text-xs text-muted-foreground/50 text-right">
             {comment.length}/2000
@@ -269,7 +269,7 @@ export function RatingForm({
           <button
             type="submit"
             disabled={isSubmitting || isDeleting || overall === 0}
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-2.5 text-sm font-medium text-primary-foreground transition-all hover:bg-[#35D7E8] disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:px-6"
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-[#35D7E8] disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:px-6"
           >
             {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
             {isSubmitting ? 'Ukládám...' : hasExistingRating ? 'Uložit změny' : 'Uložit hodnocení'}

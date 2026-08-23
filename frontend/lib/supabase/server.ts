@@ -10,6 +10,10 @@ export async function createClient() {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
+        cookieOptions: {
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax',
+        },
         getAll() {
           return cookieStore.getAll()
         },
@@ -19,7 +23,7 @@ export async function createClient() {
               cookieStore.set(name, value, options)
             )
           } catch {
-            // setAll může selhat v Server Components — ignorujeme
+            // setAll může selhat v Server Components, proto chybu ignorujeme.
           }
         },
       },

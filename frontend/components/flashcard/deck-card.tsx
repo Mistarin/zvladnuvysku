@@ -10,7 +10,7 @@ interface DeckCardProps {
 
 export function DeckCard({ deck, dueCount }: DeckCardProps) {
   return (
-    <div className="glass-card hover-card rounded-xl p-5 space-y-3 transition-all group">
+    <div className="surface-card interactive-surface rounded-xl p-5 space-y-3 transition-colors group">
       <div className="flex items-start justify-between gap-3">
         <Link href={`/flashcardy/${deck.id}`} className="min-w-0 flex-1">
           <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors leading-snug">
@@ -25,7 +25,7 @@ export function DeckCard({ deck, dueCount }: DeckCardProps) {
             />
           )}
           {dueCount !== undefined && dueCount > 0 && (
-            <span className="shrink-0 text-xs font-semibold px-2 py-0.5 rounded-full accent-gradient text-white">
+            <span className="shrink-0 text-xs font-semibold px-2 py-0.5 rounded-md primary-action text-white">
               {dueCount} dnes
             </span>
           )}
@@ -41,10 +41,10 @@ export function DeckCard({ deck, dueCount }: DeckCardProps) {
 
         <div className="flex items-center justify-between pt-1">
           <span className="text-xs text-muted-foreground">
-            🃏 {deck.card_count} {deck.card_count === 1 ? 'karta' : deck.card_count >= 2 && deck.card_count <= 4 ? 'karty' : 'karet'}
+             {deck.card_count} {deck.card_count === 1 ? 'karta' : deck.card_count >= 2 && deck.card_count <= 4 ? 'karty' : 'karet'}
           </span>
           {!deck.is_public && (
-            <span className="text-xs text-muted-foreground">🔒 Soukromý</span>
+            <span className="text-xs text-muted-foreground"> Soukromý</span>
           )}
         </div>
       </Link>

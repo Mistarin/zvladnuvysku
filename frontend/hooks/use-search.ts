@@ -31,7 +31,7 @@ export function useSearch(): UseSearchReturn {
       .finally(() => setCacheLoading(false))
   }, [])
 
-  // Vyhledávání je čistě synchronní — žádná síť, žádný debounce
+  // Vyhledávání je čistě synchronní … žádná síť, žádný debounce
   const results = useMemo<SearchResult[]>(() => {
     if (!cache || query.trim().length < 1) return []
     return searchInCache(cache, query, 10)

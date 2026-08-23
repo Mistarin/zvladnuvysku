@@ -73,16 +73,16 @@ export default async function AdminPage(props: {
         </div>
         <div className="flex flex-col items-end gap-1">
           <Link href="/admin/subjects" className="text-sm font-medium text-primary hover:underline">
-            Správa předmětů →
+            Správa předmětů
           </Link>
           <Link href="/admin/materialy" className="text-sm font-medium text-primary hover:underline">
-            Správa materiálů →
+            Správa materiálů
           </Link>
           <Link href="/admin/ucitele" className="text-sm font-medium text-primary hover:underline">
-            Správa vyučujících →
+            Správa vyučujících
           </Link>
           <Link href="/admin/katedry" className="text-sm font-medium text-primary hover:underline">
-            Správa kateder →
+            Správa kateder
           </Link>
         </div>
       </div>
@@ -92,7 +92,7 @@ export default async function AdminPage(props: {
         <FacultyFilter />
       </div>
 
-      <div className="space-y-4 rounded-2xl border border-white/5 bg-card/40 backdrop-blur-md p-5 shadow-sm">
+      <div className="space-y-4 rounded-2xl border border-white/5 bg-card/40  p-5 ">
         <div className="flex flex-wrap gap-2">
           {([
             { key: "all", label: "Vše" },
@@ -113,10 +113,10 @@ export default async function AdminPage(props: {
               <Link
                 key={queue.key}
                 href={href}
-                className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${
+                className={`inline-flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm font-medium transition-colors ${
                   isActive
                     ? "border-primary bg-primary/10 text-primary"
-                    : "border-white/5 bg-background shadow-inner text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+                    : "border-white/5 bg-background  text-muted-foreground hover:bg-muted/50 hover:text-foreground"
                 }`}
               >
                 <span>{queue.label}</span>
@@ -131,13 +131,13 @@ export default async function AdminPage(props: {
             name="q"
             defaultValue={query}
             placeholder="Hledat v moderaci podle názvu, komentáře nebo zprávy..."
-            className="w-full rounded-xl border border-white/5 bg-background shadow-inner px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+            className="w-full rounded-xl border border-white/5 bg-background  px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20"
           />
           {facultyFilter && <input type="hidden" name="faculty" value={facultyFilter} />}
           {queueFilter !== "all" && <input type="hidden" name="queue" value={queueFilter} />}
           <button
             type="submit"
-            className="rounded-xl border border-white/5 bg-card/60 shadow-inner px-5 py-3 text-sm font-medium text-foreground hover:bg-muted/50"
+            className="rounded-xl border border-white/5 bg-card/60  px-5 py-3 text-sm font-medium text-foreground hover:bg-muted/50"
           >
             Filtrovat frontu
           </button>
@@ -166,20 +166,20 @@ async function AdminQueuesSection({
   const { data: rawProposals } = await supabase
     .from("subject_proposals")
     .select("*")
-    .eq("status", "pending")
+    .eq("status" as never, "pending")
     .order("created_at", { ascending: true })
     .limit(queueItemLimit);
 
-  let proposals = (rawProposals ?? []) as SubjectProposal[];
+  let proposals = (rawProposals ?? []) as unknown as SubjectProposal[];
   const { data: rawProposalHistory } = queueFilter === "history"
     ? await supabase
         .from("subject_proposals")
         .select("*")
-        .in("status", ["approved", "rejected"])
+        .in("status" as never, ["approved", "rejected"])
         .order("reviewed_at", { ascending: false })
         .limit(queueItemLimit)
     : { data: [] as SubjectProposal[] };
-  let proposalHistory = (rawProposalHistory ?? []) as SubjectProposal[];
+  let proposalHistory = (rawProposalHistory ?? []) as unknown as SubjectProposal[];
 
   type MaterialWithSubject = Database["public"]["Tables"]["subject_materials"]["Row"] & {
     subject: Pick<Database["public"]["Tables"]["subjects"]["Row"], "name" | "faculty" | "slug"> | null;
@@ -208,43 +208,43 @@ async function AdminQueuesSection({
   const { data: rawMaterials } = await supabase
     .from("subject_materials")
     .select("*, subject:subject_id(name, faculty, slug)")
-    .eq("moderation_status", "pending")
+    .eq("moderation_status" as never, "pending")
     .order("created_at", { ascending: true })
     .limit(queueItemLimit);
-  let unapprovedMaterials = (rawMaterials ?? []) as MaterialWithSubject[];
+  let unapprovedMaterials = (rawMaterials ?? []) as unknown as MaterialWithSubject[];
 
   const { data: rawSubjectRatings } = await supabase
     .from("subject_ratings")
     .select("*, subject:subject_id(name, faculty)")
     .not("comment", "is", null)
-    .eq("comment_is_approved", false)
+    .eq("comment_is_approved" as never, false)
     .order("created_at", { ascending: true })
     .limit(queueItemLimit);
-  let unapprovedSubjectRatings = (rawSubjectRatings ?? []) as SubjectCommentQueueItem[];
+  let unapprovedSubjectRatings = (rawSubjectRatings ?? []) as unknown as SubjectCommentQueueItem[];
 
   const { data: rawTeacherRatings } = await supabase
     .from("teacher_ratings")
     .select("*, teacher:teacher_id(name, faculty)")
     .not("review", "is", null)
-    .eq("comment_is_approved", false)
+    .eq("comment_is_approved" as never, false)
     .order("created_at", { ascending: true })
     .limit(queueItemLimit);
-  let unapprovedTeacherRatings = (rawTeacherRatings ?? []) as TeacherCommentQueueItem[];
+  let unapprovedTeacherRatings = (rawTeacherRatings ?? []) as unknown as TeacherCommentQueueItem[];
 
   const { data: rawFeedback } = await supabase
     .from("feedback")
     .select("*")
-    .neq("status", "resolved")
+    .neq("status" as never, "resolved")
     .limit(queueItemLimit);
-  const unresolvedFeedback = (rawFeedback ?? []) as FeedbackItem[];
+  const unresolvedFeedback = (rawFeedback ?? []) as unknown as FeedbackItem[];
 
   const { data: rawTeachers } = await supabase
     .from("teachers")
     .select("*")
-    .eq("is_approved", false)
+    .eq("is_approved" as never, false)
     .order("created_at", { ascending: true })
     .limit(queueItemLimit);
-  let unapprovedTeachers = (rawTeachers ?? []) as TeacherItem[];
+  let unapprovedTeachers = (rawTeachers ?? []) as unknown as TeacherItem[];
 
   const userSummaries = await getPublicUserSummaryMap(
     [
@@ -326,7 +326,8 @@ async function AdminQueuesSection({
   ].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
 
   const subjectIds = proposals.filter((p) => p.type === "edit" && p.subject_id).map((p) => p.subject_id as string);
-  const { data: currentSubjects } = subjectIds.length ? await supabase.from("subjects").select("*").in("id", subjectIds) : { data: [] as Database["public"]["Tables"]["subjects"]["Row"][] };
+  const { data: rawCurrentSubjects } = subjectIds.length ? await supabase.from("subjects").select("*").in("id" as never, subjectIds) : { data: [] as Database["public"]["Tables"]["subjects"]["Row"][] };
+  const currentSubjects = (rawCurrentSubjects ?? []) as unknown as Database["public"]["Tables"]["subjects"]["Row"][];
   const subjectsMap = Object.fromEntries((currentSubjects ?? []).map((subject) => [subject.id, subject]));
   const proposalsWithEmail = proposals.map((proposal) => ({
     ...proposal,
@@ -360,14 +361,14 @@ async function AdminQueuesSection({
       <MaterialStorageAudit />
 
       {allDone ? (
-        <div className="glass-card mt-8 space-y-3 p-12 text-center">
-          <div className="text-4xl">🎉</div>
+        <div className="surface-card mt-8 space-y-3 p-12 text-center">
+          <div className="text-4xl"></div>
           <p className="text-muted-foreground">Vše je vyřízeno! Žádné úkoly k řešení pro tuto volbu.</p>
         </div>
       ) : (
         <div className="space-y-12">
           {isQueueVisible("proposals") && proposalsWithEmail.length > 0 && (
-            <QueueSection icon="📝" title="Návrhy předmětů" countLabel={formatCount(proposalsWithEmail.length, "návrh", "návrhy", "návrhů")}>
+            <QueueSection icon="" title="Návrhy předmětů" countLabel={formatCount(proposalsWithEmail.length, "návrh", "návrhy", "návrhů")}>
               <div className="space-y-4">
                 {proposalsWithEmail.map((proposal) => (
                   <ProposalCard
@@ -380,7 +381,7 @@ async function AdminQueuesSection({
             </QueueSection>
           )}
           {isQueueVisible("history") && proposalHistoryWithEmail.length > 0 && (
-            <QueueSection icon="🗂️" title="Historie návrhů" countLabel={formatCount(proposalHistoryWithEmail.length, "záznam", "záznamy", "záznamů")}>
+            <QueueSection icon="" title="Historie návrhů" countLabel={formatCount(proposalHistoryWithEmail.length, "záznam", "záznamy", "záznamů")}>
               <div className="space-y-4">
                 {proposalHistoryWithEmail.map((proposal) => (
                   <ProposalCard
@@ -394,7 +395,7 @@ async function AdminQueuesSection({
             </QueueSection>
           )}
           {isQueueVisible("materials") && unapprovedMaterials.length > 0 && (
-            <QueueSection icon="📚" title="Nové materiály" countLabel={formatCount(unapprovedMaterials.length, "materiál", "materiály", "materiálů")}>
+            <QueueSection icon="" title="Nové materiály" countLabel={formatCount(unapprovedMaterials.length, "materiál", "materiály", "materiálů")}>
               <div className="space-y-4">
                 {unapprovedMaterials.map((material) => (
                   <MaterialApprovalCard
@@ -409,14 +410,14 @@ async function AdminQueuesSection({
             </QueueSection>
           )}
           {isQueueVisible("comments") && unapprovedComments.length > 0 && (
-            <QueueSection icon="💬" title="Nové komentáře" countLabel={formatCount(unapprovedComments.length, "komentář", "komentáře", "komentářů")}>
+            <QueueSection icon="" title="Nové komentáře" countLabel={formatCount(unapprovedComments.length, "komentář", "komentáře", "komentářů")}>
               <div className="space-y-4">
                 {unapprovedComments.map((comment) => <RatingApprovalCard key={comment.id} rating={comment} />)}
               </div>
             </QueueSection>
           )}
           {isQueueVisible("feedback") && filteredFeedback.length > 0 && (
-            <QueueSection icon="💡" title="Zpětná vazba" countLabel={formatCount(filteredFeedback.length, "zpráva", "zprávy", "zpráv")}>
+            <QueueSection icon="" title="Zpětná vazba" countLabel={formatCount(filteredFeedback.length, "zpráva", "zprávy", "zpráv")}>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 {filteredFeedback.map((feedback) => (
                   <FeedbackApprovalCard
@@ -431,7 +432,7 @@ async function AdminQueuesSection({
             </QueueSection>
           )}
           {isQueueVisible("teachers") && unapprovedTeachers.length > 0 && (
-            <QueueSection icon="🧑‍🏫" title="Noví učitelé" countLabel={formatCount(unapprovedTeachers.length, "učitel", "učitelé", "učitelů")}>
+            <QueueSection icon="‍" title="Noví učitelé" countLabel={formatCount(unapprovedTeachers.length, "učitel", "učitelé", "učitelů")}>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 {unapprovedTeachers.map((teacher) => (
                   <TeacherApprovalCard
@@ -451,7 +452,7 @@ async function AdminQueuesSection({
 
 function CountCard({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded-2xl border border-white/5 bg-card/40 backdrop-blur-md px-5 py-4 shadow-sm">
+    <div className="rounded-2xl border border-white/5 bg-card/40  px-5 py-4 ">
       <p className="text-xs uppercase tracking-wide text-muted-foreground">{label}</p>
       <p className="mt-1 text-2xl font-bold text-foreground">{value}</p>
     </div>
@@ -497,11 +498,11 @@ function AdminQueuesSkeleton() {
           </div>
         ))}
       </div>
-      <div className="rounded-[2rem] border border-white/5 bg-card/40 p-6">
+      <div className="rounded-lg border border-white/5 bg-card/40 p-6">
         <div className="h-6 w-48 animate-pulse rounded bg-muted" />
         <div className="mt-4 space-y-3">
           {Array.from({ length: 4 }).map((_, index) => (
-            <div key={index} className="rounded-2xl border border-white/5 bg-background/50 p-5 shadow-sm">
+            <div key={index} className="rounded-2xl border border-white/5 bg-background/50 p-5 ">
               <div className="h-4 w-2/3 animate-pulse rounded bg-muted" />
               <div className="mt-2 h-4 w-1/2 animate-pulse rounded bg-muted" />
             </div>

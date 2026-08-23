@@ -29,7 +29,7 @@ export function TeacherFormDialog({
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
-  
+
   // Local controlled state if not controlled by parent
   const [internalOpen, setInternalOpen] = useState(false);
   const isOpen = open !== undefined ? open : internalOpen;
@@ -95,8 +95,8 @@ export function TeacherFormDialog({
     <Dialog.Root open={isOpen} onOpenChange={setIsOpen}>
       {trigger && <Dialog.Trigger asChild>{trigger}</Dialog.Trigger>}
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 animate-in fade-in" />
-        <Dialog.Content className="fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-card p-6 shadow-lg sm:rounded-xl animate-in fade-in zoom-in-95">
+        <Dialog.Overlay className="fixed inset-0 bg-background/80  z-50 animate-in fade-in" />
+        <Dialog.Content className="fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-card p-6  sm:rounded-xl animate-in fade-in zoom-in-95">
           <div className="flex flex-col space-y-1.5 text-center sm:text-left">
             <Dialog.Title className="text-lg font-semibold leading-none tracking-tight">
               {isEditing ? "Upravit vyučujícího" : "Přidat vyučujícího"}
@@ -112,7 +112,7 @@ export function TeacherFormDialog({
                 {error}
               </div>
             )}
-            
+
             <div className="space-y-2">
               <label htmlFor="name" className="text-sm font-medium">Jméno s tituly</label>
               <input

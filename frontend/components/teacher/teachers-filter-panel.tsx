@@ -113,7 +113,7 @@ export function TeachersFilterPanel({ departments, subjects }: TeachersFilterPan
           type="button"
           onClick={() => setIsOpen((open) => !open)}
           className={`
-            flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-medium transition-all duration-150
+            flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-medium transition-colors duration-150
             ${isOpen || activeFilterCount > 0
               ? "border-primary/30 bg-primary/10 text-primary"
               : "border-border bg-card text-muted-foreground hover:bg-muted hover:text-foreground"}
@@ -122,7 +122,7 @@ export function TeachersFilterPanel({ departments, subjects }: TeachersFilterPan
           <span>{isOpen ? "▲" : "▼"}</span>
           <span>Filtry</span>
           {activeFilterCount > 0 ? (
-            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
+            <span className="flex h-5 w-5 items-center justify-center rounded-md bg-primary text-xs font-bold text-primary-foreground">
               {activeFilterCount}
             </span>
           ) : null}
@@ -140,7 +140,7 @@ export function TeachersFilterPanel({ departments, subjects }: TeachersFilterPan
       </div>
 
       {isOpen ? (
-        <div className="grid gap-4 rounded-2xl border border-border bg-card/90 p-4 shadow-sm animate-slide-down md:grid-cols-2 xl:grid-cols-4">
+        <div className="grid gap-4 rounded-2xl border border-border bg-card/90 p-4   md:grid-cols-2 xl:grid-cols-4">
           <div className="space-y-2">
             <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Fakulta</h4>
             <select
@@ -192,7 +192,7 @@ export function TeachersFilterPanel({ departments, subjects }: TeachersFilterPan
               <option value="">Bez minima</option>
               {[1, 2, 3, 4, 4.5].map((rating) => (
                 <option key={rating} value={rating}>
-                  {rating.toString().replace(".", ",")} ★ a více
+                  {rating.toString().replace(".", ",")}  a více
                 </option>
               ))}
             </select>

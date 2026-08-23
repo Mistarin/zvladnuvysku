@@ -32,12 +32,12 @@ export function DifficultyBadge({
   return (
     <span
       className={`
-        inline-flex items-center rounded-full font-medium whitespace-nowrap
+        inline-flex items-center rounded-md font-medium whitespace-nowrap
         badge-difficulty-${clampedDifficulty}
         ${sizeClasses[size]}
       `}
-      title={`Obtížnost: ${displayValue}/5 — ${label}`}
-      aria-label={`Obtížnost ${displayValue} z 5 — ${label}`}
+      title={`Obtížnost: ${displayValue}/5 … ${label}`}
+      aria-label={`Obtížnost ${displayValue} z 5 … ${label}`}
     >
       {showLabel ? (
         <span>Obtížnost: {displayValue}/5</span>
@@ -68,7 +68,7 @@ export function StarRating({ value, max = 5, size = "default" }: StarRatingProps
               : "text-muted-foreground/30"
           }`}
         >
-          ★
+
         </span>
       ))}
     </span>

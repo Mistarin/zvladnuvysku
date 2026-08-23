@@ -77,11 +77,11 @@ export function ReportIssueDialog({
       </Dialog.Trigger>
 
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm animate-in fade-in" />
-        <Dialog.Content className="fixed left-[50%] top-[50%] z-50 w-[calc(100vw-2rem)] max-w-md translate-x-[-50%] translate-y-[-50%] rounded-2xl border bg-card p-6 shadow-xl animate-in fade-in zoom-in-95">
+        <Dialog.Overlay className="fixed inset-0 z-50 bg-background/80  animate-in fade-in" />
+        <Dialog.Content className="fixed left-[50%] top-[50%] z-50 w-[calc(100vw-2rem)] max-w-md translate-x-[-50%] translate-y-[-50%] rounded-2xl border bg-card p-6  animate-in fade-in zoom-in-95">
           {success ? (
             <div className="space-y-3 py-6 text-center">
-              <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-amber-500/10 text-amber-600">
+              <div className="mx-auto flex size-12 items-center justify-center rounded-md bg-amber-500/10 text-amber-600">
                 <AlertTriangle className="size-5" />
               </div>
               <div>

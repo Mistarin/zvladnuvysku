@@ -42,8 +42,8 @@ export function DeleteDeckButton({ deckId }: { deckId: string }) {
       </Dialog.Trigger>
 
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm animate-in fade-in" />
-        <Dialog.Content className="fixed left-[50%] top-[50%] z-50 w-[calc(100vw-2rem)] max-w-md translate-x-[-50%] translate-y-[-50%] rounded-2xl border bg-card p-6 shadow-xl animate-in fade-in zoom-in-95">
+        <Dialog.Overlay className="fixed inset-0 z-50 bg-background/80  animate-in fade-in" />
+        <Dialog.Content className="fixed left-[50%] top-[50%] z-50 w-[calc(100vw-2rem)] max-w-md translate-x-[-50%] translate-y-[-50%] rounded-2xl border bg-card p-6  animate-in fade-in zoom-in-95">
           <div className="space-y-2 pr-8">
             <Dialog.Title className="text-lg font-semibold text-foreground">
               Smazat balíček kartiček?

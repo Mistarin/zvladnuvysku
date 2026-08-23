@@ -1,7 +1,7 @@
 export const FACULTIES = [
   {
     value: 'FSS',
-    label: 'FSS — Fakulta sociálních studií',
+    label: 'FSS: Fakulta sociálních studií',
     shortLabel: 'FSS',
     adminLabel: 'Sociální věda',
     color: '#FBB900',
@@ -9,7 +9,7 @@ export const FACULTIES = [
   },
   {
     value: 'FU',
-    label: 'FU — Fakulta umění',
+    label: 'FU: Fakulta umění',
     shortLabel: 'FU',
     adminLabel: 'Umělecká',
     color: '#D2091D',
@@ -17,7 +17,7 @@ export const FACULTIES = [
   },
   {
     value: 'FF',
-    label: 'FF — Filozofická fakulta',
+    label: 'FF: Filozofická fakulta',
     shortLabel: 'FF',
     adminLabel: 'Filozofická',
     color: '#74348B',
@@ -25,7 +25,7 @@ export const FACULTIES = [
   },
   {
     value: 'LF',
-    label: 'LF — Lékařská fakulta',
+    label: 'LF: Lékařská fakulta',
     shortLabel: 'LF',
     adminLabel: 'Lékařská',
     color: '#007CBB',
@@ -33,7 +33,7 @@ export const FACULTIES = [
   },
   {
     value: 'PdF',
-    label: 'PdF — Pedagogická fakulta',
+    label: 'PdF: Pedagogická fakulta',
     shortLabel: 'PdF',
     adminLabel: 'Pedagogická',
     color: '#EE7202',
@@ -41,7 +41,7 @@ export const FACULTIES = [
   },
   {
     value: 'PřF',
-    label: 'PřF — Přírodovědecká fakulta',
+    label: 'PřF: Přírodovědecká fakulta',
     shortLabel: 'PřF',
     adminLabel: 'Přírodní vědy',
     color: '#7A9B21',

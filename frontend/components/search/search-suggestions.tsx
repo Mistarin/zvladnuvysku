@@ -55,11 +55,11 @@ export function SearchSuggestions({
     return (
       <div
         data-search-suggestions
-        className="absolute top-full left-0 right-0 mt-1 z-50 animate-slide-down"
+        className="absolute top-full left-0 right-0 mt-1 z-50 "
         role="listbox"
         aria-label="Výsledky vyhledávání balíčků"
       >
-        <div className="bg-popover border border-border rounded-xl shadow-xl overflow-hidden">
+        <div className="bg-popover border border-border rounded-xl  overflow-hidden">
           {/* Header */}
           <div className="px-4 py-2 border-b border-border/50 flex items-center gap-2 bg-primary/5">
             <Layers className="w-3.5 h-3.5 text-primary" />
@@ -68,14 +68,14 @@ export function SearchSuggestions({
             </span>
             {flashcardQuery && (
               <span className="text-xs text-muted-foreground">
-                — hledám „{flashcardQuery}“
+                … hledám „{flashcardQuery}“
               </span>
             )}
           </div>
 
           {isDeckLoading ? (
             <div className="p-4 flex items-center gap-3">
-              <div className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+              <div className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-md animate-spin" />
               <span className="text-sm text-muted-foreground">Hledám balíčky...</span>
             </div>
           ) : deckResults.length === 0 ? (
@@ -90,7 +90,7 @@ export function SearchSuggestions({
                 className="mt-2 text-xs text-primary hover:underline block"
                 onClick={onSelect}
               >
-                Vytvořit nový balíček →
+                Vytvořit nový balíček
               </Link>
             </div>
           ) : (
@@ -143,7 +143,7 @@ export function SearchSuggestions({
                 onClick={onSelect}
                 className="flex items-center justify-center px-4 py-2.5 text-xs text-primary hover:bg-primary/5 transition-colors border-t border-border/50"
               >
-                Všechny balíčky →
+                Všechny balíčky
               </Link>
             </>
           )}
@@ -157,11 +157,11 @@ export function SearchSuggestions({
     return (
       <div
         data-search-suggestions
-        className="absolute top-full left-0 right-0 mt-1 z-50 animate-slide-down"
+        className="absolute top-full left-0 right-0 mt-1 z-50 "
         role="listbox"
         aria-label="Výsledky vyhledávání materiálů"
       >
-        <div className="bg-popover border border-border rounded-xl shadow-xl overflow-hidden">
+        <div className="bg-popover border border-border rounded-xl  overflow-hidden">
           <div className="px-4 py-2 border-b border-border/50 flex items-center gap-2 bg-sky-500/5">
             <FileText className="w-3.5 h-3.5 text-sky-600" />
             <span className="text-xs font-semibold text-sky-700 tracking-wide">
@@ -169,14 +169,14 @@ export function SearchSuggestions({
             </span>
             {materialQuery && (
               <span className="text-xs text-muted-foreground">
-                — hledám „{materialQuery}“
+                … hledám „{materialQuery}“
               </span>
             )}
           </div>
 
           {isMaterialLoading ? (
             <div className="p-4 flex items-center gap-3">
-              <div className="w-4 h-4 border-2 border-sky-600/30 border-t-sky-600 rounded-full animate-spin" />
+              <div className="w-4 h-4 border-2 border-sky-600/30 border-t-sky-600 rounded-md animate-spin" />
               <span className="text-sm text-muted-foreground">Hledám materiály...</span>
             </div>
           ) : materialResults.length === 0 ? (
@@ -191,7 +191,7 @@ export function SearchSuggestions({
                 onClick={onSelect}
                 className="mt-2 text-xs text-sky-700 hover:underline block"
               >
-                Zobrazit všechny materiály →
+                Zobrazit všechny materiály
               </Link>
             </div>
           ) : (
@@ -239,7 +239,7 @@ export function SearchSuggestions({
                 onClick={onSelect}
                 className="flex items-center justify-center px-4 py-2.5 text-xs text-sky-700 hover:bg-sky-500/5 transition-colors border-t border-border/50"
               >
-                Všechny materiály →
+                Všechny materiály
               </Link>
             </>
           )}
@@ -253,11 +253,11 @@ export function SearchSuggestions({
     return (
       <div
         data-search-suggestions
-        className="absolute top-full left-0 right-0 mt-1 z-50 animate-slide-down"
+        className="absolute top-full left-0 right-0 mt-1 z-50 "
         role="listbox"
         aria-label="Výsledky vyhledávání skupin materiálů"
       >
-        <div className="bg-popover border border-border rounded-xl shadow-xl overflow-hidden">
+        <div className="bg-popover border border-border rounded-xl  overflow-hidden">
           <div className="px-4 py-2 border-b border-border/50 flex items-center gap-2 bg-amber-500/10">
             <FolderOpen className="w-3.5 h-3.5 text-amber-600" />
             <span className="text-xs font-semibold text-amber-700 tracking-wide">
@@ -265,14 +265,14 @@ export function SearchSuggestions({
             </span>
             {groupQuery && (
               <span className="text-xs text-muted-foreground">
-                — hledám &bdquo;{groupQuery}&ldquo;
+                … hledám &bdquo;{groupQuery}&ldquo;
               </span>
             )}
           </div>
 
           {isGroupLoading ? (
             <div className="p-4 flex items-center gap-3">
-              <div className="w-4 h-4 border-2 border-amber-600/30 border-t-amber-600 rounded-full animate-spin" />
+              <div className="w-4 h-4 border-2 border-amber-600/30 border-t-amber-600 rounded-md animate-spin" />
               <span className="text-sm text-muted-foreground">Hledám skupiny...</span>
             </div>
           ) : groupResults.length === 0 ? (
@@ -287,7 +287,7 @@ export function SearchSuggestions({
                 className="mt-2 text-xs text-amber-700 hover:underline block"
                 onClick={onSelect}
               >
-                Procházet všechny skupiny →
+                Procházet všechny skupiny
               </Link>
             </div>
           ) : (
@@ -375,7 +375,7 @@ export function SearchSuggestions({
                 onClick={onSelect}
                 className="flex items-center justify-center px-4 py-2.5 text-xs text-amber-700 hover:bg-amber-500/5 transition-colors border-t border-border/50"
               >
-                Všechny skupiny →
+                Všechny skupiny
               </Link>
             </>
           )}
@@ -388,14 +388,14 @@ export function SearchSuggestions({
   return (
     <div
       data-search-suggestions
-      className="absolute top-full left-0 right-0 mt-1 z-50 animate-slide-down"
+      className="absolute top-full left-0 right-0 mt-1 z-50 "
       role="listbox"
       aria-label="Výsledky vyhledávání"
     >
-      <div className="bg-popover border border-border rounded-xl shadow-xl overflow-hidden">
+      <div className="bg-popover border border-border rounded-xl  overflow-hidden">
         {isLoading ? (
           <div className="p-4 flex items-center gap-3">
-            <div className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+            <div className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-md animate-spin" />
             <span className="text-sm text-muted-foreground">Hledám...</span>
           </div>
         ) : results.length === 0 ? (
@@ -411,7 +411,7 @@ export function SearchSuggestions({
               className="mt-2 text-xs text-primary hover:underline block"
               onClick={onSelect}
             >
-              Zobrazit všechny předměty →
+              Zobrazit všechny předměty
             </Link>
           </div>
         ) : (
@@ -424,7 +424,7 @@ export function SearchSuggestions({
                 role="option"
                 aria-selected={false}
                 className={`
-                  flex items-center justify-between px-4 py-3 
+                  flex items-center justify-between px-4 py-3
                   hover:bg-muted transition-colors duration-100 cursor-pointer
                   ${idx !== limitedResults.length - 1 ? "border-b border-border/50" : ""}
                 `}
@@ -456,7 +456,7 @@ export function SearchSuggestions({
               onClick={onSelect}
               className="flex items-center justify-center px-4 py-2.5 text-xs text-primary hover:bg-primary/5 transition-colors border-t border-border/50"
             >
-              Zobrazit všechny výsledky →
+              Zobrazit všechny výsledky
             </Link>
           </>
         )}

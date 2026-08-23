@@ -8,21 +8,21 @@ import { useSound } from "./sound-provider";
 export function SettingsMenu() {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
-  
+
   const { setTheme, resolvedTheme } = useTheme();
   const { isSoundEnabled, toggleSound } = useSound();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
-    
+
     // Close menu when clicking outside
     const handleClickOutside = (event: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
         setIsOpen(false);
       }
     };
-    
+
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
@@ -41,7 +41,7 @@ export function SettingsMenu() {
     <div className="relative" ref={menuRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`w-11 h-11 rounded-lg flex items-center justify-center transition-all duration-200 hover:scale-110 ${
+        className={`w-11 h-11 rounded-lg flex items-center justify-center transition-colors duration-200 ${
           isOpen ? "bg-muted text-foreground" : "text-muted-foreground hover:text-foreground hover:bg-muted"
         }`}
         aria-label="Nastavení"
@@ -51,7 +51,7 @@ export function SettingsMenu() {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 top-11 z-50 w-56 rounded-xl border border-border bg-popover shadow-xl animate-scale-in p-1">
+        <div className="absolute right-0 top-11 z-50 w-56 rounded-xl border border-border bg-popover   p-1">
           <button
             onClick={() => setTheme(isDark ? "light" : "dark")}
             className="w-full flex items-center justify-between px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
@@ -64,7 +64,7 @@ export function SettingsMenu() {
               {isDark ? "Tmavé" : "Světlé"}
             </span>
           </button>
-          
+
           <button
             onClick={toggleSound}
             className={`w-full flex items-center justify-between px-3 py-2 text-sm hover:bg-muted rounded-lg transition-colors ${

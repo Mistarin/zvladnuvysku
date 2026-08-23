@@ -493,7 +493,13 @@ export async function saveOwnDeck(formData: FormData): Promise<SaveDeckResult> {
           removedPaths.push(question.mediaPath)
         }
 
-        const extension = mediaFile.name.split('.').pop() || 'png'
+        const extension = mediaFile.type === 'image/jpeg'
+          ? 'jpg'
+          : mediaFile.type === 'image/png'
+            ? 'png'
+            : mediaFile.type === 'image/webp'
+              ? 'webp'
+              : 'avif'
         mediaPath = `${FLASHCARD_MEDIA_PREFIX}/${user.id}/${Date.now()}-${index}-${crypto.randomUUID()}.${extension}`
         const { error: uploadError } = await supabase.storage
           .from(FLASHCARD_MEDIA_BUCKET)
@@ -507,6 +513,8 @@ export async function saveOwnDeck(formData: FormData): Promise<SaveDeckResult> {
       } else if (question.removeMedia && question.mediaPath) {
         removedPaths.push(question.mediaPath)
         mediaPath = null
+      } else if (question.mediaPath && !question.mediaPath.startsWith(`${FLASHCARD_MEDIA_PREFIX}/${user.id}/`)) {
+        throw new Error(`Otázka ${index + 1}: obrázek nepatří k tvému účtu.`)
       }
 
       const answerData =

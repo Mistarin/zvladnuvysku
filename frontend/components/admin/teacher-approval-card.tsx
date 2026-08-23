@@ -46,11 +46,11 @@ export function TeacherApprovalCard({ teacher, author }: TeacherApprovalCardProp
   };
 
   return (
-    <div className="glass-card p-4 space-y-4">
+    <div className="surface-card p-4 space-y-4">
       <div className="flex justify-between items-start gap-4">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-600 border border-blue-500/20">
+            <span className="text-xs font-semibold px-2 py-0.5 rounded-md bg-blue-500/10 text-blue-600 border border-blue-500/20">
               Nový učitel
             </span>
             <span className="text-xs text-muted-foreground">
@@ -95,7 +95,7 @@ export function TeacherApprovalCard({ teacher, author }: TeacherApprovalCardProp
           Schválit
         </button>
 
-        <TeacherFormDialog 
+        <TeacherFormDialog
           teacher={teacher}
           trigger={
             <button

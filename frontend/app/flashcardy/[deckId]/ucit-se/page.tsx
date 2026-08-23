@@ -13,7 +13,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { deckId } = await params
   const supabase = await createClient()
   const { data } = await supabase.from('flashcard_decks').select('title').eq('id', deckId).single()
-  return { title: `Procvičování — ${(data as { title: string } | null)?.title ?? 'Kartičky'}` }
+  return { title: `Procvičování … ${(data as { title: string } | null)?.title ?? 'Kartičky'}` }
 }
 
 export default async function UcitSePage({ params }: PageProps) {

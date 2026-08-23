@@ -95,7 +95,7 @@ export default async function MyActivityPage() {
         </span>
       </div>
 
-      <div className="mb-6 rounded-[30px] border border-border bg-card p-6 shadow-[0_8px_24px_rgba(17,24,39,0.06)] dark:border-[#22344D] dark:bg-[linear-gradient(180deg,#0D1B2E,#07111F)] dark:shadow-[0_24px_80px_rgba(0,0,0,0.32)] sm:p-7">
+      <div className="mb-6 rounded-lg border border-border bg-card p-6 dark:border-[#22344D] dark:bg-[#0D1B2E] sm:p-7">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <h1 className="text-3xl font-bold text-foreground dark:text-[#F4F8FB] sm:text-4xl">Moje aktivita</h1>
@@ -671,7 +671,7 @@ function MyActivitySkeleton() {
     <div className="space-y-8">
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
         {Array.from({ length: 5 }).map((_, index) => (
-          <div key={index} className="rounded-[1.5rem] border border-white/5 bg-card/40 backdrop-blur-md p-5 shadow-sm">
+          <div key={index} className="rounded-lg border border-white/5 bg-card/40  p-5 ">
             <div className="h-4 w-24 animate-pulse rounded bg-muted" />
             <div className="mt-3 h-8 w-20 animate-pulse rounded bg-muted" />
             <div className="mt-2 h-4 w-full animate-pulse rounded bg-muted" />
@@ -682,7 +682,7 @@ function MyActivitySkeleton() {
       {Array.from({ length: 4 }).map((_, index) => (
         <section key={index} className="space-y-4">
           <div className="h-6 w-48 animate-pulse rounded bg-muted" />
-          <div className="rounded-[1.5rem] border border-white/5 bg-card/40 backdrop-blur-md p-5 shadow-sm">
+          <div className="rounded-lg border border-white/5 bg-card/40  p-5 ">
             <div className="grid grid-cols-3 gap-2">
               {Array.from({ length: 3 }).map((__, buttonIndex) => (
                 <div key={buttonIndex} className="h-12 animate-pulse rounded-xl bg-muted" />
@@ -690,7 +690,7 @@ function MyActivitySkeleton() {
             </div>
             <div className="mt-4 space-y-3">
               {Array.from({ length: 3 }).map((__, itemIndex) => (
-                <div key={itemIndex} className="rounded-[1.5rem] border border-white/5 bg-background/50 p-5 shadow-sm">
+                <div key={itemIndex} className="rounded-lg border border-white/5 bg-background/50 p-5 ">
                   <div className="h-4 w-2/3 animate-pulse rounded bg-muted" />
                   <div className="mt-2 h-4 w-1/2 animate-pulse rounded bg-muted" />
                 </div>

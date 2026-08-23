@@ -184,7 +184,7 @@ export function MyActivityDashboard({ publicIdentity, sections: initialSections 
       {activeSection ? (
         <section className="space-y-4">
           <div className="overflow-x-auto pb-1">
-            <div className="inline-flex min-w-full gap-2 rounded-2xl border border-border bg-card p-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] dark:border-[#22344D] dark:bg-[#0D1B2E] sm:min-w-0">
+            <div className="inline-flex min-w-full gap-2 rounded-2xl border border-border bg-card p-2  dark:border-[#22344D] dark:bg-[#0D1B2E] sm:min-w-0">
               {sections.map((section) => {
                 const isActive = section.id === activeSection.id
                 return (
@@ -293,7 +293,7 @@ function renderSectionContent({
         ) : null}
       </div>
 
-      <div className="rounded-[28px] border border-border bg-card p-5 shadow-[0_8px_24px_rgba(17,24,39,0.06)] dark:border-[#22344D] dark:bg-[linear-gradient(180deg,#0D1B2E,#07111F)] dark:shadow-[0_18px_60px_rgba(0,0,0,0.28)] sm:p-6">
+      <div className="rounded-lg border border-border bg-card p-5 dark:border-[#22344D] dark:bg-[#0D1B2E] sm:p-6">
         <div
           className="grid gap-2 rounded-2xl border border-border bg-background p-2 dark:border-[#22344D] dark:bg-[#0D1B2E]"
           style={{ gridTemplateColumns: `repeat(${section.tabs.length}, minmax(0, 1fr))` }}
@@ -431,7 +431,7 @@ function getSectionItemCount(section: ActivitySectionData) {
 
 function SummaryCard({ card }: { card: SummaryCardData }) {
   return (
-    <div className="rounded-[24px] border border-border bg-card p-5 shadow-[0_8px_24px_rgba(17,24,39,0.06)] dark:border-[#22344D] dark:bg-[rgba(13,27,46,0.94)] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
+    <div className="rounded-lg border border-border bg-card p-5  dark:border-[#22344D] dark:bg-[rgba(13,27,46,0.94)] dark:">
       <div className="flex items-center gap-3 text-sm font-medium text-muted-foreground dark:text-[#8FA3B8]">
         <span className={cn('inline-flex h-10 w-10 items-center justify-center rounded-xl border', getToneSurfaceClass(card.tone))}>
           {card.icon}
@@ -473,7 +473,7 @@ function ActivityCard({
   return (
     <div
       className={cn(
-        'rounded-[24px] border border-border bg-card p-5 shadow-[0_8px_24px_rgba(17,24,39,0.06)] dark:border-[#22344D] dark:bg-[rgba(13,27,46,0.94)] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.02)]',
+        'rounded-lg border border-border bg-card p-5  dark:border-[#22344D] dark:bg-[rgba(13,27,46,0.94)] dark:',
         getActivityAccentClass(item),
         item.attention?.acknowledged ? 'opacity-75' : null,
       )}

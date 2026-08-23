@@ -252,7 +252,7 @@ function isNextFrameworkControlFlowError(error: unknown) {
 function NavrhnoutRenderFallback() {
   return (
     <div className="container mx-auto max-w-2xl px-4 py-16 text-center sm:px-6 lg:px-8">
-      <div className="rounded-2xl border border-border bg-card p-8 shadow-sm">
+      <div className="rounded-2xl border border-border bg-card p-8 ">
         <h1 className="text-2xl font-bold text-foreground">Návrh teď nejde načíst</h1>
         <p className="mt-3 text-sm leading-6 text-muted-foreground">
           Nepodařilo se bezpečně ověřit přihlášení nebo profil. Zkus stránku obnovit, případně se znovu přihlásit.
@@ -276,7 +276,7 @@ function ProposalSubmitSuccess({
   subjectSlug?: string | null
 }) {
   return (
-    <div className="rounded-[2rem] border border-white/10 bg-card/70 p-8 shadow-sm backdrop-blur-xl sm:p-10">
+    <div className="rounded-lg border border-white/10 bg-card/70 p-8   sm:p-10">
       <div className="flex justify-center">
         <div className="inline-flex size-14 items-center justify-center rounded-2xl bg-primary/10 text-primary">
           <CheckCircle2 className="size-7" />

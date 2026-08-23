@@ -12,11 +12,11 @@ interface TeacherTableProps {
 
 function TeacherRating({ teacher }: { teacher: TeacherDirectoryRow }) {
   if (!teacher.totalRatings || teacher.avgRating === null) {
-    return <span className="text-sm text-muted-foreground">—</span>;
+    return <span className="text-sm text-muted-foreground">…</span>;
   }
 
   return (
-    <div className="inline-flex items-center gap-1 rounded-full border border-amber-500/20 bg-amber-500/10 px-2.5 py-1 text-sm text-amber-600 dark:text-amber-400">
+    <div className="inline-flex items-center gap-1 rounded-md border border-amber-500/20 bg-amber-500/10 px-2.5 py-1 text-sm text-amber-600 dark:text-amber-400">
       <span className="font-semibold">{teacher.avgRating.toFixed(1)}</span>
       <Star className="h-3.5 w-3.5 fill-current" />
       <span className="text-[11px] text-muted-foreground">({teacher.totalRatings})</span>
@@ -41,7 +41,7 @@ export function TeacherTable({ teachers }: TeacherTableProps) {
           {teachers.length === 0 ? (
             <tr>
               <td colSpan={5} className="px-4 py-12 text-center text-muted-foreground">
-                <p className="mb-1 text-lg">🔎</p>
+                <p className="mb-1 text-lg"></p>
                 <p className="text-sm">Žádní vyučující neodpovídají filtrům.</p>
               </td>
             </tr>
@@ -87,13 +87,13 @@ export function TeacherTable({ teachers }: TeacherTableProps) {
                                 <Link
                                   key={subject.id}
                                   href={`/predmety/${subject.slug}`}
-                                  className="rounded-full border border-border bg-background px-2 py-0.5 text-[11px] font-medium text-foreground transition-colors hover:bg-muted"
+                                  className="rounded-md border border-border bg-background px-2 py-0.5 text-[11px] font-medium text-foreground transition-colors hover:bg-muted"
                                 >
                                   {subject.short_tag}
                                 </Link>
                               ))}
                               {remainingSubjectCount > 0 ? (
-                                <span className="rounded-full border border-dashed border-border px-2 py-0.5 text-[11px] text-muted-foreground">
+                                <span className="rounded-md border border-dashed border-border px-2 py-0.5 text-[11px] text-muted-foreground">
                                   +{remainingSubjectCount}
                                 </span>
                               ) : null}
@@ -114,7 +114,7 @@ export function TeacherTable({ teachers }: TeacherTableProps) {
                     </span>
                   </td>
                   <td className="hidden px-4 py-3 text-sm text-muted-foreground lg:table-cell">
-                    {teacher.department ?? "—"}
+                    {teacher.department ?? "…"}
                   </td>
                   <td className="hidden px-4 py-3 text-center align-top sm:table-cell">
                     <TeacherRating teacher={teacher} />
@@ -126,19 +126,19 @@ export function TeacherTable({ teachers }: TeacherTableProps) {
                           <Link
                             key={subject.id}
                             href={`/predmety/${subject.slug}`}
-                            className="rounded-full border border-border bg-background px-2 py-0.5 text-xs font-medium text-foreground transition-colors hover:bg-muted"
+                            className="rounded-md border border-border bg-background px-2 py-0.5 text-xs font-medium text-foreground transition-colors hover:bg-muted"
                           >
                             {subject.short_tag}
                           </Link>
                         ))}
                         {remainingSubjectCount > 0 ? (
-                          <span className="rounded-full border border-dashed border-border px-2 py-0.5 text-xs text-muted-foreground">
+                          <span className="rounded-md border border-dashed border-border px-2 py-0.5 text-xs text-muted-foreground">
                             +{remainingSubjectCount}
                           </span>
                         ) : null}
                       </div>
                     ) : (
-                      <span className="text-sm text-muted-foreground">—</span>
+                      <span className="text-sm text-muted-foreground">…</span>
                     )}
                   </td>
                 </tr>

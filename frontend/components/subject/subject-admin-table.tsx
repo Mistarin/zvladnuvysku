@@ -99,7 +99,7 @@ function EditRow({
           }
           className={inputCls}
         >
-          <option value="">—</option>
+          <option value="">…</option>
           {FACULTIES.map((faculty) => (
             <option key={faculty.value} value={faculty.value}>
               {faculty.label}
@@ -109,7 +109,7 @@ function EditRow({
       </td>
       <td className="px-4 py-3 hidden md:table-cell">
         <select value={form.department_id} onChange={(event) => setForm((current) => ({ ...current, department_id: event.target.value }))} className={inputCls}>
-          <option value="">—</option>
+          <option value="">…</option>
           {availableDepartments.map((department) => (
             <option key={department.id} value={department.id}>
               {department.name}
@@ -119,7 +119,7 @@ function EditRow({
       </td>
       <td className="px-4 py-3 hidden md:table-cell">
         <select value={form.semester} onChange={(event) => setForm((current) => ({ ...current, semester: event.target.value }))} className={inputCls}>
-          <option value="">—</option>
+          <option value="">…</option>
           <option value="zimní">Zimní</option>
           <option value="letní">Letní</option>
           <option value="oba">Oba</option>
@@ -182,7 +182,7 @@ function SubjectRowComp({ subject, departments }: { subject: SubjectRow; departm
 
   if (deleted) return null
 
-  const departmentName = subject.department_ref?.name ?? subject.department ?? '—'
+  const departmentName = subject.department_ref?.name ?? subject.department ?? '…'
 
   return (
     <tr className="border-b border-border/50 transition-colors hover:bg-muted/30 last:border-0">
@@ -200,11 +200,11 @@ function SubjectRowComp({ subject, departments }: { subject: SubjectRow; departm
           <td className="px-4 py-3 hidden sm:table-cell">
             <span className="rounded bg-primary/10 px-1.5 py-0.5 font-mono text-xs font-semibold text-primary/80">{subject.short_tag}</span>
           </td>
-          <td className="px-4 py-3 hidden md:table-cell text-sm text-muted-foreground">{subject.faculty ?? '—'}</td>
+          <td className="px-4 py-3 hidden md:table-cell text-sm text-muted-foreground">{subject.faculty ?? '…'}</td>
           <td className="px-4 py-3 hidden md:table-cell text-sm text-muted-foreground">{departmentName}</td>
-          <td className="px-4 py-3 hidden md:table-cell text-sm text-muted-foreground">{subject.semester ?? '—'}</td>
-          <td className="px-4 py-3 hidden lg:table-cell text-center text-sm">{subject.difficulty ?? '—'}</td>
-          <td className="px-4 py-3 hidden lg:table-cell text-center text-sm">{subject.credits ?? '—'}</td>
+          <td className="px-4 py-3 hidden md:table-cell text-sm text-muted-foreground">{subject.semester ?? '…'}</td>
+          <td className="px-4 py-3 hidden lg:table-cell text-center text-sm">{subject.difficulty ?? '…'}</td>
+          <td className="px-4 py-3 hidden lg:table-cell text-center text-sm">{subject.credits ?? '…'}</td>
           <td className="px-4 py-3">
             <div className="flex items-center gap-2">
               <button onClick={() => setEditing(true)} className="rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
@@ -241,7 +241,7 @@ export function SubjectAdminTable({ subjects, departments }: Props) {
         placeholder="Hledat předmět, zkratku nebo katedru…"
         value={search}
         onChange={(event) => setSearch(event.target.value)}
-        className="w-full max-w-sm rounded-xl border border-border bg-card px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground outline-none transition-all focus:border-primary/40 focus:ring-1 focus:ring-primary/40"
+        className="w-full max-w-sm rounded-xl border border-border bg-card px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground outline-none transition-colors focus:border-primary/40 focus:ring-1 focus:ring-primary/40"
       />
 
       <div className="w-full overflow-x-auto rounded-xl border border-border">

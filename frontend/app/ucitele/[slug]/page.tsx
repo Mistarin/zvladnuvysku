@@ -83,7 +83,7 @@ export default async function TeacherDetailPage({ params }: PageProps) {
     if (!row.subjects) return [];
     return Array.isArray(row.subjects) ? row.subjects : [row.subjects];
   });
-    
+
   const { data: teacherRatingStats } = await supabase
     .from("teacher_rating_stats")
     .select("avg_rating, total_ratings")
@@ -91,7 +91,7 @@ export default async function TeacherDetailPage({ params }: PageProps) {
     .maybeSingle();
 
   const ratingStats = teacherRatingStats as Database["public"]["Tables"]["teacher_rating_stats"]["Row"] | null;
-  const avgRating = ratingStats?.total_ratings ? ratingStats.avg_rating.toFixed(1) : "—";
+  const avgRating = ratingStats?.total_ratings ? ratingStats.avg_rating.toFixed(1) : "…";
 
   const { data: { user } } = await supabase.auth.getUser();
   const isLoggedIn = !!user;
@@ -122,13 +122,13 @@ export default async function TeacherDetailPage({ params }: PageProps) {
       </nav>
 
       {/* Header */}
-      <div className="glass-card p-8 mb-8 border-t-4" style={{ borderTopColor: facColor }}>
+      <div className="surface-card p-8 mb-8 border-t-4" style={{ borderTopColor: facColor }}>
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <span 
+              <span
                 className="px-2.5 py-1 text-xs font-semibold rounded-md uppercase tracking-wider"
-                style={{ 
+                style={{
                   backgroundColor: `${facColor}20`,
                   color: facColor,
                 }}
@@ -146,7 +146,7 @@ export default async function TeacherDetailPage({ params }: PageProps) {
           <div className="text-center bg-card border border-border rounded-2xl p-4 min-w-[120px]">
             <div className="text-sm text-muted-foreground font-medium mb-1">Průměrné hodnocení</div>
             <div className="text-3xl font-bold text-primary flex items-center justify-center gap-1">
-              {avgRating} <span className="text-xl">⭐</span>
+              {avgRating} <span className="text-xl"></span>
             </div>
             <div className="text-xs text-muted-foreground mt-1">
               {ratingStats?.total_ratings || 0} hodnocení
@@ -158,9 +158,9 @@ export default async function TeacherDetailPage({ params }: PageProps) {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         {/* Left Column (Subjects & Info) */}
         <div className="md:col-span-1 space-y-6">
-          <div className="glass-card p-6">
+          <div className="surface-card p-6">
             <h3 className="font-semibold text-lg border-b border-border pb-3 mb-4 flex items-center gap-2">
-              <span>📚</span> Vyučované předměty
+              <span></span> Vyučované předměty
             </h3>
             {subjects.length > 0 ? (
               <ul className="space-y-3">
@@ -187,7 +187,7 @@ export default async function TeacherDetailPage({ params }: PageProps) {
 
         {/* Right Column (Reviews) */}
         <div className="md:col-span-2 space-y-8">
-          <div className="glass-card p-6">
+          <div className="surface-card p-6">
             <h3 className="font-semibold text-xl mb-4">Ohodnoťte vyučujícího</h3>
             <TeacherRatingForm
               teacherId={t.id}

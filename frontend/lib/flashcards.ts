@@ -189,9 +189,8 @@ export function getFlashcardMediaUrl(mediaPath: string | null): string | null {
   if (typeof mediaPath === "string" && mediaPath.startsWith("http")) {
     return mediaPath;
   }
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  if (!supabaseUrl) return null;
-  return `${supabaseUrl}/storage/v1/object/public/${getFlashcardMediaBucket(mediaPath)}/${mediaPath}`;
+  const encodedPath = mediaPath.split('/').map((segment) => encodeURIComponent(segment)).join('/');
+  return `/api/storage/${encodeURIComponent(getFlashcardMediaBucket(mediaPath))}/${encodedPath}`;
 }
 
 export function getFlashcardMediaBucket(mediaPath: string | null | undefined): string {

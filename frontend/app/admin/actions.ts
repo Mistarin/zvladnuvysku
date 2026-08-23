@@ -101,7 +101,7 @@ function normalizeProposalMaterialGroupTitle(title: string | null | undefined) {
 
 function buildMaterialGroupFallbackTitle(subject: Pick<Database['public']['Tables']['subjects']['Row'], 'name' | 'short_tag'>) {
   const base = subject.short_tag?.trim() || subject.name?.trim() || 'Materiály'
-  return `${base} — materiály`
+  return `${base} … materiály`
 }
 
 async function insertSubjectWithUniqueSlug(
@@ -119,7 +119,7 @@ async function insertSubjectWithUniqueSlug(
 
     const { data, error } = await supabase.from('subjects').insert(nextPayload as never).select().single()
     if (!error && data) {
-      return { data: data as Database['public']['Tables']['subjects']['Row'], error: null }
+      return { data: data as unknown as Database['public']['Tables']['subjects']['Row'], error: null }
     }
 
     lastError = error ?? null
@@ -131,7 +131,7 @@ async function insertSubjectWithUniqueSlug(
   return { data: null, error: lastError }
 }
 
-async function getAdminClient() {
+async function getAdminClient(requireAdmin = false) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Nepřihlášen')
@@ -140,6 +140,9 @@ async function getAdminClient() {
   const role = user.app_metadata?.role as string | undefined
   if (role !== 'admin' && role !== 'moderator') {
     throw new Error('Nedostatečná oprávnění')
+  }
+  if (requireAdmin && role !== 'admin') {
+    throw new Error('Tuto operaci může provést pouze administrátor')
   }
 
   return { supabase, userId: user.id }
@@ -193,7 +196,7 @@ export async function approveProposal(
     })
       .from('subject_proposals')
       .select('*')
-      .eq('id', proposalId)
+      .eq('id' as never, proposalId)
       .single()
 
     if (fetchError || !proposal) return { success: false, error: 'Návrh nenalezen' }
@@ -265,14 +268,14 @@ export async function approveProposal(
       )
       delete updateData.material_group_title
 
-      const { error: updateError } = await supabase.from('subjects').update(updateData as never).eq('id', subjectId)
+    const { error: updateError } = await supabase.from('subjects').update(updateData as never).eq('id' as never, subjectId)
       if (updateError) return { success: false, error: `Chyba při úpravě: ${updateError.message}` }
 
       if (teachers && teachers.length > 0) {
         const teacherResult = await processTeachers(supabase, subjectId, teachers, proposal.proposed_by)
         if (!teacherResult.success) return teacherResult
       }
-      
+
       if (materials && materials.length > 0) {
         let groupId: string | null = null
         if (materials.length > 1) {
@@ -319,7 +322,7 @@ export async function approveProposal(
     })
       .from('subject_proposals')
       .update({ status: 'approved', reviewed_by: userId, reviewed_at: reviewedAt, subject_id: approvedSubjectId })
-      .eq('id', proposalId)
+      .eq('id' as never, proposalId)
 
     if (statusError) return { success: false, error: 'Chyba při aktualizaci stavu' }
 
@@ -355,7 +358,7 @@ export async function rejectProposal(proposalId: string, reason?: string): Promi
 
     let { error } = await proposalsTable
       .update(extendedPayload)
-      .eq('id', proposalId)
+      .eq('id' as never, proposalId)
 
     const isLegacySchemaError =
       typeof error === 'object' &&
@@ -367,7 +370,7 @@ export async function rejectProposal(proposalId: string, reason?: string): Promi
     if (isLegacySchemaError) {
       const retryResult = await proposalsTable
         .update(basePayload)
-        .eq('id', proposalId)
+        .eq('id' as never, proposalId)
       error = retryResult.error
     }
 
@@ -390,8 +393,8 @@ export async function rejectProposal(proposalId: string, reason?: string): Promi
 
 export async function deleteSubject(subjectId: string): Promise<ActionResult> {
   try {
-    const { supabase } = await getAdminClient()
-    const { error } = await supabase.from('subjects').delete().eq('id', subjectId)
+    const { supabase } = await getAdminClient(true)
+    const { error } = await supabase.from('subjects').delete().eq('id' as never, subjectId)
     if (error) return { success: false, error: `Chyba při mazání: ${error.message}` }
     revalidatePath('/admin')
     revalidatePath('/moje-aktivita')
@@ -405,13 +408,15 @@ export async function deleteSubject(subjectId: string): Promise<ActionResult> {
 export async function updateSubject(subjectId: string, data: Record<string, unknown>): Promise<ActionResult> {
   try {
     const { supabase } = await getAdminClient()
-    const payload = {
-      ...data,
-      ...(data.department !== undefined
-        ? { department: normalizeDepartmentName(typeof data.department === 'string' ? data.department : null) }
-        : {}),
+    const allowedKeys = ['name', 'short_tag', 'faculty', 'semester', 'difficulty', 'credits', 'department_id', 'department'] as const
+    const payload: Record<string, unknown> = {}
+    for (const key of allowedKeys) {
+      if (data[key] !== undefined) payload[key] = data[key]
     }
-    const { error } = await supabase.from('subjects').update(payload as never).eq('id', subjectId)
+    if (data.department !== undefined) {
+      payload.department = normalizeDepartmentName(typeof data.department === 'string' ? data.department : null)
+    }
+    const { error } = await supabase.from('subjects').update(payload as never).eq('id' as never, subjectId)
     if (error) return { success: false, error: `Chyba při ukládání: ${error.message}` }
     revalidatePath('/admin')
     revalidatePath('/admin/subjects')
@@ -454,10 +459,10 @@ async function processTeachers(
       }
       const { data: newTeacherData, error: teacherError } = await supabase.from('teachers').insert(teacherInsert as never).select().single()
       if (teacherError) return { success: false, error: `Nepodařilo se vytvořit vyučujícího ${t.name}: ${teacherError.message}` }
-      const newT = newTeacherData as Database['public']['Tables']['teachers']['Row'] | null
+      const newT = newTeacherData as unknown as Database['public']['Tables']['teachers']['Row'] | null
       if (newT) teacherId = newT.id
     }
-    
+
     if (teacherId) {
       // Link to subject
       const subjectTeacherInsert: SubjectTeacherInsert = {
@@ -501,7 +506,7 @@ export async function updateMaterialScoring(
     const { data: material, error: loadError } = await supabase
       .from('subject_materials')
       .select('id, uploader_id, subject:subject_id(slug)')
-      .eq('id', materialId)
+      .eq('id' as never, materialId)
       .maybeSingle()
 
     const typedMaterial = material as {
@@ -524,7 +529,7 @@ export async function updateMaterialScoring(
         page_count: normalizedPageCount,
         points_override: input.pointsOverride,
       } as never)
-      .eq('id', materialId)
+      .eq('id' as never, materialId)
 
     if (updateError) {
       return { success: false, error: `Nepodařilo se uložit bodování: ${updateError.message}` }
@@ -549,7 +554,7 @@ export async function approveMaterial(materialId: string): Promise<ActionResult>
     const { data: material, error: loadError } = await supabase
       .from('subject_materials')
       .select('id, uploader_id, subject:subject_id(slug)')
-      .eq('id', materialId)
+      .eq('id' as never, materialId)
       .maybeSingle()
     const typedMaterial = material as { id: string; uploader_id: string; subject: { slug: string } | null } | null
 
@@ -569,7 +574,7 @@ export async function approveMaterial(materialId: string): Promise<ActionResult>
         rejection_reason: null,
         moderated_at: new Date().toISOString(),
       } as never)
-      .eq('id', materialId)
+      .eq('id' as never, materialId)
 
     if (error) return { success: false, error: `Chyba při schvalování materiálu: ${error.message}` }
     revalidatePath('/admin')
@@ -591,7 +596,7 @@ export async function rejectMaterial(materialId: string, reason?: string): Promi
     const { data: material } = await supabase
       .from('subject_materials')
       .select('subject:subject_id(slug)')
-      .eq('id', materialId)
+      .eq('id' as never, materialId)
       .maybeSingle()
     const typedMaterial = material as { subject: { slug: string } | null } | null
 
@@ -603,12 +608,12 @@ export async function rejectMaterial(materialId: string, reason?: string): Promi
         rejection_reason: reason?.trim() || null,
         moderated_at: new Date().toISOString(),
       } as never)
-      .eq('id', materialId)
-      
-    if (dbError) { 
+      .eq('id' as never, materialId)
+
+    if (dbError) {
       return { success: false, error: `Chyba při zamítnutí materiálu: ${dbError.message}` }
     }
-    
+
     revalidatePath('/admin')
     if (typedMaterial?.subject?.slug) {
       revalidatePath(`/predmety/${typedMaterial.subject.slug}`)
@@ -627,21 +632,21 @@ export async function approveRatingComment(ratingId: string, type: "subject" | "
     const { data: existingRowData } = await supabase
       .from(table)
       .select(`user_id, ${type === 'subject' ? 'subject:subject_id(slug)' : 'teacher:teacher_id(slug)'}`)
-      .eq('id', ratingId)
+      .eq('id' as never, ratingId)
       .maybeSingle()
     const existingRow = existingRowData as {
       user_id: string
       subject?: { slug: string } | null
       teacher?: { slug: string } | null
     } | null
-    
+
     const { error } = await supabase
       .from(table)
       .update({ comment_is_approved: true } as never)
-      .eq('id', ratingId)
+      .eq('id' as never, ratingId)
 
     if (error) return { success: false, error: `Chyba při schvalování komentáře: ${error.message}` }
-    
+
     revalidatePath('/admin')
     revalidatePath('/')
     if (existingRow?.user_id) {
@@ -653,7 +658,7 @@ export async function approveRatingComment(ratingId: string, type: "subject" | "
         revalidatePath(`/${type === 'subject' ? 'predmety' : 'ucitele'}/${slug}`)
       }
     }
-    
+
     return { success: true }
   } catch (err) {
     return { success: false, error: err instanceof Error ? err.message : 'Neočekávaná chyba' }
@@ -667,22 +672,22 @@ export async function rejectRatingComment(ratingId: string, type: "subject" | "t
     const { data: existingRowData } = await supabase
       .from(table)
       .select(`user_id, ${type === 'subject' ? 'subject:subject_id(slug)' : 'teacher:teacher_id(slug)'}`)
-      .eq('id', ratingId)
+      .eq('id' as never, ratingId)
       .maybeSingle()
     const existingRow = existingRowData as {
       user_id: string
       subject?: { slug: string } | null
       teacher?: { slug: string } | null
     } | null
-    
+
     // We only set comment/review to NULL. We don't delete the row, so the star rating remains.
     const { error } = await supabase
       .from(table)
       .update((type === "subject" ? { comment: null } : { review: null }) as never)
-      .eq('id', ratingId)
+      .eq('id' as never, ratingId)
 
     if (error) return { success: false, error: `Chyba při mazání textu komentáře: ${error.message}` }
-    
+
     revalidatePath('/admin')
     revalidatePath('/')
     if (existingRow?.user_id) {
@@ -694,7 +699,7 @@ export async function rejectRatingComment(ratingId: string, type: "subject" | "t
         revalidatePath(`/${type === 'subject' ? 'predmety' : 'ucitele'}/${slug}`)
       }
     }
-    
+
     return { success: true }
   } catch (err) {
     return { success: false, error: err instanceof Error ? err.message : 'Neočekávaná chyba' }
@@ -708,7 +713,7 @@ export async function resolveFeedback(feedbackId: string): Promise<ActionResult>
     const { error } = await supabase
       .from('feedback')
       .update(feedbackUpdate as never)
-      .eq('id', feedbackId)
+      .eq('id' as never, feedbackId)
 
     if (error) return { success: false, error: 'Chyba při aktualizaci stavu zpětné vazby' }
 
@@ -730,7 +735,7 @@ export async function setFeedbackStatus(
     const { error } = await supabase
       .from('feedback')
       .update(feedbackUpdate as never)
-      .eq('id', feedbackId)
+      .eq('id' as never, feedbackId)
 
     if (error) return { success: false, error: 'Chyba při aktualizaci stavu zpětné vazby' }
 
@@ -748,14 +753,14 @@ export async function auditApprovedMaterials(): Promise<AuditActionResult<Broken
     const { data, error } = await supabase
       .from('subject_materials')
       .select('id, title, file_path, created_at, subject:subject_id(name, slug)')
-      .eq('moderation_status', 'approved')
+      .eq('moderation_status' as never, 'approved')
       .order('created_at', { ascending: false })
 
     if (error) {
       return { success: false, error: `Nepodařilo se načíst materiály: ${error.message}` }
     }
 
-    const materials = (data ?? []) as {
+    const materials = (data ?? []) as unknown as {
       id: string
       title: string
       file_path: string
@@ -822,14 +827,14 @@ export async function removeBrokenMaterialRecord(materialId: string): Promise<Ac
     const { data: material } = await supabase
       .from('subject_materials')
       .select('subject:subject_id(slug)')
-      .eq('id', materialId)
+      .eq('id' as never, materialId)
       .maybeSingle()
     const typedMaterial = material as { subject: { slug: string } | null } | null
 
     const { error } = await supabase
       .from('subject_materials')
       .delete()
-      .eq('id', materialId)
+      .eq('id' as never, materialId)
 
     if (error) {
       return { success: false, error: `Nepodařilo se smazat záznam materiálu: ${error.message}` }

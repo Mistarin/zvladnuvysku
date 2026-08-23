@@ -57,7 +57,7 @@ export function PublicUserLink({
         </span>
       ) : null}
       {summary ? (
-        <span className="shrink-0 rounded-full border border-primary/15 bg-primary/8 px-2 py-0.5 text-[11px] font-semibold text-primary">
+        <span className="shrink-0 rounded-md border border-primary/15 bg-primary/8 px-2 py-0.5 text-[11px] font-semibold text-primary">
           Lv. {summary.level}
         </span>
       ) : null}

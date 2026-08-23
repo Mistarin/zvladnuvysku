@@ -15,11 +15,7 @@ interface ListPageHeaderProps {
 }
 
 export function ListPageShell({ children, className }: ListPageShellProps) {
-  return (
-    <div className={cn("mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 lg:px-8", className)}>
-      {children}
-    </div>
-  );
+  return <main className={cn("mx-auto w-full max-w-6xl px-4 py-10 sm:px-6 sm:py-12 lg:px-8", className)}>{children}</main>;
 }
 
 export function ListPageHeader({
@@ -30,7 +26,7 @@ export function ListPageHeader({
   className,
 }: ListPageHeaderProps) {
   return (
-    <div className={cn("mb-10 flex flex-col gap-5 sm:gap-6", className)}>
+    <header className={cn("mb-8 flex flex-col gap-5 sm:mb-10 sm:gap-6", className)}>
       <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
         <div className="min-w-0">
           <div className="flex items-start gap-3">
@@ -41,13 +37,13 @@ export function ListPageHeader({
             ) : null}
             <div className="min-w-0 space-y-2">
               <h1 className="text-3xl font-bold text-foreground sm:text-4xl">{title}</h1>
-              <p className="max-w-3xl text-sm text-muted-foreground sm:text-base">{description}</p>
-              <div className="h-1 w-18 rounded-full bg-primary/85" />
+              <p className="max-w-[65ch] text-sm leading-6 text-muted-foreground sm:text-base">{description}</p>
+              <div className="h-1 w-12 rounded-sm bg-primary/85" />
             </div>
           </div>
         </div>
         {actions ? <div className="shrink-0">{actions}</div> : null}
       </div>
-    </div>
+    </header>
   );
 }

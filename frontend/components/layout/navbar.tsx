@@ -91,7 +91,7 @@ export function Navbar({ initialUser }: NavbarProps) {
     : "";
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border/60 bg-background/95 supports-[backdrop-filter]:bg-background/90 md:supports-[backdrop-filter]:bg-background/80 md:supports-[backdrop-filter]:backdrop-blur-md">
+    <header className="sticky top-0 z-50 w-full border-b border-border/60 bg-background">
       <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8">
         <nav className="flex h-14 items-center justify-between">
           {/* Logo */}
@@ -107,7 +107,7 @@ export function Navbar({ initialUser }: NavbarProps) {
               alt="ZvládnuVýšku Logo"
               width={36}
               height={36}
-              className="shrink-0 group-hover:scale-105 transition-transform duration-200"
+              className="shrink-0 group- transition-colors duration-200"
             />
             <span className="font-semibold text-foreground tracking-tight">
               Zvládnu<span className="home-title-accent">Výšku</span>
@@ -121,7 +121,7 @@ export function Navbar({ initialUser }: NavbarProps) {
                 key={link.href}
                 href={link.href}
                 prefetch={link.prefetch}
-                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-150 ${
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors duration-150 ${
                   linkIsActive(link.href) ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-muted"
                 }`}
               >
@@ -135,10 +135,10 @@ export function Navbar({ initialUser }: NavbarProps) {
 
             {user ? (
               <div className="relative ml-1">
-                {/* Avatar — min 44×44px touch target via padding trick */}
+                {/* Avatar … min 44×44px touch target via padding trick */}
                 <button
                   onClick={() => setUserMenuOpen((o) => !o)}
-                  className="w-8 h-8 p-0 m-1.5 rounded-full accent-gradient flex items-center justify-center text-white text-xs font-bold hover:opacity-90 transition-opacity"
+                  className="w-8 h-8 p-0 m-1.5 rounded-md primary-action flex items-center justify-center text-white text-xs font-bold hover:opacity-90 transition-opacity"
                   aria-label="Uživatelské menu"
                   aria-expanded={userMenuOpen}
                 >
@@ -147,7 +147,7 @@ export function Navbar({ initialUser }: NavbarProps) {
                 {userMenuOpen && (
                   <>
                     <div className="fixed inset-0 z-40" onClick={() => setUserMenuOpen(false)} />
-                    <div className="absolute right-0 top-10 z-50 w-52 rounded-xl border border-border bg-popover shadow-xl animate-scale-in">
+                    <div className="absolute right-0 top-10 z-50 w-52 rounded-xl border border-border bg-popover  ">
                       <div className="px-4 py-3 border-b border-border/50">
                         <p className="text-sm font-medium text-foreground truncate">{user.email}</p>
                       </div>
@@ -196,7 +196,7 @@ export function Navbar({ initialUser }: NavbarProps) {
                   href="/prihlaseni"
                   prefetch
                   onClick={() => trackEvent(analyticsEvents.clickLogin, { source: analyticsSources.navbarDesktop })}
-                  className="px-4 py-1.5 text-sm font-semibold rounded-lg bg-foreground text-background hover:scale-105 transition-transform"
+                  className="px-4 py-1.5 text-sm font-semibold rounded-lg bg-foreground text-background  transition-colors"
                 >
                   Přihlásit
                 </Link>
@@ -204,7 +204,7 @@ export function Navbar({ initialUser }: NavbarProps) {
             )}
           </div>
 
-          {/* Mobile right side — settings + hamburger (only for user menu) */}
+          {/* Mobile right side … settings + hamburger (only for user menu) */}
           <div className="flex items-center gap-1 md:hidden">
             <SettingsMenu />
             {user ? (
@@ -220,7 +220,7 @@ export function Navbar({ initialUser }: NavbarProps) {
                     <line x1="6" y1="6" x2="18" y2="18"></line>
                   </svg>
                 ) : (
-                  <div className="w-7 h-7 rounded-full accent-gradient flex items-center justify-center text-white text-xs font-bold">
+                  <div className="w-7 h-7 rounded-md primary-action flex items-center justify-center text-white text-xs font-bold">
                     {initials}
                   </div>
                 )}
@@ -239,7 +239,7 @@ export function Navbar({ initialUser }: NavbarProps) {
         </nav>
       </div>
 
-      {/* Mobile scrollable nav tabs — always visible, replaces hamburger for navigation */}
+      {/* Mobile scrollable nav tabs … always visible, replaces hamburger for navigation */}
       <div className="border-t border-border/40 md:hidden">
         <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8">
           <div className="flex gap-2 overflow-x-auto py-2 no-scrollbar relative">
@@ -248,7 +248,7 @@ export function Navbar({ initialUser }: NavbarProps) {
                 key={link.href}
                 href={link.href}
                 prefetch={link.prefetch}
-                className={`shrink-0 rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${
+                className={`shrink-0 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
                   linkIsActive(link.href)
                     ? "bg-primary text-primary-foreground"
                     : "bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground"
@@ -261,9 +261,9 @@ export function Navbar({ initialUser }: NavbarProps) {
         </div>
       </div>
 
-      {/* Mobile user dropdown — only shown when logged in and hamburger tapped */}
+      {/* Mobile user dropdown … only shown when logged in and hamburger tapped */}
       {mobileMenuOpen && user && (
-        <div className="md:hidden border-t border-border/50 bg-background px-4 py-4 space-y-1 shadow-xl">
+        <div className="md:hidden border-t border-border/50 bg-background px-4 py-4 space-y-1 ">
           <div className="px-4 py-2 text-sm text-foreground opacity-70 truncate">{user.email}</div>
           <Link
             href="/moje-aktivita"

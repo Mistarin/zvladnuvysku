@@ -47,11 +47,11 @@ export function MaterialApprovalCard({ material, subjectName, subjectSlug, autho
   const isWorking = isApproving || isRejecting;
 
   return (
-    <div className="glass-card p-5 space-y-4">
+    <div className="surface-card p-5 space-y-4">
       <div className="flex justify-between items-start gap-4">
         <div>
           <h3 className="font-bold text-lg text-foreground flex items-center gap-2">
-            📄 {material.title}
+             {material.title}
           </h3>
           <p className="text-sm text-muted-foreground mt-1">
             Velikost: {(material.size_bytes / 1024 / 1024).toFixed(2)} MB
@@ -74,20 +74,20 @@ export function MaterialApprovalCard({ material, subjectName, subjectSlug, autho
           </div>
         </div>
         <div className="flex flex-col items-end gap-2">
-          <a 
+          <a
             href={publicUrl ?? "#"}
             target="_blank"
             rel="noopener noreferrer"
             className="text-sm font-medium px-3 py-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
           >
-            Otevřít PDF ↗
+            Otevřít PDF
           </a>
           {subjectSlug && (
             <Link
               href={`/predmety/${subjectSlug}`}
               className="text-xs font-medium text-muted-foreground hover:text-foreground"
             >
-              Detail předmětu →
+              Detail předmětu
             </Link>
           )}
         </div>

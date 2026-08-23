@@ -559,7 +559,7 @@ export function NewDeckForm({ initialSubject = null, initialDeckData }: NewDeckF
 
   return (
     <form onSubmit={handleSubmit} className="space-y-8">
-      <div className="glass-card rounded-xl p-6 space-y-4">
+      <div className="surface-card rounded-xl p-6 space-y-4">
         <h2 className="text-lg font-semibold text-foreground">Informace o balíčku</h2>
 
         <div className="space-y-2">
@@ -571,7 +571,7 @@ export function NewDeckForm({ initialSubject = null, initialDeckData }: NewDeckF
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="např. Biologie — buněčné dělení"
+            placeholder="např. Biologie … buněčné dělení"
             className="w-full px-4 py-2.5 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
             required
           />
@@ -674,16 +674,16 @@ export function NewDeckForm({ initialSubject = null, initialDeckData }: NewDeckF
           <button
             type="button"
             onClick={() => setIsPublic((v) => !v)}
-            className={`relative w-11 h-6 rounded-full transition-colors ${isPublic ? 'accent-gradient' : 'bg-muted'}`}
+            className={`relative w-11 h-6 rounded-md transition-colors ${isPublic ? 'primary-action' : 'bg-muted'}`}
           >
             <span
-              className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
+              className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-md shadow transition-colors ${
                 isPublic ? 'translate-x-5' : 'translate-x-0'
               }`}
             />
           </button>
           <label className="text-sm text-foreground cursor-pointer" onClick={() => setIsPublic((v) => !v)}>
-            {isPublic ? '🌐 Veřejný balíček' : '🔒 Soukromý balíček'}
+            {isPublic ? ' Veřejný balíček' : ' Soukromý balíček'}
           </label>
         </div>
       </div>
@@ -697,14 +697,14 @@ export function NewDeckForm({ initialSubject = null, initialDeckData }: NewDeckF
                 <button
                   type="button"
                   onClick={() => setAllCollapsed(true)}
-                  className="text-sm px-3 py-1.5 rounded-lg border border-border text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
+                  className="text-sm px-3 py-1.5 rounded-lg border border-border text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
                 >
                   Sbalit vše
                 </button>
                 <button
                   type="button"
                   onClick={() => setAllCollapsed(false)}
-                  className="text-sm px-3 py-1.5 rounded-lg border border-border text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
+                  className="text-sm px-3 py-1.5 rounded-lg border border-border text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
                 >
                   Rozbalit vše
                 </button>
@@ -713,7 +713,7 @@ export function NewDeckForm({ initialSubject = null, initialDeckData }: NewDeckF
             <button
               type="button"
               onClick={addQuestion}
-              className="inline-flex items-center gap-2 text-sm px-3 py-1.5 rounded-lg border border-primary/30 text-primary hover:bg-primary/5 transition-all"
+              className="inline-flex items-center gap-2 text-sm px-3 py-1.5 rounded-lg border border-primary/30 text-primary hover:bg-primary/5 transition-colors"
             >
               <Plus className="size-4" />
               Přidat otázku
@@ -729,7 +729,7 @@ export function NewDeckForm({ initialSubject = null, initialDeckData }: NewDeckF
               const questionSummary = question.prompt.trim() || 'Prázdná otázka'
 
               return (
-            <div key={questionKey} className="glass-card rounded-xl p-5 space-y-4">
+            <div key={questionKey} className="surface-card rounded-xl p-5 space-y-4">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
@@ -737,7 +737,7 @@ export function NewDeckForm({ initialSubject = null, initialDeckData }: NewDeckF
                     <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                       Otázka {index + 1}
                     </span>
-                    <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
+                    <span className="rounded-md bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
                       {getQuestionTypeDescription(question.type)}
                     </span>
                   </div>
@@ -879,7 +879,7 @@ export function NewDeckForm({ initialSubject = null, initialDeckData }: NewDeckF
                         }
                         className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md border transition-colors ${
                           question.correctOptionIds.includes(option.id)
-                            ? 'border-primary bg-primary text-primary-foreground shadow-sm'
+                            ? 'border-primary bg-primary text-primary-foreground '
                             : 'border-border bg-background text-transparent hover:border-primary/50 hover:bg-primary/5'
                         }`}
                       >
@@ -952,7 +952,7 @@ export function NewDeckForm({ initialSubject = null, initialDeckData }: NewDeckF
         <button
           type="button"
           onClick={addQuestion}
-          className="w-full py-3 rounded-xl border-2 border-dashed border-border text-muted-foreground text-sm hover:border-primary/40 hover:text-primary transition-all"
+          className="w-full py-3 rounded-xl border-2 border-dashed border-border text-muted-foreground text-sm hover:border-primary/40 hover:text-primary transition-colors"
         >
           + Přidat další otázku
         </button>
@@ -968,13 +968,13 @@ export function NewDeckForm({ initialSubject = null, initialDeckData }: NewDeckF
         <button
           type="submit"
           disabled={loading}
-          className="flex-1 py-3 rounded-xl font-medium accent-gradient text-white hover:opacity-90 transition-all disabled:opacity-50"
+          className="flex-1 py-3 rounded-xl font-medium primary-action text-white hover:opacity-90 transition-colors disabled:opacity-50"
         >
-          {loading ? (isEditing ? 'Ukládání...' : 'Vytváření...') : isEditing ? '✓ Uložit změny' : '✓ Vytvořit balíček'}
+          {loading ? (isEditing ? 'Ukládání...' : 'Vytváření...') : isEditing ? ' Uložit změny' : ' Vytvořit balíček'}
         </button>
         <Link
           href={cancelHref}
-          className="px-5 py-3 rounded-xl border border-border bg-card hover:bg-muted transition-all text-sm font-medium"
+          className="px-5 py-3 rounded-xl border border-border bg-card hover:bg-muted transition-colors text-sm font-medium"
         >
           Zrušit
         </Link>

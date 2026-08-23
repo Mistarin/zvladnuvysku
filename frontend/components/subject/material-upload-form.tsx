@@ -139,7 +139,7 @@ export function MaterialUploadForm({
       <div className="space-y-3">
         <button
           onClick={() => setIsOpen(true)}
-          className="flex w-full flex-col items-center justify-center gap-2 rounded-[1.5rem] border-2 border-dashed border-border px-4 py-4 text-muted-foreground transition-all hover:border-primary/40 hover:bg-muted/30 hover:text-foreground"
+          className="flex w-full flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border px-4 py-4 text-muted-foreground transition-colors hover:border-primary/40 hover:bg-muted/30 hover:text-foreground"
         >
           <FileText className="h-5 w-5 text-primary" />
           <span className="text-sm font-medium">Nahrát studijní materiál (PDF)</span>
@@ -155,7 +155,7 @@ export function MaterialUploadForm({
 
   return (
     <>
-      <div className="space-y-5 rounded-[2rem] border border-border bg-card p-6 shadow-sm">
+      <div className="space-y-5 rounded-lg border border-border bg-card p-6 ">
         <div className="flex items-center justify-between border-b border-border pb-4">
           <h3 className="font-semibold">Nahrát nový materiál</h3>
           <button
@@ -175,7 +175,7 @@ export function MaterialUploadForm({
             <li>XP se počítají přímo z bodů: 1 bod = 10 XP, 2 body = 20 XP, 3 body = 30 XP a 4 body = 40 XP.</li>
           </ul>
           <Link href="/jak-to-funguje" target="_blank" className="mt-0.5 inline-block text-xs text-primary hover:underline">
-            Jak fungují body? →
+            Jak fungují body?
           </Link>
         </div>
 
@@ -191,7 +191,7 @@ export function MaterialUploadForm({
               onChange={(e) => setTitle(e.target.value)}
               placeholder="např. Výpisky ke zkoušce"
               required
-              className="w-full rounded-xl border border-border bg-input px-4 py-3 text-sm outline-none transition-all focus:bg-background focus:ring-1 focus:ring-primary/50"
+              className="w-full rounded-xl border border-border bg-input px-4 py-3 text-sm outline-none transition-colors focus:bg-background focus:ring-1 focus:ring-primary/50"
             />
           </div>
 
@@ -208,7 +208,7 @@ export function MaterialUploadForm({
               value={pageCount}
               onChange={(e) => setPageCount(e.target.value)}
               placeholder="např. 42"
-              className="w-32 rounded-xl border border-border bg-input px-4 py-3 text-sm outline-none transition-all focus:bg-background focus:ring-1 focus:ring-primary/50"
+              className="w-32 rounded-xl border border-border bg-input px-4 py-3 text-sm outline-none transition-colors focus:bg-background focus:ring-1 focus:ring-primary/50"
             />
           </div>
 
@@ -229,12 +229,12 @@ export function MaterialUploadForm({
                 file:text-sm file:font-semibold
                 file:bg-primary/10 file:text-primary
                 hover:file:bg-primary/20 file:cursor-pointer file:transition-colors
-                cursor-pointer rounded-xl border border-border bg-input p-2 shadow-inner"
+                cursor-pointer rounded-xl border border-border bg-input p-2 "
             />
           </div>
 
           {/* Group toggle */}
-          <div className="space-y-3 rounded-2xl border border-border bg-background/50 p-4 shadow-sm">
+          <div className="space-y-3 rounded-2xl border border-border bg-background/50 p-4 ">
             <label className="flex items-center gap-2.5 cursor-pointer select-none">
               <input
                 type="checkbox"
@@ -252,9 +252,9 @@ export function MaterialUploadForm({
                   type="text"
                   value={groupTitle}
                   onChange={(e) => setGroupTitle(e.target.value)}
-                  placeholder={`např. ${subjectName ? subjectName + " — vše ke zkoušce" : "Statistika — vše ke státnicím"}`}
+                  placeholder={`např. ${subjectName ? subjectName + " … vše ke zkoušce" : "Statistika … vše ke státnicím"}`}
                   maxLength={120}
-                  className="w-full rounded-xl border border-border bg-input px-4 py-3 text-sm outline-none transition-all focus:bg-background focus:ring-1 focus:ring-[#F6B73C]/50"
+                  className="w-full rounded-xl border border-border bg-input px-4 py-3 text-sm outline-none transition-colors focus:bg-background focus:ring-1 focus:ring-[#F6B73C]/50"
                   autoFocus
                 />
                 <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
@@ -282,7 +282,7 @@ export function MaterialUploadForm({
             <button
               type="submit"
               disabled={!file || !title || isUploading}
-              className="px-4 py-2 rounded-lg text-sm font-medium bg-primary text-primary-foreground disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:opacity-90 flex items-center gap-2"
+              className="px-4 py-2 rounded-lg text-sm font-medium bg-primary text-primary-foreground disabled:opacity-50 disabled:cursor-not-allowed transition-colors hover:opacity-90 flex items-center gap-2"
             >
               {isUploading && <Loader2 className="h-4 w-4 animate-spin" />}
               {isUploading ? "Nahrávám..." : isGroup ? "Nahrát a vytvořit skupinu" : "Nahrát soubor"}

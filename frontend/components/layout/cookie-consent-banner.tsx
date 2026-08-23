@@ -64,7 +64,7 @@ export function CookieConsentBanner({ initialConsent }: CookieConsentBannerProps
 
   return (
     <div className="fixed inset-x-0 bottom-4 z-[80] px-4 sm:bottom-6">
-      <div className="mx-auto max-w-3xl rounded-[1.5rem] border border-border bg-card p-5 shadow-[0_20px_60px_rgba(17,24,39,0.18)]">
+      <div className="mx-auto max-w-3xl rounded-lg border border-border bg-card p-5 ">
         <div className="flex items-start gap-4">
           <div className="mt-0.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
             <Cookie className="h-5 w-5" />
@@ -102,7 +102,7 @@ export function CookieConsentBanner({ initialConsent }: CookieConsentBannerProps
                       nelze vypnout.
                     </p>
                   </div>
-                  <span className="rounded-full border border-border bg-muted px-2.5 py-1 text-xs font-medium text-foreground">
+                  <span className="rounded-md border border-border bg-muted px-2.5 py-1 text-xs font-medium text-foreground">
                     Vždy aktivní
                   </span>
                 </div>

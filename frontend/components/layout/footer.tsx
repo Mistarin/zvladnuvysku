@@ -47,7 +47,7 @@ export function Footer() {
                 <p className="text-sm text-muted-foreground">
                   © {year}{" "}
                   <span className="font-medium text-foreground">ZvládnuVýšku</span>
-                  {" "}— studentský hub OU
+                  {" "}studentský hub OU
                 </p>
               </div>
               <p className="text-sm text-muted-foreground leading-relaxed">
@@ -91,7 +91,7 @@ export function Footer() {
                   href="/proc-ne-primat"
                   className="hover:text-foreground transition-colors"
                 >
-                  Proč ne Primát?
+                  Co nabízí ZvládnuVýšku
                 </Link>
               </div>
               <div className="flex flex-wrap items-center gap-4 text-xs sm:text-sm">

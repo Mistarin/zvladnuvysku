@@ -14,7 +14,7 @@ export type Tab = 'recenze' | 'prehled' | 'materialy'
 function TabBadge({ count }: { count: number }) {
   if (count === 0) return null
   return (
-    <span className="ml-1.5 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-primary/15 px-1.5 text-[11px] font-bold tabular-nums text-primary">
+    <span className="ml-1.5 inline-flex h-5 min-w-5 items-center justify-center rounded-md bg-primary/15 px-1.5 text-[11px] font-bold tabular-nums text-primary">
       {count}
     </span>
   )
@@ -62,9 +62,9 @@ export function SubjectTabs({
             aria-selected={activeTab === tab.id}
             aria-controls={`panel-${tab.id}`}
             href={tab.id === 'prehled' ? basePath : `${basePath}?tab=${tab.id}`}
-            className={`relative flex flex-1 items-center justify-center gap-1.5 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
+            className={`relative flex flex-1 items-center justify-center gap-1.5 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors duration-200 ${
               activeTab === tab.id
-                ? 'bg-secondary text-foreground shadow-sm'
+                ? 'bg-secondary text-foreground '
                 : 'text-muted-foreground hover:bg-muted hover:text-foreground'
             }`}
           >

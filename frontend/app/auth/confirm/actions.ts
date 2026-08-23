@@ -36,12 +36,12 @@ async function setPostAuthDisplayNameCookie(
   const { data: profile } = await supabase
     .from('profiles')
     .select('display_name, faculty, secondary_faculty, legal_accepted_at, legal_accepted_version')
-    .eq('user_id', userId)
+    .eq('user_id' as never, userId)
     .maybeSingle()
 
   const cookieStore = await cookies()
 
-  if (!hasCompletedPublicProfileSetup(profile)) {
+  if (!hasCompletedPublicProfileSetup(profile as unknown as Parameters<typeof hasCompletedPublicProfileSetup>[0])) {
     cookieStore.set('needs_display_name', '1', {
       path: '/',
       sameSite: 'lax',

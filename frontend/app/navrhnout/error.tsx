@@ -15,7 +15,7 @@ export default function NavrhnoutError({
 
   return (
     <div className="container mx-auto max-w-2xl px-4 py-16 text-center sm:px-6 lg:px-8">
-      <div className="rounded-2xl border border-border bg-card p-8 shadow-sm">
+      <div className="rounded-2xl border border-border bg-card p-8 ">
         <h1 className="text-2xl font-bold text-foreground">Návrh se nepodařilo načíst</h1>
         <p className="mt-3 text-sm leading-6 text-muted-foreground">
           Stránka narazila na chybu při načítání. Zkus to znovu, nebo se odhlaš a přihlaš.

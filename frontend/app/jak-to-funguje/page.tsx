@@ -10,9 +10,9 @@ export default function JakToFunguePage() {
   return (
     <main className="container mx-auto max-w-4xl px-4 py-12 space-y-10">
       {/* Hero */}
-      <div className="glass-card rounded-[2rem] p-8 sm:p-12 text-center space-y-4">
+      <div className="surface-card rounded-lg p-8 sm:p-12 text-center space-y-4">
         <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/10 text-4xl mb-2">
-          🏆
+
         </div>
         <h1 className="text-3xl sm:text-4xl font-bold text-foreground">
           Jak funguje bodový systém?
@@ -25,9 +25,9 @@ export default function JakToFunguePage() {
       </div>
 
       {/* Materiály */}
-      <section className="glass-card rounded-[1.75rem] p-7 sm:p-8 space-y-6">
+      <section className="surface-card rounded-lg p-7 sm:p-8 space-y-6">
         <div className="flex items-center gap-3">
-          <span className="text-2xl">📄</span>
+          <span className="text-2xl"></span>
           <div>
             <h2 className="text-xl font-semibold text-foreground">Body za studijní materiály</h2>
             <p className="text-xs text-muted-foreground mt-0.5">Body se připíšou po schválení moderátorem</p>
@@ -46,25 +46,25 @@ export default function JakToFunguePage() {
               <tr className="hover:bg-muted/30 transition-colors">
                 <td className="px-4 py-3 text-foreground">Do 5 stran</td>
                 <td className="px-4 py-3 text-right">
-                  <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-primary/5 text-primary font-semibold text-sm">1</span>
+                  <span className="inline-flex items-center justify-center w-8 h-8 rounded-md bg-primary/5 text-primary font-semibold text-sm">1</span>
                 </td>
               </tr>
               <tr className="hover:bg-muted/30 transition-colors">
                 <td className="px-4 py-3 text-foreground">5–15 stran</td>
                 <td className="px-4 py-3 text-right">
-                  <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary font-semibold text-sm">2</span>
+                  <span className="inline-flex items-center justify-center w-8 h-8 rounded-md bg-primary/10 text-primary font-semibold text-sm">2</span>
                 </td>
               </tr>
               <tr className="hover:bg-muted/30 transition-colors">
                 <td className="px-4 py-3 text-foreground">16–30 stran</td>
                 <td className="px-4 py-3 text-right">
-                  <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-primary/15 text-primary font-semibold text-sm">3</span>
+                  <span className="inline-flex items-center justify-center w-8 h-8 rounded-md bg-primary/15 text-primary font-semibold text-sm">3</span>
                 </td>
               </tr>
               <tr className="hover:bg-muted/30 transition-colors">
                 <td className="px-4 py-3 text-foreground font-medium">Nad 30 stran</td>
                 <td className="px-4 py-3 text-right">
-                  <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-amber-500/20 text-amber-600 dark:text-amber-400 font-bold text-sm">4</span>
+                  <span className="inline-flex items-center justify-center w-8 h-8 rounded-md bg-amber-500/20 text-amber-600 dark:text-amber-400 font-bold text-sm">4</span>
                 </td>
               </tr>
             </tbody>
@@ -73,9 +73,9 @@ export default function JakToFunguePage() {
       </section>
 
       {/* Balíčky kartiček */}
-      <section className="glass-card rounded-[1.75rem] p-7 sm:p-8 space-y-6">
+      <section className="surface-card rounded-lg p-7 sm:p-8 space-y-6">
         <div className="flex items-center gap-3">
-          <span className="text-2xl">🃏</span>
+          <span className="text-2xl"></span>
           <div>
             <h2 className="text-xl font-semibold text-foreground">Body za balíčky kartiček</h2>
             <p className="text-xs text-muted-foreground mt-0.5">Body se připíšou po schválení moderátorem</p>
@@ -94,19 +94,19 @@ export default function JakToFunguePage() {
               <tr className="hover:bg-muted/30 transition-colors">
                 <td className="px-4 py-3 text-foreground">Do 50 otázek</td>
                 <td className="px-4 py-3 text-right">
-                  <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary font-semibold text-sm">1</span>
+                  <span className="inline-flex items-center justify-center w-8 h-8 rounded-md bg-primary/10 text-primary font-semibold text-sm">1</span>
                 </td>
               </tr>
               <tr className="hover:bg-muted/30 transition-colors">
                 <td className="px-4 py-3 text-foreground">50–100 otázek</td>
                 <td className="px-4 py-3 text-right">
-                  <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-primary/15 text-primary font-semibold text-sm">2</span>
+                  <span className="inline-flex items-center justify-center w-8 h-8 rounded-md bg-primary/15 text-primary font-semibold text-sm">2</span>
                 </td>
               </tr>
               <tr className="hover:bg-muted/30 transition-colors">
                 <td className="px-4 py-3 text-foreground font-medium">101+ otázek</td>
                 <td className="px-4 py-3 text-right">
-                  <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-amber-500/20 text-amber-600 dark:text-amber-400 font-bold text-sm">3</span>
+                  <span className="inline-flex items-center justify-center w-8 h-8 rounded-md bg-amber-500/20 text-amber-600 dark:text-amber-400 font-bold text-sm">3</span>
                 </td>
               </tr>
             </tbody>
@@ -115,9 +115,9 @@ export default function JakToFunguePage() {
       </section>
 
       {/* Předměty */}
-      <section className="glass-card rounded-[1.75rem] p-7 sm:p-8 space-y-6">
+      <section className="surface-card rounded-lg p-7 sm:p-8 space-y-6">
         <div className="flex items-center gap-3">
-          <span className="text-2xl">🎓</span>
+          <span className="text-2xl"></span>
           <div>
             <h2 className="text-xl font-semibold text-foreground">Body za návrhy předmětů</h2>
             <p className="text-xs text-muted-foreground mt-0.5">Stejně funguje nový návrh i úprava existujícího předmětu</p>
@@ -138,9 +138,9 @@ export default function JakToFunguePage() {
       </section>
 
       {/* Tipy */}
-      <section className="glass-card rounded-[1.75rem] p-7 sm:p-8 space-y-4">
+      <section className="surface-card rounded-lg p-7 sm:p-8 space-y-4">
         <div className="flex items-center gap-3">
-          <span className="text-2xl">⚡</span>
+          <span className="text-2xl"></span>
           <h2 className="text-xl font-semibold text-foreground">Jak se počítají XP</h2>
         </div>
         <p className="text-sm text-muted-foreground">
@@ -149,24 +149,24 @@ export default function JakToFunguePage() {
       </section>
 
       {/* Tipy */}
-      <section className="glass-card rounded-[1.75rem] p-7 sm:p-8 space-y-5">
+      <section className="surface-card rounded-lg p-7 sm:p-8 space-y-5">
         <div className="flex items-center gap-3">
-          <span className="text-2xl">💡</span>
+          <span className="text-2xl"></span>
           <h2 className="text-xl font-semibold text-foreground">Tipy pro získání více bodů</h2>
         </div>
 
         <ul className="space-y-3">
           {[
             {
-              icon: '📦',
-              text: 'Posílej co nejvíce stran pohromadě — jeden velký soubor vydá více než pět malých.',
+              icon: '',
+              text: 'Posílej co nejvíce stran pohromadě … jeden velký soubor vydá více než pět malých.',
             },
             {
-              icon: '🚫',
+              icon: '',
               text: 'Vyhýbej se AI slopu a odfláknutým materiálům. Takové podklady budeme vracet ke kontrole.',
             },
             {
-              icon: '📏',
+              icon: '',
               text: 'Za materiál dostaneš 1 bod už do 5 stran, ale delší a ucelenější podklady mají vyšší hodnotu.',
             },
           ].map(({ icon, text }) => (
@@ -185,9 +185,9 @@ export default function JakToFunguePage() {
       <div className="text-center pb-4">
         <a
           href="/navrhnout"
-          className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold accent-gradient text-white hover:opacity-90 transition-all"
+          className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold primary-action text-white hover:opacity-90 transition-colors"
         >
-          Navrhnout předmět →
+          Navrhnout předmět
         </a>
       </div>
     </main>

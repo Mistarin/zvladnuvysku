@@ -56,7 +56,7 @@ export default async function NovyBalicekPage({ searchParams }: PageProps) {
       </nav>
 
       <div className="mb-8">
-        <h1 className="text-2xl sm:text-3xl font-bold text-foreground">🃏 Nový balíček procvičování</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-foreground"> Nový balíček procvičování</h1>
         <p className="text-muted-foreground mt-1">
           Vytvořte sadu otázek a procvičujte je pomocí opakování.
         </p>

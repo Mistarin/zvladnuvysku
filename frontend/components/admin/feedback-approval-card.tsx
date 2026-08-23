@@ -54,7 +54,7 @@ export function FeedbackApprovalCard({ feedback }: FeedbackApprovalCardProps) {
   };
 
   return (
-    <div className="glass-card p-4 space-y-3">
+    <div className="surface-card p-4 space-y-3">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <span className={`text-xs font-semibold px-2 py-0.5 rounded uppercase ${config.color}`}>
@@ -64,11 +64,11 @@ export function FeedbackApprovalCard({ feedback }: FeedbackApprovalCardProps) {
             {new Date(feedback.created_at).toLocaleString("cs-CZ")}
           </span>
         </div>
-        <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-foreground">
+        <span className="rounded-md bg-muted px-2 py-0.5 text-[11px] font-medium text-foreground">
           {statusLabels[feedback.status]}
         </span>
       </div>
-      
+
       <p className="text-sm text-foreground/90 whitespace-pre-wrap leading-relaxed">
         {feedback.message}
       </p>

@@ -2,6 +2,10 @@
   "name": "frontend",
   "version": "0.1.0",
   "private": true,
+  "packageManager": "pnpm@11.3.0",
+  "overrides": {
+    "postcss": ">=8.5.10"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",

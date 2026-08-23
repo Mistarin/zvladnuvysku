@@ -91,10 +91,10 @@ export async function markActivityItemUnread(input: ActivityAcknowledgementInput
     const { error } = await supabase
       .from('activity_acknowledgements')
       .delete()
-      .eq('user_id', user.id)
-      .eq('item_type', normalized.itemType)
-      .eq('item_id', normalized.itemId)
-      .eq('state_token', normalized.stateToken)
+      .eq('user_id' as never, user.id)
+      .eq('item_type' as never, normalized.itemType)
+      .eq('item_id' as never, normalized.itemId)
+      .eq('state_token' as never, normalized.stateToken)
 
     if (error) {
       return { success: false, error: `Nepodařilo se změnit stav: ${error.message}` }

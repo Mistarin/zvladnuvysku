@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef, useDeferredValue } from "react";
+import { useState, useCallback, useRef, useDeferredValue, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Search, BarChart3, FlipVertical } from "lucide-react";
@@ -46,6 +46,7 @@ const FEATURES = [
 export function HomePageClient({ siteStats }: HomePageClientProps) {
   const router = useRouter();
   const [isFocused, setIsFocused] = useState(false);
+  const [showWelcome, setShowWelcome] = useState(true);
   const { query, setQuery, results, isLoading, clearSearch } = useSearch();
   const deferredQuery = useDeferredValue(query);
   const { isFlashcardMode, flashcardQuery, deckResults, isDeckLoading } =
@@ -56,6 +57,11 @@ export function HomePageClient({ siteStats }: HomePageClientProps) {
     useGroupSearch(deferredQuery);
   const containerRef = useRef<HTMLDivElement>(null);
   const searchMode = parseSearchMode(query).mode;
+
+  useEffect(() => {
+    const welcomeTimer = window.setTimeout(() => setShowWelcome(false), 5000);
+    return () => window.clearTimeout(welcomeTimer);
+  }, []);
 
   const handleFocus = useCallback(() => setIsFocused(true), []);
   const handleBlur = useCallback(() => {
@@ -131,22 +137,35 @@ export function HomePageClient({ siteStats }: HomePageClientProps) {
     <div className="relative overflow-hidden">
       <section className="home-hero">
         <div className="relative w-full mb-8 flex flex-col items-center pointer-events-none select-none">
-          <div className="transition-all ease-out text-center">
+          <div className="transition-colors ease-out text-center">
             <h1 className="home-title text-balance">
-              Najdi{" "}
-              <span className="home-title-accent">
-                {searchMode === "flashcards"
-                  ? "kartičky"
-                  : searchMode === "materials"
-                    ? "materiály"
-                    : searchMode === "groups"
-                      ? "složky"
-                      : "předmět"}
+              <span className="grid min-h-[5.5rem] place-items-center sm:min-h-[3.5rem]">
+                <span
+                  className={`col-start-1 row-start-1 transition-opacity duration-700 ${showWelcome ? "opacity-100" : "opacity-0"}`}
+                  aria-hidden={!showWelcome}
+                >
+                  Vítej v databázi předmětů Ostravské univerzity!
+                </span>
+                <span
+                  className={`col-start-1 row-start-1 transition-opacity duration-700 ${showWelcome ? "opacity-0" : "opacity-100"}`}
+                  aria-hidden={showWelcome}
+                >
+                  Najdi{" "}
+                  <span className="home-title-accent">
+                    {searchMode === "flashcards"
+                      ? "kartičky"
+                      : searchMode === "materials"
+                        ? "materiály"
+                        : searchMode === "groups"
+                          ? "složky"
+                          : "předmět"}
+                  </span>
+                </span>
               </span>
             </h1>
           </div>
 
-          <div className="mt-4 transition-all ease-out opacity-100">
+          <div className="mt-4 transition-colors ease-out opacity-100">
             <p className="text-lg md:text-xl font-medium text-muted-foreground/80 tracking-tight px-4 text-balance text-center max-w-md">
               {searchMode === "flashcards"
                 ? "Hledáš balíček kartiček? Zkus zadat název nebo předmět."
@@ -166,19 +185,12 @@ export function HomePageClient({ siteStats }: HomePageClientProps) {
         >
           {isFocused && (
             <div
-              className="search-backdrop-blur"
+              className="search-"
               onClick={() => setIsFocused(false)}
             />
           )}
 
           <div className="relative z-50 w-full">
-            <div
-              className={`absolute -inset-4 sm:-inset-6 z-[-1] home-ambient-glow-aura transition-transform duration-500 ease-out ${
-                isFocused ? "scale-90" : "scale-100"
-              }`}
-              aria-hidden="true"
-            />
-
             <SearchBar
               query={query}
               onQueryChange={setQuery}
@@ -213,40 +225,40 @@ export function HomePageClient({ siteStats }: HomePageClientProps) {
             <div className="flex flex-wrap justify-center gap-2 mt-4">
               <button
                 onClick={() => handleTabClick("subjects")}
-                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
+                className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${
                   searchMode === "subjects"
-                    ? "bg-foreground text-background shadow-md scale-105"
-                    : "bg-card border border-white/5 text-muted-foreground hover:bg-muted/50 hover:text-foreground shadow-sm"
+                    ? "bg-foreground text-background  "
+                    : "bg-card border border-white/5 text-muted-foreground hover:bg-muted/50 hover:text-foreground "
                 }`}
               >
                 Předměty
               </button>
               <button
                 onClick={() => handleTabClick("flashcards")}
-                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
+                className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${
                   searchMode === "flashcards"
-                    ? "bg-primary text-primary-foreground shadow-md scale-105"
-                    : "bg-card border border-white/5 text-muted-foreground hover:bg-muted/50 hover:text-foreground shadow-sm"
+                    ? "bg-primary text-primary-foreground  "
+                    : "bg-card border border-white/5 text-muted-foreground hover:bg-muted/50 hover:text-foreground "
                 }`}
               >
                 Kartičky
               </button>
               <button
                 onClick={() => handleTabClick("materials")}
-                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
+                className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${
                   searchMode === "materials"
-                    ? "bg-sky-600 text-white shadow-md scale-105"
-                    : "bg-card border border-white/5 text-muted-foreground hover:bg-muted/50 hover:text-foreground shadow-sm"
+                    ? "bg-sky-600 text-white  "
+                    : "bg-card border border-white/5 text-muted-foreground hover:bg-muted/50 hover:text-foreground "
                 }`}
               >
                 Materiály
               </button>
               <button
                 onClick={() => handleTabClick("groups")}
-                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
+                className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${
                   searchMode === "groups"
-                    ? "bg-amber-600 text-white shadow-md scale-105"
-                    : "bg-card border border-white/5 text-muted-foreground hover:bg-muted/50 hover:text-foreground shadow-sm"
+                    ? "bg-amber-600 text-white  "
+                    : "bg-card border border-white/5 text-muted-foreground hover:bg-muted/50 hover:text-foreground "
                 }`}
               >
                 Skupiny
@@ -260,7 +272,7 @@ export function HomePageClient({ siteStats }: HomePageClientProps) {
                   ? "Hledáš konkrétní studijní materiály, poznámky nebo skripta."
                   : searchMode === "groups"
                     ? "Hledáš ucelené skupiny materiálů k vybranému tématu."
-                    : "Jednotný studentský hub. Proč generovat stokrát to, co už dávno existuje?"}
+                    : "Přehled předmětů, materiálů a zkušeností studentů Ostravské univerzity."}
             </p>
           </div>
         </div>
@@ -284,62 +296,60 @@ export function HomePageClient({ siteStats }: HomePageClientProps) {
         <div className="container mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
           <div className="mb-10 text-center">
             <h2 className="text-2xl sm:text-3xl font-bold text-foreground">
-              Vše, co potřebuješ vědět
+              Předmět před zápisem
             </h2>
-            <div className="mx-auto mt-3 h-1 w-18 rounded-full bg-primary/85" />
+            <div className="mx-auto mt-3 h-1 w-18 rounded-md bg-primary/85" />
             <p className="mt-2 text-muted-foreground">
-              Než si zapíšeš předmět, zjisti co od něj čekat.
+              Než si zapíšeš předmět, zjisti, co od něj čekat.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
+          <div className="space-y-3">
             {FEATURES.map(({ Icon, title, desc, href }, idx) => (
               <Link
                 key={title}
                 href={href}
-                className="glass-card hover-card block space-y-4 p-6 text-center animate-slide-up"
+                className="surface-card interactive-surface flex items-start gap-4 p-5 text-left"
                 style={{ animationDelay: `${idx * 80}ms` }}
               >
-                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl"
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md"
                   style={{ background: "color-mix(in srgb, var(--accent-color) 14%, transparent)" }}>
                   <Icon className="h-6 w-6" style={{ color: "var(--accent-color)" }} />
                 </div>
-                <h3 className="text-lg font-semibold text-foreground">
-                  {title}
-                </h3>
-                <p className="text-sm leading-relaxed text-muted-foreground">
-                  {desc}
-                </p>
+                <div>
+                  <h3 className="text-lg font-semibold text-foreground">{title}</h3>
+                  <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{desc}</p>
+                </div>
               </Link>
             ))}
           </div>
 
           <p className="mt-10 text-center text-xs text-muted-foreground/60">
-            ZvládnuVýšku je neoficiální studentský web — není spojen s Ostravskou univerzitou ani jejími fakultami.
+            ZvládnuVýšku je neoficiální studentský web. Není spojen s Ostravskou univerzitou ani jejími fakultami.
           </p>
         </div>
       </section>
 
       <section className="container mx-auto max-w-5xl border-t border-white/5 px-4 py-16 sm:px-6 lg:px-8">
-        <div className="grid gap-6 rounded-[2rem] border border-white/5 bg-card/40 p-8 shadow-sm backdrop-blur md:grid-cols-[1.4fr_0.9fr] md:items-center">
+        <div className="grid gap-6 rounded-lg border border-white/5 bg-card/40 p-8   md:grid-cols-[1.4fr_0.9fr] md:items-center">
           <div className="space-y-3">
-            <span className="inline-flex rounded-full border border-primary/15 bg-primary/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-primary">
-              Proč ZvládnuVýšku
+            <span className="inline-flex rounded-md border border-primary/15 bg-primary/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-primary">
+              Co na webu najdeš
             </span>
             <h2 className="text-2xl font-bold text-foreground sm:text-3xl">
-              Nejsme další sklad PDF souborů
+              Materiály, recenze a procvičování na jednom místě
             </h2>
             <p className="text-sm leading-relaxed text-muted-foreground sm:text-base">
-              Otevřené studijní materiály, důvěryhodné recenze a chytré kartičky pro Ostravskou univerzitu na jednom místě.
-              Bez reklam, bez paywallů a bez virtuální měny.
+              Otevřené studijní materiály, studentské recenze a kartičky pro Ostravskou univerzitu na jednom místě.
+              Studium bez reklam a placených bariér.
             </p>
           </div>
           <div className="flex flex-col gap-3 sm:flex-row md:flex-col">
             <Link
               href="/proc-ne-primat"
-              className="inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold text-white accent-gradient hover:opacity-90"
+              className="inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold text-white primary-action hover:opacity-90"
             >
-              Proč ne Primát?
+              Co nabízí ZvládnuVýšku
             </Link>
             <Link
               href="/materialy"
@@ -354,7 +364,7 @@ export function HomePageClient({ siteStats }: HomePageClientProps) {
       <section className="container mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-16 border-t border-white/5">
         <div className="text-center space-y-4">
           <h2 className="text-2xl font-bold text-foreground">
-            Začni hned teď
+            Prohlédni si předměty
           </h2>
           <p className="text-muted-foreground">
             Prohlédni si všechny předměty Ostravské univerzity.
@@ -362,10 +372,10 @@ export function HomePageClient({ siteStats }: HomePageClientProps) {
           <Link
             href="/predmety"
             id="bottom-cta-btn"
-            className="inline-flex items-center gap-2 px-8 py-3 rounded-xl font-semibold accent-gradient text-white hover:opacity-90 transition-all duration-150 hover:scale-105 shadow-lg shadow-primary/20"
+            className="inline-flex items-center gap-2 px-8 py-3 rounded-xl font-semibold primary-action text-white hover:opacity-90 transition-colors duration-150   "
           >
             <span>Procházet předměty</span>
-            <span>→</span>
+            <span></span>
           </Link>
         </div>
       </section>

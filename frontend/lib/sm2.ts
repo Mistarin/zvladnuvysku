@@ -24,7 +24,7 @@ export function calculateNextReview(
   let nextStatus: 'new' | 'learning' | 'review'
 
   if (quality < 3) {
-    // Failed — reset repetitions and interval
+    // Failed: reset repetitions and interval
     nextRepetitions = 0
     nextInterval = 1
     nextEaseFactor = easeFactor // ease unchanged on failure

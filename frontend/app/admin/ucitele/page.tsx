@@ -78,7 +78,7 @@ export default async function AdminTeachersPage() {
         </div>
       </div>
 
-      <TeacherList initialTeachers={teachers || []} departments={(departments as never[]) || []} />
+      <TeacherList initialTeachers={(teachers as never[]) || []} departments={(departments as never[]) || []} />
     </div>
   )
 }
