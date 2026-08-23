@@ -67,13 +67,6 @@ export default function CookiesPage() {
               "Do smazání uživatelem.",
             ],
             [
-              "sound_enabled",
-              "localStorage",
-              "Zapamatování, zda jsou v rozhraní povolené zvuky.",
-              "Funkční",
-              "Do smazání uživatelem.",
-            ],
-            [
               "_ga, _ga_*",
               "Cookie",
               "Měření návštěvnosti a základní analytika v Google Analytics po udělení souhlasu.",
@@ -88,7 +81,7 @@ export default function CookiesPage() {
         <p>
           Cookies můžete spravovat přímo ve svém prohlížeči. Smazáním přihlašovacích cookies budete
           odhlášeni. Smazáním lokálního úložiště se resetují některé preference, například zvolený
-          motiv vzhledu nebo nastavení zvuku.
+          motiv vzhledu.
         </p>
         <p>
           Pokud používáte blokátory nebo rozšíření pro ochranu soukromí, mohou ovlivnit načtení

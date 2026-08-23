@@ -1,16 +1,14 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Settings, Volume2, VolumeX, Moon, Sun } from "lucide-react";
+import { Settings, Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
-import { useSound } from "./sound-provider";
 
 export function SettingsMenu() {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   const { setTheme, resolvedTheme } = useTheme();
-  const { isSoundEnabled, toggleSound } = useSound();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -65,20 +63,6 @@ export function SettingsMenu() {
             </span>
           </button>
 
-          <button
-            onClick={toggleSound}
-            className={`w-full flex items-center justify-between px-3 py-2 text-sm hover:bg-muted rounded-lg transition-colors ${
-              isSoundEnabled ? "text-muted-foreground hover:text-foreground" : "text-muted-foreground/50 hover:text-muted-foreground"
-            }`}
-          >
-            <span className="flex items-center gap-2 whitespace-nowrap">
-              {isSoundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
-              Zvuky
-            </span>
-            <span className="text-xs font-medium bg-muted/50 px-1.5 py-0.5 rounded whitespace-nowrap">
-              {isSoundEnabled ? "Zapnuto" : "Vypnuto"}
-            </span>
-          </button>
         </div>
       )}
     </div>

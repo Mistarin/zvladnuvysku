@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import path from "path";
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
@@ -30,6 +31,9 @@ const nextConfig: NextConfig = {
         hostname: "onfkbvqifvkltelkomgo.supabase.co",
       },
     ],
+  },
+  turbopack: {
+    root: path.resolve(__dirname, ".."),
   },
 };
 

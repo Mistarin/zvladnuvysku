@@ -3,7 +3,6 @@
 import type { KeyboardEventHandler } from "react";
 import { useEffect, useRef } from "react";
 import { Search, X } from "lucide-react";
-import { useSound } from "../layout/sound-provider";
 
 interface SearchBarProps {
   query: string;
@@ -33,8 +32,6 @@ export function SearchBar({
   onKeyDown,
 }: SearchBarProps) {
   const inputRef = useRef<HTMLInputElement>(null);
-  const { isSoundEnabled } = useSound();
-
   useEffect(() => {
     if (isFocused) {
       inputRef.current?.focus();
@@ -43,11 +40,6 @@ export function SearchBar({
   }, []);
 
   const handleFocus = () => {
-    if (isSoundEnabled) {
-      const audio = new Audio('/sounds/swipe-confirm2.mp3');
-      audio.volume = 0.5; // default volume
-      audio.play().catch(e => console.warn('Audio play failed:', e));
-    }
     onFocus?.();
   };
 
@@ -61,7 +53,7 @@ export function SearchBar({
         transition-[border-color,box-shadow,background-color] duration-200
         ${
           isFocused
-            ? "ring-1  search-bar-focused"
+            ? "search-bar-focused"
             : "hover:border-border hover:bg-card"
         }
         ${className ?? ""}

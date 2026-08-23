@@ -47,6 +47,7 @@ export function HomePageClient({ siteStats }: HomePageClientProps) {
   const router = useRouter();
   const [isFocused, setIsFocused] = useState(false);
   const [showWelcome, setShowWelcome] = useState(true);
+  const [isWelcomeTransitioning, setIsWelcomeTransitioning] = useState(false);
   const { query, setQuery, results, isLoading, clearSearch } = useSearch();
   const deferredQuery = useDeferredValue(query);
   const { isFlashcardMode, flashcardQuery, deckResults, isDeckLoading } =
@@ -59,8 +60,18 @@ export function HomePageClient({ siteStats }: HomePageClientProps) {
   const searchMode = parseSearchMode(query).mode;
 
   useEffect(() => {
-    const welcomeTimer = window.setTimeout(() => setShowWelcome(false), 5000);
-    return () => window.clearTimeout(welcomeTimer);
+    const startTransitionTimer = window.setTimeout(() => {
+      setIsWelcomeTransitioning(true);
+      window.setTimeout(() => setShowWelcome(false), 380);
+    }, 5000);
+    const finishTransitionTimer = window.setTimeout(() => {
+      setIsWelcomeTransitioning(false);
+    }, 6000);
+
+    return () => {
+      window.clearTimeout(startTransitionTimer);
+      window.clearTimeout(finishTransitionTimer);
+    };
   }, []);
 
   const handleFocus = useCallback(() => setIsFocused(true), []);
@@ -139,15 +150,15 @@ export function HomePageClient({ siteStats }: HomePageClientProps) {
         <div className="relative w-full mb-8 flex flex-col items-center pointer-events-none select-none">
           <div className="transition-colors ease-out text-center">
             <h1 className="home-title text-balance">
-              <span className="grid min-h-[5.5rem] place-items-center sm:min-h-[3.5rem]">
+              <span className={`home-title-switcher grid min-h-[5.5rem] place-items-center sm:min-h-[3.5rem] ${isWelcomeTransitioning ? "home-title-switcher-transitioning" : ""}`}>
                 <span
-                  className={`col-start-1 row-start-1 transition-opacity duration-700 ${showWelcome ? "opacity-100" : "opacity-0"}`}
+                  className={`col-start-1 row-start-1 transition-opacity duration-300 ${showWelcome ? "opacity-100" : "opacity-0"}`}
                   aria-hidden={!showWelcome}
                 >
                   Vítej v databázi předmětů Ostravské univerzity!
                 </span>
                 <span
-                  className={`col-start-1 row-start-1 transition-opacity duration-700 ${showWelcome ? "opacity-0" : "opacity-100"}`}
+                  className={`col-start-1 row-start-1 transition-opacity duration-300 ${showWelcome ? "opacity-0" : "opacity-100"}`}
                   aria-hidden={showWelcome}
                 >
                   Najdi{" "}
@@ -161,6 +172,12 @@ export function HomePageClient({ siteStats }: HomePageClientProps) {
                           : "předmět"}
                   </span>
                 </span>
+                {isWelcomeTransitioning ? (
+                  <>
+                    <span className="home-title-barn-door home-title-barn-door-left" aria-hidden="true" />
+                    <span className="home-title-barn-door home-title-barn-door-right" aria-hidden="true" />
+                  </>
+                ) : null}
               </span>
             </h1>
           </div>
@@ -183,13 +200,6 @@ export function HomePageClient({ siteStats }: HomePageClientProps) {
           className="home-search-wrapper"
           onKeyDown={handleKeyDown}
         >
-          {isFocused && (
-            <div
-              className="search-"
-              onClick={() => setIsFocused(false)}
-            />
-          )}
-
           <div className="relative z-50 w-full">
             <SearchBar
               query={query}

@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { ThemeProvider } from "@/components/layout/theme-provider";
-import { SoundProvider } from "@/components/layout/sound-provider";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { CookieConsentBanner } from "@/components/layout/cookie-consent-banner";
@@ -80,22 +79,20 @@ export default async function RootLayout({
           disableTransitionOnChange={false}
         >
           <GoogleAnalytics initialConsent={initialCookieConsent} />
-          <SoundProvider>
-            <Navbar initialUser={user} />
-            <main className="flex-1 pb-[25vh]">{children}</main>
-            <Footer />
-            <CookieConsentBanner initialConsent={initialCookieConsent} />
-            <FeedbackButton />
-            <WelcomeDisplayNameModal
-              initialOpen={shouldShowOnboarding}
-              initialDisplayName={publicIdentity.displayName}
-              initialFaculty={publicIdentity.faculty}
-              initialSecondaryFaculty={publicIdentity.secondaryFaculty}
-              initialLegalAcceptedAt={hasAcceptedLegal ? profile?.legal_accepted_at ?? null : null}
-              initialLegalAcceptedVersion={profile?.legal_accepted_version ?? null}
-              clearCookieOnClose
-            />
-          </SoundProvider>
+          <Navbar initialUser={user} />
+          <main className="flex-1 pb-[25vh]">{children}</main>
+          <Footer />
+          <CookieConsentBanner initialConsent={initialCookieConsent} />
+          <FeedbackButton />
+          <WelcomeDisplayNameModal
+            initialOpen={shouldShowOnboarding}
+            initialDisplayName={publicIdentity.displayName}
+            initialFaculty={publicIdentity.faculty}
+            initialSecondaryFaculty={publicIdentity.secondaryFaculty}
+            initialLegalAcceptedAt={hasAcceptedLegal ? profile?.legal_accepted_at ?? null : null}
+            initialLegalAcceptedVersion={profile?.legal_accepted_version ?? null}
+            clearCookieOnClose
+          />
         </ThemeProvider>
       </body>
     </html>
