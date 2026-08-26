@@ -489,10 +489,13 @@
   bottom: -12%;
   width: 53%;
   pointer-events: none;
-  background: #fff;
-  border: 1px solid rgba(255, 255, 255, 0.25);
+  /* Must match the hero backdrop in both themes: light hero paints
+     var(--color-background) directly, dark hero is transparent over the body,
+     which uses the same variable. A hardcoded #fff appeared as bright panels
+     in dark mode and clashed with #FAFAF9 even in light mode. */
+  background: var(--color-background);
   filter: blur(9px);
-  opacity: 0.96;
+  opacity: 1;
 }
 
 .home-title-barn-door-left {
