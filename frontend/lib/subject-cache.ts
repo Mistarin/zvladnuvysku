@@ -19,7 +19,12 @@ export interface SubjectCacheEntry {
 }
 
 let cache: SubjectCacheEntry[] | null = null
+let cacheFetchedAt = 0
 let fetchPromise: Promise<SubjectCacheEntry[]> | null = null
+
+// Cache entries live at most this long, so approvals made by admins (or in
+// another tab) become searchable without a full page reload.
+const CACHE_TTL_MS = 5 * 60 * 1000
 
 async function fetchAllSubjects(): Promise<SubjectCacheEntry[]> {
   const result = await getSubjectSearchCache()
@@ -39,14 +44,19 @@ async function fetchAllSubjects(): Promise<SubjectCacheEntry[]> {
   }))
 }
 
-/** Vrátí všechny předměty. Fetchne max jednou za session. */
+/** Vrátí všechny předměty. Fetchne max jednou za TTL. */
 export function getSubjectCache(): Promise<SubjectCacheEntry[]> {
-  if (cache) return Promise.resolve(cache)
+  if (cache && Date.now() - cacheFetchedAt < CACHE_TTL_MS) return Promise.resolve(cache)
+  if (cache) {
+    cache = null // entry older than TTL — refetch
+    fetchPromise = null
+  }
   if (fetchPromise) return fetchPromise
 
   fetchPromise = fetchAllSubjects()
     .then((entries) => {
       cache = entries
+      cacheFetchedAt = Date.now()
       return entries
     })
     .catch((err: unknown) => {

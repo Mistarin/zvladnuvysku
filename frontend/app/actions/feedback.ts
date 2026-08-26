@@ -28,7 +28,19 @@ const rateLimitStore = new Map<string, number[]>()
 function checkRateLimit(key: string, maxRequests: number, windowMs: number): boolean {
   const now = Date.now()
   const timestamps = (rateLimitStore.get(key) ?? []).filter((t) => now - t < windowMs)
-  if (timestamps.length >= maxRequests) return false // blocked
+  if (timestamps.length >= maxRequests) {
+    // Refresh so a continuously-active offender's key stays alive
+    rateLimitStore.set(key, timestamps)
+    return false // blocked
+  }
+  if (rateLimitStore.size > 10_000) {
+    // Bound memory: drop every key whose window has fully expired.
+    for (const [existingKey, existingTimestamps] of rateLimitStore) {
+      if (!existingTimestamps.some((t) => now - t < windowMs)) {
+        rateLimitStore.delete(existingKey)
+      }
+    }
+  }
   rateLimitStore.set(key, [...timestamps, now])
   return true // allowed
 }

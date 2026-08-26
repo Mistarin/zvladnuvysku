@@ -19,7 +19,6 @@ type FlashcardDeckRow = Database['public']['Tables']['flashcard_decks']['Row']
 type FlashcardDeckInsert = Database['public']['Tables']['flashcard_decks']['Insert']
 type FlashcardDeckUpdate = Database['public']['Tables']['flashcard_decks']['Update']
 type FlashcardInsert = Database['public']['Tables']['flashcards']['Insert']
-type FlashcardUpdate = Database['public']['Tables']['flashcards']['Update']
 type FlashcardRow = Database['public']['Tables']['flashcards']['Row']
 type SaveDeckQuestion = {
   clientKey: string
@@ -411,8 +410,10 @@ export async function saveOwnDeck(formData: FormData): Promise<SaveDeckResult> {
   }
 
   const uploadedPaths: string[] = []
-  const removedPaths: string[] = []
   let createdDeckId: string | undefined
+  // Set once card rows are persisted; gates catch-block media cleanup so
+  // saved cards never lose their images.
+  let rowsPersisted = false
 
   try {
     let deckId = ownedDeckId
@@ -477,8 +478,13 @@ export async function saveOwnDeck(formData: FormData): Promise<SaveDeckResult> {
     const validIds = new Set(valid.map((question) => question.id).filter(Boolean))
     const cardsToDelete = existingCards.filter((card) => !validIds.has(card.id))
 
-    const newCardRecords: FlashcardInsert[] = []
+    type PreparedCardInsert = FlashcardInsert & { existing_id?: string }
 
+    const preparedCards: PreparedCardInsert[] = []
+
+    // Phase 1 — stage media and build every record without mutating rows.
+    // Any failure below only costs uploaded files, which are cleaned up in
+    // `catch` while nothing references them yet.
     for (const [index, question] of valid.entries()) {
       const mediaEntry = formData.get(`media:${question.clientKey}`)
       const mediaFile = mediaEntry instanceof File && mediaEntry.size > 0 ? mediaEntry : null
@@ -487,10 +493,6 @@ export async function saveOwnDeck(formData: FormData): Promise<SaveDeckResult> {
       if (mediaFile) {
         if (!ALLOWED_IMAGE_TYPES.includes(mediaFile.type) || mediaFile.size > IMAGE_STORAGE_MAX_FILE_SIZE) {
           throw new Error(`Otázka ${index + 1}: finální obrázek musí mít do 50 KB a být ve formátu JPG, PNG, WEBP nebo AVIF.`)
-        }
-
-        if (question.mediaPath) {
-          removedPaths.push(question.mediaPath)
         }
 
         const extension = mediaFile.type === 'image/jpeg'
@@ -511,7 +513,6 @@ export async function saveOwnDeck(formData: FormData): Promise<SaveDeckResult> {
 
         uploadedPaths.push(mediaPath)
       } else if (question.removeMedia && question.mediaPath) {
-        removedPaths.push(question.mediaPath)
         mediaPath = null
       } else if (question.mediaPath && !question.mediaPath.startsWith(`${FLASHCARD_MEDIA_PREFIX}/${user.id}/`)) {
         throw new Error(`Otázka ${index + 1}: obrázek nepatří k tvému účtu.`)
@@ -529,7 +530,7 @@ export async function saveOwnDeck(formData: FormData): Promise<SaveDeckResult> {
             ? { correct: question.yesNoCorrect }
             : { answerText: question.answerText }
 
-      const baseRecord = {
+      const record: PreparedCardInsert = {
         deck_id: deckId,
         front: question.prompt,
         back: question.type === 'yes_no' ? (question.yesNoCorrect ? 'Ano' : 'Ne') : question.answerText,
@@ -540,29 +541,35 @@ export async function saveOwnDeck(formData: FormData): Promise<SaveDeckResult> {
         position: index,
       }
 
-      if (question.id && existingCardsMap.has(question.id)) {
-        const updateRecord: FlashcardUpdate = baseRecord
-        const { error: updateError } = await supabase
-          .from('flashcards')
-          .update(updateRecord as never)
-          .eq('id', question.id)
-          .eq('deck_id', deckId)
-
-        if (updateError) {
-          throw new Error(updateError.message || 'Nepodařilo se upravit otázku.')
-        }
-      } else {
-        newCardRecords.push(baseRecord)
+      const existingCard = question.id ? existingCardsMap.get(question.id) : undefined
+      if (existingCard) {
+        record.existing_id = existingCard.id
       }
+
+      preparedCards.push(record)
     }
 
-    if (newCardRecords.length > 0) {
-      const { error: insertCardsError } = await supabase.from('flashcards').insert(newCardRecords as never)
-      if (insertCardsError) {
-        throw new Error(insertCardsError.message || 'Nepodařilo se uložit nové otázky.')
+    // Phase 2 — persist every card in a single atomic statement. Rows carrying
+    // an existing id are updated via ON CONFLICT, fresh rows are inserted.
+    const cardRecordsToWrite: FlashcardInsert[] = preparedCards.map((card) => {
+      const { existing_id, ...record } = card
+      if (existing_id) {
+        return { ...record, id: existing_id } as FlashcardInsert
+      }
+      return record as FlashcardInsert
+    })
+
+    if (cardRecordsToWrite.length > 0) {
+      const { error: upsertError } = await supabase.from('flashcards').upsert(cardRecordsToWrite as never, {
+        onConflict: 'id',
+      })
+      if (upsertError) {
+        throw new Error(upsertError.message || 'Nepodařilo se uložit otázky.')
       }
     }
+    rowsPersisted = true
 
+    // Phase 3 — remove cards that are no longer part of the payload.
     for (const card of cardsToDelete) {
       const { error: deleteError } = await supabase
         .from('flashcards')
@@ -573,15 +580,24 @@ export async function saveOwnDeck(formData: FormData): Promise<SaveDeckResult> {
       if (deleteError) {
         throw new Error(deleteError.message || 'Nepodařilo se smazat otázku.')
       }
-
-      if (card.media_path) {
-        removedPaths.push(card.media_path)
-      }
     }
 
-    const uniqueRemovedPaths = [...new Set(removedPaths.filter(Boolean))]
-    if (uniqueRemovedPaths.length > 0) {
-      for (const entry of groupFlashcardMediaPaths(uniqueRemovedPaths)) {
+    // Phase 4 — reclaim storage only after row writes succeeded, so no
+    // persisted card can ever point at a deleted file.
+    const liveMediaPaths = new Set(
+      cardRecordsToWrite.map((card) => card.media_path).filter(Boolean) as string[],
+    )
+    const staleMediaPaths = [
+      ...new Set(
+        existingCards
+          .map((card) => card.media_path)
+          .filter((path): path is string => Boolean(path))
+          .filter((path) => !liveMediaPaths.has(path)),
+      ),
+    ]
+
+    if (staleMediaPaths.length > 0) {
+      for (const entry of groupFlashcardMediaPaths(staleMediaPaths)) {
         await supabase.storage.from(entry.bucket).remove(entry.paths)
       }
     }
@@ -590,7 +606,9 @@ export async function saveOwnDeck(formData: FormData): Promise<SaveDeckResult> {
     revalidatePath(`/flashcardy/${deckId}`)
     return { success: true, deckId }
   } catch (error) {
-    if (uploadedPaths.length > 0) {
+    // Before rows are persisted, fresh uploads are guaranteed unreferenced and
+    // safe to reclaim; afterwards they belong to saved cards and must stay.
+    if (!rowsPersisted && uploadedPaths.length > 0) {
       for (const entry of groupFlashcardMediaPaths(uploadedPaths)) {
         await supabase.storage.from(entry.bucket).remove(entry.paths)
       }

@@ -341,6 +341,18 @@ export async function submitSubjectProposal(formData: FormData): Promise<ActionR
       return { success: false, error: 'Pro odeslání návrhu je potřeba se přihlásit.' }
     }
 
+    // Cheap server-side checks run before any bytes are uploaded.
+    const textToCheck = [
+      payload.form.name,
+      payload.form.description,
+      payload.form.note,
+      payload.form.target_audience,
+      payload.form.real_requirements,
+    ].filter(Boolean).join(' ')
+    if (containsProfanity(textToCheck)) {
+      return { success: false, error: 'Návrh obsahuje nevhodný jazyk. Přepiš ho prosím konstruktivně … chceme pomáhat studentům, ne je urážet.' }
+    }
+
     const proposalId = typeof payload.proposalId === 'string' && payload.proposalId.trim()
       ? payload.proposalId.trim()
       : null
@@ -413,17 +425,6 @@ export async function submitSubjectProposal(formData: FormData): Promise<ActionR
         size_bytes: file.size,
         page_count: materialMeta.pageCount,
       })
-    }
-
-    const textToCheck = [
-      payload.form.name,
-      payload.form.description,
-      payload.form.note,
-      payload.form.target_audience,
-      payload.form.real_requirements,
-    ].filter(Boolean).join(' ')
-    if (containsProfanity(textToCheck)) {
-      return { success: false, error: 'Návrh obsahuje nevhodný jazyk. Přepiš ho prosím konstruktivně … chceme pomáhat studentům, ne je urážet.' }
     }
 
     const normalizedTeachers = payload.teachers.map((teacher) => ({
@@ -622,9 +623,26 @@ export async function uploadSubjectMaterial(formData: FormData): Promise<ActionR
     }
 
     const rawGroupId = formData.get('groupId')
-    const groupId = typeof rawGroupId === 'string' && rawGroupId ? rawGroupId : null
+    let groupId = typeof rawGroupId === 'string' && rawGroupId ? rawGroupId : null
     const rawPageCount = formData.get('pageCount')
     const pageCount = typeof rawPageCount === 'string' && rawPageCount ? parseInt(rawPageCount, 10) || null : null
+
+    // Reject material groups the caller doesn't own — otherwise a crafted
+    // request could attach materials into someone else's group.
+    if (groupId) {
+      const { data: ownedGroup } = await supabase
+        .from('material_groups')
+        .select('id')
+        .eq('id' as never, groupId)
+        .eq('uploader_id' as never, user.id)
+        .maybeSingle()
+
+      if (!ownedGroup) {
+        await supabase.storage.from('study_materials').remove([uploadData.path])
+        return { success: false, error: 'Skupina materiálů nenalezena nebo nepatří tobě.' }
+      }
+      groupId = (ownedGroup as unknown as { id: string }).id
+    }
 
     const materialInsert: Database['public']['Tables']['subject_materials']['Insert'] = {
       subject_id: subjectId,
@@ -1083,6 +1101,24 @@ export async function createMaterialGroup(input: {
   }
 }
 
+// Groups surface on public profiles and on the subject page they belong to;
+// both concrete paths need explicit invalidation because template patterns
+// like '/profil/[userId]' do not match anything.
+async function revalidateGroupSurfaces(supabase: Awaited<ReturnType<typeof createClient>>, groupId: string, userId: string) {
+  const { data: group } = await supabase
+    .from('material_groups')
+    .select('subject:subjects!material_groups_subject_id_fkey(slug)')
+    .eq('id' as never, groupId)
+    .maybeSingle()
+
+  const typedGroup = group as unknown as { subject: { slug: string } | null } | null
+  if (typedGroup?.subject?.slug) {
+    revalidatePath(`/predmety/${typedGroup.subject.slug}`)
+  }
+  revalidatePath(`/profil/${userId}`)
+  revalidatePath(`/profil/${userId}/prispevky`)
+}
+
 export async function deleteMaterialGroup(groupId: string): Promise<ActionResult> {
   try {
     const supabase = await createClient()
@@ -1098,6 +1134,10 @@ export async function deleteMaterialGroup(groupId: string): Promise<ActionResult
 
     if (!group) return { success: false, error: 'Skupina nenalezena.' }
     if ((group as unknown as { uploader_id: string }).uploader_id !== user.id) return { success: false, error: 'Nemáte oprávnění smazat tuto skupinu.' }
+
+    // Surfaces are revalidated before the row disappears so the subject slug
+    // can still be resolved.
+    try { await revalidateGroupSurfaces(supabase, groupId, user.id) } catch { /* ignore */ }
 
     await supabase.from('subject_materials').update({ group_id: null } as never).eq('group_id' as never, groupId)
 
@@ -1131,7 +1171,7 @@ export async function renameMaterialGroup(groupId: string, newTitle: string): Pr
     if (error) return { success: false, error: `Nepodařilo se přejmenovat skupinu: ${error.message}` }
 
     try { revalidatePath('/moje-aktivita') } catch { /* ignore */ }
-    try { revalidatePath('/profil/[userId]', 'page') } catch { /* ignore */ }
+    try { await revalidateGroupSurfaces(supabase, groupId, user.id) } catch { /* ignore */ }
     return { success: true }
   } catch (error) {
     return { success: false, error: error instanceof Error ? error.message : 'Nepodařilo se přejmenovat skupinu.' }

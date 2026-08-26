@@ -19,7 +19,40 @@ export async function saveCardReview(
     redirect('/prihlaseni')
   }
 
-  // Fetch existing progress or use defaults
+  // Preferred path: single atomic RPC that reads and advances SM-2 state in
+  // one statement, so concurrent study sessions cannot lose updates.
+  const { data: rpcResult, error: rpcError } = await supabase
+    .rpc('record_card_review' as never, { p_card_id: cardId, p_quality: quality } as never)
+    .maybeSingle()
+
+  // Depending on PostgREST serialization the jsonb result arrives either
+  // unwrapped or nested under the function name — handle both.
+  const rowData = (Array.isArray(rpcResult) ? rpcResult[0] : rpcResult) as
+    | Record<string, unknown>
+    | { record_card_review: Record<string, unknown> }
+    | null
+  const candidate =
+    rowData && typeof rowData === 'object' && 'nextInterval' in rowData
+      ? rowData
+      : (rowData as { record_card_review?: Record<string, unknown> } | null)?.record_card_review
+
+  const payload = candidate as Record<string, unknown> | undefined
+
+  if (!rpcError && payload && 'nextInterval' in payload) {
+    return {
+      nextInterval: Number(payload.nextInterval),
+      nextEaseFactor: Number(payload.nextEaseFactor),
+      nextRepetitions: Number(payload.nextRepetitions),
+      nextStatus: String(payload.nextStatus) as 'new' | 'learning' | 'review',
+      dueDate: String(payload.dueDate),
+    }
+  }
+
+  if (rpcError && !String(rpcError.message).includes('schema cache')) {
+    console.error('[saveCardReview] record_card_review failed:', rpcError.message)
+  }
+
+  // Fallback for environments where the RPC migration has not been applied yet.
   const { data: existingRaw } = await supabase
     .from('card_progress')
     .select('*')

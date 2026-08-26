@@ -220,13 +220,33 @@ export async function approveProposal(
       const insertedSubject = insertedSubjectData
       approvedSubjectId = insertedSubject.id
 
+      let groupId: string | null = null
+
+      // Failure-safe wrapper: steps below are not transactional, so anything
+      // this flow creates after the subject is rolled back before surfacing
+      // the error — otherwise a retry would create a duplicate subject.
+      const rollbackApprovedSubject = async () => {
+        await supabase.from('material_groups').delete().eq('subject_id' as never, insertedSubject.id)
+        await supabase.from('subjects').delete().eq('id' as never, insertedSubject.id)
+        const filePaths = materials.map((m) => m.file_path).filter(Boolean)
+        if (filePaths.length > 0) {
+          await supabase.storage.from('study_materials').remove(filePaths)
+        }
+      }
+
+      const failure = async (message: string): Promise<ActionResult> => {
+        await rollbackApprovedSubject()
+        return { success: false, error: message }
+      }
+
       if (teachers && teachers.length > 0) {
         const teacherResult = await processTeachers(supabase, insertedSubject.id, teachers, proposal.proposed_by)
-        if (!teacherResult.success) return teacherResult
+        if (!teacherResult.success) {
+          return await failure(`Schválení se nepovedlo dokončit, změny byly vráceny. ${teacherResult.error}`)
+        }
       }
 
       if (materials && materials.length > 0) {
-        let groupId: string | null = null
         if (materials.length > 1) {
           const { data: groupData, error: groupError } = await createProposalMaterialGroup(
             supabase,
@@ -235,7 +255,7 @@ export async function approveProposal(
             materialGroupTitle,
           )
           if (groupError || !groupData) {
-            return { success: false, error: `Předmět byl vytvořen, ale skupinu materiálů se nepodařilo založit: ${groupError?.message ?? 'neznámá chyba'}` }
+            return await failure(`Skupinu materiálů se nepodařilo založit, změny byly vráceny: ${groupError?.message ?? 'neznámá chyba'}`)
           }
           groupId = groupData.id
         }
@@ -253,7 +273,9 @@ export async function approveProposal(
           page_count: m.page_count ?? null,
         }))
         const { error: materialsError } = await supabase.from('subject_materials').insert(materialsToInsert as never)
-        if (materialsError) return { success: false, error: `Předmět byl vytvořen, ale materiály se nepodařilo připojit: ${materialsError.message}` }
+        if (materialsError) {
+          return await failure(`Materiály se nepodařilo připojit, změny byly vráceny: ${materialsError.message}`)
+        }
       }
     } else if (proposal.type === 'edit' && proposal.subject_id) {
       const subjectId = proposal.subject_id
@@ -268,12 +290,36 @@ export async function approveProposal(
       )
       delete updateData.material_group_title
 
+      const { data: previousSubjectRow } = await supabase
+        .from('subjects')
+        .select('*')
+        .eq('id' as never, subjectId)
+        .maybeSingle()
+      const previousSubject = previousSubjectRow as Record<string, unknown> | null
+
     const { error: updateError } = await supabase.from('subjects').update(updateData as never).eq('id' as never, subjectId)
       if (updateError) return { success: false, error: `Chyba při úpravě: ${updateError.message}` }
 
+      // Restore the prior field values if any later step of this multi-write
+      // flow fails, so the edit either applies fully or not at all.
+      const restorePreviousSubject = async () => {
+        if (!previousSubject) return
+        const restorePayload = Object.fromEntries(
+          Object.keys(updateData as Record<string, unknown>).map((key) => [key, previousSubject[key] ?? null]),
+        )
+        await supabase.from('subjects').update(restorePayload as never).eq('id' as never, subjectId)
+      }
+
+      const editFailure = async (message: string): Promise<ActionResult> => {
+        await restorePreviousSubject()
+        return { success: false, error: message }
+      }
+
       if (teachers && teachers.length > 0) {
         const teacherResult = await processTeachers(supabase, subjectId, teachers, proposal.proposed_by)
-        if (!teacherResult.success) return teacherResult
+        if (!teacherResult.success) {
+          return await editFailure(`Úprava se nepovedla dokončit, změny byly vráceny. ${teacherResult.error}`)
+        }
       }
 
       if (materials && materials.length > 0) {
@@ -290,7 +336,7 @@ export async function approveProposal(
             materialGroupTitle,
           )
           if (groupError || !groupData) {
-            return { success: false, error: `Změny byly uloženy, ale skupinu materiálů se nepodařilo založit: ${groupError?.message ?? 'neznámá chyba'}` }
+            return await editFailure(`Skupinu materiálů se nepodařilo založit, změny byly vráceny: ${groupError?.message ?? 'neznámá chyba'}`)
           }
           groupId = groupData.id
         }
@@ -308,7 +354,10 @@ export async function approveProposal(
           page_count: m.page_count ?? null,
         }))
         const { error: materialsError } = await supabase.from('subject_materials').insert(materialsToInsert as never)
-        if (materialsError) return { success: false, error: `Změny byly uloženy, ale materiály se nepodařilo připojit: ${materialsError.message}` }
+        if (materialsError) {
+          await supabase.from('material_groups').delete().eq('subject_id' as never, subjectId)
+          return await editFailure(`Materiály se nepodařilo připojit, změny byly vráceny: ${materialsError.message}`)
+        }
       }
     }
 
@@ -436,16 +485,18 @@ async function processTeachers(
   teachers: ProposalTeacher[],
   proposedBy: string | null,
 ): Promise<ActionResult> {
+  const createdTeacherIds: string[] = []
+
   for (const t of teachers) {
     let teacherId = t.id
     if (!teacherId) {
       const faculty = t.faculty?.trim()
       if (!faculty) {
-        return { success: false, error: `U nového vyučujícího ${t.name} chybí fakulta.` }
+        return await rollbackCreatedTeachers(supabase, createdTeacherIds, `U nového vyučujícího ${t.name} chybí fakulta.`)
       }
       const department = normalizeDepartmentName(t.department)
       if (!department) {
-        return { success: false, error: `U nového vyučujícího ${t.name} chybí katedra.` }
+        return await rollbackCreatedTeachers(supabase, createdTeacherIds, `U nového vyučujícího ${t.name} chybí katedra.`)
       }
 
       // Create new teacher
@@ -458,9 +509,14 @@ async function processTeachers(
         proposed_by: proposedBy,
       }
       const { data: newTeacherData, error: teacherError } = await supabase.from('teachers').insert(teacherInsert as never).select().single()
-      if (teacherError) return { success: false, error: `Nepodařilo se vytvořit vyučujícího ${t.name}: ${teacherError.message}` }
+      if (teacherError) {
+        return await rollbackCreatedTeachers(supabase, createdTeacherIds, `Nepodařilo se vytvořit vyučujícího ${t.name}: ${teacherError.message}`)
+      }
       const newT = newTeacherData as unknown as Database['public']['Tables']['teachers']['Row'] | null
-      if (newT) teacherId = newT.id
+      if (newT) {
+        teacherId = newT.id
+        createdTeacherIds.push(newT.id)
+      }
     }
 
     if (teacherId) {
@@ -477,6 +533,20 @@ async function processTeachers(
   }
 
   return { success: true }
+}
+
+// Deletes teachers this flow created so a failed approval leaves no orphaned
+// admin-approved catalog entries behind.
+async function rollbackCreatedTeachers(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  createdTeacherIds: string[],
+  message: string,
+): Promise<ActionResult> {
+  if (createdTeacherIds.length > 0) {
+    await supabase.from('subject_teachers').delete().in('teacher_id' as never, createdTeacherIds)
+    await supabase.from('teachers').delete().in('id' as never, createdTeacherIds)
+  }
+  return { success: false, error: message }
 }
 
 export async function updateMaterialScoring(
@@ -593,12 +663,16 @@ export async function rejectMaterial(materialId: string, reason?: string): Promi
   try {
     const { supabase } = await getAdminClient()
 
-    const { data: material } = await supabase
+    const { data: material, error: lookupError } = await supabase
       .from('subject_materials')
-      .select('subject:subjects!subject_ratings_subject_id_fkey(slug)')
+      .select('subject:subjects!subject_materials_subject_id_fkey(slug)')
       .eq('id' as never, materialId)
       .maybeSingle()
     const typedMaterial = material as { subject: { slug: string } | null } | null
+    if (lookupError) {
+      // Lookup only feeds cache revalidation — don't block the rejection.
+      console.error('[rejectMaterial] Failed to resolve subject slug:', lookupError.message)
+    }
 
     const { error: dbError } = await supabase
       .from('subject_materials')
@@ -768,50 +842,58 @@ export async function auditApprovedMaterials(): Promise<AuditActionResult<Broken
       subject: { name: string; slug: string } | null
     }[]
 
-    const brokenItems = await Promise.all(
-      materials.map(async (material) => {
-        const { data: publicUrlData } = supabase.storage
-          .from('study_materials')
-          .getPublicUrl(material.file_path)
+    const brokenItems: BrokenMaterialAuditItem[] = []
 
-        try {
-          const response = await fetch(publicUrlData.publicUrl, {
-            method: 'HEAD',
-            cache: 'no-store',
-          })
+    // Bounded concurrency: one HEAD per file across every approved material
+    // can mean hundreds of simultaneous requests against the storage host.
+    const AUDIT_BATCH_SIZE = 10
+    for (let start = 0; start < materials.length; start += AUDIT_BATCH_SIZE) {
+      const batchResults = await Promise.all(
+        materials.slice(start, start + AUDIT_BATCH_SIZE).map(async (material) => {
+          const { data: publicUrlData } = supabase.storage
+            .from('study_materials')
+            .getPublicUrl(material.file_path)
 
-          if (response.ok) {
-            return null
+          try {
+            const response = await fetch(publicUrlData.publicUrl, {
+              method: 'HEAD',
+              cache: 'no-store',
+            })
+
+            if (response.ok) {
+              return null
+            }
+
+            return {
+              id: material.id,
+              title: material.title,
+              file_path: material.file_path,
+              created_at: material.created_at,
+              subject_name: material.subject?.name ?? null,
+              subject_slug: material.subject?.slug ?? null,
+              status_code: response.status,
+              error_message: null,
+            } satisfies BrokenMaterialAuditItem
+          } catch (error) {
+            return {
+              id: material.id,
+              title: material.title,
+              file_path: material.file_path,
+              created_at: material.created_at,
+              subject_name: material.subject?.name ?? null,
+              subject_slug: material.subject?.slug ?? null,
+              status_code: null,
+              error_message: error instanceof Error ? error.message : 'Unknown error',
+            } satisfies BrokenMaterialAuditItem
           }
-
-          return {
-            id: material.id,
-            title: material.title,
-            file_path: material.file_path,
-            created_at: material.created_at,
-            subject_name: material.subject?.name ?? null,
-            subject_slug: material.subject?.slug ?? null,
-            status_code: response.status,
-            error_message: null,
-          } satisfies BrokenMaterialAuditItem
-        } catch (error) {
-          return {
-            id: material.id,
-            title: material.title,
-            file_path: material.file_path,
-            created_at: material.created_at,
-            subject_name: material.subject?.name ?? null,
-            subject_slug: material.subject?.slug ?? null,
-            status_code: null,
-            error_message: error instanceof Error ? error.message : 'Unknown error',
-          } satisfies BrokenMaterialAuditItem
-        }
-      })
-    )
+        })
+      )
+      brokenItems.push(...batchResults.filter(Boolean) as BrokenMaterialAuditItem[])
+    }
 
     return {
       success: true,
-      data: brokenItems.filter(Boolean) as BrokenMaterialAuditItem[],
+      data: brokenItems,
     }
   } catch (error) {
     return {
@@ -824,12 +906,16 @@ export async function auditApprovedMaterials(): Promise<AuditActionResult<Broken
 export async function removeBrokenMaterialRecord(materialId: string): Promise<ActionResult> {
   try {
     const { supabase } = await getAdminClient()
-    const { data: material } = await supabase
+    const { data: material, error: lookupError } = await supabase
       .from('subject_materials')
-      .select('subject:subjects!subject_ratings_subject_id_fkey(slug)')
+      .select('subject:subjects!subject_materials_subject_id_fkey(slug)')
       .eq('id' as never, materialId)
       .maybeSingle()
     const typedMaterial = material as { subject: { slug: string } | null } | null
+    if (lookupError) {
+      // Lookup only feeds cache revalidation — don't block the removal.
+      console.error('[removeBrokenMaterialRecord] Failed to resolve subject slug:', lookupError.message)
+    }
 
     const { error } = await supabase
       .from('subject_materials')
