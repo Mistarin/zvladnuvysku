@@ -65,8 +65,8 @@ export default async function UcitSePage({ params }: PageProps) {
     const pa = progressMap.get(a.id)
     const pb = progressMap.get(b.id)
 
-    const isDueA = pa && pa.due_date <= today
-    const isDueB = pb && pb.due_date <= today
+    const isDueA = pa?.due_date ? pa.due_date <= today : false
+    const isDueB = pb?.due_date ? pb.due_date <= today : false
 
     if (isDueA && !isDueB) return -1
     if (!isDueA && isDueB) return 1

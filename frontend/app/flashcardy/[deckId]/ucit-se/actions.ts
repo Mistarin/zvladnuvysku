@@ -22,7 +22,7 @@ export async function saveCardReview(
   // Preferred path: single atomic RPC that reads and advances SM-2 state in
   // one statement, so concurrent study sessions cannot lose updates.
   const { data: rpcResult, error: rpcError } = await supabase
-    .rpc('record_card_review' as never, { p_card_id: cardId, p_quality: quality } as never)
+    .rpc('record_card_review', { p_card_id: cardId, p_quality: quality })
     .maybeSingle()
 
   // Depending on PostgREST serialization the jsonb result arrives either

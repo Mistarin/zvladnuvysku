@@ -91,7 +91,10 @@ export default async function TeacherDetailPage({ params }: PageProps) {
     .maybeSingle();
 
   const ratingStats = teacherRatingStats as Database["public"]["Tables"]["teacher_rating_stats"]["Row"] | null;
-  const avgRating = ratingStats?.total_ratings ? ratingStats.avg_rating.toFixed(1) : "…";
+  const avgRating =
+    ratingStats?.total_ratings && ratingStats.avg_rating != null
+      ? ratingStats.avg_rating.toFixed(1)
+      : "…";
 
   const { data: { user } } = await supabase.auth.getUser();
   const isLoggedIn = !!user;

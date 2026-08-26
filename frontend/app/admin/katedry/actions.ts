@@ -32,7 +32,8 @@ function revalidateDepartmentSurfaces() {
   revalidatePath("/ucitele");
 }
 
-export async function createDepartment(data: DepartmentInsert) {
+// Only name+faculty are accepted; the DB trigger derives the slug.
+export async function createDepartment(data: { faculty: string; name: string }) {
   try {
     if (!isFacultyCode(data.faculty)) {
       return { error: "Vyber platnou fakultu." };

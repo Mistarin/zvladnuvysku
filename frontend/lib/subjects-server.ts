@@ -129,7 +129,10 @@ const getCachedSubjectsPage = unstable_cache(
     }
 
     const subjects = (data ?? []) as SubjectWithStats[];
-    const subjectIds = subjects.map((subject) => subject.id);
+    // View rows lose NOT NULL metadata, so ids type as string | null.
+    const subjectIds = subjects
+      .map((subject) => subject.id)
+      .filter((id): id is string => typeof id === "string");
     const teacherPreviewMap = new Map<string, NonNullable<SubjectWithStats["teacher_rating_preview"]>>();
 
     if (subjectIds.length > 0) {
@@ -165,7 +168,7 @@ const getCachedSubjectsPage = unstable_cache(
     return {
       subjects: subjects.map((subject) => ({
         ...subject,
-        teacher_rating_preview: (teacherPreviewMap.get(subject.id) ?? []).sort((left, right) =>
+        teacher_rating_preview: (subject.id ? teacherPreviewMap.get(subject.id) ?? [] : []).sort((left, right) =>
           left.name.localeCompare(right.name, "cs")
         ),
       })),

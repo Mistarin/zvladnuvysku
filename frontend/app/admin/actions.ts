@@ -158,6 +158,8 @@ async function createProposalMaterialGroup(
     title: title ?? buildMaterialGroupFallbackTitle(subject),
     subject_id: subject.id,
     uploader_id: uploaderId,
+    // Trigger trg_material_groups_share_slug derives the real slug from title.
+    share_slug: '',
   }
 
   const { data, error } = await supabase
@@ -262,6 +264,8 @@ export async function approveProposal(
 
         const materialsToInsert: SubjectMaterialInsert[] = materials.map((m) => ({
           subject_id: insertedSubject.id,
+          // Trigger trg_subject_materials_share_slug derives the share slug.
+          share_slug: '',
           uploader_id: proposal.proposed_by,
           title: m.title,
           file_path: m.file_path,
@@ -343,6 +347,8 @@ export async function approveProposal(
 
         const materialsToInsert: SubjectMaterialInsert[] = materials.map((m) => ({
           subject_id: subjectId,
+          // Trigger trg_subject_materials_share_slug derives the share slug.
+          share_slug: '',
           uploader_id: proposal.proposed_by,
           title: m.title,
           file_path: m.file_path,

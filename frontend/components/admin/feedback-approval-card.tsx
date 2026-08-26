@@ -5,17 +5,14 @@ import { setFeedbackStatus } from "@/app/admin/actions";
 import { PublicUserLink } from "@/components/profile/public-user-link";
 import { Check } from "lucide-react";
 import type { PublicUserSummary } from "@/lib/public-user-summaries";
+import type { Database } from "@/lib/types/database";
 
 interface FeedbackApprovalCardProps {
-  feedback: {
-    id: string;
-    type: "bug" | "feature" | "other";
-    message: string;
-    created_at: string;
-    user_id: string | null;
-    status: "new" | "in_progress" | "resolved";
-    source_label?: string | null;
-    source_type?: "general" | "material" | "subject_rating" | "teacher_rating" | null;
+  // status/type are plain text columns in the live schema, so accept what the
+  // database actually returns; runtime comparisons stay literal.
+  feedback: Omit<Database["public"]["Tables"]["feedback"]["Row"], "status" | "type"> & {
+    status: string;
+    type: string;
     author?: PublicUserSummary | null;
   };
 }
@@ -34,14 +31,14 @@ export function FeedbackApprovalCard({ feedback }: FeedbackApprovalCardProps) {
     setIsWorking(false);
   };
 
-  const typeLabels = {
+  const typeLabels: Record<string, { label: string; color: string }> = {
     bug: { label: "Chyba", color: "text-red-500 bg-red-500/10" },
     feature: { label: "Návrh", color: "text-blue-500 bg-blue-500/10" },
     other: { label: "Jiné", color: "text-gray-500 bg-gray-500/10" },
   };
 
-  const config = typeLabels[feedback.type];
-  const statusLabels = {
+  const config = typeLabels[feedback.type] ?? typeLabels.other;
+  const statusLabels: Record<string, string> = {
     new: "Nové",
     in_progress: "Rozpracováno",
     resolved: "Vyřešeno",
@@ -61,11 +58,11 @@ export function FeedbackApprovalCard({ feedback }: FeedbackApprovalCardProps) {
             {config.label}
           </span>
           <span className="text-xs text-muted-foreground">
-            {new Date(feedback.created_at).toLocaleString("cs-CZ")}
+            {feedback.created_at ? new Date(feedback.created_at).toLocaleString("cs-CZ") : ""}
           </span>
         </div>
         <span className="rounded-md bg-muted px-2 py-0.5 text-[11px] font-medium text-foreground">
-          {statusLabels[feedback.status]}
+          {statusLabels[feedback.status] ?? feedback.status}
         </span>
       </div>
 

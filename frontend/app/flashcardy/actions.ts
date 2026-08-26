@@ -291,6 +291,8 @@ export async function duplicateOwnDeck(deckId: string): Promise<DeckMutationResu
       subject_id: sourceDeck.subject_id,
       title: `${sourceDeck.title} (kopie)`,
       description: sourceDeck.description,
+      // Trigger trg_flashcard_decks_share_slug derives the share slug.
+      share_slug: '',
       is_public: false,
     }
 
@@ -442,6 +444,8 @@ export async function saveOwnDeck(formData: FormData): Promise<SaveDeckResult> {
         is_public: payload.isPublic,
         creator_id: user.id,
         subject_id: payload.subjectId,
+        // Trigger trg_flashcard_decks_share_slug derives the share slug.
+        share_slug: '',
       }
 
       const { data: newDeck, error: createDeckError } = await supabase

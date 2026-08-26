@@ -6,51 +6,667 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
-export interface Database {
+export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "14.17"
+  }
   public: {
     Tables: {
-      departments: {
+      activity_acknowledgements: {
         Row: {
-          id: string
-          slug: string
-          name: string
-          faculty: string
           created_at: string
-          updated_at: string
+          id: string
+          item_id: string
+          item_type: string
+          state_token: string
+          user_id: string
         }
-        Insert: Omit<Database['public']['Tables']['departments']['Row'], 'id' | 'created_at' | 'updated_at' | 'slug'> & {
-          slug?: string
+        Insert: {
+          created_at?: string
+          id?: string
+          item_id: string
+          item_type: string
+          state_token: string
+          user_id: string
         }
-        Update: Partial<Database['public']['Tables']['departments']['Insert']>
+        Update: {
+          created_at?: string
+          id?: string
+          item_id?: string
+          item_type?: string
+          state_token?: string
+          user_id?: string
+        }
         Relationships: []
       }
-      subjects: {
+      card_progress: {
         Row: {
+          card_id: string
+          due_date: string | null
+          ease_factor: number | null
           id: string
-          slug: string
-          name: string
-          short_tag: string
-          description: string | null
-          target_audience: string | null
-          real_requirements: string | null
-          difficulty: number | null
-          time_intensity: number | null
-          attendance_type: string | null
-          credits: number | null
-          exam_from_home: boolean | null
-          semester: 'zimní' | 'letní' | 'oba' | null
-          faculty: string | null
-          department: string | null
-          department_id: string | null
-          year: number | null
+          interval_days: number | null
+          last_reviewed_at: string | null
+          repetitions: number | null
+          status: string | null
+          user_id: string
+        }
+        Insert: {
+          card_id: string
+          due_date?: string | null
+          ease_factor?: number | null
+          id?: string
+          interval_days?: number | null
+          last_reviewed_at?: string | null
+          repetitions?: number | null
+          status?: string | null
+          user_id: string
+        }
+        Update: {
+          card_id?: string
+          due_date?: string | null
+          ease_factor?: number | null
+          id?: string
+          interval_days?: number | null
+          last_reviewed_at?: string | null
+          repetitions?: number | null
+          status?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "card_progress_card_id_fkey"
+            columns: ["card_id"]
+            isOneToOne: false
+            referencedRelation: "flashcards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      departments: {
+        Row: {
           created_at: string
+          faculty: string
+          id: string
+          name: string
+          slug: string
           updated_at: string
         }
-        Insert: Omit<Database['public']['Tables']['subjects']['Row'], 'id' | 'created_at' | 'updated_at' | 'department_id'> & {
-          department_id?: string | null
+        Insert: {
+          created_at?: string
+          faculty: string
+          id?: string
+          name: string
+          slug: string
+          updated_at?: string
         }
-        Update: Partial<Database['public']['Tables']['subjects']['Insert']>
+        Update: {
+          created_at?: string
+          faculty?: string
+          id?: string
+          name?: string
+          slug?: string
+          updated_at?: string
+        }
         Relationships: []
+      }
+      feedback: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_resolved: boolean | null
+          message: string
+          source_id: string | null
+          source_label: string | null
+          source_type: string | null
+          status: string
+          type: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_resolved?: boolean | null
+          message: string
+          source_id?: string | null
+          source_label?: string | null
+          source_type?: string | null
+          status?: string
+          type: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_resolved?: boolean | null
+          message?: string
+          source_id?: string | null
+          source_label?: string | null
+          source_type?: string | null
+          status?: string
+          type?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      flashcard_decks: {
+        Row: {
+          card_count: number
+          created_at: string
+          creator_id: string
+          description: string | null
+          id: string
+          is_public: boolean
+          share_slug: string
+          subject_id: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          card_count?: number
+          created_at?: string
+          creator_id: string
+          description?: string | null
+          id?: string
+          is_public?: boolean
+          share_slug: string
+          subject_id?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          card_count?: number
+          created_at?: string
+          creator_id?: string
+          description?: string | null
+          id?: string
+          is_public?: boolean
+          share_slug?: string
+          subject_id?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "flashcard_decks_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "subject_search_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "flashcard_decks_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "subjects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      flashcards: {
+        Row: {
+          answer_data: Json
+          back: string
+          created_at: string
+          deck_id: string
+          front: string
+          id: string
+          media_path: string | null
+          position: number
+          prompt: string
+          question_type: string
+        }
+        Insert: {
+          answer_data?: Json
+          back: string
+          created_at?: string
+          deck_id: string
+          front: string
+          id?: string
+          media_path?: string | null
+          position?: number
+          prompt?: string
+          question_type?: string
+        }
+        Update: {
+          answer_data?: Json
+          back?: string
+          created_at?: string
+          deck_id?: string
+          front?: string
+          id?: string
+          media_path?: string | null
+          position?: number
+          prompt?: string
+          question_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "flashcards_deck_id_fkey"
+            columns: ["deck_id"]
+            isOneToOne: false
+            referencedRelation: "flashcard_decks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      material_groups: {
+        Row: {
+          created_at: string
+          id: string
+          share_slug: string
+          subject_id: string | null
+          title: string
+          uploader_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          share_slug: string
+          subject_id?: string | null
+          title: string
+          uploader_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          share_slug?: string
+          subject_id?: string | null
+          title?: string
+          uploader_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "material_groups_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "subject_search_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "material_groups_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "subjects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          display_name: string | null
+          faculty: string | null
+          legal_accepted_at: string | null
+          legal_accepted_version: string | null
+          secondary_faculty: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          display_name?: string | null
+          faculty?: string | null
+          legal_accepted_at?: string | null
+          legal_accepted_version?: string | null
+          secondary_faculty?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          display_name?: string | null
+          faculty?: string | null
+          legal_accepted_at?: string | null
+          legal_accepted_version?: string | null
+          secondary_faculty?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      public_subject_reviews: {
+        Row: {
+          author_user_id: string | null
+          comment: string
+          created_at: string
+          id: string
+          is_anonymous: boolean
+          overall: number
+          subject_id: string
+        }
+        Insert: {
+          author_user_id?: string | null
+          comment: string
+          created_at: string
+          id: string
+          is_anonymous?: boolean
+          overall: number
+          subject_id: string
+        }
+        Update: {
+          author_user_id?: string | null
+          comment?: string
+          created_at?: string
+          id?: string
+          is_anonymous?: boolean
+          overall?: number
+          subject_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "public_subject_reviews_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "subject_ratings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "public_subject_reviews_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "subject_search_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "public_subject_reviews_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "subjects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      public_teacher_reviews: {
+        Row: {
+          author_user_id: string | null
+          created_at: string
+          id: string
+          is_anonymous: boolean
+          rating: number
+          review: string
+          teacher_id: string
+        }
+        Insert: {
+          author_user_id?: string | null
+          created_at: string
+          id: string
+          is_anonymous?: boolean
+          rating: number
+          review: string
+          teacher_id: string
+        }
+        Update: {
+          author_user_id?: string | null
+          created_at?: string
+          id?: string
+          is_anonymous?: boolean
+          rating?: number
+          review?: string
+          teacher_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "public_teacher_reviews_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "teacher_ratings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "public_teacher_reviews_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "teachers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subject_materials: {
+        Row: {
+          created_at: string
+          file_path: string
+          group_id: string | null
+          id: string
+          is_approved: boolean
+          moderated_at: string | null
+          moderation_status: string
+          page_count: number | null
+          points_override: number | null
+          rejection_reason: string | null
+          share_slug: string
+          size_bytes: number
+          subject_id: string
+          title: string
+          uploader_id: string
+        }
+        Insert: {
+          created_at?: string
+          file_path: string
+          group_id?: string | null
+          id?: string
+          is_approved?: boolean
+          moderated_at?: string | null
+          moderation_status?: string
+          page_count?: number | null
+          points_override?: number | null
+          rejection_reason?: string | null
+          share_slug: string
+          size_bytes: number
+          subject_id: string
+          title: string
+          uploader_id: string
+        }
+        Update: {
+          created_at?: string
+          file_path?: string
+          group_id?: string | null
+          id?: string
+          is_approved?: boolean
+          moderated_at?: string | null
+          moderation_status?: string
+          page_count?: number | null
+          points_override?: number | null
+          rejection_reason?: string | null
+          share_slug?: string
+          size_bytes?: number
+          subject_id?: string
+          title?: string
+          uploader_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subject_materials_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "material_groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subject_materials_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "subject_search_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subject_materials_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "subjects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subject_proposals: {
+        Row: {
+          created_at: string
+          data: Json
+          id: string
+          note: string | null
+          proposed_by: string
+          rejection_reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          subject_id: string | null
+          submission_token: string | null
+          type: string
+        }
+        Insert: {
+          created_at?: string
+          data: Json
+          id?: string
+          note?: string | null
+          proposed_by: string
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          subject_id?: string | null
+          submission_token?: string | null
+          type: string
+        }
+        Update: {
+          created_at?: string
+          data?: Json
+          id?: string
+          note?: string | null
+          proposed_by?: string
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          subject_id?: string | null
+          submission_token?: string | null
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subject_proposals_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "subject_search_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subject_proposals_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "subjects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subject_rating_stats: {
+        Row: {
+          avg_difficulty: number | null
+          avg_overall: number | null
+          avg_usefulness: number | null
+          avg_workload: number | null
+          subject_id: string
+          total_ratings: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          avg_difficulty?: number | null
+          avg_overall?: number | null
+          avg_usefulness?: number | null
+          avg_workload?: number | null
+          subject_id: string
+          total_ratings?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          avg_difficulty?: number | null
+          avg_overall?: number | null
+          avg_usefulness?: number | null
+          avg_workload?: number | null
+          subject_id?: string
+          total_ratings?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subject_rating_stats_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: true
+            referencedRelation: "subject_search_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subject_rating_stats_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: true
+            referencedRelation: "subjects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subject_ratings: {
+        Row: {
+          comment: string | null
+          comment_is_approved: boolean | null
+          created_at: string | null
+          difficulty: number | null
+          id: string
+          is_anonymous: boolean
+          overall: number
+          overall_rating: number | null
+          subject_id: string
+          usefulness: number | null
+          user_id: string
+          workload: number | null
+        }
+        Insert: {
+          comment?: string | null
+          comment_is_approved?: boolean | null
+          created_at?: string | null
+          difficulty?: number | null
+          id?: string
+          is_anonymous?: boolean
+          overall: number
+          overall_rating?: number | null
+          subject_id: string
+          usefulness?: number | null
+          user_id: string
+          workload?: number | null
+        }
+        Update: {
+          comment?: string | null
+          comment_is_approved?: boolean | null
+          created_at?: string | null
+          difficulty?: number | null
+          id?: string
+          is_anonymous?: boolean
+          overall?: number
+          overall_rating?: number | null
+          subject_id?: string
+          usefulness?: number | null
+          user_id?: string
+          workload?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subject_ratings_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "subject_search_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subject_ratings_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "subjects"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       subject_tags: {
         Row: {
@@ -58,218 +674,30 @@ export interface Database {
           subject_id: string
           tag: string
         }
-        Insert: Omit<Database['public']['Tables']['subject_tags']['Row'], 'id'>
-        Update: Partial<Database['public']['Tables']['subject_tags']['Insert']>
-        Relationships: []
-      }
-      flashcard_decks: {
-        Row: {
-          id: string
-          subject_id: string | null
-          creator_id: string
-          title: string
-          description: string | null
-          share_slug: string
-          is_public: boolean
-          card_count: number
-          created_at: string
-          updated_at: string
-        }
-        Insert: Omit<Database['public']['Tables']['flashcard_decks']['Row'], 'id' | 'share_slug' | 'card_count' | 'created_at' | 'updated_at'> & {
-          share_slug?: string
-        }
-        Update: Partial<Database['public']['Tables']['flashcard_decks']['Insert']>
-        Relationships: [
-          {
-            foreignKeyName: 'flashcard_decks_subject_id_fkey'
-            columns: ['subject_id']
-            isOneToOne: false
-            referencedRelation: 'subjects'
-            referencedColumns: ['id']
-          },
-        ]
-      }
-      flashcards: {
-        Row: {
-          id: string
-          deck_id: string
-          front: string
-          back: string
-          question_type: 'classic_flashcard' | 'multiple_choice' | 'yes_no' | 'open_answer'
-          prompt: string
-          answer_data: Json
-          media_path: string | null
-          position: number
-          created_at: string
-        }
-        Insert: Omit<Database['public']['Tables']['flashcards']['Row'], 'id' | 'created_at'>
-        Update: Partial<Database['public']['Tables']['flashcards']['Insert']>
-        Relationships: [
-          {
-            foreignKeyName: 'flashcards_deck_id_fkey'
-            columns: ['deck_id']
-            isOneToOne: false
-            referencedRelation: 'flashcard_decks'
-            referencedColumns: ['id']
-          },
-        ]
-      }
-      card_progress: {
-        Row: {
-          id: string
-          user_id: string
-          card_id: string
-          ease_factor: number
-          interval_days: number
-          repetitions: number
-          due_date: string
-          status: 'new' | 'learning' | 'review'
-          last_reviewed_at: string | null
-        }
-        Insert: Omit<Database['public']['Tables']['card_progress']['Row'], 'id'>
-        Update: Partial<Database['public']['Tables']['card_progress']['Insert']>
-        Relationships: []
-      }
-      subject_ratings: {
-        Row: {
-          id: string
+        Insert: {
+          id?: string
           subject_id: string
-          user_id: string
-          difficulty: number | null
-          usefulness: number | null
-          workload: number | null
-          overall: number
-          overall_rating: number | null
-          comment: string | null
-          comment_is_approved: boolean | null
-          is_anonymous: boolean
-          created_at: string
+          tag: string
         }
-        Insert: Omit<Database['public']['Tables']['subject_ratings']['Row'], 'id' | 'created_at' | 'comment_is_approved' | 'overall_rating'> & {
-          comment_is_approved?: boolean | null
-          is_anonymous?: boolean
-          overall_rating?: number | null
+        Update: {
+          id?: string
+          subject_id?: string
+          tag?: string
         }
-        Update: Partial<Database['public']['Tables']['subject_ratings']['Insert']>
         Relationships: [
           {
-            foreignKeyName: 'subject_ratings_subject_id_fkey'
-            columns: ['subject_id']
+            foreignKeyName: "subject_tags_subject_id_fkey"
+            columns: ["subject_id"]
             isOneToOne: false
-            referencedRelation: 'subjects'
-            referencedColumns: ['id']
+            referencedRelation: "subject_search_view"
+            referencedColumns: ["id"]
           },
-        ]
-      }
-      subject_rating_stats: {
-        Row: {
-          subject_id: string
-          avg_overall: number
-          avg_difficulty: number
-          avg_usefulness: number
-          avg_workload: number
-          total_ratings: number
-          updated_at: string
-        }
-        Insert: Omit<Database['public']['Tables']['subject_rating_stats']['Row'], 'updated_at'>
-        Update: Partial<Database['public']['Tables']['subject_rating_stats']['Insert']>
-        Relationships: []
-      }
-      teachers: {
-        Row: {
-          id: string
-          slug: string
-          name: string
-          faculty: string
-          department: string | null
-          department_id: string | null
-          is_approved: boolean | null
-          proposed_by: string | null
-          created_at: string
-        }
-        Insert: Omit<Database['public']['Tables']['teachers']['Row'], 'id' | 'created_at' | 'is_approved' | 'proposed_by' | 'department_id'> & {
-          department_id?: string | null
-          is_approved?: boolean | null
-          proposed_by?: string | null
-        }
-        Update: Partial<Database['public']['Tables']['teachers']['Insert']>
-        Relationships: [
           {
-            foreignKeyName: 'teacher_rating_stats_teacher_id_fkey'
-            columns: ['id']
-            isOneToOne: true
-            referencedRelation: 'teacher_rating_stats'
-            referencedColumns: ['teacher_id']
-          },
-        ]
-      }
-      teacher_ratings: {
-        Row: {
-          id: string
-          teacher_id: string
-          user_id: string
-          rating: number | null
-          review: string | null
-          comment_is_approved: boolean | null
-          is_anonymous: boolean
-          created_at: string
-        }
-        Insert: Omit<Database['public']['Tables']['teacher_ratings']['Row'], 'id' | 'created_at' | 'comment_is_approved'> & {
-          comment_is_approved?: boolean | null
-          is_anonymous?: boolean
-        }
-        Update: Partial<Database['public']['Tables']['teacher_ratings']['Insert']>
-        Relationships: [
-          {
-            foreignKeyName: 'teacher_ratings_teacher_id_fkey'
-            columns: ['teacher_id']
+            foreignKeyName: "subject_tags_subject_id_fkey"
+            columns: ["subject_id"]
             isOneToOne: false
-            referencedRelation: 'teachers'
-            referencedColumns: ['id']
-          },
-        ]
-      }
-      public_subject_reviews: {
-        Row: {
-          id: string
-          subject_id: string
-          overall: number
-          comment: string
-          created_at: string
-          author_user_id: string | null
-          is_anonymous: boolean
-        }
-        Insert: Database['public']['Tables']['public_subject_reviews']['Row']
-        Update: Partial<Database['public']['Tables']['public_subject_reviews']['Insert']>
-        Relationships: [
-          {
-            foreignKeyName: 'public_subject_reviews_subject_id_fkey'
-            columns: ['subject_id']
-            isOneToOne: false
-            referencedRelation: 'subjects'
-            referencedColumns: ['id']
-          },
-        ]
-      }
-      public_teacher_reviews: {
-        Row: {
-          id: string
-          teacher_id: string
-          rating: number
-          review: string
-          created_at: string
-          author_user_id: string | null
-          is_anonymous: boolean
-        }
-        Insert: Database['public']['Tables']['public_teacher_reviews']['Row']
-        Update: Partial<Database['public']['Tables']['public_teacher_reviews']['Insert']>
-        Relationships: [
-          {
-            foreignKeyName: 'public_teacher_reviews_teacher_id_fkey'
-            columns: ['teacher_id']
-            isOneToOne: false
-            referencedRelation: 'teachers'
-            referencedColumns: ['id']
+            referencedRelation: "subjects"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -278,286 +706,465 @@ export interface Database {
           subject_id: string
           teacher_id: string
         }
-        Insert: Database['public']['Tables']['subject_teachers']['Row']
-        Update: Partial<Database['public']['Tables']['subject_teachers']['Insert']>
-        Relationships: [
-          {
-            foreignKeyName: 'subject_teachers_subject_id_fkey'
-            columns: ['subject_id']
-            isOneToOne: false
-            referencedRelation: 'subjects'
-            referencedColumns: ['id']
-          },
-          {
-            foreignKeyName: 'subject_teachers_teacher_id_fkey'
-            columns: ['teacher_id']
-            isOneToOne: false
-            referencedRelation: 'teachers'
-            referencedColumns: ['id']
-          },
-        ]
-      }
-      subject_materials: {
-        Row: {
-          id: string
+        Insert: {
           subject_id: string
-          uploader_id: string
-          title: string
-          share_slug: string
-          file_path: string
-          size_bytes: number
-          group_id: string | null
-          page_count: number | null
-          points_override: number | null
-          created_at: string
-          is_approved: boolean
-          moderation_status: 'pending' | 'approved' | 'rejected'
-          rejection_reason: string | null
-          moderated_at: string | null
+          teacher_id: string
         }
-        Insert: Omit<Database['public']['Tables']['subject_materials']['Row'], 'id' | 'share_slug' | 'created_at' | 'is_approved' | 'moderated_at' | 'points_override'> & {
-          share_slug?: string
-          is_approved?: boolean
-          moderation_status?: 'pending' | 'approved' | 'rejected'
-          rejection_reason?: string | null
-          moderated_at?: string | null
-          points_override?: number | null
+        Update: {
+          subject_id?: string
+          teacher_id?: string
         }
-        Update: Partial<Database['public']['Tables']['subject_materials']['Insert']>
         Relationships: [
           {
-            foreignKeyName: 'subject_materials_subject_id_fkey'
-            columns: ['subject_id']
+            foreignKeyName: "subject_teachers_subject_id_fkey"
+            columns: ["subject_id"]
             isOneToOne: false
-            referencedRelation: 'subjects'
-            referencedColumns: ['id']
+            referencedRelation: "subject_search_view"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'subject_materials_group_id_fkey'
-            columns: ['group_id']
+            foreignKeyName: "subject_teachers_subject_id_fkey"
+            columns: ["subject_id"]
             isOneToOne: false
-            referencedRelation: 'material_groups'
-            referencedColumns: ['id']
+            referencedRelation: "subjects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subject_teachers_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "teachers"
+            referencedColumns: ["id"]
           },
         ]
       }
-      material_groups: {
+      subjects: {
         Row: {
-          id: string
-          title: string
-          share_slug: string
-          subject_id: string | null
-          uploader_id: string
-          created_at: string
-        }
-        Insert: Omit<Database['public']['Tables']['material_groups']['Row'], 'id' | 'share_slug' | 'created_at'> & {
-          share_slug?: string
-        }
-        Update: Partial<Database['public']['Tables']['material_groups']['Insert']>
-        Relationships: [
-          {
-            foreignKeyName: 'material_groups_subject_id_fkey'
-            columns: ['subject_id']
-            isOneToOne: false
-            referencedRelation: 'subjects'
-            referencedColumns: ['id']
-          },
-          {
-            foreignKeyName: 'subject_materials_group_id_fkey'
-            columns: ['id']
-            isOneToOne: false
-            referencedRelation: 'subject_materials'
-            referencedColumns: ['group_id']
-          },
-        ]
-      }
-      subject_proposals: {
-        Row: {
-          id: string
-          type: 'new' | 'edit'
-          subject_id: string | null
-          data: Json
-          note: string | null
-          proposed_by: string
-          submission_token: string | null
-          status: 'pending' | 'approved' | 'rejected'
-          rejection_reason: string | null
-          reviewed_by: string | null
-          reviewed_at: string | null
-          created_at: string
-        }
-        Insert: Omit<Database['public']['Tables']['subject_proposals']['Row'], 'id' | 'status' | 'rejection_reason' | 'reviewed_by' | 'reviewed_at' | 'created_at'> & {
-          status?: 'pending' | 'approved' | 'rejected'
-          submission_token?: string | null
-          rejection_reason?: string | null
-          reviewed_by?: string | null
-          reviewed_at?: string | null
-        }
-        Update: Partial<Database['public']['Tables']['subject_proposals']['Insert']>
-        Relationships: []
-      }
-      profiles: {
-        Row: {
-          user_id: string
-          display_name: string | null
+          attendance_type: string | null
+          created_at: string | null
+          credits: number | null
+          department: string | null
+          department_id: string | null
+          description: string | null
+          difficulty: number | null
+          exam_from_home: boolean | null
           faculty: string | null
-          secondary_faculty: string | null
-          legal_accepted_at: string | null
-          legal_accepted_version: string | null
-          created_at: string
-          updated_at: string
+          id: string
+          name: string
+          real_requirements: string | null
+          semester: string | null
+          short_tag: string
+          slug: string
+          target_audience: string | null
+          time_intensity: number | null
+          updated_at: string | null
+          year: number | null
         }
-        Insert: Omit<Database['public']['Tables']['profiles']['Row'], 'created_at' | 'updated_at'> & {
-          display_name?: string | null
+        Insert: {
+          attendance_type?: string | null
+          created_at?: string | null
+          credits?: number | null
+          department?: string | null
+          department_id?: string | null
+          description?: string | null
+          difficulty?: number | null
+          exam_from_home?: boolean | null
           faculty?: string | null
-          secondary_faculty?: string | null
-          legal_accepted_at?: string | null
-          legal_accepted_version?: string | null
+          id?: string
+          name: string
+          real_requirements?: string | null
+          semester?: string | null
+          short_tag: string
+          slug: string
+          target_audience?: string | null
+          time_intensity?: number | null
+          updated_at?: string | null
+          year?: number | null
         }
-        Update: Partial<Database['public']['Tables']['profiles']['Insert']>
-        Relationships: []
-      }
-      feedback: {
-        Row: {
-          id: string
-          user_id: string | null
-          type: 'bug' | 'feature' | 'other'
-          message: string
-          is_resolved: boolean
-          status: 'new' | 'in_progress' | 'resolved'
-          source_type: 'general' | 'material' | 'subject_rating' | 'teacher_rating' | null
-          source_id: string | null
-          source_label: string | null
-          created_at: string
-          updated_at: string
+        Update: {
+          attendance_type?: string | null
+          created_at?: string | null
+          credits?: number | null
+          department?: string | null
+          department_id?: string | null
+          description?: string | null
+          difficulty?: number | null
+          exam_from_home?: boolean | null
+          faculty?: string | null
+          id?: string
+          name?: string
+          real_requirements?: string | null
+          semester?: string | null
+          short_tag?: string
+          slug?: string
+          target_audience?: string | null
+          time_intensity?: number | null
+          updated_at?: string | null
+          year?: number | null
         }
-        Insert: Omit<Database['public']['Tables']['feedback']['Row'], 'id' | 'created_at' | 'is_resolved' | 'updated_at'> & {
-          is_resolved?: boolean
-          status?: 'new' | 'in_progress' | 'resolved'
-          source_type?: 'general' | 'material' | 'subject_rating' | 'teacher_rating' | null
-          source_id?: string | null
-          source_label?: string | null
-        }
-        Update: Partial<Database['public']['Tables']['feedback']['Insert']>
-        Relationships: []
-      }
-      activity_acknowledgements: {
-        Row: {
-          id: string
-          user_id: string
-          item_type: string
-          item_id: string
-          state_token: string
-          created_at: string
-        }
-        Insert: Omit<Database['public']['Tables']['activity_acknowledgements']['Row'], 'id' | 'created_at'> & {
-          created_at?: string
-        }
-        Update: Partial<Database['public']['Tables']['activity_acknowledgements']['Insert']>
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "subjects_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       teacher_rating_stats: {
         Row: {
+          avg_rating: number | null
           teacher_id: string
-          avg_rating: number
-          total_ratings: number
-          updated_at: string
+          total_ratings: number | null
+          updated_at: string | null
         }
-        Insert: Omit<Database['public']['Tables']['teacher_rating_stats']['Row'], 'updated_at'>
-        Update: Partial<Database['public']['Tables']['teacher_rating_stats']['Insert']>
+        Insert: {
+          avg_rating?: number | null
+          teacher_id: string
+          total_ratings?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          avg_rating?: number | null
+          teacher_id?: string
+          total_ratings?: number | null
+          updated_at?: string | null
+        }
         Relationships: [
           {
-            foreignKeyName: 'teacher_rating_stats_teacher_id_fkey'
-            columns: ['teacher_id']
+            foreignKeyName: "teacher_rating_stats_teacher_id_fkey"
+            columns: ["teacher_id"]
             isOneToOne: true
-            referencedRelation: 'teachers'
-            referencedColumns: ['id']
+            referencedRelation: "teachers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      teacher_ratings: {
+        Row: {
+          comment_is_approved: boolean | null
+          created_at: string | null
+          id: string
+          is_anonymous: boolean
+          rating: number | null
+          review: string | null
+          teacher_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          comment_is_approved?: boolean | null
+          created_at?: string | null
+          id?: string
+          is_anonymous?: boolean
+          rating?: number | null
+          review?: string | null
+          teacher_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          comment_is_approved?: boolean | null
+          created_at?: string | null
+          id?: string
+          is_anonymous?: boolean
+          rating?: number | null
+          review?: string | null
+          teacher_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "teacher_ratings_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "teachers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      teachers: {
+        Row: {
+          created_at: string
+          department: string | null
+          department_id: string | null
+          faculty: string
+          id: string
+          is_approved: boolean
+          name: string
+          proposed_by: string | null
+          slug: string
+        }
+        Insert: {
+          created_at?: string
+          department?: string | null
+          department_id?: string | null
+          faculty: string
+          id?: string
+          is_approved?: boolean
+          name: string
+          proposed_by?: string | null
+          slug: string
+        }
+        Update: {
+          created_at?: string
+          department?: string | null
+          department_id?: string | null
+          faculty?: string
+          id?: string
+          is_approved?: boolean
+          name?: string
+          proposed_by?: string | null
+          slug?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "teachers_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
           },
         ]
       }
     }
     Views: {
       subject_search_view: {
-        Row: Database['public']['Tables']['subjects']['Row'] & {
-          avg_subject_rating: number
-          avg_teacher_rating: number
+        Row: {
+          attendance_type: string | null
+          avg_subject_rating: number | null
+          avg_teacher_rating: number | null
+          created_at: string | null
+          credits: number | null
+          department: string | null
+          description: string | null
+          difficulty: number | null
+          exam_from_home: boolean | null
+          faculty: string | null
+          id: string | null
+          name: string | null
+          real_requirements: string | null
+          semester: string | null
+          short_tag: string | null
+          slug: string | null
+          target_audience: string | null
+          time_intensity: number | null
+          updated_at: string | null
+          year: number | null
         }
         Relationships: []
       }
     }
     Functions: {
+      ensure_unique_share_slug: {
+        Args: { requested_slug: string; row_id: string; table_name: string }
+        Returns: string
+      }
+      generate_department_slug: {
+        Args: { department_faculty: string; department_name: string }
+        Returns: string
+      }
       get_hall_of_fame: {
-        Args: {
-          period_key?: 'week' | 'month' | 'all'
-          entry_limit?: number
-        }
+        Args: { entry_limit?: number; period_key?: string }
         Returns: {
-          user_id: string
           display_name: string
-          faculty: string | null
-          secondary_faculty: string | null
-          total_score: number
+          faculty: string
           flashcard_count: number
           material_count: number
+          secondary_faculty: string
           subject_count: number
           teacher_count: number
+          total_score: number
+          user_id: string
         }[]
       }
       get_public_profile_stats: {
-        Args: {
-          profile_user_id: string
-        }
+        Args: { profile_user_id: string }
         Returns: {
-          faculty: string | null
-          secondary_faculty: string | null
-          flashcard_count: number
-          material_count: number
-          subject_count: number
-          teacher_count: number
-          subject_comment_count: number
-          teacher_review_count: number
+          anon_subject_comment_count: number
+          anon_teacher_review_count: number
           approved_score: number
-          total_xp: number
+          faculty: string
+          flashcard_count: number
           level: number
           level_progress_xp: number
+          material_count: number
           next_level_xp: number
           public_subject_comment_count: number
-          anon_subject_comment_count: number
           public_teacher_review_count: number
-          anon_teacher_review_count: number
-        }[]
-      }
-      get_public_profile_summaries: {
-        Args: {
-          profile_user_ids: string[]
-        }
-        Returns: {
-          user_id: string
-          display_name: string | null
-          faculty: string | null
-          secondary_faculty: string | null
+          secondary_faculty: string
+          subject_comment_count: number
+          subject_count: number
+          teacher_count: number
+          teacher_review_count: number
           total_xp: number
-          level: number
         }[]
       }
       get_public_profile_subject_proposals: {
-        Args: {
-          profile_user_id: string
-          entry_limit?: number
-        }
+        Args: { entry_limit?: number; profile_user_id: string }
         Returns: {
+          created_at: string
           proposal_id: string
           proposal_type: string
-          created_at: string
           subject_name: string
-          subject_short_tag: string | null
-          subject_slug: string | null
+          subject_short_tag: string
+          subject_slug: string
         }[]
       }
+      get_public_profile_summaries: {
+        Args: { profile_user_ids: string[] }
+        Returns: {
+          display_name: string
+          faculty: string
+          level: number
+          secondary_faculty: string
+          total_xp: number
+          user_id: string
+        }[]
+      }
+      normalize_department_name_sql: {
+        Args: { value: string }
+        Returns: string
+      }
+      record_card_review: {
+        Args: { p_card_id: string; p_quality: number }
+        Returns: Json
+      }
+      slugify_share_text: {
+        Args: { fallback_prefix: string; source: string }
+        Returns: string
+      }
     }
-    Enums: Record<string, never>
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
   }
 }
+
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
+
+export type Tables<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+      Row: infer R
+    }
+    ? R
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+        Row: infer R
+      }
+      ? R
+      : never
+    : never
+
+export type TablesInsert<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Insert: infer I
+    }
+    ? I
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Insert: infer I
+      }
+      ? I
+      : never
+    : never
+
+export type TablesUpdate<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Update: infer U
+    }
+    ? U
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Update: infer U
+      }
+      ? U
+      : never
+    : never
+
+export type Enums<
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema["Enums"]
+    | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    : never = never,
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+    : never
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof DatabaseWithoutInternals },
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never = never,
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never
+
+export const Constants = {
+  public: {
+    Enums: {},
+  },
+} as const
 
 // Convenience types
 export type Subject = Database['public']['Tables']['subjects']['Row']

@@ -649,6 +649,8 @@ export async function uploadSubjectMaterial(formData: FormData): Promise<ActionR
       uploader_id: user.id,
       title: title.trim(),
       file_path: uploadData.path,
+      // Trigger trg_subject_materials_share_slug derives the share slug.
+      share_slug: '',
       size_bytes: file.size,
       moderation_status: 'pending',
       rejection_reason: null,

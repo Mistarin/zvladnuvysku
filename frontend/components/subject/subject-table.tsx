@@ -57,7 +57,10 @@ function TeacherRatingCell({ subject }: { subject: SubjectWithStats }) {
   }
 
   const hasMultipleTeachers = teachers.length > 1;
-  const average = subject.avg_teacher_rating > 0 ? subject.avg_teacher_rating : null;
+  const average =
+    subject.avg_teacher_rating != null && subject.avg_teacher_rating > 0
+      ? subject.avg_teacher_rating
+      : null;
 
   return (
     <div className="group relative inline-flex items-center justify-center">

@@ -580,8 +580,8 @@ function buildFeedbackCard(item: Feedback, acknowledgementSet: Set<string>): Act
       ...(attention?.acknowledged ? [{ label: "Přečteno", tone: "muted" as const }] : []),
     ],
     meta: [
-      { label: "Odesláno", value: formatDateTime(item.created_at) },
-      { label: "Naposledy změněno", value: formatDateTime(item.updated_at) },
+      { label: "Odesláno", value: item.created_at ? formatDateTime(item.created_at) : "—" },
+      { label: "Naposledy změněno", value: item.updated_at ? formatDateTime(item.updated_at) : "—" },
     ],
     body: item.message,
     attention,
@@ -730,7 +730,7 @@ function getProposalLinkedState(
     return "deleted";
   }
 
-  if (proposal.reviewed_at) {
+  if (proposal.reviewed_at && linkedSubject.updated_at) {
     const reviewedAt = new Date(proposal.reviewed_at).getTime();
     const updatedAt = new Date(linkedSubject.updated_at).getTime();
 

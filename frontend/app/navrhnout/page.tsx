@@ -124,7 +124,8 @@ export default async function NavrhnoutPage({ searchParams }: PageProps) {
 
       initialProposal = {
         id: typedProposal.id,
-        type: typedProposal.type,
+        // Column is CHECK-constrained to 'new'|'edit' but introspects as text.
+        type: typedProposal.type === 'edit' ? 'edit' : 'new',
         subjectId: typedProposal.subject_id,
         subjectSlug: originalSubject && 'slug' in originalSubject ? (originalSubject as SubjectDetails & { slug?: string | null }).slug ?? null : null,
         subjectLabel,

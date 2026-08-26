@@ -6,18 +6,13 @@ import { updateMaterialScoring } from "@/app/admin/actions";
 import { PublicUserLink } from "@/components/profile/public-user-link";
 import type { PublicUserSummary } from "@/lib/public-user-summaries";
 import { getStoragePublicUrl } from "@/lib/storage";
+import type { Database } from "@/lib/types/database";
 
-type ManagedMaterial = {
-  id: string;
-  title: string;
-  file_path: string;
-  size_bytes: number;
-  page_count: number | null;
-  points_override: number | null;
-  moderation_status: "pending" | "approved" | "rejected";
-  created_at: string;
-  uploader_id: string;
-};
+// Derived from the live schema so it stays in sync with codegen.
+type ManagedMaterial = Pick<
+  Database["public"]["Tables"]["subject_materials"]["Row"],
+  "id" | "title" | "file_path" | "size_bytes" | "page_count" | "points_override" | "moderation_status" | "created_at" | "uploader_id"
+>;
 
 interface MaterialManagementCardProps {
   material: ManagedMaterial;
